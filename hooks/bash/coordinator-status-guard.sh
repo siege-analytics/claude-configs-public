@@ -333,7 +333,39 @@ ARTIFACT_MODAL_WORD = re.compile(
     r"\b(?:could|might|would|may|should|will|shall|must|can|cannot|ought|"
     r"(?:can|couldn|wouldn|shouldn|won|mustn|shan)['\u2019]t)\b"
 )
-ARTIFACT_QUESTION_START = re.compile(r'(?:did|does|do|has|have|had|is|are|was|were|am)\b')
+ARTIFACT_MODAL_TOKEN = re.compile(ARTIFACT_MODAL_WORD.pattern, re.I)
+# A clause opening with an inverted auxiliary asks rather than states.
+ARTIFACT_QUESTION_START = re.compile(r'(?:did|does|do|has|have|had|is|are|was|were|am)[ \t]+[a-z]', re.I)
+# Language classification treats a URI as one opaque token (#1164 F4).
+ARTIFACT_URI = re.compile(r'(?:https?://|www\.)\S+', re.I)
+
+
+def artifact_is_question(text):
+    """A question whatever wraps it: quotes, emphasis, a field label or a ?! tail (#1164 F1)."""
+    core = re.sub(r'^[\W_]+', '', text.strip())
+    return bool(re.search(r'\?[\W_]*$', core) or ARTIFACT_QUESTION_START.match(core))
+
+
+def artifact_has_modal(clause):
+    """True when a modal auxiliary governs the clause (#1164 R1, F4).
+
+    A URI is opaque. May/Will before a number is a date. A capitalized May/Will
+    after the clause opening is a name or month unless a verb follows it: past
+    forms ("Will approved") and punctuation or clause end mark the name. Any
+    other position stays modal, so ambiguous wording fails closed.
+    """
+    text = ARTIFACT_URI.sub(' ', clause)
+    for match in ARTIFACT_MODAL_TOKEN.finditer(text):
+        word, after = match.group(0), text[match.end():]
+        if word.lower() in ('may', 'will'):
+            if re.match(r'[ \t]+\d', after):
+                continue
+            opening = not re.search(r'[A-Za-z0-9]', text[:match.start()])
+            if word[0].isupper() and not opening and re.match(
+                    r'[ \t]*(?:$|[^\w \t]|(?:and|or|\w+(?<!e)ed)\b)', after):
+                continue
+        return True
+    return False
 
 
 # Completion of the artifact itself is not completion of the project lane.
@@ -354,38 +386,40 @@ def mask_modal_hedges(clause):
     return COMPLETION_RE.sub(masked, clause)
 
 
-def artifact_factual_lines(lowered):
+def artifact_factual_lines(original):
     """(claim text, evidence text) for every line, front matter and wrapped lines included.
 
     Claim text drops hypothetical conditional clauses and masks modal-governed
     completion words. Evidence text keeps only factual clauses: no question,
-    no modal, no conditional, and nothing under a hypothetical field.
+    no modal auxiliary, no conditional, and nothing under a hypothetical field.
+    Classification reads the original case, so "May 5" and "operator Will"
+    are not modals; both outputs are lowercased.
     """
     factual, hypothetical = [], False
-    for raw in lowered.splitlines():
-        line = re.sub(r'^(?:[ \t>#*_`|-]+|\[[ x]\][ \t]*|[0-9]+[.)][ \t]*)+', '', raw)
+    for raw in original.splitlines():
+        line = re.sub(r'^(?:[ \t>#*_`|-]+|\[[ xX]\][ \t]*|[0-9]+[.)][ \t]*)+', '', raw)
         line = re.sub(r'[*_`]+', '', line).strip()
         if not line:
             continue  # a blank line does not end a field's indented continuation
         field = re.match(r'(.{1,40}?)(?::|[ \t]+(?:—|--)[ \t]+)', line)
         if field:
-            hypothetical = field.group(1).strip() in ARTIFACT_HYPOTHETICAL_FIELDS
+            hypothetical = field.group(1).strip().lower() in ARTIFACT_HYPOTHETICAL_FIELDS
         elif not raw[:1].isspace() or raw.lstrip().startswith(('#', '-', '*')):
             hypothetical = False
         kept, evidence = [], []
         for sentence in re.split(r'(?<=[;.!?])[ \t]+', line):
-            question = (sentence.rstrip().endswith('?')
-                        or bool(ARTIFACT_QUESTION_START.match(sentence.strip())))
+            question = artifact_is_question(sentence)
             # `://` is a URL, not a field separator.
-            parts = re.split(r'(,|:(?!//)|[ \t]+(?:—|–|--)[ \t]+|\bthen\b)', sentence)
-            clauses, separators = parts[0::2], parts[1::2] + ['']
+            parts = re.split(r'(,|:(?!//)|[ \t]+(?:—|–|--)[ \t]+|\bthen\b)', sentence, flags=re.I)
+            clauses, separators = parts[0::2], [s.lower() for s in parts[1::2]] + ['']
             for index, clause in enumerate(clauses):
                 consequent = any(re.search(r'\w', later) for later in clauses[index + 1:])
-                if consequent and ARTIFACT_CONDITIONAL_START.match(clause.strip()):
+                if consequent and ARTIFACT_CONDITIONAL_START.match(clause.strip().lower()):
                     clause = ''
-                kept.append(mask_modal_hedges(clause) + separators[index])
-                if not (hypothetical or question or ARTIFACT_MODAL_WORD.search(clause)):
-                    evidence.append(clause + separators[index])
+                kept.append(mask_modal_hedges(clause.lower()) + separators[index])
+                if not (hypothetical or question or artifact_is_question(clause)
+                        or artifact_has_modal(clause)):
+                    evidence.append(clause.lower() + separators[index])
         text = ' '.join(''.join(kept).split())
         if text:
             factual.append((text, ' '.join(''.join(evidence).split())))
@@ -418,7 +452,7 @@ if (
     and ARTIFACT_HEADING.match(first_line)
     and (ARTIFACT_TASK_REF.search(body) or re.search(r'#[0-9]+\b', first_line))
 ):
-    factual = artifact_factual_lines(lower)
+    factual = artifact_factual_lines(text)
     claims = artifact_claims([text for text, _ in factual])
     missing = artifact_missing_evidence(evidence for _, evidence in factual if evidence) if claims else []
     if missing:

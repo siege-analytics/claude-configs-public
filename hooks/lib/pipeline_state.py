@@ -45,25 +45,91 @@ APPROVED_ASSOCIATIONS = {'OWNER', 'MEMBER', 'COLLABORATOR'}
 COMMENT_QUERY = '.[] | {author: .user.login, association: .author_association, body: .body} | @json'
 
 
-def comment_text(body):
-    """Exclude fenced, inline-code, HTML-comment and HTML code/quote content (#1164)."""
-    output, fence = [], None
+# CommonMark 0.31 HTML blocks (spec 4.6). Their lines are raw HTML, never
+# Markdown, so a "heading" inside one is not a heading (#1164 F3).
+HTML_BLOCK_1 = re.compile(r' {0,3}<(?:pre|script|style|textarea)(?:[ \t>]|$)', re.I)
+HTML_BLOCK_1_END = re.compile(r'</(?:pre|script|style|textarea)>', re.I)
+HTML_BLOCK_6 = re.compile(
+    r' {0,3}</?(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|'
+    r'dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|'
+    r'iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|source|'
+    r'summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)(?:[ \t]|/?>|$)', re.I)
+HTML_BLOCK_7 = re.compile(
+    r' {0,3}(?:<(?!(?:pre|script|style|textarea)\b)[A-Za-z][A-Za-z0-9-]*'
+    r'(?:[ \t]+[A-Za-z_:][\w.:-]*(?:[ \t]*=[ \t]*(?:[^ \t"\'=<>`]+|\'[^\']*\'|"[^"]*"))?)*[ \t]*/?>'
+    r'|</[A-Za-z][A-Za-z0-9-]*[ \t]*>)[ \t]*$')
+HTML_BLOCK_OPENERS = (  # (start, end); end None means "a blank line ends it"
+    (HTML_BLOCK_1, HTML_BLOCK_1_END),
+    (re.compile(r' {0,3}<!--'), re.compile(r'-->')),
+    (re.compile(r' {0,3}<\?'), re.compile(r'\?>')),
+    (re.compile(r' {0,3}<![A-Za-z]'), re.compile(r'>')),
+    (re.compile(r' {0,3}<!\[CDATA\['), re.compile(r'\]\]>')),
+    (HTML_BLOCK_6, None),
+)
+
+
+def markdown_lines(body):
+    """Body lines outside fenced code, with CommonMark HTML-block lines neutralized (#1164 F3).
+
+    Types 1-5 end at the line holding their end marker; types 6-7 end only at
+    a blank line, not at a closing tag. Type 7 cannot interrupt a paragraph.
+    An HTML-block line is kept, indented one space: it can never be a heading,
+    and the later name-aware container filter still sees its tags.
+    """
+    output, fence, block_end, paragraph = [], None, False, False
     for line in body.splitlines():
         marker = re.match(r'^ {0,3}(`{3,}|~{3,})', line)
-        if marker:
+        if block_end is False and marker:
             token = marker.group(1)
             if fence is None:
                 fence = token
             elif (token[0] == fence[0] and len(token) >= len(fence)
                   and not line[marker.end():].strip()):
                 fence = None
+            paragraph = False
             continue
-        if fence is None:
+        if fence is not None:
+            continue
+        if block_end is not False:
+            if block_end is None and not line.strip():
+                block_end, paragraph = False, False
+                output.append(line)
+                continue
+            if block_end is not None and block_end.search(line):
+                block_end = False
+            output.append(' ' + line)
+            continue
+        for start, end in HTML_BLOCK_OPENERS + (((HTML_BLOCK_7, None),) if not paragraph else ()):
+            opened = start.match(line)
+            if opened:
+                if end is None or not end.search(line, opened.end()):
+                    block_end = end
+                paragraph = False
+                output.append(' ' + line)
+                break
+        else:
             output.append(line)
+            paragraph = bool(line.strip()) and not re.match(r' {0,3}#{1,6}(?:[ \t]|$)', line)
+    return output
+
+
+def comment_views(body):
+    """(identity text, heading text) of one comment.
+
+    Identity keeps inline-code content, so `other/repo#9` still names its
+    ticket (#1164 F2). Heading text erases inline code and HTML containers.
+    """
+    visible = '\n'.join(markdown_lines(body))
+    identity = re.sub(r'(`+)(?!`)(.+?)(?<!`)\1(?!`)', r' \2 ', visible)
+    return identity, comment_text(visible)
+
+
+def comment_text(visible):
+    """Erase inline code, HTML comments, CDATA and HTML code/quote containers (#1164)."""
     # An inline code span shows `<pre>` as text, so it goes before HTML
     # parsing. Every removed span becomes one space: a remainder can never
     # start a line with `#` and become a heading.
-    text = re.sub(r'(`+)(?!`).+?(?<!`)\1(?!`)', ' ', '\n'.join(output))
+    text = re.sub(r'(`+)(?!`).+?(?<!`)\1(?!`)', ' ', visible)
     text = re.sub(r'<!--.*?(?:-->|\Z)', ' ', text, flags=re.S)
     text = re.sub(r'<!\[CDATA\[.*?(?:\]\]>|\Z)', ' ', text, flags=re.S)
     # Closure is name-aware (#1164 R3): `</blockquote>` cannot end an open
@@ -100,6 +166,7 @@ def declarations(text):
 
     A declaration value is its inline text plus every following indented or
     list-item line (#1164 R2): YAML `ticket_refs:` lists, wrapped `Ticket:` values.
+    Blank lines do not end it (#1164 F2); the first unindented text line does.
     """
     lines = text.splitlines()
     for index, line in enumerate(lines):
@@ -109,19 +176,32 @@ def declarations(text):
             continue
         value = [line]
         for follow in lines[index + 1:]:
-            if not follow.strip() or not (follow[:1].isspace() or re.match(r'[-*+][ \t]', follow)):
+            if follow.strip() and not (follow[:1].isspace() or re.match(r'[-*+][ \t]', follow)):
                 break
             value.append(follow)
         yield '\n'.join(value)
 
 
+# A leading YAML front-matter block, delimited by `---` lines.
+FRONT_MATTER = re.compile(r'\s*---[ \t]*\n(.*?)\n[ \t]*---[ \t]*(?:\n|$)', re.S)
+
+
 def declares_other_ticket(text, repo_slug, issue_num):
-    """True when a declaration or artifact heading names tickets, none of them the current one."""
-    for value in declarations(text):
-        refs = ticket_refs(value)
-        if refs and not any(num == issue_num and repo in ('', repo_slug) for repo, num in refs):
-            return True
-    return False
+    """True when a declaration, artifact heading or front matter names tickets, none of them the current one.
+
+    Front matter is judged as one whole region, not parsed (#1164 F2): no YAML
+    parser is available in the hook runtime as installed. Any ticket reference
+    anywhere in the block counts, so blank lines, comments, flow collections
+    and folded scalars cannot hide a foreign one.
+    """
+    def names_only_others(region):
+        refs = ticket_refs(region)
+        return bool(refs) and not any(num == issue_num and repo in ('', repo_slug) for repo, num in refs)
+
+    front = FRONT_MATTER.match(text)
+    if front and names_only_others(front.group(1)):
+        return True
+    return any(names_only_others(value) for value in declarations(text))
 
 
 def artifact_heading(lowered_comments, names):
@@ -359,8 +439,8 @@ if status == 'implementing' and current_ticket:
                     if not ((actor_login and author.lower() == actor_login.lower())
                             or record.get('association') in APPROVED_ASSOCIATIONS):
                         continue
-                    text = comment_text(record['body']).lower()
-                    if not declares_other_ticket(text, ticket_repo, issue_num):
+                    identity, text = (view.lower() for view in comment_views(record['body']))
+                    if not declares_other_ticket(identity, ticket_repo, issue_num):
                         texts.append(text)
                 comments = '\n# comment boundary\n'.join(texts)
                 junior_hits = sum(1 for s in junior_stems if s in comments)

@@ -57,6 +57,11 @@ B1 = {
                                        'Did the owner approve the rollout', 2),
     'owner_evidence_split_across_lines': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
                                           'Owner:\napproved.', 2),
+    # F4: a capitalized May/Will that governs a verb stays a modal (fail closed).
+    'capitalized_may_with_verb_stays_modal': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
+                                              'The owner May have approved the rollout.', 2),
+    'capitalized_will_with_base_verb_stays_modal': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
+                                                    'The owner Will approve the rollout.', 2),
     'typographic_negated_modal_supplies_nothing': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
                                                    'The owner won\u2019t have approved the rollout.', 2),
     'modal_risk_wording_passes': (MARKER + '- Scenario: the PR could be merged before CI finishes and the hook deployed broken.\n'
@@ -127,6 +132,17 @@ B2 = {
                                                       '  - o/r#1164: comment posted\n---\n' + H)], 'task-owner', True),
     'nested_code_close_keeps_pre_open': ([comment('<pre><code>a</code>\n' + H + '\n</pre>')], 'task-owner', False),
     'unclosed_cdata': ([comment('<![CDATA[\n' + H)], 'task-owner', False),
+    # F2 (decision A): front matter is one identity region, never parsed.
+    'front_matter_inline_flow_foreign_only': ([comment('---\nticket_refs: [other/repo#1, other/repo#2]\n---\n' + H)],
+                                              'task-owner', False),
+    'front_matter_mixed_current_and_foreign_counts': ([comment('---\nticket_refs: [o/r#1164, other/repo#2]\n---\n' + H)],
+                                                      'task-owner', True),
+    'body_ticket_value_after_blank_line': ([comment('Ticket:\n\n  other/repo#99999\n' + H)], 'task-owner', False),
+    # F3: CommonMark HTML blocks. Type 6 ends only at a blank line; type 7 cannot
+    # interrupt a paragraph.
+    'type6_div_without_blank_line': ([comment('Ticket: o/r#1164\n<div>\nx\n</div>\n' + H)], 'task-owner', False),
+    'type7_tag_after_blank_line': ([comment('Ticket: o/r#1164\n\n<span>\n' + H)], 'task-owner', False),
+    'type7_tag_cannot_interrupt_paragraph': ([comment('Ticket: o/r#1164\n<span>\n' + H)], 'task-owner', True),
 }
 
 COMMENT_QUERY = '.[] | {author: .user.login, association: .author_association, body: .body} | @json'

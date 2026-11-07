@@ -29,12 +29,18 @@ B1, `hooks/bash/coordinator-status-guard.sh`. A field label no longer exempts an
   - A modal does not carry over a later `and` conjunct.
 - The word sits in a clause that opens with a subordinator (if, when, unless, until, once, ...) followed by a non-empty consequent clause in the same sentence.
 
-**Evidence (fix round 1, R1).** Eligibility is decided separately from masking. A clause supplies owner/merge/rollout evidence only if all of these hold:
+**Evidence (fix rounds 1-2, R1/F1/F4).** Eligibility is decided separately from masking, on the original-case text. A clause supplies owner/merge/rollout evidence only if all of these hold:
 
-- it is not in a question, meaning a sentence that ends with `?` or opens with did/does/do/has/have/had/is/are/was/were/am;
-- it contains no modal word anywhere;
-- it is not a hypothetical conditional clause;
-- it is not under a hypothetical field (`ARTIFACT_HYPOTHETICAL_FIELDS`, wrapped continuation included).
+- Neither the clause nor its sentence is interrogative (`artifact_is_question`). Leading quotes, emphasis and Markdown quote markers are skipped. A field label is its own clause, because clauses split at `:`. A question is:
+  - text ending in `?` followed only by non-word characters (`?"`, `?!`); or
+  - text opening with an inverted auxiliary (did/does/do/has/have/had/is/are/was/were/am followed by a word), question mark or not.
+- No modal auxiliary governs it (`artifact_has_modal`).
+  - URIs are opaque, so `/may/` and `/will/` path segments are not modals.
+  - May/Will followed by a number is a date.
+  - A capitalized May/Will after the clause opening is a name or month when followed by punctuation, clause end, `and`/`or` or a past form ("operator Will.", "owner Will approved").
+  - Every other occurrence stays modal ("owner May have approved", "owner Will approve"). Genuinely ambiguous wording therefore fails closed.
+- It is not a hypothetical conditional clause.
+- It is not under a hypothetical field (`ARTIFACT_HYPOTHETICAL_FIELDS`, wrapped continuation included).
 
 Each evidence predicate must match within a single line (`artifact_missing_evidence`). A line break therefore ends a match, so `Owner:` on one line and `approved.` on the next do not combine. The lane's entry rules, the evidence predicates themselves and the status lane are unchanged.
 
@@ -43,11 +49,20 @@ B2, `hooks/lib/pipeline_state.py`. The comment query now projects `user.login`, 
 - its author is the authenticated `gh api user` login, or GitHub attests OWNER, MEMBER or COLLABORATOR. A failed actor lookup falls back to the attested roles only. A bare string record counts as unattributed and is skipped.
 - no ticket declaration names only other tickets (fix round 1, R2). A declaration is one of:
   - an artifact heading line;
-  - a Ticket/Task/Issue/Refs/`ticket_refs` key together with its entire value: its inline text plus every following indented or list-item line. This covers YAML `ticket_refs:` lists and wrapped `Ticket:` values.
+  - a Ticket/Task/Issue/Refs/`ticket_refs` key together with its entire value: its inline text plus every following indented or list-item line, across blank lines (F2). This covers YAML `ticket_refs:` lists, folded values and wrapped `Ticket:` values.
 
   Supported reference forms are `#N`, `owner/repo#N` and GitHub issue/PR URLs. A same-number reference in another repository is a different ticket. A declaration that also names the current ticket still counts, as does a comment with no declaration.
+  - Identity is read from a view where inline code is unwrapped, not erased (`comment_views`), so `` `other/repo#9` `` still names its ticket (F2).
+  - The rule is strict for every key, `Refs` included. A separate `Refs:` list naming only foreign tickets excludes an otherwise current-ticket artifact, so `Refs` is not a free-form bibliography.
 
-`comment_text()` keeps the fence filter, then removes, in this order:
+`markdown_lines()` (F3) drops fenced code and recognizes CommonMark 0.31 HTML blocks:
+- types 1-5 (`pre`/`script`/`style`/`textarea`, comment, processing instruction, declaration, CDATA) end at the line holding their end marker;
+- type 6 (block-level tags such as `blockquote`, `div`, `details`) and type 7 (any other complete tag alone on its line) end only at a blank line;
+- type 7 cannot interrupt a paragraph.
+
+An HTML-block line is kept but indented one space. It can never be a heading, and the name-aware container filter below still sees its tags, so a mismatched type-1 end marker cannot expose a `<script>`'s content.
+
+`comment_text()` then removes, in this order:
 
 1. inline code spans;
 2. HTML comments;
@@ -59,12 +74,12 @@ Container closure is name-aware (R3). A closing tag ends its own open element an
 ## Test plan
 
 - `hooks/_test/gate_bypass_1164.py` (run by `gate_bypass_1164.test.sh`):
-  - B1: all 10 main-review payloads plus 19 extra shapes against the real guard. Refusals must name "asserts completion status".
-  - B2: all 13 main-review fixtures plus 21 extra shapes.
+  - B1: all 10 main-review payloads plus 21 extra shapes against the real guard. Refusals must name "asserts completion status".
+  - B2: all 13 main-review fixtures plus 27 extra shapes.
     - Each runs the real writer, then the unchanged universal-mutation-gate on both an existing and a missing hook target.
     - The writer reads from a fake `gh` that applies the writer's actual query to raw API records with real `jq`.
     - Refused cases need all four signals false with `api_reachable` true and gate exit 2. Counted cases need all four true and exit 0.
-  - Review corpus (fix round 1): 46 B1 and 27 B2 exact cases from the 371c4fe review, loaded from `gate_bypass_1164_review_cases.json`.
+  - Review corpus, loaded from `gate_bypass_1164_review_cases.json`: 46 B1 and 27 B2 exact cases from the 371c4fe review (fix round 1), plus 17 B1 and 19 B2 exact cases from the 530beaa review (fix round 2, file prefix `r2/`).
 - Five accepted fixtures relied on the label exemption: three in `hooks/_test/coordinator_status_guard.test.sh` and two in `hooks/_test/artifact_result_followup.py`. They are reworded to modal form with the same intent, and their old wording is added as refusal cases. No refusal expectation is relaxed; `test_hypothetical_text_cannot_supply_actual_completion_evidence` still refuses.
 - `hooks/_test/pipeline_review_headings_1164.test.sh`: the fake `gh` now emits attributed records (MEMBER). All its expectations are unchanged.
 
@@ -145,6 +160,34 @@ All 46 B1 and 27 B2 cases of the reviewer's corpus are ported byte-for-byte as `
 - The R1/R2/R3 cases now refuse. `real_headings_after_pre_control` (four real headings after a closed `pre`) still counts.
 - `evidence_split_owner` and `evidence_split_role` (approval wrapped across lines) went from 0 at both develop and 371c4fe to 2. This is a deliberate consequence of per-line evidence, which the review listed as inherited and non-blocking.
 
+## Fix round 2 (review of 530beaa: REJECT)
+
+Findings: https://github.com/siege-analytics/claude-configs-public/pull/1212#issuecomment-6700795795
+
+- **F1:** quoted, field-prefixed, unmarked and `?!` questions supplied owner evidence. Fixed by `artifact_is_question` on each sentence and clause, after leading wrappers are skipped.
+- **F4:** "May 5", "operator Will", "owner Will approved" and `/may/`/`/will/` URL segments wrongly removed real signoff (an over-refusal introduced in round 1). Fixed by `artifact_has_modal` on original-case text, with URIs opaque.
+- **F3:** a `<blockquote>` closed without a following blank line exposed later headings. Fixed by CommonMark HTML-block recognition in `markdown_lines`.
+- **F2 (hub decision A, whole-region identity):**
+  - YAML front matter is not parsed. If the block contains any ticket reference anywhere, at least one must be the current ticket, or the comment is excluded. Blank lines, YAML comments, flow collections and folded scalars therefore cannot hide a foreign reference.
+  - Body `Ticket:`/`Refs:` values continue across blank lines while indented or list-item lines follow.
+  - Identity is read from a view where inline code is unwrapped, before code spans are erased for heading detection.
+  - Documented costs:
+    1. front matter naming the current ticket together with foreign ones still counts, consistent with the per-declaration rule;
+    2. front matter or a `Refs:` list naming only foreign tickets is excluded, even when it is meant as a bibliography (strict identity policy).
+  - The hub's decision text says both "reference ONLY the current ticket" and "mixed current+foreign still counts". These conflict, and the conflict came from my option A wording. This head implements the latter, matching the stated cost and the body rule. Flipping to only-current is a one-line change.
+- **Note for whoever owns hook-runtime dependencies:** no YAML parser is available to hooks as installed on this host.
+  - The Craft router (`hooks/lib/craft-settings-router.py`) runs hooks as `python3 -I -B` with `#!/usr/bin/env python3` shebangs, so they get the first `python3` on the app PATH.
+  - Here that is `/Library/Developer/CommandLineTools/usr/bin/python3` 3.9.6, which cannot import PyYAML.
+  - `bin/install.sh` requires PyYAML only for the build. `hooks/git/decomposition-guard.sh` imports `yaml` and silently skips when it is missing, which is acceptable for an advisory warning but would be fail-open in a security gate.
+  - A parser-based approach needs PyYAML declared and verified as a hook-runtime dependency first.
+- **B1 direction:** lexical owner-signoff checking may be replaced by a structural check verified through the GitHub API, as Deep Think advises. That would be a separate PR after a Root/Dheeraj design decision; further lexical B1 hardening is held.
+- **Corrections:**
+  - the PR body's extra-B1 count;
+  - split owner/role evidence described as newly refused;
+  - foreign wrapped `Refs` documented under the strict identity rule.
+
+The 17 B1 and 19 B2 round-2 reviewer cases are ported byte-for-byte into the corpus. The writer is also exercised under the 3.9.6 hook-runtime interpreter.
+
 ## Findings
 
-Hostile re-review of the fix-round-1 head is PENDING with the original cross-family reviewer.
+Hostile re-review of the fix-round-2 head is PENDING with the original cross-family reviewer.
