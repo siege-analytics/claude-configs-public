@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import importlib.util,json,subprocess,sys,tempfile
+import importlib.util,json,subprocess,sys,tempfile,time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]; SCRIPT=ROOT/"bin/resolve-load-set.py"
 SPEC=importlib.util.spec_from_file_location("resolver",SCRIPT); assert SPEC and SPEC.loader
 M=importlib.util.module_from_spec(SPEC);sys.modules[SPEC.name]=M;SPEC.loader.exec_module(M)
+CHILD_TIMEOUT=60
+# Every child process gets a finite timeout, so a resolver that never returns fails this test instead of stalling it.
+def run_bounded(argv,timeout=CHILD_TIMEOUT):return subprocess.run(argv,text=True,capture_output=True,timeout=timeout)
 def inv():
  def i(s,k="skill"):return {"slug":s,"kind":k,"characters":100,"estimated_tokens":25}
  slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","close-ticket","ci-billing-failure-merge","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","pipeline-jobs","analysis","scala-on-spark","postgis","geopandas","sedona","duckdb-spatial","django","django-rest-framework","react","typescript","vue","rust","stalled-session-recovery","ask-questions","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
@@ -103,7 +106,13 @@ def main():
  assert spoofed["project"] is None and not any(x["slug"].startswith("siege-utilities--") for x in spoofed["selected"])
  with tempfile.TemporaryDirectory() as raw:
   malformed=Path(raw)/"manifest.json";malformed.write_text('{"routes":null}')
-  proc=subprocess.run([sys.executable,str(SCRIPT),"--manifest",str(malformed)],text=True,capture_output=True)
+  proc=run_bounded([sys.executable,str(SCRIPT),"--manifest",str(malformed)])
   assert proc.returncode==1 and json.loads(proc.stdout)["state"]=="error" and not proc.stderr
+ # The bound is real: a child that never returns is killed at the timeout rather than stalling the suite.
+ started=time.monotonic();timed_out=False
+ try:run_bounded([sys.executable,"-c","import time;time.sleep(10)"],timeout=1)
+ except subprocess.TimeoutExpired as exc:timed_out=exc.timeout==1
+ assert timed_out,"non-returning child was not bounded"
+ assert time.monotonic()-started<5,"bounded child took too long to stop"
  print("resolve_load_set_test: PASS")
 if __name__=="__main__":main()
