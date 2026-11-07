@@ -23,7 +23,9 @@ class ArtifactResults(unittest.TestCase):
             return result
 
     def test_wrapped_hypothetical_field_is_not_project_completion(self):
-        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  The deployment is complete without a verified owner.\n\nMitigation: retain the actual review.\n', 0)
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  The deployment could be complete without a verified owner.\n\nMitigation: retain the actual review.\n', 0)
+        # A field label exempts nothing (#1164 B1): indicative wording is a claim.
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  The deployment is complete without a verified owner.\n\nMitigation: retain the actual review.\n', 2)
 
     def test_unindented_sentence_does_not_borrow_hypothetical_field(self):
         self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: tests may fail.\nDeployment complete.\n', 2)
@@ -64,7 +66,8 @@ class ArtifactResults(unittest.TestCase):
         self.hook('Review completed.\n', 2)
 
     def test_existing_hypothetical_fields_still_work(self):
-        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: deployment complete with stale data.\nMitigation: if checks complete, compare actual state.\n', 0)
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: deployment could be complete with stale data.\nMitigation: if checks complete, compare actual state.\n', 0)
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: deployment complete with stale data.\nMitigation: if checks complete, compare actual state.\n', 2)
 
 
 class EmptyTrailers(unittest.TestCase):

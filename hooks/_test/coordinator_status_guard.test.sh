@@ -286,8 +286,18 @@ expect_pass \
   "$(payload "gh issue comment 1164 --body '## Junior task description
 Ticket: #1164
 Current behavior: the lane is blocked and the gate rejects the post.
-**Success criteria** — done when the gate accepts the post; tests green.
+**Success criteria** — the gate accepts the post; tests must be green.
 5. What could go wrong: missing fixtures leave the blocker unresolved.'")"
+
+# A field label exempts nothing (#1164 B1): indicative completion wording under
+# Success criteria, Scenario or Trigger condition needs evidence like any line.
+expect_block_because \
+  "label exemption removed: indicative success criteria needs evidence" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Junior task description
+Ticket: #1164
+**Success criteria** — done when the gate accepts the post; tests green.'")" \
+  "asserts completion status"
 
 expect_pass \
   "AC3: marked senior adversarial checklist passes" \
@@ -320,8 +330,16 @@ expect_pass \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Pre-Mortem
 Ticket: #1164
-- Scenario: the PR is merged before CI finishes and the hook is deployed broken.
+- Scenario: the PR could be merged before CI finishes and the hook deployed broken.
 - Mitigation: if CI is red the gate will hold.'")"
+
+expect_block_because \
+  "label exemption removed: indicative scenario needs evidence" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+Ticket: #1164
+- Scenario: the PR is merged before CI finishes and the hook is deployed broken.'")" \
+  "asserts completion status"
 
 expect_block_because \
   "AC2: unmarked finish claim without evidence still blocks" \
@@ -455,7 +473,15 @@ expect_pass \
   "$(payload "gh issue comment 1164 --body '## Pre-Mortem
 Ticket: #1164
 - If the PR is merged early, the gate will hold.
-- Trigger condition: CI green on a stale head.'")"
+- Trigger condition: CI could be green on a stale head.'")"
+
+expect_block_because \
+  "label exemption removed: verbless trigger condition needs evidence" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+Ticket: #1164
+- Trigger condition: CI green on a stale head.'")" \
+  "asserts completion status"
 
 expect_pass \
   "plural Design Notes heading is recognized" \

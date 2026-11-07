@@ -1,0 +1,1439 @@
+{
+ "source": "review-1212-371c4fe (cross-family hostile review of PR #1212 at 371c4fe)",
+ "B1": [
+  {
+   "file": "evidence-B1.json",
+   "name": "conditional_approval_supplies_evidence",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nIf the owner approved, investigate.",
+   "develop_exit": 2,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "evidence-B1.json",
+   "name": "modal_question_supplies_evidence",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nCould the owner have approved the rollout?",
+   "develop_exit": 2,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "R1"
+  },
+  {
+   "file": "evidence-B1.json",
+   "name": "conditional_approval_modal_consequent",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nIf the owner approved, the gate might be ready.",
+   "develop_exit": 2,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "evidence-B1.json",
+   "name": "conditional_approval_only",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nIf the owner approved the rollout, stop.",
+   "develop_exit": 2,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "evidence-B1.json",
+   "name": "split_conditional_approval",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nOwner:\nIf approved, investigate.",
+   "develop_exit": 2,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "evidence-B1.json",
+   "name": "actual_approval_control",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nThe owner approved the rollout.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "evidence-B1.json",
+   "name": "no_approval_control",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\n",
+   "develop_exit": 2,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "evidence-B1.json",
+   "name": "false_hypothesis_field_control",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nScenario: If the owner approved, investigate.",
+   "develop_exit": 2,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "evidence-B1.json",
+   "name": "parenthetical_factual_status",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: If anyone asks (we have merged and released the fix), investigate.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "modal-evidence-family-B1.json",
+   "name": "modal_approval_0",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nWould the owner have approved the rollout?",
+   "develop_exit": 2,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "R1"
+  },
+  {
+   "file": "modal-evidence-family-B1.json",
+   "name": "modal_approval_1",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nMight the owner have approved the rollout?",
+   "develop_exit": 2,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "R1"
+  },
+  {
+   "file": "modal-evidence-family-B1.json",
+   "name": "modal_approval_2",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nShould the owner have approved the rollout?",
+   "develop_exit": 2,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "R1"
+  },
+  {
+   "file": "modal-evidence-family-B1.json",
+   "name": "modal_approval_3",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nApproval question: Could the owner have approved the rollout?",
+   "develop_exit": 2,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "R1"
+  },
+  {
+   "file": "modal-evidence-family-B1.json",
+   "name": "modal_approval_4",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nCould the owner have signed off on the rollout?",
+   "develop_exit": 2,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "R1"
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "modal_because",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: The gate may be green because we merged and released the fix.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "modal_after_past",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: The gate might be green after we merged and released the fix.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "modal_now_that",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: We may be ready now that the fix is merged.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "modal_although",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: The gate could be green although production is ready.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "modal_but",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: The gate could be green but production is ready.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "modal_conjunct",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: The gate could be green and production is ready.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "modal_nested_report",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: We might report that the fix is merged and released.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "modal_then_factual",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: We could be green; the fix is merged and released.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "conditional_nested_parenthetical",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: If anyone asks (the fix is merged and released), investigate.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "conditional_parenthetical_assertion",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: If asked, (the fix is merged and released), we could investigate.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "conditional_then_consequent",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: If asked then the gate is ready and the fix is merged.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "conditional_nested_if",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: If asked whether the gate is green, say that the fix is merged and released.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "conditional_because_fact",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: If asked because the fix is merged and released, investigate.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "conditional_nested_comma",
+   "body": "## Pre-Mortem\nTicket: #1164\nMitigation: If asked, report that if the gate is green, production is ready.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "evidence_split_owner",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: the gate is complete; the fix is merged and released.\nOwner:\napproved.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "per-line-evidence"
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "evidence_split_role",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: the gate is complete; the fix is merged and released.\nThe owner\napproved this.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "per-line-evidence"
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "evidence_hypothesis",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: the gate is complete; the fix is merged and released.\nScenario: owner approved deployment on main.",
+   "develop_exit": 2,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "url_evidence_control",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: the gate is complete.\nOwner approved: https://example.invalid/approval\nMerge evidence: https://example.invalid/pull/9\nRollout: N/A",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "url_query_sentence",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: the gate is complete; the fix is merged and released.\nEvidence: https://example.invalid/?owner=approved&state=merged&rollout=released",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "genuine_nested_hypothesis",
+   "body": "## Pre-Mortem\nTicket: #1164\nScenario: If the gate is green and the fix is merged, we should investigate the blocker.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "genuine_modal_auxiliary",
+   "body": "## Pre-Mortem\nTicket: #1164\nScenario: The gate could have been green before the blocker appeared.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "genuine_indicative_risk",
+   "body": "## Pre-Mortem\nTicket: #1164\nRisk: A false positive reports the gate is green even though no owner approved the rollout.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "genuine_indicative_scenario",
+   "body": "## Pre-Mortem\nTicket: #1164\nScenario: The gate reports ready while validation is incomplete.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "extra-B1.json",
+   "name": "genuine_review_result",
+   "body": "## Pre-Mortem\nTicket: #1164\nReview complete. No blocking findings.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "literal-B1.json",
+   "name": "curly_modal_literal_control",
+   "body": "## Pre-Mortem\nTicket: #1164\nScenario: The gate won\u2019t be green.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "literal-B1.json",
+   "name": "emdash_field_evidence_excluded",
+   "body": "## Pre-Mortem\nTicket: #1164\nSuccess criteria \u2014 The owner approved; merged on main and released.\nStatus: complete.",
+   "develop_exit": 2,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "literal-B1.json",
+   "name": "endash_conditional_control",
+   "body": "## Pre-Mortem\nTicket: #1164\nIf the gate is green \u2013 investigate.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "old-wording-B1.json",
+   "name": "old_junior_success_criteria",
+   "body": "## Junior task description\nTicket: #1164\nCurrent behavior: the lane is blocked and the gate rejects the post.\n**Success criteria** \u2014 done when the gate accepts the post; tests green.\n5. What could go wrong: missing fixtures leave the blocker unresolved.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "old-wording-B1.json",
+   "name": "old_indicative_risk_scenario",
+   "body": "## Pre-Mortem\nTicket: #1164\n- Scenario: the PR is merged before CI finishes and the hook is deployed broken.\n- Mitigation: if CI is red the gate will hold.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "old-wording-B1.json",
+   "name": "old_wrapped_scenario",
+   "body": "## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  The deployment is complete without a verified owner.\n\nMitigation: retain the actual review.\n",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "old-wording-B1.json",
+   "name": "old_verbless_scenario",
+   "body": "## Pre-Mortem\nTicket: o/r#1164\nScenario: deployment complete with stale data.\nMitigation: if checks complete, compare actual state.\n",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "old-wording-B1.json",
+   "name": "old_verbless_trigger",
+   "body": "## Pre-Mortem\nTicket: #1164\n- If the PR is merged early, the gate will hold.\n- Trigger condition: CI green on a stale head.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "r2/question-edge-B1.json",
+   "name": "plain-question-control",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nHas the owner approved the rollout?",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "r2/question-edge-B1.json",
+   "name": "quoted-question",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\n\"Has the owner approved the rollout?\"",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "F1"
+  },
+  {
+   "file": "r2/question-edge-B1.json",
+   "name": "field-quoted-question",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nApproval question: \"Has the owner approved the rollout?\"",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "F1"
+  },
+  {
+   "file": "r2/question-edge-B1.json",
+   "name": "field-inverted-question-no-mark",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nApproval question: Has the owner approved the rollout",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "F1"
+  },
+  {
+   "file": "r2/question-edge-B1.json",
+   "name": "field-question-emphasis",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nApproval question: Has the owner approved the rollout?!",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "F1"
+  },
+  {
+   "file": "r2/question-edge-B1.json",
+   "name": "actual-signoff-control",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nThe owner approved the rollout.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "r2/question-edge-B1.json",
+   "name": "actual-quoted-signoff-control",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\n\"The owner approved the rollout.\"",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "r2/question-edge-B1.json",
+   "name": "actual-signoff-date-may",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nThe owner approved the rollout on May 5.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 0,
+   "finding": "F4"
+  },
+  {
+   "file": "r2/question-edge-B1.json",
+   "name": "actual-signoff-person-will",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nThe owner Will approved the rollout.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 0,
+   "finding": "F4"
+  },
+  {
+   "file": "r2/compatibility-B1.json",
+   "name": "june-date-control",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nThe owner approved the rollout on June 5.",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "r2/compatibility-B1.json",
+   "name": "may-date-signoff",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nThe owner approved the rollout on May 5.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 0,
+   "finding": "F4"
+  },
+  {
+   "file": "r2/compatibility-B1.json",
+   "name": "link-june-control",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nOwner approval thread: https://github.com/june/r/issues/1#issuecomment-1",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 0,
+   "finding": ""
+  },
+  {
+   "file": "r2/compatibility-B1.json",
+   "name": "link-may-signoff",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nOwner approval thread: https://github.com/may/r/issues/1#issuecomment-1",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 0,
+   "finding": "F4"
+  },
+  {
+   "file": "r2/compatibility-B1.json",
+   "name": "link-will-signoff",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nOwner approval thread: https://github.com/will/r/issues/1#issuecomment-1",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 0,
+   "finding": "F4"
+  },
+  {
+   "file": "r2/compatibility-B1.json",
+   "name": "operator-will-signoff",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nApproved by operator Will.",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 0,
+   "finding": "F4"
+  },
+  {
+   "file": "r2/compatibility-B1.json",
+   "name": "quoted-modal-question-control",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\nApproval question: \"Could the owner have approved the rollout?\"",
+   "develop_exit": 0,
+   "candidate_exit": 2,
+   "expected_exit": 2,
+   "finding": ""
+  },
+  {
+   "file": "r2/compatibility-B1.json",
+   "name": "markdown-quoted-question",
+   "body": "## Pre-Mortem\nTicket: #1164\nStatus: The gate is complete; the fix is merged and released.\n> \"Has the owner approved the rollout?\"",
+   "develop_exit": 0,
+   "candidate_exit": 0,
+   "expected_exit": 2,
+   "finding": "F1"
+  }
+ ],
+ "B2": [
+  {
+   "file": "native-annotation-B2.json",
+   "name": "native_annotated_yaml_ticket_refs",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "---\nticket_refs:\n  - other/repo#99999: comment posted\n---\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "R2"
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "body_role_spoof",
+   "records": [
+    {
+     "body": "Author: task-owner\nRole: OWNER\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "outsider"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "unattributed_record",
+   "records": [
+    {
+     "body": "## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "empty_actor_missing_author",
+   "records": [
+    {
+     "body": "## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {},
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": true,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "attested_OWNER",
+   "records": [
+    {
+     "body": "## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "approved-reviewer"
+     },
+     "author_association": "OWNER"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": true,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "attested_MEMBER",
+   "records": [
+    {
+     "body": "## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "approved-reviewer"
+     },
+     "author_association": "MEMBER"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": true,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "attested_COLLABORATOR",
+   "records": [
+    {
+     "body": "## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "approved-reviewer"
+     },
+     "author_association": "COLLABORATOR"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": true,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "unattributed_attested_owner",
+   "records": [
+    {
+     "body": "## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "author_association": "OWNER"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": true,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "yaml_ticket_refs",
+   "records": [
+    {
+     "body": "---\nticket_refs:\n  - other/repo#99999\n---\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "R2"
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "yaml_ticket_list_same_number",
+   "records": [
+    {
+     "body": "---\nticket_refs:\n  - other/repo#1164\n---\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "R2"
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "yaml_ticket_list_url",
+   "records": [
+    {
+     "body": "---\nticket_refs:\n  - https://github.com/other/repo/issues/99999\n---\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "R2"
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "yaml_ticket_wrapped",
+   "records": [
+    {
+     "body": "Ticket:\n  other/repo#99999\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "R2"
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "heading_wrong_ticket",
+   "records": [
+    {
+     "body": "## Junior task description other/repo#99999\nx\n## Senior adversarial checklist other/repo#99999\nx\n## Investigation other/repo#99999\nx\n## Pre-Mortem other/repo#99999\nx",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "unclosed_html_comment",
+   "records": [
+    {
+     "body": "Example only:\n<!--\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "unclosed_pre",
+   "records": [
+    {
+     "body": "Example only:\n<pre>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "nested_unclosed_code",
+   "records": [
+    {
+     "body": "Example only:\n<pre><code>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n</pre>",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "selfclosing_pre",
+   "records": [
+    {
+     "body": "Example only:\n<pre/>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n</pre>",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "nested_mixed_tags",
+   "records": [
+    {
+     "body": "Example only:\n<blockquote><pre><code>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n</code></pre></blockquote>",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "quoted_gt_attribute",
+   "records": [
+    {
+     "body": "Example only:\n<pre title=\">\">\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n</pre>",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "entity_inside_container",
+   "records": [
+    {
+     "body": "Example only:\n<pre>&lt;code&gt;\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n&lt;/code&gt;</pre>",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "entity_tag_mention_control",
+   "records": [
+    {
+     "body": "Literal tag name: &lt;pre&gt;\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "cdata_example",
+   "records": [
+    {
+     "body": "Example only:\n<![CDATA[\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n]]>",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "R3"
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "html_textarea_unclosed",
+   "records": [
+    {
+     "body": "Example only:\n<textarea>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "extra-B2.json",
+   "name": "html_comment_closed",
+   "records": [
+    {
+     "body": "Example only:\n<!--\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n-->",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "formal-edge-B2.json",
+   "name": "mismatched_blockquote_closes_pre",
+   "records": [
+    {
+     "body": "Example only:\n<pre>\n</blockquote>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n</pre>",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "R3"
+  },
+  {
+   "file": "formal-edge-B2.json",
+   "name": "mismatched_code_closes_pre",
+   "records": [
+    {
+     "body": "Example only:\n<pre>\n</code>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n</pre>",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "R3"
+  },
+  {
+   "file": "formal-edge-B2.json",
+   "name": "real_headings_after_pre_control",
+   "records": [
+    {
+     "body": "Example only:\n<pre>\nx\n</pre>\n\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx",
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "nested-all-closed-example",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "<pre><blockquote><code>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n</code></blockquote></pre>"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "parent-close-real-after-control",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "<pre><code>x\n</pre>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "unmatched-close-inside-pre",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "<pre></q><code>x</code>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n</pre>"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "script-mismatched-close",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "<script></pre>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n</script>"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "script-own-close-real-after-control",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "<script><pre>x</script>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "cdata-unclosed-example",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "<![CDATA[\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "cdata-two-examples",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "<![CDATA[\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n]] >\n<![CDATA[\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n]]>"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "cdata-closed-real-after-control",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "<![CDATA[example]]>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "inline-cdata-mention-control",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "`<![CDATA[` is a literal example.\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "blockquote-closed-no-blank",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "Example only:\n<blockquote>\nx\n</blockquote>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "F3"
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "blockquote-closed-blank-control",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "Example only:\n<blockquote>\nx\n</blockquote>\n\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "r2/html-edge-B2.json",
+   "name": "plaintext-false-close",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "Example only:\n<plaintext>\n</plaintext>\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "r2/declaration-edge-B2.json",
+   "name": "yaml-blank-before-list",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "---\nticket_refs:\n\n  - other/repo#99999: comment posted\n---\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "F2"
+  },
+  {
+   "file": "r2/declaration-edge-B2.json",
+   "name": "yaml-blank-after-comment",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "---\nticket_refs:\n  # task association\n\n  - other/repo#99999: comment posted\n---\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "F2"
+  },
+  {
+   "file": "r2/declaration-edge-B2.json",
+   "name": "yaml-flow-unindented",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "---\nticket_refs: [\nother/repo#99999\n]\n---\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "F2"
+  },
+  {
+   "file": "r2/declaration-edge-B2.json",
+   "name": "yaml-current-blank-control",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "---\nticket_refs:\n\n  - o/r#1164: comment posted\n---\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": true,
+   "finding": ""
+  },
+  {
+   "file": "r2/declaration-edge-B2.json",
+   "name": "current-with-related-refs",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "Ticket: o/r#1164\nRefs:\n  - other/repo#99999\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": false,
+   "expected_counted": false,
+   "finding": ""
+  },
+  {
+   "file": "r2/declaration-extra-B2.json",
+   "name": "inline-coded-foreign-declaration",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "Ticket: `other/repo#99999`\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "F2"
+  },
+  {
+   "file": "r2/declaration-extra-B2.json",
+   "name": "folded-leading-blank-foreign-declaration",
+   "records": [
+    {
+     "user": {
+      "login": "task-owner"
+     },
+     "author_association": "NONE",
+     "body": "---\nticket_refs: >\n\n  other/repo#99999\n---\n## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx\n"
+    }
+   ],
+   "actor": "task-owner",
+   "actor_failure": false,
+   "develop_counted": true,
+   "candidate_counted": true,
+   "expected_counted": false,
+   "finding": "F2"
+  }
+ ]
+}

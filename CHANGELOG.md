@@ -4,6 +4,31 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: gate artifact laundering and spoofed artifact signals (#1164)
+
+- coordinator-status-guard: in a think-pipeline artifact post, completion wording needs the same evidence on every line.
+  - A field label (Mitigation, Scenario, Success criteria, ...), YAML front matter or a wrapped line no longer exempts it.
+  - A completion word is treated as hypothetical in two cases only:
+    - A modal directly precedes it, optionally with adverbs and linking verbs ("CI could be green", "should not be merged", "to be done"). Without a linking verb, only `go` and `complete` are hedged; a bare `to` ("set to done") hedges nothing.
+    - It sits in a conditional clause (if, when, unless, until, once, ...) followed by a non-empty consequent in the same sentence ("if CI is green, deploy"). An unsplit conditional opener no longer hides the assertion after it.
+  - Evidence is a separate test from claim masking. These never supply owner/merge/rollout evidence:
+    - an interrogative clause, whatever wraps it: surrounding quotes, a Markdown quote marker, a field label ("Approval question: ..."), a missing question mark or a `?!` tail;
+    - a clause governed by a modal auxiliary ("Could the owner have approved the rollout?");
+    - text under a hypothetical field.
+  - Modal detection reads the original case and treats URIs as opaque. A date ("May 5"), a name after the clause opening ("operator Will", "owner Will approved") or a URL path segment (`/may/`, `/will/`) is not a modal. A capitalized May/Will that governs a verb ("May have approved") still is, so ambiguous wording fails closed.
+  - Each evidence predicate must match within one line.
+  - **Behavior change:** #1164's original "no wording workarounds needed" outcome no longer holds. Risks or criteria stated in the indicative ("Scenario: the PR is merged before CI finishes") now need modal or conditional wording, or real evidence. Owner or role approval split across two lines ("Owner:" then "approved.") is newly refused; it was accepted before.
+- The pipeline-state writer counts a posted comment toward `junior-senior-gate.json` and `artifacts-posted-gate.json` only when:
+  - its author is the authenticated `gh` login, or has the GitHub-attested OWNER, MEMBER or COLLABORATOR role;
+  - no ticket declaration names only other tickets. A declaration is a Ticket/Task/Issue/Refs/`ticket_refs` key, or an artifact heading, with its entire value.
+    - The value includes indented and list-item continuation lines, across blank lines, so YAML `ticket_refs:` lists, folded values and wrapped `Ticket:` values count.
+    - YAML front matter is judged as one region, not parsed: if it references any ticket, it must include the current one. Blank lines, comments, flow collections and folded scalars cannot hide a foreign reference.
+    - A reference written as inline code (`` `other/repo#9` ``) still names its ticket.
+    - The identity rule is strict and applies to `Refs` too: a separate `Refs:` list naming only other tickets excludes an otherwise current-ticket artifact, so `Refs` is not a free-form bibliography.
+  - HTML comments, CDATA, inline code, and HTML `pre`, `code`, `blockquote` and similar container content no longer supply headings or keywords. Container closure is name-aware: a mismatched closing tag cannot end an open container.
+  - Lines inside a CommonMark HTML block (types 1-7) are raw HTML, never headings. A type-6 block such as `<blockquote>` or `<div>` runs to the next blank line, not to its closing tag. A type-7 tag cannot interrupt a paragraph.
+  - The unchanged Tier C mutation gate therefore refuses the tested wrong-ticket, outsider and HTML-quoted shapes. The filters are bounded parsers, not a full Markdown/HTML renderer.
+
 ### Fixed: task scopes and evidence execution
 
 - Add a GitHub issue to an approved project through the exact current task and a source-owned standing policy, without inventing a filesystem target. Other issues, projects, destructive operations and arbitrary API writes remain guarded (#1161).
