@@ -15,18 +15,21 @@ All notable changes to this project are documented here. Versioning follows [Sem
     - an interrogative clause, whatever wraps it: surrounding quotes, a Markdown quote marker, a field label ("Approval question: ..."), a missing question mark or a `?!` tail;
     - a clause governed by a modal auxiliary ("Could the owner have approved the rollout?");
     - text under a hypothetical field.
-  - Modal detection reads the original case and treats URIs as opaque. A date ("May 5"), a name after the clause opening ("operator Will", "owner Will approved") or a URL path segment (`/may/`, `/will/`) is not a modal. A capitalized May/Will that governs a verb ("May have approved") still is, so ambiguous wording fails closed.
+  - Modal detection reads the original case and treats URIs as opaque. A date ("May 5"), a name that does not open a sentence ("operator Will", "Owner: Will approved", "The owner Will has approved") or a URL path segment (`/may/`, `/will/`) is not a modal. A capitalized May/Will that governs a base verb ("May have approved", "Owner: Will approve") still is, so ambiguous wording fails closed.
+  - A finite auxiliary plus participle in a field value ("Owner: has approved the rollout", "had approved", "has signed off") is a statement, not an inverted question, and supplies evidence. An auxiliary followed by its subject ("Has the owner approved the rollout") is still a question.
   - Each evidence predicate must match within one line.
   - **Behavior change:** #1164's original "no wording workarounds needed" outcome no longer holds. Risks or criteria stated in the indicative ("Scenario: the PR is merged before CI finishes") now need modal or conditional wording, or real evidence. Owner or role approval split across two lines ("Owner:" then "approved.") is newly refused; it was accepted before.
 - The pipeline-state writer counts a posted comment toward `junior-senior-gate.json` and `artifacts-posted-gate.json` only when:
   - its author is the authenticated `gh` login, or has the GitHub-attested OWNER, MEMBER or COLLABORATOR role;
   - no ticket declaration names only other tickets. A declaration is a Ticket/Task/Issue/Refs/`ticket_refs` key, or an artifact heading, with its entire value.
     - The value includes indented and list-item continuation lines, across blank lines, so YAML `ticket_refs:` lists, folded values and wrapped `Ticket:` values count.
-    - YAML front matter is judged as one region, not parsed: if it references any ticket, it must include the current one. Blank lines, comments, flow collections and folded scalars cannot hide a foreign reference.
+    - YAML front matter is judged as one region of the raw comment, not parsed: every ticket reference in it must be the current ticket. Front matter naming the current ticket together with any other ticket is excluded, and blank lines, comments, flow collections, folded scalars or an unrecognized key cannot hide a foreign reference. Front matter naming only other tickets, even as a bibliography, is excluded too.
     - A reference written as inline code (`` `other/repo#9` ``) still names its ticket.
     - The identity rule is strict and applies to `Refs` too: a separate `Refs:` list naming only other tickets excludes an otherwise current-ticket artifact, so `Refs` is not a free-form bibliography.
-  - HTML comments, CDATA, inline code, and HTML `pre`, `code`, `blockquote` and similar container content no longer supply headings or keywords. Container closure is name-aware: a mismatched closing tag cannot end an open container.
-  - Lines inside a CommonMark HTML block (types 1-7) are raw HTML, never headings. A type-6 block such as `<blockquote>` or `<div>` runs to the next blank line, not to its closing tag. A type-7 tag cannot interrupt a paragraph.
+  - One CommonMark block classifier decides which text is eligible, and headings, keyword stems and body ticket identity all read only that text:
+    - Lines inside a CommonMark HTML block (types 1-7, including processing instructions, declarations and `<div>` or `<span>` examples) are raw HTML. They supply no heading, no keyword and no ticket declaration, so a foreign `Ticket:` inside an HTML comment or `<pre>` example no longer excludes a real current-ticket artifact after it.
+    - A type-6 block such as `<blockquote>` or `<div>` runs to the next blank line, not to its closing tag. A type-7 tag cannot interrupt a paragraph, but can start after a blank line, heading or thematic break.
+    - HTML comments, CDATA, inline code, and HTML `pre`, `code`, `blockquote` and similar container content no longer supply headings or keywords. Container closure is name-aware: a mismatched closing tag cannot end an open container. Fenced code is unchanged.
   - The unchanged Tier C mutation gate therefore refuses the tested wrong-ticket, outsider and HTML-quoted shapes. The filters are bounded parsers, not a full Markdown/HTML renderer.
 
 ### Fixed: task scopes and evidence execution

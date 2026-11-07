@@ -334,8 +334,18 @@ ARTIFACT_MODAL_WORD = re.compile(
     r"(?:can|couldn|wouldn|shouldn|won|mustn|shan)['\u2019]t)\b"
 )
 ARTIFACT_MODAL_TOKEN = re.compile(ARTIFACT_MODAL_WORD.pattern, re.I)
-# A clause opening with an inverted auxiliary asks rather than states.
+# A clause opening with an inverted auxiliary asks rather than states: the
+# auxiliary is followed by its subject ("Has the owner approved"). A finite
+# auxiliary followed by a lowercase participle is an elliptical field value
+# ("Owner: has approved the rollout"), not an inversion (#1164 N5). A bare
+# "have" is non-finite: it follows a modal ("could, in principle, have
+# approved"), so it stays ineligible.
 ARTIFACT_QUESTION_START = re.compile(r'(?:did|does|do|has|have|had|is|are|was|were|am)[ \t]+[a-z]', re.I)
+ARTIFACT_DECLARATIVE_AUX = re.compile(
+    r'(?i:has|had|is|are|was|were|am)'
+    r'(?:[ \t]+(?:not|never|now|also|just|already|since|finally|then|(?-i:[a-z]+ly)))*'
+    r'[ \t]+(?-i:[a-z]+ed|been|done|gone|given|taken|seen|written|made|got|gotten|put|set|run|begun|held|kept|left|built|sent|spent)\b'
+)
 # Language classification treats a URI as one opaque token (#1164 F4).
 ARTIFACT_URI = re.compile(r'(?:https?://|www\.)\S+', re.I)
 
@@ -343,16 +353,19 @@ ARTIFACT_URI = re.compile(r'(?:https?://|www\.)\S+', re.I)
 def artifact_is_question(text):
     """A question whatever wraps it: quotes, emphasis, a field label or a ?! tail (#1164 F1)."""
     core = re.sub(r'^[\W_]+', '', text.strip())
-    return bool(re.search(r'\?[\W_]*$', core) or ARTIFACT_QUESTION_START.match(core))
+    return bool(re.search(r'\?[\W_]*$', core)
+                or (ARTIFACT_QUESTION_START.match(core) and not ARTIFACT_DECLARATIVE_AUX.match(core)))
 
 
-def artifact_has_modal(clause):
-    """True when a modal auxiliary governs the clause (#1164 R1, F4).
+def artifact_has_modal(clause, field_value=False):
+    """True when a modal auxiliary governs the clause (#1164 R1, F4, N5).
 
     A URI is opaque. May/Will before a number is a date. A capitalized May/Will
-    after the clause opening is a name or month unless a verb follows it: past
-    forms ("Will approved") and punctuation or clause end mark the name. Any
-    other position stays modal, so ambiguous wording fails closed.
+    that does not open a sentence is a name or month unless a verb in base form
+    follows it: past forms ("Will approved"), a finite has/had/is/was/did/does
+    ("Will has approved"), and punctuation or clause end mark the name. A field
+    value ("Owner: Will approved") does not open a sentence. Any other position
+    stays modal, so ambiguous wording ("Will have approved") fails closed.
     """
     text = ARTIFACT_URI.sub(' ', clause)
     for match in ARTIFACT_MODAL_TOKEN.finditer(text):
@@ -360,9 +373,9 @@ def artifact_has_modal(clause):
         if word.lower() in ('may', 'will'):
             if re.match(r'[ \t]+\d', after):
                 continue
-            opening = not re.search(r'[A-Za-z0-9]', text[:match.start()])
+            opening = not field_value and not re.search(r'[A-Za-z0-9]', text[:match.start()])
             if word[0].isupper() and not opening and re.match(
-                    r'[ \t]*(?:$|[^\w \t]|(?:and|or|\w+(?<!e)ed)\b)', after):
+                    r'[ \t]*(?:$|[^\w \t]|(?:and|or|has|had|is|was|did|does|\w+(?<!e)ed)\b)', after):
                 continue
         return True
     return False
@@ -417,8 +430,9 @@ def artifact_factual_lines(original):
                 if consequent and ARTIFACT_CONDITIONAL_START.match(clause.strip().lower()):
                     clause = ''
                 kept.append(mask_modal_hedges(clause.lower()) + separators[index])
+                field_value = index > 0 and separators[index - 1] == ':'
                 if not (hypothetical or question or artifact_is_question(clause)
-                        or artifact_has_modal(clause)):
+                        or artifact_has_modal(clause, field_value)):
                     evidence.append(clause.lower() + separators[index])
         text = ' '.join(''.join(kept).split())
         if text:

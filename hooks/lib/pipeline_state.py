@@ -57,7 +57,7 @@ HTML_BLOCK_6 = re.compile(
 HTML_BLOCK_7 = re.compile(
     r' {0,3}(?:<(?!(?:pre|script|style|textarea)\b)[A-Za-z][A-Za-z0-9-]*'
     r'(?:[ \t]+[A-Za-z_:][\w.:-]*(?:[ \t]*=[ \t]*(?:[^ \t"\'=<>`]+|\'[^\']*\'|"[^"]*"))?)*[ \t]*/?>'
-    r'|</[A-Za-z][A-Za-z0-9-]*[ \t]*>)[ \t]*$')
+    r'|</(?!(?:pre|script|style|textarea)\b)[A-Za-z][A-Za-z0-9-]*[ \t]*>)[ \t]*$', re.I)
 HTML_BLOCK_OPENERS = (  # (start, end); end None means "a blank line ends it"
     (HTML_BLOCK_1, HTML_BLOCK_1_END),
     (re.compile(r' {0,3}<!--'), re.compile(r'-->')),
@@ -68,18 +68,34 @@ HTML_BLOCK_OPENERS = (  # (start, end); end None means "a blank line ends it"
 )
 
 
-def markdown_lines(body):
-    """Body lines outside fenced code, with CommonMark HTML-block lines neutralized (#1164 F3).
+THEMATIC_BREAK = re.compile(r' {0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$')
+ATX_HEADING = re.compile(r' {0,3}#{1,6}(?:[ \t]|$)')
 
-    Types 1-5 end at the line holding their end marker; types 6-7 end only at
-    a blank line, not at a closing tag. Type 7 cannot interrupt a paragraph.
-    An HTML-block line is kept, indented one space: it can never be a heading,
-    and the later name-aware container filter still sees its tags.
+
+def container_tags(text):
+    """Only the code/quote container tags of raw HTML, so name-aware closure still sees them."""
+    tags = ' '.join(tag.group(0) for tag in HTML_CONTAINER.finditer(text))
+    return ' ' + tags if tags else ''
+
+
+def block_kinds(body):
+    """(kind, eligible text) for each body line, kind 'text', 'fence' or 'html' (#1164 F3, N3, N4).
+
+    The one CommonMark 0.31 block classifier every consumer shares. Types 1-5
+    end at the line holding their end marker; types 6-7 end only at a blank
+    line, not at a closing tag. Type 7 cannot interrupt a paragraph; a blank
+    line, ATX heading, thematic break, setext underline or indented code line
+    leaves no paragraph open, so type 7 can start after one.
+
+    An HTML-block line contributes no text. An element block (types 1, 6, 7)
+    keeps its container tags, indented, so `<script></pre>` still hides what
+    follows until `</script>`; a comment, processing instruction, declaration
+    or CDATA block (types 2-5) keeps only tags after its end marker.
     """
-    output, fence, block_end, paragraph = [], None, False, False
+    kinds, fence, block, paragraph = [], None, None, False
     for line in body.splitlines():
         marker = re.match(r'^ {0,3}(`{3,}|~{3,})', line)
-        if block_end is False and marker:
+        if block is None and marker:
             token = marker.group(1)
             if fence is None:
                 fence = token
@@ -87,49 +103,87 @@ def markdown_lines(body):
                   and not line[marker.end():].strip()):
                 fence = None
             paragraph = False
+            kinds.append(('fence', ''))
             continue
         if fence is not None:
+            kinds.append(('fence', ''))
             continue
-        if block_end is not False:
-            if block_end is None and not line.strip():
-                block_end, paragraph = False, False
-                output.append(line)
+        if block is not None:
+            number, end = block
+            if end is None and not line.strip():
+                block, paragraph = None, False
+                kinds.append(('text', line))
                 continue
-            if block_end is not None and block_end.search(line):
-                block_end = False
-            output.append(' ' + line)
+            closed = end.search(line) if end is not None else None
+            if closed:
+                block = None
+            if number in (1, 6, 7):
+                kinds.append(('html', container_tags(line)))
+            else:
+                kinds.append(('html', container_tags(line[closed.end():]) if closed else ''))
             continue
-        for start, end in HTML_BLOCK_OPENERS + (((HTML_BLOCK_7, None),) if not paragraph else ()):
+        openers = HTML_BLOCK_OPENERS + (((HTML_BLOCK_7, None),) if not paragraph else ())
+        for number, (start, end) in enumerate(openers, 1):
             opened = start.match(line)
             if opened:
-                if end is None or not end.search(line, opened.end()):
-                    block_end = end
+                closed = end.search(line, opened.end()) if end is not None else None
+                if not closed:
+                    block = (number, end)
+                if number in (1, 6, 7):
+                    kinds.append(('html', container_tags(line)))
+                else:
+                    kinds.append(('html', container_tags(line[closed.end():]) if closed else ''))
                 paragraph = False
-                output.append(' ' + line)
                 break
         else:
-            output.append(line)
-            paragraph = bool(line.strip()) and not re.match(r' {0,3}#{1,6}(?:[ \t]|$)', line)
-    return output
+            kinds.append(('text', line))
+            if (not line.strip() or ATX_HEADING.match(line) or THEMATIC_BREAK.match(line)
+                    or (paragraph and re.match(r' {0,3}=+[ \t]*$', line))):
+                paragraph = False
+            elif not paragraph and re.match(r' {4}| {0,3}\t', line):
+                paragraph = False  # an indented code line
+            else:
+                paragraph = True
+    return kinds
+
+
+def markdown_lines(body):
+    """Eligible body lines: fenced code dropped, HTML-block text removed (#1164 F3, N3).
+
+    Raw HTML-block content (processing instructions, declarations, <div>
+    examples) is never Markdown text: it reaches neither heading detection nor
+    keyword-stem matching nor ticket identity.
+    """
+    return [text for kind, text in block_kinds(body) if kind != 'fence']
 
 
 def comment_views(body):
-    """(identity text, heading text) of one comment.
+    """(identity text, heading text) of one comment, both from the same eligible text.
 
     Identity keeps inline-code content, so `other/repo#9` still names its
-    ticket (#1164 F2). Heading text erases inline code and HTML containers.
+    ticket (#1164 F2). Neither view sees HTML-block, HTML-comment, CDATA or
+    code/quote-container content (#1164 N4).
     """
     visible = '\n'.join(markdown_lines(body))
-    identity = re.sub(r'(`+)(?!`)(.+?)(?<!`)\1(?!`)', r' \2 ', visible)
-    return identity, comment_text(visible)
+    return comment_text(visible, keep_code=True), comment_text(visible)
 
 
-def comment_text(visible):
-    """Erase inline code, HTML comments, CDATA and HTML code/quote containers (#1164)."""
-    # An inline code span shows `<pre>` as text, so it goes before HTML
-    # parsing. Every removed span becomes one space: a remainder can never
+def comment_text(visible, keep_code=False):
+    """Erase inline code, HTML comments, CDATA and HTML code/quote containers (#1164).
+
+    keep_code restores each inline code span's content once the HTML filters
+    have run, so a code span can name a ticket but never open or close a tag.
+    """
+    # An inline code span shows `<pre>` as text, so it is set aside before HTML
+    # parsing. Every erased span becomes one space: a remainder can never
     # start a line with `#` and become a heading.
-    text = re.sub(r'(`+)(?!`).+?(?<!`)\1(?!`)', ' ', visible)
+    spans = []
+
+    def stash(match):
+        spans.append(match.group(2))
+        return '\x00%d\x00' % (len(spans) - 1)
+
+    text = re.sub(r'(`+)(?!`)(.+?)(?<!`)\1(?!`)', stash, visible.replace('\x00', ''))
     text = re.sub(r'<!--.*?(?:-->|\Z)', ' ', text, flags=re.S)
     text = re.sub(r'<!\[CDATA\[.*?(?:\]\]>|\Z)', ' ', text, flags=re.S)
     # Closure is name-aware (#1164 R3): `</blockquote>` cannot end an open
@@ -152,7 +206,7 @@ def comment_text(visible):
                 position = tag.end()
     # An unclosed container hides the rest of the comment.
     kept.append(text[position:] if not stack else ' ')
-    return ''.join(kept)
+    return re.sub(r'\x00([0-9]+)\x00', lambda m: ' %s ' % spans[int(m.group(1))] if keep_code else ' ', ''.join(kept))
 
 
 def ticket_refs(text):
@@ -186,22 +240,26 @@ def declarations(text):
 FRONT_MATTER = re.compile(r'\s*---[ \t]*\n(.*?)\n[ \t]*---[ \t]*(?:\n|$)', re.S)
 
 
-def declares_other_ticket(text, repo_slug, issue_num):
-    """True when a declaration, artifact heading or front matter names tickets, none of them the current one.
+def declares_other_ticket(identity, body, repo_slug, issue_num):
+    """True when front matter names any other ticket, or a body declaration names only other tickets.
 
-    Front matter is judged as one whole region, not parsed (#1164 F2): no YAML
-    parser is available in the hook runtime as installed. Any ticket reference
-    anywhere in the block counts, so blank lines, comments, flow collections
-    and folded scalars cannot hide a foreign one.
+    Front matter is judged on the raw body as one whole region, not parsed
+    (#1164 F2, N1): no YAML parser is available in the hook runtime as
+    installed. Every ticket reference anywhere in the block must be the current
+    ticket, so a current reference cannot neutralize a foreign one, and blank
+    lines, comments, flow collections and folded scalars cannot hide one.
+    Body declarations and artifact headings come from the eligible identity
+    text and are excluded only when they name tickets, none of them current.
     """
-    def names_only_others(region):
-        refs = ticket_refs(region)
-        return bool(refs) and not any(num == issue_num and repo in ('', repo_slug) for repo, num in refs)
+    def current(ref):
+        repo, num = ref
+        return num == issue_num and repo in ('', repo_slug)
 
-    front = FRONT_MATTER.match(text)
-    if front and names_only_others(front.group(1)):
+    front = FRONT_MATTER.match(body)
+    if front and not all(current(ref) for ref in ticket_refs(front.group(1))):
         return True
-    return any(names_only_others(value) for value in declarations(text))
+    return any(refs and not any(current(ref) for ref in refs)
+               for refs in (ticket_refs(value) for value in declarations(identity)))
 
 
 def artifact_heading(lowered_comments, names):
@@ -440,7 +498,7 @@ if status == 'implementing' and current_ticket:
                             or record.get('association') in APPROVED_ASSOCIATIONS):
                         continue
                     identity, text = (view.lower() for view in comment_views(record['body']))
-                    if not declares_other_ticket(identity, ticket_repo, issue_num):
+                    if not declares_other_ticket(identity, record['body'].lower(), ticket_repo, issue_num):
                         texts.append(text)
                 comments = '\n# comment boundary\n'.join(texts)
                 junior_hits = sum(1 for s in junior_stems if s in comments)

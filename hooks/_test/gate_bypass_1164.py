@@ -70,6 +70,14 @@ B1 = {
                                      '- Trigger condition: CI could be green on a stale head.', 0),
     'could_go_wrong_passes': (MARKER + '5. What could go wrong: the guard could refuse the post.', 0),
     'to_be_green_passes': (MARKER + 'Steps: tests need to be green before the PR is opened.', 0),
+    # N5: an auxiliary plus participle is a declarative field value, not an
+    # inversion; a name after a field label is not a sentence-opening modal.
+    'owner_has_since_approved_passes': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
+                                        'Owner: has since approved the rollout.', 0),
+    'question_field_inversion_still_refused': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
+                                               'Question: has the owner approved the rollout', 2),
+    'field_will_with_base_verb_stays_modal': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
+                                              'Owner: Will approve the rollout.', 2),
 }
 
 H = '## Junior task description\nx\n## Senior adversarial checklist\nx\n## Investigation\nx\n## Pre-Mortem\nx'
@@ -128,21 +136,35 @@ B2 = {
     'own_actor_counts_without_role': ([comment(H, 'task-owner', 'NONE')], 'task-owner', True),
     'current_ticket_among_others_counts': ([comment('Ticket: o/r#1164, other/repo#99999\n' + H)], 'task-owner', True),
     # R2/R3 context controls.
-    'yaml_ticket_refs_with_current_counts': ([comment('---\nticket_refs:\n  - other/repo#99999: comment posted\n'
-                                                      '  - o/r#1164: comment posted\n---\n' + H)], 'task-owner', True),
+    'yaml_ticket_refs_mixed_excluded': ([comment('---\nticket_refs:\n  - other/repo#99999: comment posted\n'
+                                                 '  - o/r#1164: comment posted\n---\n' + H)], 'task-owner', False),
     'nested_code_close_keeps_pre_open': ([comment('<pre><code>a</code>\n' + H + '\n</pre>')], 'task-owner', False),
     'unclosed_cdata': ([comment('<![CDATA[\n' + H)], 'task-owner', False),
-    # F2 (decision A): front matter is one identity region, never parsed.
+    # F2/N1 (decision A): front matter is one identity region, never parsed;
+    # every reference in it must be the current ticket.
     'front_matter_inline_flow_foreign_only': ([comment('---\nticket_refs: [other/repo#1, other/repo#2]\n---\n' + H)],
                                               'task-owner', False),
-    'front_matter_mixed_current_and_foreign_counts': ([comment('---\nticket_refs: [o/r#1164, other/repo#2]\n---\n' + H)],
-                                                      'task-owner', True),
+    'front_matter_mixed_current_and_foreign_excluded': ([comment('---\nticket_refs: [o/r#1164, other/repo#2]\n---\n' + H)],
+                                                        'task-owner', False),
+    'front_matter_current_only_counts': ([comment('---\nticket: o/r#1164\nrelated: "#1164"\n---\n' + H)], 'task-owner', True),
+    'front_matter_without_refs_counts': ([comment('---\ntitle: notes\n---\n' + H)], 'task-owner', True),
     'body_ticket_value_after_blank_line': ([comment('Ticket:\n\n  other/repo#99999\n' + H)], 'task-owner', False),
     # F3: CommonMark HTML blocks. Type 6 ends only at a blank line; type 7 cannot
     # interrupt a paragraph.
     'type6_div_without_blank_line': ([comment('Ticket: o/r#1164\n<div>\nx\n</div>\n' + H)], 'task-owner', False),
     'type7_tag_after_blank_line': ([comment('Ticket: o/r#1164\n\n<span>\n' + H)], 'task-owner', False),
     'type7_tag_cannot_interrupt_paragraph': ([comment('Ticket: o/r#1164\n<span>\n' + H)], 'task-owner', True),
+    # N3/N4: one block classifier for headings, keyword stems and identity.
+    'type7_after_star_break': ([comment('Ticket: o/r#1164\n\n***\n<span>\n' + H)], 'task-owner', False),
+    'type7_after_setext_heading': ([comment('Ticket: o/r#1164\n\nIntro\n=====\n<span>\n' + H)], 'task-owner', False),
+    'processing_instruction_stems': ([comment('Ticket: o/r#1164\n<?x\n' + STEMS + '\n?>')], 'task-owner', False),
+    'type6_block_stems': ([comment('Ticket: o/r#1164\n<div>\n' + STEMS + '\n</div>')], 'task-owner', False),
+    'foreign_ticket_in_cdata_example': ([comment('Ticket: o/r#1164\n<![CDATA[\nTicket: other/repo#9\n]]>\n' + H)],
+                                        'task-owner', True),
+    'foreign_ticket_in_type6_example': ([comment('Ticket: o/r#1164\n<div>\nTicket: other/repo#9\n</div>\n\n' + H)],
+                                        'task-owner', True),
+    'inline_code_tag_cannot_hide_foreign_ticket': ([comment('See `<pre>` here.\nTicket: other/repo#9\n' + H)],
+                                                   'task-owner', False),
 }
 
 COMMENT_QUERY = '.[] | {author: .user.login, association: .author_association, body: .body} | @json'
@@ -188,9 +210,11 @@ class GuardArtifactLane(unittest.TestCase):
                     self.assertIn('asserts completion status', result.stderr)
 
     def test_review_corpus_b1(self):
-        """Every B1 payload of the 371c4fe review, byte-for-byte; R1 cases now refuse."""
+        """Every reviewer B1 payload, byte-for-byte. Held N2 rows are recorded, never asserted."""
         for case in REVIEW_CASES['B1']:
             with self.subTest(case['file'] + ':' + case['name']):
+                if case.get('held'):
+                    self.skipTest(case['held'])
                 result = guard(case['body'])
                 self.assertEqual(result.returncode, case['expected_exit'], result.stderr)
 
