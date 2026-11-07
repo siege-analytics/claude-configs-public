@@ -29,7 +29,7 @@ PLAIN = {
 # Verbs whose options can write or run programs: their arguments must reach the
 # per-tool check exactly as bash will see them, so no unquoted expansion.
 GUARDED = {"sed", "find", "sort", "uniq", "jq", "yq", "date", "rg", "git", "gh", "kubectl", "docker",
-           "timeout", "nice", "time", "base64"}
+           "timeout", "nice", "time", "base64", "command"}
 SHELL_WORDS = {"do", "done", "then", "else", "fi", "!", "{", "}", "while", "until", "if", "elif"}
 GIT_READ = {"log", "show", "diff", "status", "rev-parse", "rev-list", "ls-files", "ls-remote",
             "ls-tree", "describe", "blame", "grep", "cat-file", "for-each-ref", "merge-base",
@@ -297,6 +297,10 @@ def simple_ok(words):
         if not rest or rest[0].startswith("-"):
             return False
         return simple_ok(rest)
+    if w == "command":
+        # Lookup only: do not unwrap a command executor or broaden option grammar.
+        return (len(args) >= 2 and args[0] in {"-v", "-V"}
+                and all(name and not name.startswith("-") for name in args[1:]))
     if w in PLAIN:
         return True
     if w == "base64":
@@ -331,6 +335,8 @@ def simple_ok(words):
     if w == "ss":
         return not ss_kills(args)
     if w == "docker":
+        if args == ["buildx", "version"]:
+            return True
         if len(args) >= 2 and args[0] in DOCKER_MGMT_READ:
             return args[1] in DOCKER_MGMT_READ[args[0]]
         return bool(args) and args[0] in DOCKER_READ
