@@ -7,6 +7,7 @@ import os
 import re
 from pathlib import Path
 import shutil
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -1332,6 +1333,195 @@ class ResolverRecovery(unittest.TestCase):
             gate.write_text('{"status":"implementing"}')
             with patch('builtins.open', side_effect=PermissionError('unreadable gate')):
                 self.assertIsNone(r._load(str(gate)))
+
+
+class GraphQLReview(unittest.TestCase):
+    def setUp(self):
+        self.g = Gates(methodName='runTest')
+        self.g.setUp()
+        self.addCleanup(self.g.tearDown)
+        self.proof = self.g.ws / 'thread-proof.json'
+        self.node = {'id': 'PRRT_fixture', '__typename': 'PullRequestReviewThread',
+                     'viewerCanResolve': True, 'isResolved': False,
+                     'pullRequest': {'number': 99, 'body': '', 'headRefOid': 'a' * 40,
+                                     'repository': {'nameWithOwner': 'siege-analytics/synthetic'},
+                                     'closingIssuesReferences': {'nodes': [{'number': 1210, 'repository': {'nameWithOwner': 'siege-analytics/synthetic'}}]}}}
+        self.save_proof()
+        binaries = self.g.ws / 'bin'; binaries.mkdir()
+        gh = binaries / 'gh'
+        gh.write_text('#!' + sys.executable + '\nimport pathlib,sys\nsys.stdout.write(pathlib.Path(' + repr(str(self.proof)) + ').read_text())\n')
+        gh.chmod(0o755)
+        self.g.env['PATH'] = str(binaries) + os.pathsep + self.g.env.get('PATH', '')
+        self.query = 'query Threads($owner:String!,$name:String!,$pr:Int!){repository(owner:$owner,name:$name){pullRequest(number:$pr){reviewThreads(first:30){nodes{id isResolved comments(first:1){nodes{body}}}}}}}'
+        self.resolve = 'mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{id isResolved}}}'
+
+    def save_proof(self):
+        self.proof.write_text(json.dumps({'id': 77, 'pull_request_url': 'https://api.github.com/repos/' + self.node['pullRequest']['repository']['nameWithOwner'] + '/pulls/' + str(self.node['pullRequest']['number']),
+                                         'data': {'node': self.node, 'repository': {'pullRequest': self.node['pullRequest']}}}))
+
+    def command(self, document, fields=''):
+        return 'gh api graphql -f ' + shlex.quote('query=' + document) + fields
+
+    def gate(self, status='implementing', role=None):
+        path = self.g.task('siege-analytics/synthetic#1210', self.g.repo, status=status) / 'think-gate.json'
+        data = json.loads(path.read_text())
+        if role:
+            data.update(role=role, authorized_by='Existing assigned PR comment/review scope; AGENTS direct posting rule')
+            path.write_text(json.dumps(data))
+        return path
+
+    def test_structural_queries_are_reads_with_literal_variables_and_data(self):
+        commands = [self.command(self.query, ' -f owner=siege-analytics -f name=synthetic -F pr=99 --jq .data'),
+                    self.command('query {repository(owner:"mutation",name:"enqueuePullRequest"){name}} # mutation {bad}'),
+                    self.command('{viewer{login}}')]
+        for command in commands:
+            result = self.g.hook(command)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_existing_author_and_comment_only_review_grants_resolve_bound_thread(self):
+        for status, role in [('implementing', None), ('reviewing', 'comment-only'), ('verifying', 'comment-only')]:
+            self.gate(status, role)
+            result = self.g.hook(self.command(self.resolve, ' -f id=PRRT_fixture'))
+            self.assertEqual(result.returncode, 0, (status, result.stderr))
+
+    def test_resolution_never_borrows_planned_read_only_or_foreign_task(self):
+        for status, role in [('designing', None), ('reviewing', None), ('reviewing', 'review-only'), ('implementing', 'read-only'), ('implementing', 'reviewer')]:
+            self.gate(status, role)
+            result = self.g.hook(self.command(self.resolve, ' -f id=PRRT_fixture'))
+            self.assertEqual(result.returncode, 2, (status, role, result.stderr))
+        self.gate()
+        self.node['pullRequest']['repository']['nameWithOwner'] = 'other/foreign'
+        self.node['pullRequest']['closingIssuesReferences']['nodes'][0]['repository']['nameWithOwner'] = 'other/foreign'
+        self.save_proof()
+        self.assertEqual(self.g.hook(self.command(self.resolve, ' -f id=PRRT_fixture')).returncode, 2)
+        self.node['pullRequest']['repository']['nameWithOwner'] = 'siege-analytics/synthetic'
+        self.node['pullRequest']['closingIssuesReferences']['nodes'][0]['repository']['nameWithOwner'] = 'siege-analytics/synthetic'
+        self.node['id'] = 'PRRT_other'; self.save_proof()
+        self.assertEqual(self.g.hook(self.command(self.resolve, ' -f id=PRRT_fixture')).returncode, 2)
+
+    def test_review_reply_has_same_remote_binding_and_body_is_data(self):
+        self.gate('reviewing', 'comment-only')
+        command = 'gh api repos/siege-analytics/synthetic/pulls/99/comments/77/replies -X POST -f ' + shlex.quote('body=Verified fix; git commit and gh pr merge are prose, not commands')
+        self.assertEqual(self.g.hook(command).returncode, 0)
+        for suffix in (' -f state=closed', ' -f body=duplicate', ' --input unknown.json'):
+            self.assertEqual(self.g.hook(command + suffix).returncode, 2)
+        self.assertEqual(self.g.hook(command.replace('/comments/77/', '/comments/78/')).returncode, 2)
+        self.assertEqual(self.g.hook(command.replace('/pulls/99/', '/pulls/100/')).returncode, 2)
+
+    def test_ambiguity_wrong_grant_and_failed_remote_proof_fail_closed(self):
+        first = self.gate()
+        self.g.task('siege-analytics/synthetic#99', self.g.repo)
+        command = self.command(self.resolve, ' -f id=PRRT_fixture')
+        self.assertEqual(self.g.hook(command).returncode, 2)
+        self.assertEqual(self.g.hook('CCP_TASK_ID=siege-analytics/synthetic#1210 ' + command).returncode, 0)
+        second = self.g.ws / 'sessions/one/tasks' / r.task_slug('siege-analytics/synthetic#99')
+        shutil.rmtree(second)
+        data = json.loads(first.read_text()); data['task_id'] = 'siege-analytics/synthetic#1211'; first.write_text(json.dumps(data))
+        self.assertEqual(self.g.hook(command).returncode, 2)
+        data.pop('task_id'); first.write_text(json.dumps(data))
+        self.node['viewerCanResolve'] = False; self.save_proof()
+        self.assertEqual(self.g.hook(command).returncode, 2)
+        self.node['viewerCanResolve'] = True
+        for invalid_body in (False, 0, [], {}):
+            self.node['pullRequest']['body'] = invalid_body; self.save_proof()
+            self.assertEqual(self.g.hook(command).returncode, 2)
+        self.node['pullRequest']['body'] = ''
+        self.node['pullRequest']['closingIssuesReferences']['nodes'] = ['malformed']; self.save_proof()
+        self.assertEqual(self.g.hook(command).returncode, 2)
+        self.proof.write_text('{bad JSON')
+        self.assertEqual(self.g.hook(command).returncode, 2)
+
+    def test_standard_implicit_reply_post_jq_and_repository_case_preserve_scope(self):
+        self.gate('reviewing', 'comment-only')
+        body = self.g.ws / 'reply.md'; body.write_text('Specific reviewed fix; completion words are data')
+        command = 'gh api repos/Siege-Analytics/SYNTHETIC/pulls/99/comments/77/replies -F ' + shlex.quote('body=@' + str(body)) + ' --jq .html_url'
+        self.assertEqual(self.g.hook(command).returncode, 0)
+        for suffix in (' --jq .id', ' -q .id', ' -X GET', ' -f body=duplicate', ' -f state=closed',
+                       '; touch ' + shlex.quote(str(self.g.ws / 'outside-scope'))):
+            self.assertEqual(self.g.hook(command + suffix).returncode, 2, suffix)
+        self.assertFalse((self.g.ws / 'outside-scope').exists())
+        self.assertEqual(self.g.hook(command + ' --hostname other.example').returncode, 2)
+        proof = json.loads(self.proof.read_text())
+        for url in ('https://other.example/repos/siege-analytics/synthetic/pulls/99',
+                    'https://api.github.com/REPOS/siege-analytics/synthetic/pulls/99',
+                    'https://API.GITHUB.COM/repos/siege-analytics/synthetic/pulls/99',
+                    'https://api.github.com/repos/siege-analytics/synthetic/pulls/100',
+                    'https://api.github.com/repos/siege-analytics/synthetic/pulls/99?override=1'):
+            proof['pull_request_url'] = url; self.proof.write_text(json.dumps(proof))
+            self.assertEqual(self.g.hook(command).returncode, 2, url)
+
+    def test_existing_refs_lists_bind_the_assigned_ticket_without_magic_closing_words(self):
+        self.gate()
+        self.node['pullRequest']['closingIssuesReferences']['nodes'] = []
+        self.node['pullRequest']['body'] = 'Refs: #1210, #1211'
+        self.save_proof()
+        self.assertEqual(self.g.hook(self.command(self.resolve, ' -f id=PRRT_fixture')).returncode, 0)
+
+    def test_central_ticket_body_and_live_cross_repository_links_are_scoped(self):
+        self.g.task('electinfo/enterprise#3304', self.g.repo)
+        pr = self.node['pullRequest']; pr['repository']['nameWithOwner'] = 'electinfo/spark-on-kubernetes'
+        pr['number'] = 95; pr['closingIssuesReferences']['nodes'] = []
+        command = self.command(self.resolve, ' -f id=PRRT_fixture')
+        for body in ('Refs electinfo/enterprise#3304', 'References: electinfo/enterprise#3304, electinfo/enterprise#3305',
+                     'Refs https://github.com/electinfo/enterprise/issues/3304'):
+            pr['body'] = body; self.save_proof()
+            self.assertEqual(self.g.hook(command).returncode, 0, body)
+        for body in ('Refs #3304', 'Context electinfo/enterprise#3304', '> Refs electinfo/enterprise#3304',
+                     '```text\nRefs electinfo/enterprise#3304\n```', 'Not Refs electinfo/enterprise#3304',
+                     '## Example\nRefs electinfo/enterprise#3304', 'Refs electinfo/enterprise#3304, unrelated prose',
+                     'Refs electinfo/other#3304'):
+            pr['body'] = body; self.save_proof()
+            self.assertEqual(self.g.hook(command).returncode, 2, body)
+        pr['body'] = ''; pr['closingIssuesReferences']['nodes'] = [{'number': 3304, 'repository': {'nameWithOwner': 'electinfo/enterprise'}}]
+        self.save_proof(); self.assertEqual(self.g.hook(command).returncode, 0)
+        pr['closingIssuesReferences']['nodes'][0]['repository']['nameWithOwner'] = 'electinfo/other'
+        self.save_proof(); self.assertEqual(self.g.hook(command).returncode, 2)
+
+    def test_existing_text_metadata_cannot_donate_review_authority(self):
+        metadata = 'gh pr edit 99 --body verified'
+        review = [self.command(self.resolve, ' -f id=PRRT_fixture'),
+                  'gh api repos/siege-analytics/synthetic/pulls/99/comments/77/replies -X POST -f body=verified']
+        for command in review:
+            for mixed in (metadata + '; ' + command, command + '; ' + metadata):
+                self.assertEqual(self.g.hook(mixed).returncode, 2, mixed)
+        self.gate()
+        for command in review:
+            self.assertEqual(self.g.hook(metadata + '; ' + command).returncode, 0)
+
+    def test_remote_environment_session_and_file_inputs_are_not_authority(self):
+        self.gate()
+        command = self.command(self.resolve, ' -f id=PRRT_fixture')
+        for override in ({'GH_HOST': 'other.example'}, {'GH_REPO': 'other/repo'},
+                         {'CRAFT_SESSION_DIR': str(self.g.ws / 'sessions/foreign')}):
+            result = self.g.hook(command, env={**self.g.env, **override})
+            self.assertEqual(result.returncode, 2, result.stderr)
+        reply = 'gh api repos/siege-analytics/synthetic/pulls/99/comments/77/replies -X POST -F '
+        body = self.g.ws / 'reply.md'; body.write_text('Complete: actual fix evidence, not workflow status')
+        self.assertEqual(self.g.hook(reply + shlex.quote('body=@' + str(body))).returncode, 0)
+        body.unlink()
+        self.assertEqual(self.g.hook(reply + shlex.quote('body=@' + str(body))).returncode, 2)
+        body.symlink_to(self.proof)
+        # A readable regular referent is input data, not a grant or executable.
+        self.assertEqual(self.g.hook(reply + shlex.quote('body=@' + str(body))).returncode, 0)
+        self.proof.write_text(' ' * 70000)
+        self.assertEqual(self.g.hook(command).returncode, 2)
+
+    def test_ambiguous_transport_extra_operations_and_mixed_writes_stay_denied(self):
+        self.gate()
+        bad = [self.command('query{viewer{login}} mutation{deleteIssue(input:{issueId:"X"}){clientMutationId}}'),
+               self.command('query{viewer{login}}', ' -f query=query{viewer{login}}'),
+               self.command(self.resolve, ' -f id=PRRT_fixture --input unknown.json'),
+               self.command(self.resolve, ' -f id=PRRT_fixture -X DELETE'),
+               self.command('mutation{resolveReviewThread(input:{threadId:"PRRT_fixture"}){thread{id}} deleteIssue(input:{issueId:"X"}){clientMutationId}}'),
+               self.command('query{viewer{login}'),
+               self.command('query($id:ID!="X"){node(id:$id){id}}'),
+               self.command('query{viewer{...Fragment}} fragment Fragment on User{login}'),
+               self.command(self.resolve, ' -f id=PRRT_fixture') + '; ' + self.command(self.resolve, ' -f id=PRRT_fixture'),
+               self.command(self.resolve, ' -f id=PRRT_fixture') + '; gh project item-add 1 --owner electinfo --url https://github.com/electinfo/enterprise/issues/3300',
+               self.command('query{viewer{login}}') + '; touch ' + shlex.quote(str(self.g.ws / 'outside-scope'))]
+        for command in bad:
+            self.assertEqual(self.g.hook(command).returncode, 2, command)
+        self.assertFalse((self.g.ws / 'outside-scope').exists())
 
 
 if __name__ == '__main__':
