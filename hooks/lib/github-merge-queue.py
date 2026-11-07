@@ -13,11 +13,20 @@ from task_actions import shell_tokens
 
 SHA = r'[0-9a-fA-F]{40}'
 ID = r'[A-Za-z0-9_-]+'
+REPO = r'[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*'
+# Policy: the only destination branches whose queue enqueue needs no task gate.
+# Any other base (for example a release `main`) keeps the ordinary task path.
+QUEUE_EXEMPT_BASES = ('develop',)
+NODE_QUERY = 'query($id:ID!){node(id:$id){... on PullRequest{id number baseRefName headRefOid repository{nameWithOwner}}}}'
 
 
-def require(value, message):
+class ProofUnavailable(ValueError):
+    """The bounded read could not run or answer; this is not a mismatch."""
+
+
+def require(value, message, error=ValueError):
     if not value:
-        raise ValueError('pinned merge queue: ' + message)
+        raise error('pinned merge queue: ' + message)
 
 
 def merge_flags(args, check_pins):
@@ -85,6 +94,9 @@ def parse(command):
             return None  # Branch/URL/default selectors are not the canonical queue form.
     require(not any(operator or globs for _, operator, globs in tokens), 'standalone command required')
     require('\x00' not in command and '\n' not in command and '\r' not in command, 'single line required')
+    # Shell double quotes keep a backslash before ordinary characters but shell_tokens drops it,
+    # and GraphQL decodes \uXXXX: the validated bytes must be the delivered bytes.
+    require('\\' not in command, 'backslash escapes unsupported')
     if args[:3] == ['gh', 'pr', 'merge']:
         if len(args) < 7:
             return None
@@ -108,7 +120,7 @@ def parse(command):
         if fields.get('--merge') is not True:
             return None
         repo = fields.get('--repo', '')
-        if repo and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*', repo):
+        if repo and not re.fullmatch(REPO, repo):
             return None
         return {'form': 'cli', 'number': int(args[3]), 'head': fields['--match-head-commit'].lower(), 'repo': repo}
     require(args[:3] == ['gh', 'api', 'graphql'], 'literal GraphQL endpoint required')
@@ -149,10 +161,22 @@ def parse(command):
 
 
 def verify(target, cwd):
-    """Two fixed read-only lookups, one shared three-second execution budget."""
-    require((os.environ.get('GH_HOST') or 'github.com') == 'github.com', 'ambient GitHub host override unsupported')
-    if target['form'] == 'graphql':
-        return dict(target, repository=None, number=None, base=None)
+    """Fixed read-only lookups under one shared three-second execution budget.
+
+    None grants no queue exemption and leaves the ordinary task path. A CLI
+    proof that cannot be read returns None for that path; GraphQL has no
+    ordinary path, so its unreadable proof denies.
+    """
+    try:
+        return _verify(target, cwd)
+    except ProofUnavailable:
+        if target['form'] == 'cli':
+            return None  # Canonical pinned merge keeps its task scope; never an exemption.
+        raise
+
+
+def _verify(target, cwd):
+    require((os.environ.get('GH_HOST') or 'github.com') == 'github.com', 'ambient GitHub host override unsupported', ProofUnavailable)
     spec = importlib.util.spec_from_file_location('queue_runner', Path(__file__).with_name('craft-settings-router.py'))
     runner = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(runner)
@@ -160,24 +184,45 @@ def verify(target, cwd):
 
     def read(args):
         remaining = deadline - time.monotonic()
-        require(remaining > 0, 'read deadline exhausted')
-        result, output, _error = runner.execute_hook('cd -- ' + shlex.quote(cwd) + ' && ' + shlex.join(['gh'] + args), b'', dict(os.environ), remaining)
-        require(result == 0 and len(output.encode()) <= 65536, 'bounded GitHub proof failed')
-        return json.loads(output)
+        require(remaining > 0, 'read deadline exhausted', ProofUnavailable)
+        try:
+            result, output, _error = runner.execute_hook('cd -- ' + shlex.quote(cwd) + ' && ' + shlex.join(['gh'] + args), b'', dict(os.environ), remaining)
+            require(result == 0 and len(output.encode()) <= 65536, 'bounded GitHub proof failed', ProofUnavailable)
+            return json.loads(output)
+        except ProofUnavailable:
+            raise
+        except ValueError as exc:  # Runner timeout/output bound and undecodable JSON.
+            raise ProofUnavailable('pinned merge queue: bounded GitHub proof failed') from exc
 
+    if target['form'] == 'graphql':
+        answer = read(['api', '--hostname', 'github.com', 'graphql', '-f', 'query=' + NODE_QUERY, '-f', 'id=' + target['node']])
+        data = answer.get('data') if isinstance(answer, dict) else None
+        pr = data.get('node') if isinstance(data, dict) else None
+        require(isinstance(pr, dict) and pr.get('id') == target['node'], 'PR node lookup failed')
+        owner = pr.get('repository')
+        repo = owner.get('nameWithOwner') if isinstance(owner, dict) else None
+        require(isinstance(repo, str) and re.fullmatch(REPO, repo), 'invalid PR repository identity')
+        number = pr.get('number')
+        require(type(number) is int and number > 0, 'invalid PR number')
+        require(isinstance(pr.get('headRefOid'), str) and re.fullmatch(SHA, pr['headRefOid']) and pr['headRefOid'].lower() == target['head'], 'PR head changed or invalid')
+        require(isinstance(pr.get('baseRefName'), str) and pr['baseRefName'], 'missing destination branch')
+        if pr['baseRefName'] not in QUEUE_EXEMPT_BASES:
+            return None  # No exemption; the ordinary path does not model GraphQL.
+        return dict(target, repository=repo, number=number, base=pr['baseRefName'])
     args = ['pr', 'view', str(target['number']), '--json', 'id,number,url,headRefOid,baseRefName']
     if target['repo']:
         args += ['--repo', target['repo']]
     pr = read(args)
     require(isinstance(pr, dict), 'missing PR identity')
-    match = re.fullmatch(r'https://github\.com/([A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*)/pull/([1-9][0-9]*)', pr['url'])
+    match = re.fullmatch(r'https://github\.com/(' + REPO + r')/pull/([1-9][0-9]*)', pr['url'])
     require(match and int(match[2]) == pr['number'] and isinstance(pr['number'], int), 'invalid PR URL identity')
     repo = match[1]
     require(isinstance(pr.get('headRefOid'), str) and re.fullmatch(SHA, pr['headRefOid']) and pr['headRefOid'].lower() == target['head'], 'PR head changed or invalid')
     require(isinstance(pr.get('id'), str) and re.fullmatch(ID, pr['id']), 'invalid PR node identity')
-    if target['form'] == 'cli':
-        require(pr['number'] == target['number'] and (not target['repo'] or target['repo'].lower() == repo.lower()), 'PR repository mismatch')
+    require(pr['number'] == target['number'] and (not target['repo'] or target['repo'].lower() == repo.lower()), 'PR repository mismatch')
     require(isinstance(pr['baseRefName'], str) and pr['baseRefName'], 'missing destination branch')
+    if pr['baseRefName'] not in QUEUE_EXEMPT_BASES:
+        return None  # Not an exempt base: the ordinary task path applies.
     rules = read(['api', '--hostname', 'github.com', 'repos/' + repo + '/rules/branches/' + quote(pr['baseRefName'], safe='')])
     require(isinstance(rules, list), 'malformed effective branch rules')
     if not any(isinstance(rule, dict) and rule.get('type') == 'merge_queue' for rule in rules):

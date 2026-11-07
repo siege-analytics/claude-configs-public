@@ -764,7 +764,8 @@ def resolve_action(workspace: str, payload: dict) -> dict:
                     return {'read_only': False, 'paths': [], 'remote_only_authorized': True,
                             'queue_enqueue': verified, 'error': ''}
         except (OSError, ValueError, TypeError, KeyError, ImportError, SyntaxError) as exc:
-            return {'read_only': False, 'paths': [], 'gate': None, 'error': 'Queue enqueue denied: ' + str(exc)}
+            label = 'Queue enqueue denied: ' if re.match(r'^\s*gh\s+api\s', command) else 'Pinned merge denied: '
+            return {'read_only': False, 'paths': [], 'gate': None, 'error': label + str(exc)}
     shape = action(command, cwd) if command else {"read_only": False, "paths": [canonical(ti.get("file_path") or ti.get("notebook_path") or ti.get("path") or cwd, cwd)]}
     if shape["read_only"] or shape.get('investigation') or shape.get("metadata_only"):
         return shape  # No gate lookup for recognized reads/approved diagnostics.

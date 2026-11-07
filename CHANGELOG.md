@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: pinned merge queue escapes, exempt bases and proof failures
+
+- Reject backslashes in queue-lane commands. The hook's lexer drops a backslash inside shell double quotes, the shell keeps it, and GraphQL decodes `\uXXXX`. An audited node could differ from the node actually enqueued (#1207).
+- Limit the no-task queue exemption to the bases in `QUEUE_EXEMPT_BASES` (default `develop`).
+  - The CLI form checks the PR's base. Any other base, such as a queued release `main`, returns to the ordinary task path.
+  - The GraphQL form makes one fixed read-only `node(id:)` lookup. A failed lookup, a mismatch or a non-listed base is denied. Its audit now records the real repository, number and base (#1207).
+- A canonical task-scoped pinned CLI merge whose queue proof cannot be read keeps its task path instead of being denied. It never gains the exemption (#1207).
+- Name the denial by form: `Pinned merge denied:` for `gh pr merge`, `Queue enqueue denied:` for GraphQL. The documentation states that denying `--admin` even under a task is intended. It also qualifies the routing-environment, server-validation and audit claims (#1207).
+
 ### Fixed: task scopes and evidence execution
 
 - Add a GitHub issue to an approved project through the exact current task and a source-owned standing policy, without inventing a filesystem target. Other issues, projects, destructive operations and arbitrary API writes remain guarded (#1161).
