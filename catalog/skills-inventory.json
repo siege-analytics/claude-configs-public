@@ -10934,6 +10934,7 @@
         "bin/_test/settings_drift_test.py",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/gate_bypass_1164.py",
+        "hooks/_test/gate_bypass_1164_review_cases.json",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
