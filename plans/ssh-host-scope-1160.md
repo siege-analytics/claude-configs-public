@@ -5,7 +5,7 @@ ticket_refs:
 
 # Self-review: ssh gated by host allowlist, not as a local cwd mutation (#1160)
 
-Branch `bugfix/ssh_host_scope`, base `origin/develop` 94dd034f2c. Tier C: enforcement hooks and the review-risk policy.
+Branch `bugfix/ssh_host_scope`, first based on `origin/develop` 94dd034f2c and now integrated with develop 6cae44a. Tier C: enforcement hooks and the review-risk policy.
 
 This is the implementer's own self-review. A cross-family hostile review rejected head 03b5d24 with one merge blocker (R1, the policy loader). Fix round 1 below addresses it. Re-review is required at the new pinned head.
 
@@ -41,7 +41,23 @@ Authorized by the Siege Claude Hub (261106-neat-boulder, 21:45 CST). Review reco
   - a hard link, including an update through the secondary path after linking;
   - duplicate key; 1.1 MB oversize; FIFO; a directory in place of the policy;
   - unknown key; empty-string entry; a non-object policy.
-- **Revert proof R7.** Restoring the 03b5d24 loader body in a copied tree must fail the physical-policy cases.
+- **Revert proofs on the fix-round tree (149-case harness).** Each revert is applied to a copied tree and the harness re-run. Failed cases per revert:
+
+  | Revert | Failed |
+  |---|---|
+  | R1 gate EARLY_ALLOW line removed | 25 |
+  | R2 ssh branch removed | 114 |
+  | R3 ssh reuses `metadata_only` | 3 |
+  | R4 no option re-parse after the host | 5 |
+  | R5 no companion targets | 1 |
+  | R6 contact flag ignores project actions | 2 |
+  | R7 03b5d24 loader restored | 10 |
+
+  R7 fails 10 of the 11 new cases: symlink (both), hard link (both), duplicate key, oversize, FIFO (killed at 10 s), directory, unknown key and non-object. The directory and non-object cases still exit 2 under the old loader, but the denial does not name the specific reason. The empty-entry case passes under R7, because 03b5d24 already rejected empty entries.
+- **Scanner classification.** `skills/detect-ai-fingerprints/scan.sh --pr 1170` reports 74 findings at 03b5d24 (range fe4e0e1..03b5d24). A finding is *new* when its line is added in that range and *inherited* when the line is unchanged from the base.
+  - Inherited, 65: `writing-code-7` (7) and `writing-tests-5` (44) in `hooks/lib/resolve-think-gate.py`; `writing-code-7` (1) and `writing-tests-5` (13) in `hooks/lib/task_actions.py`. These are AST checks over whole touched files, on handlers this PR does not add.
+  - New at 03b5d24, 9: seven arrows in this file, one history reference in a harness comment, and `writing-tests-5` on the loader's `except Exception`.
+  - At the fix-round tree (range 6cae44a..head), the 65 inherited findings are unchanged. The arrows and the history reference are removed. The only new finding is `writing-tests-5` on the loader's `except Exception`. It is kept on purpose: any loader failure (including `RecursionError` from deeply nested JSON inside the 4096-byte cap) must admit no host. The policy-defect harness cases exercise it; the scanner only recognises `pytest.raises`. An inline comment at the handler records this. A probe through a copied gate with a 4090-byte nested policy exits 2 in about 0.45 s, naming "maximum recursion depth exceeded".
 
 ### evaluate-ticket exemption for #1160 (writing-rules:4)
 
@@ -185,7 +201,7 @@ This is the implementer's self-review, not an independent review. The independen
   - AC2: other hosts are denied, naming `hooks/lib/ssh-host-allowlist.json`, even under a covering task gate.
   - AC3: scp/rsync/sftp are unchanged. They are still gated without a task gate, and still pass with one.
   - AC4: redirect/tee/chain/substitution/background/heredoc forms keep local targets or fail closed.
-  - AC5: the settings snippet and `.claude/settings.json` are unchanged; `validate-hooks.py` → exit 0.
+  - AC5: the settings snippet and `.claude/settings.json` are unchanged; `validate-hooks.py` exits 0.
   - Accepted behavior change: ssh to a non-allowlisted host (for example `ssh -T git@github.com`) used to pass under a covering task gate and is now denied.
 - Software engineer: is any new path fail-open? None found by self-review:
   - allowlist errors deny;
