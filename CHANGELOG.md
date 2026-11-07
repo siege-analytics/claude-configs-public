@@ -12,6 +12,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
   - options with local effects or that are not modeled (`ProxyCommand`, `LocalCommand`, `HostName`, `-F`, `-E`, `-S`, `-M`, `-L`/`-R`/`-D`, `-f`, `-W`, `-J`, `-i` and others), including options placed after the destination;
   - `ssh` hidden behind another path, an environment assignment or an exec wrapper.
 - Local redirects, `tee` and chained commands keep their local targets. `scp`, `rsync` and `sftp` are unchanged.
+- The allowlist grant comes only from the fixed policy file itself. The loader opens it without following links and without blocking, then requires a regular, singly linked file of at most 4096 bytes, unique keys and exactly `{"hosts": [...]}`. A symlink, hard link, FIFO, oversized or malformed policy admits no host; the gate exits 2 naming the reason, and never stalls.
 - The new `remote_contact_only` flag is read only by the mutation gate. Other guards, including destructive-guard, still inspect ssh commands.
 - Behavior change, accepted tradeoff: the allowlist is strict and global.
   - ssh to a non-allowlisted host, for example `ssh -T git@github.com`, used to pass under a covering task gate. It is now denied everywhere until the operator adds the host. A task gate cannot admit extra hosts.

@@ -7,7 +7,70 @@ ticket_refs:
 
 Branch `bugfix/ssh_host_scope`, base `origin/develop` 94dd034f2c. Tier C: enforcement hooks and the review-risk policy.
 
-This is the implementer's own self-review. The cross-family hostile review has **not** happened yet. The Siege Claude Hub commissions it at the pushed PR head, and its findings will be recorded on the PR and #1160.
+This is the implementer's own self-review. A cross-family hostile review rejected head 03b5d24 with one merge blocker (R1, the policy loader). Fix round 1 below addresses it. Re-review is required at the new pinned head.
+
+## Fix round 1 (2026-11-06): physical policy-file boundary (review R1)
+
+Authorized by the Siege Claude Hub (261106-neat-boulder, 21:45 CST). Review record: https://github.com/siege-analytics/claude-configs-public/pull/1170#issuecomment-6701689802. Root's concern 3 in https://github.com/siege-analytics/claude-configs-public/pull/1170#issuecomment-6692828625 raises the same issue. D2(a) is unchanged.
+
+- **Defect at 03b5d24.** `ssh_allowlist()` used a plain `open` + `json.load`. It followed symlinks, accepted hard links and duplicate keys, read without a byte bound, and blocked on a FIFO. Policy content outside the fixed file could therefore grant admission.
+- **Fix** (`hooks/lib/task_actions.py`, `ssh_allowlist`):
+  - a fixed path under the real hooks/lib directory;
+  - a symlink is refused, and `os.open` uses `O_RDONLY | O_NONBLOCK | O_NOFOLLOW | O_CLOEXEC`;
+  - `fstat` on the descriptor before any read requires a regular file, `st_nlink == 1` and a size of at most 4096 bytes;
+  - a bounded `os.read`;
+  - `json.loads` with an `object_pairs_hook` that rejects duplicate keys;
+  - a strict schema: exactly `{"hosts": [...]}`, every entry a hostname.
+  - Any failure admits no host. The gate exits 2, naming the allowlist and the specific reason, and never stalls.
+- **Per-case results.** Gate exit with no task gate, from disposable copied trees with a 15 s bound. These are the reviewer's cases plus three added ones. "develop" is 6cae44a; "new" is the fix-round tree.
+
+  | Policy fixture | Command | develop | 03b5d24 | new |
+  |---|---|---|---|---|
+  | normal policy (control) | `ssh cyberpower true` | 2 | 0 | 0 |
+  | symlink to another JSON file naming outsider | `ssh outsider true` | 2 | **0** | 2 (symbolic link) |
+  | hard link to that file | `ssh outsider true` | 2 | **0** | 2 (2 hard links) |
+  | `{"hosts":[],"hosts":["outsider"]}` | `ssh outsider true` | 2 | **0** | 2 (duplicate key) |
+  | 1,100,000 spaces + valid policy | `ssh cyberpower true` | 2 | **0** | 2 (larger than 4096 bytes) |
+  | FIFO | `ssh cyberpower true` | 2 | **stall, killed at 15 s** | 2 in about 0.4 s (not a regular file) |
+  | `{"hosts":["cyberpower"],"extra":1}` | `ssh cyberpower true` | 2 | **0** | 2 (must be exactly hosts) |
+  | `{"hosts":["cyberpower",""]}` | `ssh cyberpower true` | 2 | 2 | 2 |
+
+  develop denies every row, because it has no ssh branch and ssh falls back to the cwd gate.
+- **New harness cases (11).** They are bounded at 10 s each, so a stalling policy fails its case instead of hanging the suite:
+  - a symlink, for both outsider and the allowlisted host;
+  - a hard link, including an update through the secondary path after linking;
+  - duplicate key; 1.1 MB oversize; FIFO; a directory in place of the policy;
+  - unknown key; empty-string entry; a non-object policy.
+- **Revert proof R7.** Restoring the 03b5d24 loader body in a copied tree must fail the physical-policy cases.
+
+### evaluate-ticket exemption for #1160 (writing-rules:4)
+
+Observed output of `scripts/discipline/evaluate-ticket.sh 'siege-analytics/claude-configs-public#1160'`, at 03b5d24 on 2026-11-06 about 20:35 CST:
+
+```
+BLOCK: ticket siege-analytics/claude-configs-public#1160 has gaps before it is fit for execution:
+  - missing sections: Context,Goal
+  - no '## Assumptions' block
+```
+
+- **Reason:** the script matches the literal headings `Context`, `Goal` and `Assumptions` (`evaluate-ticket.sh:124-151`).
+  - #1160 carries its context under `## Starting conditions` and `## Observed current outcome`.
+  - It carries its goal under `## Intended outcome` and the AC1-AC5 list under `## Acceptance criteria`.
+  - #1160 has **no** assumptions block of any name. The assumptions for this work are in this file's `## Assumptions` section and in the #1160 implementation-start comment.
+  - The #1160 body is unchanged.
+- **Evidence:**
+  - #1160 body headings: Intended outcome, Starting conditions, Observed current outcome, Design decision (for review), Known blockers, Acceptance criteria, QA / Verification, Requested by.
+  - This file's `## Assumptions` section (`Goal source: #1160`).
+  - The implementation-start comment: https://github.com/siege-analytics/claude-configs-public/issues/1160#issuecomment-6649898192
+  - Root's coordination review: https://github.com/siege-analytics/claude-configs-public/pull/1170#issuecomment-6650561457
+  - The same exemption, posted on the PR: https://github.com/siege-analytics/claude-configs-public/pull/1170#issuecomment-6701053640
+- **Falsification:**
+  1. `gh issue view 1160 --json body --jq .body | grep -E '^## (Starting conditions|Observed current outcome|Intended outcome|Acceptance criteria|Design decision)'` prints 5 headings.
+  2. This file contains `^## Assumptions` and `^Goal source: #1160`.
+  3. Both comment URLs resolve to the cited content.
+  4. Rerunning the script reports only the three gaps quoted above.
+
+  If any of these fails, the exemption is false.
 
 ## Integration with develop 1cd83f9 (2026-11-06)
 
@@ -50,7 +113,7 @@ Working as: software engineer, tech lead
 Pre-author-inventory: https://github.com/siege-analytics/claude-configs-public/issues/1160#issuecomment-6649898192
 Investigate-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1160#issuecomment-6649898192
 Pre-mortem-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1160#issuecomment-6649898192
-Hostile-review-artifact: PENDING. No independent hostile review exists at commit time. The Siege Claude Hub commissions a cross-family review at the pushed PR head, with findings to be posted on the PR and https://github.com/siege-analytics/claude-configs-public/issues/1160
+Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/pull/1170#issuecomment-6701689802 (cross-family review at 03b5d24: REJECT, one blocker R1, addressed in fix round 1 above; re-review at the new head is PENDING)
 Project-contribution: agents can reach the review host by ssh without borrowing a task gate. Remote reach becomes an explicit, operator-owned, reviewed list instead of an implicit side effect of any covering task gate.
 
 Scope authorizations, all from the Siege Claude Hub:
@@ -70,7 +133,7 @@ Assumptions checked against source:
 - **Allowlist:** `hooks/lib/ssh-host-allowlist.json`, exactly `{"hosts": ["cyberpower"]}`.
   - Matching is case-insensitive on the destination host as typed, after `user@` (split at the last `@`) or `ssh://[user@]host[:port]`.
   - It is pinned Tier C in `catalog/review-risk-policy.json`.
-  - Any loader defect yields an empty set, so every ssh is denied: absent file, 0-byte file, malformed JSON, non-list, non-string or non-hostname entry.
+  - Any loader defect yields an empty set, so every ssh is denied. Logical defects: absent file, 0-byte file, malformed JSON, non-list, non-string or non-hostname entry, duplicate or unknown key. Physical defects (since fix round 1): symlink, hard link, FIFO or other non-regular file, a file over 4096 bytes.
 - **ssh argv model (`ssh_destination`).** An allowlist, parsed before the destination and again after it until `--` or the first other word:
   - flags `-4 -6 -a -C -n -q -T -t -v -x`;
   - `-p <digits>`, `-l <login>`;
@@ -90,13 +153,15 @@ Assumptions checked against source:
 
 This is the implementer's self-review, not an independent review.
 
+> **Historical (measured at c80664c on 2026-11-04).** The 133-case and five-proof figures in this section predate both integrations and fix round 1. Current-head figures are in "Fix round 1".
+
 - writing-code:1 (smallest correct change):
   - One new branch in `_action().finish()`, placed before the operand pass that read remote text such as `'cat /etc/x'` as local paths.
   - One condition each in `resolve-think-gate.py` and the gate's EARLY_ALLOW.
-  - `bash -n hooks/bash/universal-mutation-gate.sh` → exit 0. `bash -n hooks/_test/universal_mutation_gate_ssh.test.sh` → exit 0. `/usr/bin/python3` 3.9.6 import + classify check → exit 0.
-- writing-code (fail closed): allowlist defects deny. Harness cases for an absent file, a 0-byte file, malformed JSON, a non-list, an invalid entry, a non-string entry and an empty list → all PASS.
+  - `bash -n hooks/bash/universal-mutation-gate.sh` exit 0. `bash -n hooks/_test/universal_mutation_gate_ssh.test.sh` exit 0. `/usr/bin/python3` 3.9.6 import + classify check exit 0.
+- writing-code (fail closed): allowlist defects deny. Harness cases for an absent file, a 0-byte file, malformed JSON, a non-list, an invalid entry, a non-string entry and an empty list all PASS.
 - writing-tests:1 (negative paths):
-  - `hooks/_test/universal_mutation_gate_ssh.test.sh` → 133 passed, 0 failed. It covers AC1-AC4, about 40 option forms (several placed after the host), wrapper and path forms, allowlist defects, and a covering-gate fixture.
+  - `hooks/_test/universal_mutation_gate_ssh.test.sh`: 133 passed, 0 failed (historical). It covers AC1-AC4, about 40 option forms (several placed after the host), wrapper and path forms, allowlist defects, and a covering-gate fixture.
   - Hub conditions (a)-(c) are asserted against each guard's own skip predicate, and statically: no other guard reads `remote_contact_only`.
 - writing-tests (revert proof). Each key change was reverted in a copied tree and the harness re-run:
 
@@ -108,7 +173,7 @@ This is the implementer's self-review, not an independent review.
   | R4, no option re-parse after the host | 5 | ProxyCommand/-L/-F after the destination is caught |
   | R5, unproven companions dropped | 1 | the new case catches it (see the finding below) |
 
-- R5 finding (found by the revert proof): the first harness had **no** case for an unproven reader companion beside ssh. Reverting the companion rule passed 131/131. A probe then found `printenv` (also `hostname`, `md5`, `file`, `xxd`): `reader()` admits it, but the released classifier does not prove it (verdict 1). I added `ssh cyberpower uptime; printenv` → must stay "Unscoped mutation". After that, R5 fails exactly that case.
+- R5 finding (found by the revert proof): the first harness had **no** case for an unproven reader companion beside ssh. Reverting the companion rule passed 131/131. A probe then found `printenv` (also `hostname`, `md5`, `file`, `xxd`): `reader()` admits it, but the released classifier does not prove it (verdict 1). I added `ssh cyberpower uptime; printenv`, which must stay "Unscoped mutation". After that, R5 fails exactly that case.
 - writing-claims:1: every count in this file was observed in this work cycle. Pre-existing failures were reproduced on a develop snapshot.
 
 ## Lead review
@@ -130,9 +195,11 @@ This is the implementer's self-review, not an independent review. The independen
 
 ## Quantified claims
 
-- ssh harness: 133 passed, 0 failed.
-- Revert proofs: 5 of 5 reverts make named cases fail (25 / 101 / 3 / 5 / 1).
-- Full `hooks/_test` (53 `*.test.sh` files, pyenv 3.11.11 first on PATH, `dist/` built locally): 50 passed, 3 failed. All 3 failed identically on a develop 94dd034 snapshot in the same environment, so they are pre-existing and unrelated:
+Current head (fix round 1): see the evidence table in "Fix round 1". The figures below are **historical**, measured at c80664c on 2026-11-04.
+
+- ssh harness: 133 passed, 0 failed (historical).
+- Revert proofs: 5 of 5 reverts make named cases fail (25 / 101 / 3 / 5 / 1) (historical).
+- Full `hooks/_test` (53 `*.test.sh` files at the time, pyenv 3.11.11 first on PATH, `dist/` built locally): 50 passed, 3 failed (historical). All 3 failed identically on a develop 94dd034 snapshot in the same environment, so they are pre-existing and unrelated:
   - `ca_enforcement_runtime` (4 F4/ancestry cases; this host has a real Craft ancestor);
   - `session_signal_resolution` (2 unknown-session cases);
   - `universal_mutation_gate_empty_reporoot` (`--session-known` with live session env).
@@ -159,5 +226,6 @@ This is the implementer's self-review, not an independent review. The independen
   - git over ssh;
   - programs or scripts that spawn ssh under a covering gate.
 - ssh may update `~/.ssh/known_hosts`. The operator's own `~/.ssh/config` (ControlMaster, ProxyCommand, Match exec) is trusted as operator-owned.
+- Host matching is lexical, on the destination name as typed; ssh config is never evaluated. The reviewer showed offline that an operator config can map `cyberpower` to another `HostName` and add `ProxyCommand` or `LocalCommand`. So this change does **not** prove that only allowlisted *effective* hosts are contacted, or that ssh has no local effects. It proves only that the hook adds no local target for the typed destination. Whether to treat ssh config as trusted is an open policy decision, not a test result.
 - With unbound session identity, the Craft router still denies ssh (hub condition c).
 - Test-receipt lane: in this session two gate copies run (workspace-installed + the shared clone's project hooks). Each demands its own `hooks/lib/test-evidence.py`, so no `test-gate.json` receipt could be produced. Tests were run directly under the worktree gate.

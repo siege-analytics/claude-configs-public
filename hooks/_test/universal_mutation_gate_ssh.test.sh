@@ -206,6 +206,62 @@ deny "allowlist with a non-string entry: denied" "ssh cyberpower uptime" "$NOT_L
 variant empty '{"hosts": []}'
 deny "empty allowlist: denied" "ssh cyberpower uptime" "allowed: none" "" "$T/empty"
 
+echo "--- the grant comes only from the physical policy file ---"
+# Physical-file cases: the grant must come from the fixed policy file itself.
+# Every case is bounded, so a policy that could stall the hook fails the case
+# instead of the suite.
+bounded() {  # bounded <name> <tree> <command> <pattern>: exit 2 within 10 s, for the named reason
+    payload "$3" > "$T/payload.json"
+    "$REAL_PY" - "$2" "$T/payload.json" "$REPO" "$PYDIR" "$T/home" "$WS" "$SID" > "$T/out" 2>&1 <<'PY'
+import subprocess, sys
+tree, payload, repo, pydir, home, ws, sid = sys.argv[1:]
+env = {"PATH": pydir + ":/usr/bin:/bin", "HOME": home, "CRAFT_AGENT_WORKSPACE": ws, "CRAFT_SESSION_ID": sid}
+try:
+    with open(payload) as stdin:
+        done = subprocess.run(["bash", tree + "/bash/universal-mutation-gate.sh"], stdin=stdin,
+                              capture_output=True, text=True, cwd=repo, env=env, timeout=10)
+    sys.stdout.write(done.stdout + done.stderr)
+    sys.exit(done.returncode)
+except subprocess.TimeoutExpired:
+    print("TIMEOUT: the gate did not return within 10 s")
+    sys.exit(124)
+PY
+    local rc=$?
+    [[ $rc == 2 ]] && grep -qE "$4" "$T/out" && record 1 "$1" || record 0 "$1 (exit $rc, wanted 2 within 10 s /$4/)"
+}
+fresh() {  # fresh <name>: a copied tree with the policy removed
+    cp -R "$WS/hooks" "$T/$1"
+    rm "$T/$1/lib/ssh-host-allowlist.json"
+}
+printf '%s' '{"hosts":["outsider"]}' > "$T/outside-policy.json"
+fresh linksym
+ln -s "$T/outside-policy.json" "$T/linksym/lib/ssh-host-allowlist.json"
+bounded "symlinked policy to another file: outsider denied" "$T/linksym" "ssh outsider true" "$NOT_LISTED.*symbolic link"
+bounded "symlinked policy: allowlisted host also denied" "$T/linksym" "ssh cyberpower true" "$NOT_LISTED.*symbolic link"
+printf '%s' '{"hosts":["outsider"]}' > "$T/linked-policy.json"
+fresh linkhard
+ln "$T/linked-policy.json" "$T/linkhard/lib/ssh-host-allowlist.json"
+bounded "hard-linked policy: outsider denied" "$T/linkhard" "ssh outsider true" "$NOT_LISTED.*hard links"
+printf '%s' '{"hosts":["outsider","cyberpower"]}' > "$T/linked-policy.json"
+bounded "hard-linked policy after a secondary-path update: still denied" "$T/linkhard" "ssh cyberpower true" "$NOT_LISTED.*hard links"
+variant dupkey '{"hosts":[],"hosts":["outsider"]}'
+bounded "duplicate hosts key: outsider denied" "$T/dupkey" "ssh outsider true" "$NOT_LISTED.*duplicate key"
+fresh oversized
+"$REAL_PY" -c 'import sys; open(sys.argv[1], "w").write(" " * 1100000 + "{\"hosts\":[\"cyberpower\"]}")' "$T/oversized/lib/ssh-host-allowlist.json"
+bounded "policy over the size cap (1.1 MB): denied" "$T/oversized" "ssh cyberpower true" "$NOT_LISTED.*larger than"
+fresh fifo
+mkfifo "$T/fifo/lib/ssh-host-allowlist.json"
+bounded "FIFO policy: denied without stalling" "$T/fifo" "ssh cyberpower true" "$NOT_LISTED.*not a regular file"
+fresh dirpolicy
+mkdir "$T/dirpolicy/lib/ssh-host-allowlist.json"
+bounded "directory in place of the policy: denied" "$T/dirpolicy" "ssh cyberpower true" "$NOT_LISTED.*not a regular file"
+variant extrakey '{"hosts":["cyberpower"],"extra":1}'
+bounded "unknown key beside hosts: denied" "$T/extrakey" "ssh cyberpower true" "$NOT_LISTED.*exactly"
+variant emptyhost '{"hosts":["cyberpower",""]}'
+bounded "empty-string host entry: whole file rejected" "$T/emptyhost" "ssh cyberpower true" "$NOT_LISTED.*list of hostnames"
+variant notobject '["cyberpower"]'
+bounded "policy that is not an object: denied" "$T/notobject" "ssh cyberpower true" "$NOT_LISTED.*exactly"
+
 echo "--- a covering task gate never widens the host allowlist ---"
 TASK_DIR="$WS/sessions/$SID/tasks/ssh-fixture"
 mkdir -p "$TASK_DIR"
@@ -224,7 +280,7 @@ deny "local-effect option denied even under a covering gate" "ssh -o ProxyComman
 deny "wrapper denied even under a covering gate" "timeout 5 ssh unknown-host true" "$HIDDEN"
 allow "allowlisted ssh still passes alongside a covering gate" "ssh cyberpower uptime"
 
-# Root review on PR #1170: an allowlisted contact is outbound contact only. Even
+# An allowlisted contact is outbound contact only. Even
 # with a covering task gate, the resolution must not select, bind or report
 # that task for the ssh, so it can never be read as task-authorized remote
 # mutation. A local write in the same command still binds the gate normally.

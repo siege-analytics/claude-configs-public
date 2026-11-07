@@ -446,7 +446,10 @@ def _git_toplevel(directory: str) -> str:
 # locally (ProxyCommand, LocalCommand, -F, -E, -S/-M, forwards, -f) and forms
 # that hide ssh behind another argv0. scp, rsync and sftp keep their local
 # operands and are not handled here.
-SSH_ALLOWLIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ssh-host-allowlist.json")
+# Fixed canonical policy path beside the installed hook library; the final
+# component is opened without following links (#1160).
+SSH_ALLOWLIST = os.path.join(os.path.realpath(os.path.dirname(os.path.abspath(__file__))), "ssh-host-allowlist.json")
+SSH_ALLOWLIST_MAX_BYTES = 4096
 SSH_EXECUTABLES = {"ssh", "/usr/bin/ssh"}
 SSH_WRAPPERS = {"timeout", "gtimeout", "nohup", "nice", "time", "xargs", "sudo", "doas", "stdbuf", "setsid",
                 "caffeinate", "watch", "unbuffer", "script", "flock", "ionice", "taskset", "chrt", "arch",
@@ -470,16 +473,49 @@ _SSH_CONFIG = {  # -o keys whose effects stay remote, and their accepted values
 }
 
 
+def _unique_keys(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate key {key!r}")
+        result[key] = value
+    return result
+
+
 def ssh_allowlist():
-    """Allowed ssh hosts and the allowlist source. Any defect admits no host."""
+    """Allowed ssh hosts and the allowlist source. Any defect admits no host.
+
+    The grant comes only from the fixed policy file itself: a symlink, a hard
+    link, a FIFO or other non-regular file, an oversized file, duplicate or
+    unknown keys, or a malformed host list all deny every host. The open is
+    non-blocking, so a FIFO cannot stall the hook (#1160).
+    """
     try:
-        with open(SSH_ALLOWLIST, encoding="utf-8") as handle:
-            data = json.load(handle)
-        hosts = data.get("hosts") if isinstance(data, dict) else None
+        flags = os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
+        if os.path.islink(SSH_ALLOWLIST):
+            raise ValueError("is a symbolic link; it must be the policy file itself")
+        fd = os.open(SSH_ALLOWLIST, flags)  # O_NOFOLLOW still refuses a link swapped in after the check
+        try:
+            info = os.fstat(fd)  # inspect the opened descriptor before any read
+            if not stat.S_ISREG(info.st_mode):
+                raise ValueError("not a regular file")
+            if info.st_nlink != 1:
+                raise ValueError(f"has {info.st_nlink} hard links; it must have exactly one")
+            if info.st_size > SSH_ALLOWLIST_MAX_BYTES:
+                raise ValueError(f"larger than {SSH_ALLOWLIST_MAX_BYTES} bytes")
+            raw = os.read(fd, SSH_ALLOWLIST_MAX_BYTES + 1)
+        finally:
+            os.close(fd)
+        if len(raw) > SSH_ALLOWLIST_MAX_BYTES:
+            raise ValueError(f"larger than {SSH_ALLOWLIST_MAX_BYTES} bytes")
+        data = json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_keys)
+        if not isinstance(data, dict) or set(data) != {"hosts"}:
+            raise ValueError('the policy must be exactly {"hosts": [...]}')
+        hosts = data["hosts"]
         if not isinstance(hosts, list) or not all(isinstance(h, str) and _SSH_HOST.fullmatch(h) for h in hosts):
             raise ValueError('"hosts" must be a list of hostnames')
         return frozenset(h.lower() for h in hosts), SSH_ALLOWLIST
-    except Exception as exc:  # unreadable, malformed or mistyped: deny every host
+    except Exception as exc:  # any defect, including OSError for a symlink: deny every host
         return frozenset(), f"{SSH_ALLOWLIST} (unusable: {exc})"
 
 
