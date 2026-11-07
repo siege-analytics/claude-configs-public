@@ -293,6 +293,36 @@ class Safety(unittest.TestCase):
         with self.assertRaises(UnknownShape):
             _reader_globs(['grep', '--include=*.py'], [(), (2,)])
 
+    def test_literal_command_lookup_is_read_only_without_donating_execution(self):
+        for command in ('command -v docker', 'command -V docker git',
+                        'command -v docker | head -1'):
+            result = self.hook('hooks/bash/universal-mutation-gate.sh', command)
+            self.assertEqual(result.returncode, 0, command + result.stderr)
+        forbidden = ('command docker version', 'command -p -v docker',
+                     'command -v', 'command -v --unknown',
+                     'command -v "$TOOL"', 'command -v $(touch lookup-effect)',
+                     'command -v `touch lookup-effect`')
+        for command in forbidden:
+            result = self.hook('hooks/bash/universal-mutation-gate.sh', command)
+            self.assertEqual(result.returncode, 2, command + result.stderr)
+        sentinel = self.repo / 'lookup-effect'
+        self.assert_denied_without_effect('hooks/bash/universal-mutation-gate.sh',
+                                         'command -v docker; touch ' + shlex.quote(str(sentinel)), sentinel)
+
+    def test_exact_buildx_version_is_read_only_not_buildx_mutation(self):
+        for command in ('docker buildx version', 'docker buildx version 2>&1 | head -2'):
+            result = self.hook('hooks/bash/universal-mutation-gate.sh', command)
+            self.assertEqual(result.returncode, 0, command + result.stderr)
+        for command in ('docker buildx build .', 'docker buildx rm builder',
+                        'docker buildx create', 'docker buildx version --unknown',
+                        'docker --context other buildx version', 'docker buildx "$OP"',
+                        'docker buildx version; docker buildx build .'):
+            result = self.hook('hooks/bash/universal-mutation-gate.sh', command)
+            self.assertEqual(result.returncode, 2, command + result.stderr)
+        sentinel = self.repo / 'buildx-effect'
+        self.assert_denied_without_effect('hooks/bash/universal-mutation-gate.sh',
+                                         'docker buildx version; touch ' + shlex.quote(str(sentinel)), sentinel)
+
     def test_base64_exact_option_grammar_is_portable(self):
         for command in ("base64 --decode input", "base64 -D -i input", "base64 --wrap=0 input", "base64 -w0 input"):
             result = subprocess.run([sys.executable, str(ROOT / "hooks/lib/read-only-command.py"), command], timeout=120)
