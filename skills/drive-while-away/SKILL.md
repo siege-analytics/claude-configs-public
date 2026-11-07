@@ -17,7 +17,7 @@ unresolved findings and next action before long waits or handoffs. Publish
 material transitions and configured heartbeats through the available user
 channel; reading/polling and queued messages are not progress. Select budgets
 from the applicable host/session instructions. Repeated failure classes require
-a design checkpoint for the failing approach while independent authorized work
+reconsidering the design of the failing approach, not a new approval checkpoint unless the contract requires one, while independent authorized work
 can continue. The helper supplies durable metadata, not a timer, transport,
 authorization decision or proof of runtime enforcement. Follow its resume and
 supersession sequence after interruption or compaction.
@@ -152,7 +152,7 @@ Tell the operator:
 
 ### Step 6: Hand back to the operator
 
-End the response. The scheduler will fire the next turn. Do not "stand by" -- the cron does the standing.
+Continue immediately available authorized work. When only a verified wait remains and a working scheduler provides re-entry, end the fired response; the existing scheduler supplies the next turn. Without a scheduler, follow the host continuation limits above rather than promising another fire.
 
 ## Per-fire behavior (when the scheduler fires the next turn)
 
@@ -162,25 +162,25 @@ Each fired turn runs this loop:
 2. Increment `iteration_count` (track in working memory or back into the next schedule call).
 3. Run the check for each target. Use real tool calls; "I'll check" without checking is the writing-claims:9 failure mode.
 4. Take the prescribed action per result.
-5. Produce at least one operator-visible artifact unless all work is genuinely blocked or exhausted. Acceptable artifacts include: ticket filed or updated, PR comment, self-review or hostile-review artifact, branch push, verification output captured in `/data/`, durable investigation note, or status update that names concrete forward motion. A pure "nothing changed" probe is not a productive turn.
-6. Run the end-of-turn self-check: "Will the next operator-visible message contain a new artifact since the last pickup?" If no, continue working the inventory before yielding.
+5. Produce substantive progress or new evidence: a completed action, changed authoritative state, or a finding that changes the next action. Preserve its artifact. A repeated status statement or rewritten unchanged blocker is not progress. A freshly verified live wait is a separate valid disposition when no independent authorized action remains.
+6. Before yielding, check the remaining inventory for an authorized next action. Take it if available. Otherwise verify the specific live operation and continuation mechanism, or apply the whole-objective termination criteria below; do not manufacture an artifact to disguise inactivity.
 7. Decide whether to **terminate the loop** (see termination criteria below). If terminating: call `CronDelete <job-id>` (or omit `ScheduleWakeup` for `/loop`).
-8. **Hand back silently** only after the productive-turn requirement and self-check pass. Do not present a progress report unless an escalation criterion fired (see Escalation below).
+8. Hand back after the progress or verified-wait self-check passes. Follow the operator's requested status cadence; otherwise keep routine scheduled turns quiet. An update does not require operator acknowledgment before authorized work continues.
 
 The cron schedule does NOT need to be refreshed. It fires automatically on its own cadence. The agent's job per fire is to do the work, produce forward motion, and decide whether to stop -- not to remember to keep going.
 
 ## Productive-turn bar
 
-A drive-mode turn is productive only if it changes external state or leaves durable evidence the operator can inspect later. At least one of the following must happen before the turn yields:
+A drive-mode turn is productive when it changes authoritative state or leaves substantive new evidence the operator can inspect later. Examples include:
 
 - ticket filed, updated, moved, or closed with evidence,
 - PR opened, commented, reviewed, merged, or moved with evidence,
 - branch pushed or commit created,
 - self-review / hostile-review / investigation / pre-mortem artifact written,
 - verification output captured in a durable file or ticket comment,
-- blocker escalated with `Blocked because` / `Waiting on` / `Unblocks when` evidence.
+- first escalation of a blocker, or new evidence that changes its resolution, with `Blocked because` / `Waiting on` / `Unblocks when` evidence.
 
-If none is possible, stop the loop with an explicit blocker rather than silently re-looping.
+These artifacts must record actual work or new findings; creating another file or repeating a promise alone does not satisfy the bar. A verified live wait or authorized bounded passive watch may yield without pretending to be progress: retain its real handle or polling target, current observation and supported re-entry condition. A passive watch for future events needs no currently running target operation, but its polling and re-entry must be verified and remain within the granted horizon. If no authorized action, verified live wait or authorized bounded passive watch remains, apply the whole-objective termination criteria below.
 
 ## **DO NOT** stop at progress reports between fires
 
@@ -188,39 +188,40 @@ This is the inversion of the failure mode that makes the loop die.
 
 After completing a checkpoint, do NOT:
 
-- Summarize what was just done.
-- Say "Here's the status so far."
+- End unfinished authorized work merely to summarize what was just done.
+- Substitute "Here's the status so far" for an available next action.
 - Say "continuing now," "I'll check," "watching release," or any other action announcement without the same-turn tool call or blocker.
 - Ask "Should I continue?" or "Want me to keep going?"
 - Wait for operator acknowledgment.
 
-The operator handed off the keyboard. They are NOT WATCHING. A progress report between fires is wasted output the operator cannot see in real time, and ending the turn for acknowledgment is the progress-summary stop pattern that kills the loop. An intention announcement without the action is the same failure in future tense. If a backlog remains, write the durable status artifact and then start the next item in the same turn.
+The operator handed off the keyboard, not the objective. Preserve progress durably and perform the next authorized action when one is available. If the operator requested updates, send them at that cadence and continue; do not make acknowledgment a condition of further work. An intention announcement without the action is still an unsupported promise.
 
-**The fired turn should be as quiet as possible.** Do the work, decide if done, hand back. The scheduler fires the next turn. The operator reads the conversation when they return.
+Keep routine fired turns quiet by default unless the operator requested visible updates. Do the work, distinguish progress from a verified wait or real impasse, and use the established scheduler for re-entry.
 
-The exception: if the iteration hit an **escalation criterion** (see below), surface that explicitly and stop the cron. Escalation is the only legitimate reason to break silence between fires.
+The exception: surface a material **escalation** (see below) with its evidence and affected target. A target-local blocker does not by itself stop the cron or independent authorized work.
 
 ## Termination criteria (when to actively stop)
 
-You actively stop the loop ONLY when:
+You actively stop the whole loop ONLY when:
 
-1. The operator returns and explicitly says "stop driving" or asks a focused question that shifts the work.
-2. The work is genuinely done -- every target reached its terminal state, every action succeeded, the original directive is fully satisfied.
-3. An escalation criterion fired (next section).
+1. The operator explicitly stops or pauses the whole objective, or replaces it. A target-only pause parks only that target; continue other authorized targets. A status question or the operator returning does not by itself cancel it.
+2. The original objective is genuinely complete.
+3. The granted time horizon or applicable lease expires. Do not silently extend it; renew only within existing authority and current host capabilities. Respect the 7-day `CronCreate` expiry.
+4. The whole objective reaches a genuine impasse: no independent authorized action remains and there is no verified live wait or authorized bounded passive watch that can advance it.
 
-If none of these is true, do nothing and let the cron fire again. You did not need to reschedule.
+When a whole-loop termination criterion is met, record the outcome or blocker and stop the existing job with `CronDelete` or the host's supported equivalent. Do not promise further fires after expiry or without a working scheduler. Stopping the scheduler does not itself cancel external jobs: preserve their handles and do not cancel or replay them without authority. On an authorized resume, inspect existing jobs and current state before restoring continuation. Otherwise keep the existing continuation mechanism; do not create duplicate jobs.
 
 ## Escalation criteria
 
-Surface to the operator AND stop the cron when:
+Record and report the affected target when:
 
-- A target produces an unexpected error type the loop didn't anticipate, AND the agent cannot resolve it from context.
-- The same state has persisted across N fires (N=3 default) with no progress.
-- An action the loop would normally take requires authorization the operator hasn't granted in advance (destructive ops, third-party API writes, anything in the operator's standing "ask first" list).
-- The loop has been running longer than the operator's stated time horizon (e.g., "a few hours" expired multiple fires ago).
-- The loop is about to hit the 7-day `CronCreate` auto-expiry without finishing.
+- An unexpected error remains unresolved after available diagnosis and authorized repair or preparation; report the concrete missing prerequisite.
+- Its state persists across N fires (N=3 default) without progress. A freshly verified running CI job or collaborator executing the current work is a wait, not evidence of a stall merely because its state is unchanged. Check expected duration, configured timeouts and current step/result progress; an indefinitely stale in_progress label is not sufficient. Apply `[rule:session-coordination]` to verify the live operation and result channel; an activity label, queued message or alive process alone is not enough.
+- Its next action needs authority or a required decision/review that the existing grant does not supply, or is subject to an actual hold.
 
-When escalating, write a clear message to the operator naming what stopped you and what you need, then `CronDelete` the job. The next operator interaction restarts the work.
+Diagnose errors and perform repair or preparation within the existing grant; repeated failures require revising the failing approach, not unchanged retries. Follow `[skill:think]` and the canonical autonomy/authorization rules. Park only the dependent action, name what unblocks it, and continue independent authorized targets. Do not delete the whole job because one target is blocked, treat supervision as new authority, bypass a hold, or replay an operation whose side effects are uncertain. An explicit user pause remains binding within its stated scope.
+
+If the granted horizon expires, stop rather than treating independent work or a live wait as permission to extend it. If all targets are parked with no authorized next action and neither a verified live wait nor an authorized bounded passive watch, report the whole-objective impasse and stop the loop under the termination criteria above.
 
 ## If no autonomy tool is available or visible cadence is unproven
 
@@ -239,7 +240,7 @@ Do NOT silently accept the handoff. Per `[rule:writing-prose]` writing-prose:5 a
 | Anti-pattern | What it looks like | What's wrong |
 |---|---|---|
 | Saying "I'll drive" without scheduling | Last assistant message ends with "Standing by; will probe when it lands." Zero tool calls follow. | No continuation mechanism. Next turn is the operator's next prompt, which may not come for hours. |
-| **One iteration then stop, looking for praise** | First fire does the task, presents a `Here's what I did` summary, ends the turn. No next fire scheduled or already-recurring cron got CronDelete'd. | The praise-seeking pattern. The operator is not watching; the summary is wasted output and the ended turn kills the loop. |
+| **One iteration then stop, looking for praise** | First fire does the task, presents a `Here's what I did` summary, ends the turn. No next fire scheduled or already-recurring cron got CronDelete'd. | The praise-seeking pattern. Ending unfinished authorized work for acknowledgment kills continuation. Requested progress updates remain appropriate; send them and continue. |
 | **Intention feint** | Last assistant line says "continuing to #111 now" or "watching release now," but no tool call or durable state change follows. | Future-tense chat is not work. In goal mode, action announcements require same-turn action, re-entry, or blocker evidence. |
 | Trying to call `ScheduleWakeup`/`CronCreate` without loading the tool first | The agent reads the skill, calls the tool, gets a tool-not-found error, falls into the "I cannot drive" disclaim path. | Deferred tools need `ToolSearch` to load first. Step 0 above is mandatory. |
 | Using `ScheduleWakeup` in a non-`/loop` session | Single `ScheduleWakeup` call in a regular conversation that needed `CronCreate`. | `ScheduleWakeup` is for `/loop` dynamic-mode pacing; without `/loop` context it isn't the right tool. |
@@ -247,7 +248,7 @@ Do NOT silently accept the handoff. Per `[rule:writing-prose]` writing-prose:5 a
 | Confusing `Monitor` with driving | "Monitor `bd5po7f0p` will fire on terminal state." Then silence. | `Monitor` watches one bash task. It doesn't iterate, doesn't handle multiple targets, doesn't autonomously wake. |
 | Vague cron prompt | `CronCreate(prompt="check on things")` | Fired turn has no context, can't reconstruct intent, makes wrong decisions. Always encode the digested directive + target list + termination criteria + iteration_count. |
 | Forgetting to `CronDelete` when work is done | Cron keeps firing every cadence for 7 days after the work finished, agent has to no-op each fire. | When termination criteria met, call `CronDelete <job-id>`. |
-| Briefing the operator between fires | Fired turn ends with "Update: PR #42 still pending, will check again next hour." | The operator is not watching. Save the report for when they ping you, or for the escalation case. Silence between fires is correct. |
+| Briefing the operator between fires | Fired turn ends with "Update: PR #42 still pending, will check again next hour." | Publish durable milestones and material transitions. Keep routine chat briefings quiet unless the operator requested updates; honor that cadence without making acknowledgment a condition of continuing. |
 
 ## Incident justification
 
@@ -255,7 +256,7 @@ Do NOT silently accept the handoff. Per `[rule:writing-prose]` writing-prose:5 a
 
 **Incident B (the praise-seeking failure mode this rewrite addresses):** operator tells the agent to drive. Agent does one task, presents a progress report ("Here's what I did..."), ends the turn waiting for acknowledgment. The next iteration never fires because no recurring scheduler was set up and the agent's `Brief the operator` instinct ended the turn. Operator returns to find one task done out of many. Root cause: the prior version of this skill made continuation a per-fire decision and instructed the agent to "brief the operator" after each wakeup -- two instructions that together produce the one-iteration-then-stop shape.
 
-The rewrite addresses both by: (1) requiring `CronCreate` (recurring) instead of self-rescheduling `ScheduleWakeup` in regular sessions, so continuation is automatic; (2) explicitly forbidding progress reports between fires; (3) making termination an active decision (`CronDelete`), not a passive one (forget to reschedule).
+The rewrite addresses both by: (1) requiring `CronCreate` (recurring) instead of self-rescheduling `ScheduleWakeup` in regular sessions, so continuation is automatic; (2) keeping routine fires quiet while honoring requested status updates; (3) making termination an active decision (`CronDelete`), not a passive one (forget to reschedule).
 
 ## Cross-references
 
@@ -274,13 +275,13 @@ Agent (same response):
 2. Restate directive + identify targets + pick cadence (e.g., every 20 min: "7,27,47 * * * *")
 3. CronCreate(cron="7,27,47 * * * *", recurring=true, prompt="<digested directive + targets + termination + iteration_count=0>")
 4. Brief operator: "Cron job <id> set, firing at :07/:27/:47. Watching <targets>. Stops on <criteria>. Auto-expires in 7 days. Stop with /cron-delete <id>."
-5. End turn.
+5. Continue available authorized work; end the turn only at a verified wait with working re-entry, or a genuine termination condition.
 
 On each fired turn:
 1. Read directive from prompt.
 2. Check each target via real tool calls.
 3. Take action per result.
 4. If terminated → CronDelete + brief operator with what was accomplished.
-5. If escalation → surface + CronDelete.
-6. Otherwise → end turn silently. The cron fires the next one.
+5. If a target needs escalation → surface its concrete blocker, continue independent authorized work, and keep the job unless a whole-loop termination criterion applies.
+6. Otherwise → check the remaining inventory and do any available authorized action. Yield only after verifying a live wait or an authorized bounded passive watch with a working polling target and re-entry within the granted horizon, or applying the termination criteria. A passive watch does not require a currently running target operation. Honor requested status updates; keep routine fires quiet.
 ```
