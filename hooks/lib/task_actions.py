@@ -515,7 +515,7 @@ def ssh_allowlist():
         if not isinstance(hosts, list) or not all(isinstance(h, str) and _SSH_HOST.fullmatch(h) for h in hosts):
             raise ValueError('"hosts" must be a list of hostnames')
         return frozenset(h.lower() for h in hosts), SSH_ALLOWLIST
-    # Deliberately broad. A defect surfaces as OSError (missing file, symlink),
+    # Broad on purpose. A defect surfaces as OSError (missing file, symlink),
     # ValueError (checks above, malformed JSON, bad UTF-8) or RecursionError
     # (deeply nested JSON inside the size cap; /usr/bin/python3 3.9.6 raises it
     # for a 4090-byte policy). Every one must deny all hosts, so the gate exits
