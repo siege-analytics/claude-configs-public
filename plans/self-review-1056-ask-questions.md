@@ -57,19 +57,33 @@ Contact points checked on origin/develop 1cd83f95 before authoring:
   5. After the last answer, summarize, then route and act on everything in one batch.
 - Running work is never frozen or paused, including the tasks the questions are about. Silence is never an answer. The default is the recommendation.
 - Route `ask-questions` (priority 80):
-  - Terms: "ask questions", "ask me questions", "ask your questions", "ask all your questions", "decision questions", "one question at a time".
-  - Exclude terms: "don't/do not ask questions", "don't/do not ask me questions", "no questions".
+  - Terms: "ask questions", "ask me questions", "ask your questions", "ask all your questions", "ask me your questions", "ask me any questions", "ask the operator questions", "decision questions", "one question at a time", "a question at a time".
+  - Verbs "question"/"questions" make the matcher split the prompt into ";" clauses. Exclusions and the leading "don't"/"do not" guard then apply per clause, so a prohibition or a "not all at once" in one clause does not erase a request in another. This was review round 1, R1: whole-prompt exclusions misrouted 6 scoped corrections, 5 prohibitions and 3 quoted-data prompts.
+  - Exclude terms, per clause:
+    - "don't/do not ask (me) questions"
+    - "don\u2019t ask", a JSON escape that keeps the manifest ASCII
+    - "never ask", "never go", "do not ask your"
+    - quote-prefixed "'ask", "'i ask" and "\"ask"
   - Bare "ask me" is not a term because it matches permission phrases such as "ask me before you push".
+  - Known limits, tracked in #1225 (resolver change, out of this PR's scope by hub decision C):
+    - The matcher splits clauses only on ";", "?" and newlines. "Don't ask questions as a group. Ask your questions one at a time." is therefore one clause that the verb guard skips, and it is still missed.
+    - Quoted-payload exclusion is heuristic. It covers quotes that begin with "ask" or "I ask", not quoted text in general.
 - session-coordination:5 defers to the skill and keeps only the hub rule: no answer routing or answer-based briefing until the survey is finished, with running work unaffected.
 - strategic-agency:4 and autonomy:3 defer the question format and sequence to the skill. autonomy:2 step 4 sends the next question first.
 
 ## Test plan
 
 - `bin/_test/resolve_load_set_test.py`:
-  - 7 positive phrasings load `ask-questions`. They include the ticket's falsification prompt "use the ask questions skill" and two operator-correction prompts that contain "without asking" and "Don't ask them".
-  - 5 negatives stay out: an unrelated prompt, "ask me before you push", a different-route prompt, prose about survey questions, and "don't ask questions, just do it".
-  - The explicit `[skill:ask-questions]` token loads exactly the skill.
-- Mutation check: pointing the route at another skill turns the test red at the first positive assertion; restoring it turns it green.
+  - 17 positive prompts load `ask-questions`: the ticket's falsification prompt "use the ask questions skill", the original phrasings, and every positive prompt from the cross-family review of a8aaa07, including 5 scoped corrections and 4 unadvertised requests.
+  - 21 negative prompts stay out: the original controls and every reviewer negative, including 5 explicit prohibitions and 3 quoted-data prompts.
+  - The one known miss is pinned with a #1225 reference and a message to move it to the positive cases once #1225 lands. The script has no xfail mechanism, so this is the honest equivalent.
+  - The explicit `[skill:ask-questions]` and `/ask-questions` tokens load exactly the skill.
+- Mutation checks:
+  - Pointing the route at `python` turns the test red at "use the ask questions skill".
+  - Weakening "never ask" turns it red at "Never ask questions; just do it.".
+  - Weakening the curly-apostrophe exclusion turns it red at the curly-apostrophe prompt.
+  - Removing the subprocess timeout turns it red with "non-returning child was not bounded".
+  - Every restore turns it green.
 - The real CLI (`bin/resolve-load-set.py`) with the real inventory selects `skills/ask-questions/SKILL.md` for "use the ask questions skill" and nothing for "write a friendly greeting".
 - `bin/validate-local.py --mode refresh` (generators plus every CI freshness check) and `--mode full` (the CI validation job's run steps), using a venv with the pinned PyYAML 6.0.3.
 
@@ -97,7 +111,8 @@ Contact points checked on origin/develop 1cd83f95 before authoring:
 | ID | Priority | Description | Resolution |
 |----|----------|-------------|------------|
 | H2-3 | P3 | think step 5 could be read as allowing action on mid-survey answers | noted; the skill governs the answers it collects; think left unchanged |
-| H2-6 | P3 | A curly-apostrophe "don't ask questions" is not excluded | noted; a false load costs one small skill; keeps the manifest ASCII |
+| H2-6 | P3 | A curly-apostrophe "don't ask questions" is not excluded | fixed in review round 1 with the JSON escape "don\u2019t ask" |
+| R1 | P2 | Whole-prompt exclusions misrouted scoped corrections, prohibitions and quoted data (cross-family review of a8aaa07) | fixed with per-clause matching: 40 of the 41 reviewer prompts route as intended; the remaining miss and the heuristic quote handling are ticket #1225 |
 | L2 | P3 | Enforcement is judgment-only | noted; out of scope per the ticket; `_coverage.md` names the scanner |
 
 ## Quantified claims
