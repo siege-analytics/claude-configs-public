@@ -186,29 +186,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "ec0b6262d1bb54078fc6132cc312e095f4a6537542fe6fb23e2ff14fd3029ba0"
+          "tree_sha256": "177f470e0a986c20d4e8c45ce1a4fbc183387671bc7c2f31654a7fae3ef91eb5"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "ec0b6262d1bb54078fc6132cc312e095f4a6537542fe6fb23e2ff14fd3029ba0"
+          "tree_sha256": "177f470e0a986c20d4e8c45ce1a4fbc183387671bc7c2f31654a7fae3ef91eb5"
         },
         "flat": {
           "destination": "dist/flat/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "ec0b6262d1bb54078fc6132cc312e095f4a6537542fe6fb23e2ff14fd3029ba0"
+          "tree_sha256": "177f470e0a986c20d4e8c45ce1a4fbc183387671bc7c2f31654a7fae3ef91eb5"
         },
         "nested": {
           "destination": "dist/nested/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "ec0b6262d1bb54078fc6132cc312e095f4a6537542fe6fb23e2ff14fd3029ba0"
+          "tree_sha256": "177f470e0a986c20d4e8c45ce1a4fbc183387671bc7c2f31654a7fae3ef91eb5"
         }
       },
       "canonical_source": "skills/_autonomy-rules.md",
       "kind": "rule",
       "slug": "autonomy",
       "source_file_count": 1,
-      "source_tree_sha256": "ec0b6262d1bb54078fc6132cc312e095f4a6537542fe6fb23e2ff14fd3029ba0"
+      "source_tree_sha256": "177f470e0a986c20d4e8c45ce1a4fbc183387671bc7c2f31654a7fae3ef91eb5"
     },
     {
       "artifacts": {
