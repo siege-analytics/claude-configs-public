@@ -27,6 +27,12 @@ The same action that opens a PR must update each referenced ticket:
 
 A PR comment without a status transition is incomplete unless the platform lacks a status field; in that case the comment must include `Status: In Review`.
 
+An implementation-authorized agent may request review of its own draft PR
+without asking the operator to approve the draft-to-review transition. Verify
+the PR against the own task, author, branch and current head. Requesting review
+does not assert readiness to merge or ship, waive required review, or expand a
+review-only collaborator's role.
+
 ### ticket-lifecycle:3. Test/UAT handoff moves the ticket to In Testing or Awaiting UAT
 
 When work leaves author/reviewer hands and enters testing, QA, user acceptance, rollout validation, or production UAT:
@@ -64,6 +70,19 @@ Closing or marking Done requires all applicable evidence:
 - test/UAT/production validation evidence or N/A with reason.
 
 If any evidence is missing, the ticket remains in the appropriate active state (`In Review`, `In Testing`, or `Blocked`).
+
+Do not invent an operator signoff requirement for a mechanical fixed or
+superseded close. Verify the fixing/superseding PR's merged state, merge commit,
+repository, accepted base and exact canonical reference/fixing or supersession
+relationship through GitHub. A normal Refs/References ticket list is valid
+reference evidence; it need not be rewritten into an automatic closing keyword. An issue
+fix must have reached the repository's required final integration branch; a
+develop merge alone does not complete a develop-to-main delivery. Applicable
+deployment and validation evidence, explicit holds and role boundaries still
+apply. Caller wording alone is not evidence. An unrelated or unlanded PR supplies
+no mechanical authority. A fixing/superseding PR may have another author once
+its integration and exact relationship are verified; the target own PR still
+requires the current actor for a review request or superseded close.
 
 ## Platform fallback
 
