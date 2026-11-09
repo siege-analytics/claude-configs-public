@@ -165,7 +165,9 @@ The script may contain git commit or other write operations that bypass
 hook inspection. Create a feature branch first, or run the script's
 commands directly so hooks can inspect them.
 
-  git checkout -b feature/your_description
+  git switch -c feature/your_description origin/develop
+
+If origin/develop is missing, use bin/prepare-task-branch.py to verify and bootstrap it.
 
 This is enforced by the branch-guard hook (see issue #98).
 EOF
@@ -174,7 +176,9 @@ EOF
 BLOCKED: Direct commit to '$BRANCH' is not allowed.
 
 Create a feature branch first:
-  git checkout -b feature/your_description
+  git switch -c feature/your_description origin/develop
+
+If origin/develop is missing, use bin/prepare-task-branch.py to verify and bootstrap it.
 
 This is enforced by the develop-guard and branch skills.
 EOF

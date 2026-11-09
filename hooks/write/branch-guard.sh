@@ -79,7 +79,9 @@ if [[ "$BRANCH" == "HEAD" ]]; then
 BLOCKED: Write to $FILE_PATH but the repo at $repo_root is in detached HEAD.
 
 Check out a feature branch before writing:
-  git -C $repo_root checkout -b fix/<ticket-or-description>
+  git -C "$repo_root" switch -c fix/<ticket-or-description> origin/develop
+
+If origin/develop is missing, use bin/prepare-task-branch.py to verify and bootstrap it.
 
 See git-workflow/branch/SKILL.md for branch naming.
 HOOKEOF
@@ -96,11 +98,13 @@ Direct writes to $BRANCH bypass the git-workflow discipline (branch-guard,
 ticket-required, self-review, survey-context). Switch to a feature branch
 first:
 
-  git -C $repo_root checkout -b fix/<ticket-or-description>
+  git -C "$repo_root" switch -c fix/<ticket-or-description> origin/develop
 
 If this is a documentation-only fix that genuinely needs to land on $BRANCH,
 use a feature branch + PR anyway -- the PR-time hooks (self-review,
 survey-context) catch missing trailers and doc-drift.
+
+If origin/develop is missing, use bin/prepare-task-branch.py to verify and bootstrap it.
 
 See git-workflow/branch/SKILL.md and git-workflow/develop-guard/SKILL.md.
 HOOKEOF

@@ -18,6 +18,7 @@ import sys
 sys.dont_write_bytecode = True
 
 from task_actions import UnknownShape, shell_tokens, released_read_verdict, action as classify_action
+from branch_source import check as check_branch_source
 
 PROTECTED = {"main", "master", "develop", "dev", "development", "staging", "next", "integration"}
 BUILTINS = set("add am annotate apply archive bisect blame branch bundle cat-file check-attr check-ignore check-mailmap check-ref-format checkout checkout-index cherry cherry-pick clean clone column commit config count-objects credential describe diff diff-files diff-index diff-tree difftool fast-export fast-import fetch filter-branch fmt-merge-msg for-each-ref format-patch fsck gc get-tar-commit-id grep hash-object help index-pack init instaweb interpret-trailers log ls-files ls-remote ls-tree mailinfo mailsplit maintenance merge merge-base merge-file merge-index merge-one-file merge-tree mergetool mktag mktree multi-pack-index mv name-rev notes pack-objects pack-redundant pack-refs patch-id prune prune-packed pull push range-diff read-tree rebase reflog remote repack replace request-pull rerere reset restore rev-list rev-parse revert rm send-email send-pack shortlog show show-branch show-index show-ref sparse-checkout stage stash status stripspace submodule subtree switch symbolic-ref tag unpack-file unpack-objects update-index update-ref update-server-info var verify-commit verify-pack verify-tag version whatchanged worktree write-tree".split())
@@ -244,7 +245,23 @@ def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirec
 def in_scope(cwd):
     origin = inspect_git(cwd, "config", "--get", "remote.origin.url")
     match = re.search(r"(?:[:/])([^/:]+)/[^/]+(?:\.git)?$", origin)
-    return bool(match and match[1] in os.environ.get("CLAUDE_SCOPED_OWNERS", "siege-analytics").split(":"))
+    owners = os.environ.get("CLAUDE_SCOPED_OWNERS")
+    if not owners:
+        # Consumer overlays already configure this same-package shell helper.
+        # Reuse that fixed declaration rather than silently reverting their
+        # Python operation checks to the upstream owner-only default.
+        from pathlib import Path
+        try:
+            declaration = Path(__file__).with_name("scope-check.sh").read_text()
+        except OSError as error:
+            raise UnknownShape("cannot read installed owner scope; repair the same-package scope-check.sh") from error
+        configured = re.findall(r'^SCOPED_OWNERS="\$\{CLAUDE_SCOPED_OWNERS:-([^}]+)\}"$', declaration, re.MULTILINE)
+        if len(configured) != 1:
+            raise UnknownShape("installed Git owner scope declaration is unavailable or ambiguous; repair the same-package scope-check.sh")
+        owners = configured[0]
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+(?::[A-Za-z0-9_.-]+)*", owners):
+        raise UnknownShape("installed Git owner scope is invalid")
+    return bool(match and match[1] in owners.split(":"))
 
 
 def destructive_reason(item):
@@ -492,6 +509,8 @@ def main():
         items = invocations(command, os.path.realpath(options.cwd or os.getcwd()))
         for item in items:
             if options.policy == "branch":
+                if in_scope(item["cwd"]):
+                    check_branch_source(item, inspect_git)
                 if item["args"][0] == "commit" and in_scope(item["cwd"]):
                     branch = inspect_git(item["cwd"], "symbolic-ref", "--quiet", "--short", "HEAD")
                     if branch in PROTECTED:

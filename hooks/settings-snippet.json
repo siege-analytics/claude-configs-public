@@ -254,6 +254,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "mcp__.*github.*create_branch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/native-branch-source.py",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [

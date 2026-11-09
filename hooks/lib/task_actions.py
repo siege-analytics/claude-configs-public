@@ -1131,6 +1131,42 @@ def _literal_operand_family(args: list[str]) -> bool:
     return python and args[1:3] == ['-m', 'pytest']
 
 
+
+def task_branch_preparation(args, cwd):
+    """Bound only the shipped branch helper's declared repository/worktree.
+
+    This remains a mutation and needs its ordinary owning task. Arbitrary
+    Python scripts and copied helpers keep the existing opaque-script boundary.
+    """
+    script = 0
+    if os.path.basename(args[0]) in {'python', 'python3'}:
+        script = 1
+        while script < len(args) and args[script] == '-B':
+            script += 1
+    if script >= len(args):
+        return None
+    expected = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../bin/prepare-task-branch.py'))
+    if canonical(args[script], cwd) != expected:
+        return None
+    values = {}
+    rest = args[script + 1:]
+    while rest:
+        option = rest.pop(0)
+        if '=' in option:
+            option, value = option.split('=', 1)
+        else:
+            if not rest:
+                raise UnknownShape('branch preparation option is missing its value')
+            value = rest.pop(0)
+        if option not in {'--repo', '--branch', '--worktree', '--remote'} or option in values or not value:
+            raise UnknownShape('unsupported branch preparation options')
+        values[option] = value
+    if not {'--branch', '--worktree'} <= values.keys():
+        raise UnknownShape('branch preparation needs a unique branch and worktree')
+    if values['--branch'].startswith('-') or values.get('--remote', 'origin').startswith('-'):
+        raise UnknownShape('invalid branch preparation name')
+    return [canonical(values.get('--repo', cwd), cwd), canonical(values['--worktree'], cwd)]
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
@@ -1222,6 +1258,12 @@ def _action(command: str, cwd: str) -> dict:
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             reads = False
             mutation_commands += 1
+            branch_paths = task_branch_preparation(args, effective)
+            if branch_paths is not None:
+                paths.extend(branch_paths)
+                self_managed = False
+                args, arg_globs = [], []
+                return
             project = github_project_action(args)
             if project is not None:
                 remote_actions.append(project)
