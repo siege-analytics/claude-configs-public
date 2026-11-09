@@ -152,6 +152,8 @@ def task_release_source(item, inspect, *, command):
     if candidate is None:
         return None
     name, source = candidate
+    if name.startswith('<'):
+        return None  # A release grant requires an explicit concrete destination.
     raw = os.environ.get('CCP_HOOK_INPUT_JSON')
     workspace = os.environ.get('CRAFT_AGENT_WORKSPACE')
     if not raw or not workspace:
