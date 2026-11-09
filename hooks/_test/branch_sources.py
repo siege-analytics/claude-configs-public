@@ -321,6 +321,13 @@ class BranchSources(unittest.TestCase):
             file.write_text(json.dumps(data))
             result = branch_check()
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            # Match UMG's existing same-package workspace fallback outside Craft.
+            shutil.copytree(ROOT / 'hooks', gates.ws / 'hooks')
+            no_workspace = dict(env)
+            no_workspace.pop('CRAFT_AGENT_WORKSPACE', None)
+            fallback = subprocess.run(['bash', str(gates.ws / 'hooks/git/branch-guard.sh')],
+                input=json.dumps(payload), text=True, capture_output=True, env=no_workspace)
+            self.assertEqual(fallback.returncode, 0, fallback.stdout + fallback.stderr)
             # Ordinary task/lifecycle hooks also accept this already-granted work.
             self.assertEqual(gates.hook(command, cwd=self.repo, env=env).returncode, 0)
             self.run_git(self.repo, 'switch', '-c', 'backport/approved', 'v0.15.6')

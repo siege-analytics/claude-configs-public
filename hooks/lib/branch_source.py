@@ -155,8 +155,8 @@ def task_release_source(item, inspect, *, command):
     if name.startswith('<'):
         return None  # A release grant requires an explicit concrete destination.
     raw = os.environ.get('CCP_HOOK_INPUT_JSON')
-    workspace = os.environ.get('CRAFT_AGENT_WORKSPACE')
-    if not raw or not workspace:
+    workspace = os.environ.get('CRAFT_AGENT_WORKSPACE') or str(Path(__file__).resolve().parents[2])
+    if not raw:
         return None
     try:
         payload = json.loads(raw)

@@ -60,7 +60,7 @@ def prepare(repo, branch, worktree, remote='origin'):
         if not cached:
             raise  # Network failure does not prove remote develop is absent.
         git(repo, 'worktree', 'add', '-b', branch, str(worktree), cached)
-        print('Using cached develop ' + cached + '; fetch failed, remote freshness is unverified. No bootstrap attempted.', file=sys.stderr)
+        print('Using cached develop ' + cached + '; remote refresh failed, remote freshness is unverified. No bootstrap attempted.', file=sys.stderr)
         return cached
     if 'develop' not in heads:
         source = heads.get('main')
