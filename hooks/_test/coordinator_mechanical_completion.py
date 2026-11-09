@@ -44,9 +44,23 @@ def item_url(number,resource):
  if mode=='urlnumber':value=value.rsplit('/',1)[0]+'/'+str(number+1)
  if mode=='urlquery':value+='?unexpected=1'
  return value
-if a[:4]==['api','--hostname','github.com','user']:print(json.dumps({'login':'agent'}))
+if a[:4]==['api','--hostname','github.com','user']:
+ if mode in ['appbot','appforeign']:
+  print(json.dumps({'message':'Resource not accessible by integration','status':'403'}));sys.exit(1)
+ print(json.dumps({'login':'agent'}))
+elif a==['api','--hostname','github.com','graphql','-f','query=query { viewer { login } }']:
+ if mode=='viewer_missing':print(json.dumps({'data':{}}))
+ elif mode=='viewer_null':print(json.dumps({'data':{'viewer':None}}))
+ elif mode=='viewer_malformed':print(json.dumps({'data':{'viewer':{'login':[]}}}))
+ elif mode=='viewer_blank':print(json.dumps({'data':{'viewer':{'login':' '}}}))
+ elif mode=='viewer_wrongdata':print(json.dumps({'data':[]}))
+ elif mode=='viewer_errors':print(json.dumps({'data':{'viewer':{'login':'agent'}},'errors':[{'message':'identity proof unavailable'}]}))
+ else:print(json.dumps({'data':{'viewer':{'login':'electinfo-platform[bot]' if mode in ['appbot','appforeign'] else 'agent'}}}))
+elif a[:4]==['api','--hostname','github.com','repos/electinfo/spark-on-kubernetes/pulls/95']:
+ body={'cross_relative':'Refs #3304','cross_foreign':'Refs other/enterprise#3304','cross_wrongnumber':'Refs electinfo/enterprise#3305'}.get(mode,'Refs electinfo/enterprise#3304')
+ print(json.dumps(dict(number=95,html_url='https://github.com/electinfo/spark-on-kubernetes/pull/95',state='open',draft=True,user={'login':'agent'},head={'sha':os.environ['MECHANICAL_HEAD'],'ref':'fix/3304','repo':{'full_name':'electinfo/spark-on-kubernetes'}},base={'ref':'develop','repo':{'full_name':'electinfo/spark-on-kubernetes'}},body=body)))
 elif a[:4]==['api','--hostname','github.com','repos/example/target/pulls/50']:
- print(json.dumps(dict(number=50,html_url=item_url(50,'pull'),state='open',draft=True,user={'login':'other' if mode=='other' else 'agent'},head={'sha':('b'*40 if mode=='head' else os.environ['MECHANICAL_HEAD']),'ref':'fix/31','repo':{'full_name':'example/target'}},base={'ref':'develop','repo':{'full_name':'example/target'}},body={'refs':'Refs example/target#31','multirefs':'Refs #99, example/target#31, #77.','quotedrefs':'"Refs #31"','foreignrefs':'Refs foreign/target#31','longfencedrefs':'````text\\n```\\nRefs #31\\n````','lazyquotedrefs':'> Example\\nRefs #31','negatedrefs':'Does not reference #31','fencedrefs':'```text\\nRefs #31\\n```','examplerefs':'Example:\\nRefs #31'}.get(mode,'Fixes #31'))))
+ print(json.dumps(dict(number=50,html_url=item_url(50,'pull'),state='open',draft=True,user={'login':'other' if mode=='other' else ('different-app[bot]' if mode=='appforeign' else ('electinfo-platform[bot]' if mode=='appbot' else 'agent'))},head={'sha':('b'*40 if mode=='head' else os.environ['MECHANICAL_HEAD']),'ref':'fix/31','repo':{'full_name':'example/target'}},base={'ref':'develop','repo':{'full_name':'example/target'}},body={'refs':'Refs example/target#31','multirefs':'Refs #99, example/target#31, #77.','quotedrefs':'"Refs #31"','foreignrefs':'Refs foreign/target#31','longfencedrefs':'````text\\n```\\nRefs #31\\n````','lazyquotedrefs':'> Example\\nRefs #31','negatedrefs':'Does not reference #31','fencedrefs':'```text\\nRefs #31\\n```','examplerefs':'Example:\\nRefs #31'}.get(mode,'Fixes #31'))))
 elif a[:4]==['api','--hostname','github.com','repos/example/target/pulls/60']:
  relation={'refs':'Refs example/target#31.','multirefs':'Refs #99, example/target#31, #77.','quotedrefs':'"Refs #31"','foreignrefs':'Refs foreign/target#31','longfencedrefs':'````text\\n```\\nRefs #31\\n````','lazyquotedrefs':'> Example\\nRefs #31','negatedrefs':'Does not reference #31','fencedrefs':'```text\\nRefs #31\\n```','examplerefs':'Example:\\nRefs #31','unrelated':'Fixes #99','issuesuperseded':'Supersedes issue #31.','fencedfix':'```text\\nFixes #31\\n```'}.get(mode,'Fixes #31.')
  print(json.dumps(dict(number=60,html_url=item_url(60,'pull'),state=('open' if mode=='unlanded' else 'closed'),merged=mode!='unlanded',merge_commit_sha='a'*40,user={'login':'other' if mode=='sourceother' else 'agent'},base={'ref':'develop','repo':{'full_name':'example/target'}},body=relation+' Supersedes PR #50.')))
@@ -82,7 +96,127 @@ else:sys.exit(99)
                 self.mode.write_text(mode)
                 self.hook('gh pr ready 50 --repo example/target',2)
 
+    def test_app_installation_identity_uses_same_actor_viewer(self):
+        self.mode.write_text('appbot')
+        self.hook('gh pr ready 50 --repo example/target',0)
+        self.hook("gh pr close 50 --repo example/target --comment 'Superseded by PR #60\nRollout: N/A: duplicate metadata only.'",0)
+        calls=[json.loads(x) for x in self.calls.read_text().splitlines()]
+        identity=['api','--hostname','github.com','graphql','-f','query=query { viewer { login } }']
+        self.assertEqual(sum(x==identity for x in calls),2)
+        self.assertFalse(any(x[-1:] == ['user'] for x in calls))
+        self.mode.write_text('appforeign')
+        self.hook('gh pr ready 50 --repo example/target',2)
+        self.hook("gh pr close 50 --repo example/target --comment 'Superseded by PR #60\nRollout: N/A.'",2)
+
+    def test_viewer_identity_missing_malformed_or_partial_fails_closed(self):
+        for mode in ['viewer_missing','viewer_null','viewer_malformed','viewer_blank','viewer_wrongdata','viewer_errors']:
+            with self.subTest(mode=mode):
+                self.mode.write_text(mode)
+                self.hook('gh pr ready 50 --repo example/target',2)
+
     def test_own_ready(self):
+        self.hook('gh pr ready 50 --repo example/target',0)
+
+    def central_task(self):
+        shutil.rmtree(self.f.ws/'sessions/one/tasks')
+        subprocess.run(['git','-C',str(self.f.repo),'branch','-m','fix/3304'],check=True,timeout=15)
+        return self.f.task('electinfo/enterprise#3304',self.f.repo)
+
+    def test_cross_repository_ready_real_central_ticket_shape(self):
+        self.central_task()
+        self.hook('gh pr ready 95 --repo electinfo/spark-on-kubernetes',0)
+
+    def test_cross_repository_ready_requires_canonical_not_relative_reference(self):
+        self.central_task()
+        for mode in ['cross_relative','cross_foreign','cross_wrongnumber']:
+            with self.subTest(mode=mode):
+                self.mode.write_text(mode)
+                self.hook('gh pr ready 95 --repo electinfo/spark-on-kubernetes',2)
+
+    def test_cross_repository_ready_existing_inline_task_binding(self):
+        self.central_task()
+        self.f.task('electinfo/enterprise#3305',self.f.repo)
+        command='gh pr ready 95 --repo electinfo/spark-on-kubernetes'
+        self.hook(command,2)
+        self.hook("CCP_TASK_ID='electinfo/enterprise#3304' "+command,0)
+        self.env['CCP_TASK_ID']='electinfo/enterprise#3305'
+        self.hook("CCP_TASK_ID='electinfo/enterprise#3304' "+command,2)
+
+    def test_cross_repository_does_not_expand_close_grammar(self):
+        self.central_task()
+        for command in ["gh issue close 3304 --repo electinfo/spark-on-kubernetes --comment 'Fixed by PR #60\nRollout: N/A.'", "gh pr close 95 --repo electinfo/spark-on-kubernetes --comment 'Superseded by PR #60\nRollout: N/A.'"]:
+            self.hook(command,2)
+
+    def test_same_repository_close_uses_existing_literal_binding_full_chain(self):
+        self.f.task('example/target#32',self.f.repo)
+        settings=json.loads((ROOT/'hooks/settings-snippet.json').read_text())
+        hooks=[ROOT/h['command'].split('/claude-configs-public/',1)[1]
+               for group in settings['hooks']['PreToolUse'] if group.get('matcher')=='Bash'
+               for h in group['hooks']]
+        def chain(command):
+            payload=fixture.craft_payload(tool_name='Bash',cwd=str(self.f.repo),tool_input={'command':command})
+            outcomes={}
+            for hook in hooks:
+                result=subprocess.run(['bash',str(hook)],input=json.dumps(payload),env=self.env,text=True,capture_output=True,timeout=15,cwd=self.f.repo)
+                self.assertIn(result.returncode,[0,2],(hook.name,result.stderr))
+                outcomes[hook.name]=result.returncode
+            self.assertEqual(len(outcomes),16)
+            return outcomes
+        commands=["gh issue close 31 --repo example/target --comment 'Fixed by PR #60\nRollout: N/A: verified publication metadata.'",
+                  "gh pr close 50 --repo example/target --comment 'Superseded by PR #60\nRollout: N/A: duplicate metadata only.'"]
+        for command in commands:
+            with self.subTest(command=command):
+                self.hook(command,2)  # The existing two-task ambiguity is real.
+                selected="CCP_TASK_ID='example/target#31' "+command
+                self.assertTrue(all(code==0 for code in chain(selected).values()))
+                self.assertEqual(chain("CCP_TASK_ID='example/target#32' "+command)['coordinator-status-guard.sh'],2)
+                self.assertEqual(chain("CCP_TASK_ID='foreign/repository#31' "+command)['coordinator-status-guard.sh'],2)
+                self.env['CCP_TASK_ID']='example/target#32'
+                outcomes=chain(selected)
+                self.assertEqual(outcomes['coordinator-status-guard.sh'],2)
+                self.assertEqual(outcomes['universal-mutation-gate.sh'],2)
+                self.env.pop('CCP_TASK_ID')
+
+    def cross_ready_chain(self, binding='', cwd=None):
+        settings=json.loads((ROOT/'hooks/settings-snippet.json').read_text())
+        hooks=[ROOT/h['command'].split('/claude-configs-public/',1)[1]
+               for group in settings['hooks']['PreToolUse'] if group.get('matcher')=='Bash'
+               for h in group['hooks']]
+        command='cd '+str(self.f.repo)+' && '+binding+'gh pr ready 95 --repo electinfo/spark-on-kubernetes'
+        payload=fixture.craft_payload(tool_name='Bash',cwd=str(cwd or self.f.ws/'sessions/one'),tool_input={'command':command})
+        outcomes={}
+        for hook in hooks:
+            result=subprocess.run(['bash',str(hook)],input=json.dumps(payload),env=self.env,text=True,capture_output=True,timeout=15,cwd=self.f.repo)
+            outcomes[hook.name]=result.returncode
+            self.assertIn(result.returncode,[0,2],(hook.name,result.stderr))
+        self.assertEqual(len(outcomes),16)
+        return outcomes
+
+    def test_cross_ready_binding_full_guard_chain_and_ambiguity(self):
+        self.central_task()
+        self.f.task('electinfo/enterprise#3305',self.f.repo)
+        self.assertEqual(self.cross_ready_chain()['universal-mutation-gate.sh'],2)
+        self.assertTrue(all(code==0 for code in self.cross_ready_chain("CCP_TASK_ID='electinfo/enterprise#3304' ").values()))
+
+    def test_cross_ready_lifecycle_and_scope_stay_with_actual_mutation_guard(self):
+        directory=self.central_task()
+        path=directory/'think-gate.json';data=json.loads(path.read_text())
+        fixture.write(path,{**data,'status':'reviewing'})
+        outcomes=self.cross_ready_chain()
+        self.assertEqual(outcomes['coordinator-status-guard.sh'],0)  # No new phase gate here.
+        self.assertEqual(outcomes['universal-mutation-gate.sh'],2)
+        for fields in [{'status':'disposed'},{'scope_paths':[str(self.f.b)]}]:
+            fixture.write(path,{**data,**fields})
+            self.assertEqual(self.cross_ready_chain()['universal-mutation-gate.sh'],2)
+
+    def test_ready_binding_is_literal_conflict_checked_and_not_an_env_wrapper(self):
+        self.central_task()
+        command='gh pr ready 95 --repo electinfo/spark-on-kubernetes'
+        for prefix in ['env CCP_TASK_ID=electinfo/enterprise#3304 ', 'OTHER=x ', 'CCP_TASK_ID=electinfo/enterprise#3304 OTHER=x ']:
+            self.hook(prefix+command,2)
+
+    def test_same_repository_ready_selection_is_not_broadened_by_other_tasks(self):
+        self.f.task('electinfo/enterprise#3304',self.f.repo)
         self.hook('gh pr ready 50 --repo example/target',0)
 
     def test_landed_issue_close(self):
@@ -108,7 +242,8 @@ else:sys.exit(99)
         self.hook("gh issue close 31 --repo example/target --comment 'Fixed by PR #60\nRollout: N/A: metadata after verified integration.'",0)
         self.hook("gh pr close 50 --repo example/target --comment 'Superseded by PR #60\nRollout: N/A: duplicate metadata.'",0)
         calls=[json.loads(x) for x in self.calls.read_text().splitlines()]
-        self.assertEqual(sum(x[-1:] == ['user'] for x in calls),1)
+        self.assertEqual(sum(x[:4] == ['api','--hostname','github.com','graphql'] for x in calls),1)
+        self.assertFalse(any(x[-1:] == ['user'] for x in calls))
         self.mode.write_text('other')
         self.hook("gh pr close 50 --repo example/target --comment 'Superseded by PR #60\nRollout: N/A.'",2)
 

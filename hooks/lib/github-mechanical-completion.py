@@ -67,7 +67,7 @@ def item_url_matches(value, repo, resource, number):
 
 def verify(command, cwd, body):
     """Return False outside the exact grammar; proof failures are diagnostic."""
-    if not re.match(r'^\s*(?:gh\s+(?:pr\s+ready|(?:issue|pr)\s+close)\s|cd\s)', command):
+    if not re.match(r'^\s*(?:gh\s+(?:pr\s+ready|(?:issue|pr)\s+close)\s|cd\s|CCP_TASK_ID=)', command):
         return False
     global _DEADLINE
     _DEADLINE = time.monotonic() + 8.0
@@ -77,6 +77,12 @@ def verify(command, cwd, body):
         require(not tokens[1][1] and not tokens[1][2] and os.path.isabs(tokens[1][0]), 'cd prefix requires one literal absolute task worktree')
         prefix_root = str(Path(tokens[1][0]).resolve())
         tokens = tokens[3:]
+    command_binding = ''
+    if tokens and not tokens[0][1] and tokens[0][0].startswith('CCP_TASK_ID='):
+        require(not tokens[0][2], 'task binding must be literal')
+        command_binding = tokens[0][0].split('=', 1)[1]
+        require(command_binding and len(command_binding) <= 1024 and not any(ord(c) < 32 or ord(c) == 127 for c in command_binding), 'invalid literal task binding')
+        tokens = tokens[1:]
     require(not any(op or glob for _, op, glob in tokens), 'split mechanical transitions into one literal gh command')
     args = [word for word, _, _ in tokens]
     if args[:3] not in (['gh', 'pr', 'ready'], ['gh', 'issue', 'close'], ['gh', 'pr', 'close']):
@@ -105,14 +111,24 @@ def verify(command, cwd, body):
     sid = resolver.session_id_from_env()
     require(sid, 'restore the own-session task identity')
     workspace = os.environ.get('CRAFT_AGENT_WORKSPACE') or cwd
-    binding = resolver.task_binding()
-    candidates = []
+    ambient_binding = resolver.task_binding()
+    require(not command_binding or not ambient_binding or command_binding == ambient_binding, 'conflicting command and current task bindings')
+    binding = command_binding or ambient_binding
+    candidates = []; ready_candidates = []
     for gate in resolver.find_all_gates(workspace):
         data = gate['data']
         ticket = data.get('ticket') or data.get('task_id', '')
         match = re.fullmatch(rf'({REPO})#([1-9][0-9]*)', ticket) if isinstance(ticket, str) else None
-        if match and match[1].lower() == repo.lower() and (not binding or resolver.task_identity(data) == binding):
-            candidates.append(gate)
+        if match and (not binding or resolver.task_identity(data) == binding):
+            if match[1].lower() == repo.lower():
+                candidates.append(gate)
+            elif action == 'ready' and isinstance(data.get('repo_root'), str):
+                context = prefix_root or resolver.canonical(cwd)
+                if binding or resolver._within(context, data['repo_root']):
+                    ready_candidates.append(gate)
+    # Preserve existing same-repository selection. A bound central ticket may
+    # target its actual code worktree; this adds no cross-repository close.
+    candidates = candidates or ready_candidates
     require(len(candidates) == 1, 'select one unambiguous own task for the literal repository (use its existing task binding)')
     task_root = candidates[0]['data'].get('repo_root')
     require(isinstance(task_root, str) and os.path.isabs(task_root), 'own task needs its physical repository worktree')
@@ -120,7 +136,7 @@ def verify(command, cwd, body):
     require(prefix_root is None or prefix_root == task_root, 'cd prefix does not select the bound task worktree')
     require(git(task_root, 'rev-parse', '--show-toplevel') == task_root, 'own task root is not its Git worktree')
     selected = resolver.select_task(workspace, [task_root], binding=resolver.task_identity(candidates[0]['data']))
-    require(selected.get('gate'), selected.get('error') or 'select the implementing task')
+    require(selected.get('gate'), selected.get('error') or 'select the own bound task')
     task = selected['gate']['data']
     # The universal mutation gate owns lifecycle authority. Do not introduce
     # another phase gate here (verification/closure may have its own task).
@@ -128,7 +144,8 @@ def verify(command, cwd, body):
     require(not re.search(r'read.only|review.only', role) and role not in {'reviewer', 'observer', 'comment-only'}, 'existing read-only/review-only/comment-only task does not authorize state transitions')
     ticket = task.get('ticket') or task.get('task_id')
     match = re.fullmatch(rf'({REPO})#([1-9][0-9]*)', ticket or '')
-    require(match and match[1].lower() == repo.lower(), 'own task needs a canonical ticket in the selected repository')
+    require(match and (action == 'ready' or match[1].lower() == repo.lower()), 'own task needs a canonical ticket; close must target the same repository')
+    ticket_repo = match[1]
     task_number = int(match[2])
     alias = task.get('task_id', '')
     require(not re.fullmatch(rf'{REPO}#[1-9][0-9]*', alias) or alias.lower() == ticket.lower(), 'conflicting canonical task and ticket identities')
@@ -141,8 +158,14 @@ def verify(command, cwd, body):
     require(isinstance(labels, list) and not set(labels) & {'role::reviewer', 'role::observer'}, 'review-only session role cannot ready or close items')
     viewer = None
     if kind == 'pr':
-        viewer = read(['user']).get('login')
-        require(isinstance(viewer, str) and viewer, 'missing authenticated GitHub actor')
+        # Installation tokens cannot read REST /user. The fixed GraphQL
+        # viewer read proves the same existing actor without changing tokens.
+        identity = read(['graphql', '-f', 'query=query { viewer { login } }'])
+        require(not identity.get('errors'), 'GitHub viewer identity lookup returned errors')
+        data = identity.get('data')
+        require(isinstance(data, dict) and isinstance(data.get('viewer'), dict), 'missing or malformed GitHub viewer identity')
+        viewer = data['viewer'].get('login')
+        require(isinstance(viewer, str) and viewer and not any(c.isspace() for c in viewer), 'missing authenticated GitHub actor')
 
     def pr(n):
         value = read([f'repos/{repo}/pulls/{n}'])
@@ -155,9 +178,9 @@ def verify(command, cwd, body):
         require(value.get('state') == 'open' and value.get('draft') is True, 'PR must be an open draft')
         require(value.get('user', {}).get('login') == viewer, 'PR author is another GitHub actor; obtain its owner signoff')
         head = value.get('head', {})
-        require(head.get('repo', {}).get('full_name', '').lower() == repo.lower(), 'own PR must originate in the task repository')
+        require(head.get('repo', {}).get('full_name', '').lower() == repo.lower(), 'own PR must originate in the selected PR repository')
         require(head.get('ref') == git(task_root, 'branch', '--show-current') and head.get('sha') == git(task_root, 'rev-parse', 'HEAD'), 'PR head does not match this task worktree branch and commit')
-        require(reference(value.get('body'), task_number, repo) or reference(value.get('body'), task_number, repo, 'reference'), 'PR body lacks a Refs/Fixes declaration for the own-task ticket')
+        require(reference(value.get('body'), task_number, ticket_repo, source_repo=repo) or reference(value.get('body'), task_number, ticket_repo, 'reference', source_repo=repo), 'PR body lacks a Refs/Fixes declaration for the own-task ticket')
         return True
 
     nomination = re.fullmatch(r'(fixed|superseded) by PR #([1-9][0-9]*)[.!]?', body.strip().splitlines()[0] if body.strip() else '', re.I)
