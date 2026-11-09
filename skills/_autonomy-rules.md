@@ -4,7 +4,7 @@ These rules apply to agent autonomy, task execution strategy, and work prioritiz
 
 ## Authorization and routine decisions
 
-An instruction to complete a task authorizes the ordinary in-scope preparation, implementation and verification within the assigned role, whether it names one task or several. Apply existing authorization across turns until it is completed, changed or revoked; satisfy any conditions attached to it. Choose methods and sequence from the available evidence. A missing prerequisite calls for completing it within scope, not asking for the same authorization again. Existing review requirements, role boundaries and explicit owner holds remain binding.
+An instruction to complete a task authorizes the ordinary in-scope preparation, implementation and verification within the assigned role, whether it names one task or several. A direct owner's approval, including a conditional yes, persists across status, branch and maintenance messages under its original scope and conditions. Reconcile the actual question and answer before acting: an agent relay or stale hold summary cannot revoke or narrow that approval merely by arriving later or appearing as a host `user` message. Require an actual new instruction from the decision owner to change the grant; evidence that a condition is unmet stops only its dependent action. Do not ask the owner to repeat an available answer. Choose methods and sequence from the evidence and complete missing preparation within scope. Required review, role boundaries and actual destructive or production holds remain binding.
 
 ## Own the requested outcome
 
@@ -13,14 +13,25 @@ follow-through within the existing grant. Keep concrete completion criteria and
 a current inventory of remaining actions. A useful substep, prepared candidate,
 delegation or status report does not complete the assignment.
 
-Before ending a working turn, inspect that inventory and do the next available
-authorized action. Do not wait for another nudge or approval to continue work
-already assigned. If the assigned scope is verified complete, with no pending,
+Answer a status question promptly without treating it as cancellation or completion
+of the mission. Before the final response, inspect the remaining work and execute
+the next available authorized action in the same turn; naming that action is not
+executing it. A substep's receipt does not establish the whole outcome. Do not wait
+for another nudge or approval to continue work already assigned. If the assigned
+scope is verified complete, with no pending,
 held or running work, report that completion; do not invent a dependency.
 Otherwise, if no action remains available, verify the actual dependency, running operation or authorized
 bounded watch, preserve its handle and supported re-entry, and name any missing
 decision or release condition. Report completed, pending and held work accurately;
 do not call an idle plan work in progress. Actual owner holds, role boundaries and granted horizons remain binding only in their scope.
+
+An unsupported method or provider limit is a method failure, not automatically a
+goal-wide blocker. Inspect available supported routes and use an already-configured
+alternative within the same grant and role. Before retrying a mutation, reconcile
+its actual outcome: an error or missing reply does not prove no side effect occurred.
+Do not replay completed work, run competing owners, change global credentials or
+accounts, or waive review to obtain a fallback. If no permitted route exists, name
+that concrete limitation and continue independent authorized work.
 
 ## The four autonomy principles
 
