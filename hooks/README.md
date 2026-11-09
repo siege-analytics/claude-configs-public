@@ -22,7 +22,7 @@ behavior; the skill explains the correct behavior.
 | `git/decomposition-guard.sh` | `skills/ticket-decomposition/SKILL.md`, `skills/testing-frameworks/SKILL.md` (testing.layers `source:` globs) | **Warns** (V1 non-blocking, always exit 0) on `git push`, `gh pr create`/`merge`, `glab mr create`/`merge` when the pushed diff's touched source files span more than one architectural layer per the project's `testing.layers` `source:` globs in PROJECT.md. Each file maps to exactly one layer (longest-literal-prefix wins); files matching no `source:` glob (tests, docs, config) are layer-neutral and never counted. Override: `[multi-layer-ok: <reason>]` trailer in the latest commit body. Silent no-op when the project declares no `source:` globs. Mechanical backstop for the one-ticket/PR-per-layer doctrine; promotes to a block after the false-positive rate is observed. |
 | `write/branch-guard.sh` | git-workflow/develop-guard at write time (not just commit time) | `Write` tool calls to files in a git repo on `main`/`master`/`develop`/`staging`, or in detached HEAD. Carve-outs: session-managed `plans/` and `data/` dirs, `~/.claude/`, `~/.craft-agent/`, files outside any git repo. Composes with `write/write-guard.sh` (path-pattern-based). Closes the git-perimeter coverage gap for silent file mutations that bypass push-time hooks. |
 | `bash/destructive-guard.sh` | destructive Bash patterns at PreToolUse (v1: `prod-destructive` tier only; v2 layers `shared-resource` and `general-mutation`) | `Bash` commands matching a tier-tagged deny-list of obvious-destructive shapes: `rm -rf /`, force-push to `main`/`master`/`develop`/`staging`, `--no-verify` / `--no-gpg-sign` hook bypasses, `chmod -R 777`, `psql` mutation against non-localhost, `aws s3 rm/mv` (allow-list dev buckets), `kubectl apply/delete/patch` (allow-list dev contexts). Localhost carve-out built in. Escapes (in preference order): (1) `Authorized: <reason>` trailer on latest commit (one-shot, expires on next commit), (2) allow-list file at `<repo>/.claude/destructive-bash-allowlist.txt` or `~/.claude/destructive-bash-allowlist.txt`, (3) `CLAUDE_DESTRUCTIVE_BASH=allow` env var (discouraged). v2-deferred tiers log `[v2-deferred:<tier>]` to stderr without blocking, so firing logs over coming sessions inform whether broader gates are justified. Closes #127 v1. |
-| `bash/coordinator-status-guard.sh` | coordinator status evidence gate (#609) | Blocks `gh issue`, `gh pr`, and matching `gh api` status-transition comments/issue closes that imply completion without owner/maintainer signoff, merge/branch target evidence, and deploy/UAT/rollout evidence. Also blocks completion claims that still name unresolved blockers, blocked-state updates without an explicit failure reason, future-plan gate comments that substitute promises for evidence, and uninspectable status bodies from stdin, shell expansion, unreadable body files, API payload files, or editor/web-supplied bodies. |
+| `bash/coordinator-status-guard.sh` | coordinator status evidence gate (#609) | Blocks `gh issue`, `gh pr`, and matching `gh api` status-transition comments/issue closes without required evidence. Verified own draft review requests and landed mechanical closes can replace invented owner wording (#1218); applicable merge/branch and deploy/UAT/rollout evidence remains required. Also blocks completion claims that still name unresolved blockers, blocked-state updates without an explicit failure reason, future-plan gate comments that substitute promises for evidence, and uninspectable status bodies from stdin, shell expansion, unreadable body files, API payload files, or editor/web-supplied bodies. |
 | `agent-comms/spawn-guard.sh` | child-session rule binding and worktree gate (#609, #248) | Blocks `mcp__session__spawn_session` calls that rely on inherited defaults or omit the child rule contract. Requires explicit allow-all permission, model, thinking level, enabled source list, and RULES_BUNDLE/RESOLVER/session-coordination binding in prompt or attachments. Review/security/bypass sessions require high-or-higher reasoning and non-weak reasoning-capable models. Write-capable child sessions in a Git repo must use a git worktree or be declared read-only/no-file-edits. |
 | `write/ticket-propagation-guard.sh` | artifact-to-ticket propagation (#251) | `Write`/`Edit` to `plans/*.md` or `docs/investigations/*.md` when the body contains org-qualified ticket references (`siege-analytics/repo#N`, `electinfo/repo#N`, or full GitHub URLs) but the YAML frontmatter lacks `ticket_refs:` (with entries) or `propagation-deferred: <reason>` (non-empty, non-boolean). Escapes: `scratch-*` filename prefix for exploratory drafts; `propagation-deferred:` with a real reason for workspace-only artifacts. First content-aware Write guard in the stack. |
 | `agent-comms/no-slug-form-outbound.sh` | parser-drop guard (LESSON 323a0f5) | `mcp__session__send_agent_message` calls whose body contains `[skill:slug]` or `[rule:slug]` literal forms (host parser silently drops the carrier message). Use the angle-bracket form `[skill:<name>]` instead. |
@@ -129,6 +129,38 @@ echo "Exit: $?"
 5. Update this README
 
 ## Task-keyed gate authority (#1051)
+
+### Mechanical review requests and closes (#1218)
+
+The coordinator guard can verify one literal `gh pr ready N --repo owner/repo`
+against the current session's own task, live author, local branch/head and
+fixing or canonical Refs/References relationship (including comma-separated ticket lists). This requests review; it does not authorize merging.
+For a mechanical close, put `Fixed by PR #N` or `Superseded by PR #N` on the
+first comment line, followed by applicable rollout/verification evidence or
+reasoned N/A. The guard reads GitHub rather than trusting that nomination:
+merged PR/commit, actual base ancestry and exact canonical reference/fixing
+or supersession relationship are required. No magic Fixes keyword is required
+for an issue when its landed PR declares a Refs/Fixes/Supersedes relation to that issue.
+A landed fixing/superseding PR may have another author; only a target own PR
+requires the current GitHub actor. Issue fixes must also be reachable from the repository's default integration
+branch. PR supersession requires the same actual base. Network/proof failures
+deny with the missing evidence class and a repair instruction.
+
+This proof replaces invented owner wording only. The mutation gate, existing
+role boundaries, explicit holds, required delivery verification, merge/queue
+policy and protection controls continue to apply. Unsupported command shapes
+retain the existing evidence path; no live settings are changed. From a native
+session directory, use the supported literal prefix `cd /absolute/task/worktree
+&& gh ...` (one line), which selects the bound task worktree for the existing
+mutation gate. Extra commands, expansions and arbitrary wrappers cannot ride
+that proof. A `--repo` selector alone does not grant unrelated cwd file scope.
+Canonical relationships inside code fences, quoted examples or hypothetical
+sections are not evidence.
+Mechanical proof and review-task binding share the pure
+`task_actions.github_ticket_reference` parser. A bare `#N` belongs to the
+actual PR repository; a central ticket in another repository needs an explicit
+`owner/repo#N` or canonical issue URL. Parsing a relationship supplies data,
+not a task grant or network authorization.
 
 Gate identity is `(session, full ticket reference or explicit task_id)`. New
 signals live in `sessions/<id>/tasks/<task-slug>/{think,investigate,junior-senior,artifacts-posted,review,test}-gate.json`.

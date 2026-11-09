@@ -66,6 +66,10 @@ if [[ -z "$COMMAND" ]]; then
 fi
 
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+# The existing host/session resolver, rather than the shared GitHub login,
+# supplies own-task identity to the narrow mechanical transition proof.
+_HOOK_METADATA=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/../lib/hook_payload.py") || exit 2
+export CCP_HOOK_INPUT_JSON="$_HOOK_METADATA"
 python3 -B - "$COMMAND" "$HOOK_DIR/../lib" "$CWD" <<'PY'
 import re
 import shlex
@@ -74,12 +78,30 @@ from pathlib import Path
 
 command = sys.argv[1]
 sys.path.insert(0, sys.argv[2])
+import task_actions
 from task_actions import action as classify_action
 import os
 # Text edits to existing artifacts are not coordinator state transitions.
 shape = classify_action(command, sys.argv[3] or os.getcwd())
 if shape.get("read_only") or shape.get("metadata_only"):
     sys.exit(0)
+# #1210 owns the literal REST review-reply classifier and UMG authorization.
+# A reply's prose is not a workflow transition. Reuse that typed interface
+# when present in the combined source; never inspect arbitrary POST bodies as
+# grants or duplicate its GitHub lookup/role authorization here.
+review_reply = getattr(task_actions, 'github_review_reply', None)
+if review_reply and re.match(r'^\s*gh\s+api\s', command):
+    try:
+        reply_tokens = task_actions.shell_tokens(command)
+    except ValueError:
+        reply_tokens = []
+    if reply_tokens and not any(operator or globs for _, operator, globs in reply_tokens):
+        try:
+            if review_reply([word for word, _, _ in reply_tokens], sys.argv[3] or os.getcwd()):
+                sys.exit(0)
+        except ValueError as error:
+            print('BLOCKED: invalid typed GitHub review reply: ' + str(error), file=sys.stderr)
+            sys.exit(2)
 normalized_command = command.replace("$(which gh)", "gh")
 
 try:
@@ -146,7 +168,7 @@ if resource == "api":
     if not _mutating_method and not _has_body:
         sys.exit(0)
 
-BODY_FLAGS = {"--body", "-b", "--comment", "--message", "-m", "--title"}
+BODY_FLAGS = {"--body", "-b", "--comment", "-c", "--message", "-m", "--title"}
 BODY_FILE_FLAGS = {"--body-file", "-F"}
 EDITOR_FLAGS = {"--editor", "-e", "--web", "-w"}
 API_FIELD_FLAGS = {"-f", "--field", "-F", "--raw-field"}
@@ -401,6 +423,23 @@ if blocked and not re.search(r'\b(blocked because|blocker:|failure reason:|reaso
 # Completion/close/ready transitions require evidence prerequisites.
 if completion or action in {"close", "reopen", "ready"} or api_state_transition:
     missing = missing_evidence(lower)
+    # A verified mechanical relationship supplies owner evidence, not a
+    # deployment waiver. Close still needs the existing rollout evidence/N/A;
+    # ready requests review and does not assert merge/deploy readiness.
+    if action in {"ready", "close"} and "owner_signoff" in missing:
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location('mechanical_completion', Path(sys.argv[2]) / 'github-mechanical-completion.py')
+            proof = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(proof)
+            if proof.verify(command, sys.argv[3] or os.getcwd(), body):
+                missing = [name for name in missing if name not in {'owner_signoff', 'merge_or_branch'}]
+                if action == 'ready':
+                    missing = []
+        except (OSError, ValueError, TypeError, KeyError, AttributeError, ImportError, SyntaxError) as error:
+            block("BLOCKED: coordinator completion/state transition lacks required evidence (mechanical own-task/GitHub proof).",
+                  "Missing: " + ", ".join(missing), str(error),
+                  "Supply the bound own task and live matching PR proof, or the existing signoff evidence.")
     if missing:
         block("BLOCKED: coordinator completion/state transition lacks required evidence.",
               "Missing: " + ", ".join(missing),

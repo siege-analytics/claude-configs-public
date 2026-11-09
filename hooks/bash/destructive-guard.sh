@@ -42,6 +42,18 @@ source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
 # Fast exit if no command extractable.
 [[ -z "$COMMAND" ]] && exit 0
 
+# A landed, own-task mechanical close is not a generic shared-resource grant.
+# Reuse the coordinator's exact proof, including literal command parsing,
+# item relationship and default-branch integration. The coordinator still
+# requires applicable rollout/verification evidence; UMG still owns task scope.
+if [[ "$COMMAND" =~ gh[[:space:]]+(issue|pr)[[:space:]]+close[[:space:]] ]]; then
+    _HOOK_METADATA=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/../lib/hook_payload.py") || exit 2
+    export CCP_HOOK_INPUT_JSON="$_HOOK_METADATA"
+    if python3 -B "$HOOK_DIR/../lib/github-mechanical-completion.py" "$COMMAND" "$CWD" >/dev/null 2>&1; then
+        exit 0
+    fi
+fi
+
 # Existing artifact text maintenance has a typed route, never a raw text bypass.
 if python3 -B - "$COMMAND" "$CWD" "$HOOK_DIR/../lib" <<'PY_METADATA'
 import sys

@@ -15,6 +15,7 @@ a task gate (siege#1051, #1057; electinfo#348).
 import re
 import shlex
 import sys
+sys.dont_write_bytecode = True
 
 # Bare read verbs whose arguments cannot make them write.
 PLAIN = {
@@ -29,7 +30,7 @@ PLAIN = {
 # Verbs whose options can write or run programs: their arguments must reach the
 # per-tool check exactly as bash will see them, so no unquoted expansion.
 GUARDED = {"sed", "find", "sort", "uniq", "jq", "yq", "date", "rg", "git", "gh", "kubectl", "docker",
-           "timeout", "nice", "time", "base64"}
+           "timeout", "nice", "time", "base64", "command"}
 SHELL_WORDS = {"do", "done", "then", "else", "fi", "!", "{", "}", "while", "until", "if", "elif"}
 GIT_READ = {"log", "show", "diff", "status", "rev-parse", "rev-list", "ls-files", "ls-remote",
             "ls-tree", "describe", "blame", "grep", "cat-file", "for-each-ref", "merge-base",
@@ -226,6 +227,12 @@ def gh_ok(args):
         return not any(long_opt(a, "--hostname") for a in args[2:])
     if len(args) >= 2 and args[0] in {"pr", "issue", "run", "repo", "release", "workflow", "label", "project", "search"}:
         return args[1] in GH_READ_VERBS or args[0] == "search"
+    if args[:2] == ["api", "graphql"]:
+        from task_actions import github_graphql
+        try:
+            return github_graphql(["gh"] + args).get("kind") == "query"
+        except (ValueError, TypeError, KeyError):
+            return False
     if args[:1] == ["api"]:
         for a in args[1:]:
             if long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF", "Hpqt"):
@@ -297,6 +304,10 @@ def simple_ok(words):
         if not rest or rest[0].startswith("-"):
             return False
         return simple_ok(rest)
+    if w == "command":
+        # Lookup only: do not unwrap a command executor or broaden option grammar.
+        return (len(args) >= 2 and args[0] in {"-v", "-V"}
+                and all(name and not name.startswith("-") for name in args[1:]))
     if w in PLAIN:
         return True
     if w == "base64":
@@ -331,6 +342,8 @@ def simple_ok(words):
     if w == "ss":
         return not ss_kills(args)
     if w == "docker":
+        if args == ["buildx", "version"]:
+            return True
         if len(args) >= 2 and args[0] in DOCKER_MGMT_READ:
             return args[1] in DOCKER_MGMT_READ[args[0]]
         return bool(args) and args[0] in DOCKER_READ

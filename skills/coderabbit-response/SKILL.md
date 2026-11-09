@@ -61,8 +61,7 @@ GitHub's review decision rule: a reviewer's latest *non-COMMENTED, non-DISMISSED
 
 Check what GitHub considers active:
 ```bash
-gh api "repos/OWNER/REPO/pulls/$PR/reviews" \
-  --jq '.[] | {user: .user.login, state, commit: (.commit_id[0:7]), submitted_at}'
+gh api repos/OWNER/REPO/pulls/123/reviews --jq '.[] | {user: .user.login, state, commit: (.commit_id[0:7]), submitted_at}'
 ```
 
 Look for any `coderabbitai[bot]` entry with `state: CHANGES_REQUESTED` that hasn't been dismissed. That's the one blocking you.
@@ -86,22 +85,30 @@ Look for any `coderabbitai[bot]` entry with `state: CHANGES_REQUESTED` that hasn
 ### 1. Pull the review state
 
 ```bash
-gh pr view $PR --repo OWNER/REPO --json reviewDecision,mergeStateStatus
-gh api graphql -f query='query {
-  repository(owner:"OWNER", name:"REPO") {
-    pullRequest(number: '$PR') {
-      reviewThreads(first:30) {
-        nodes {
-          id isResolved isOutdated path line
-          comments(first:1) { nodes { body author { login } } }
-        }
+gh pr view 123 --repo OWNER/REPO --json reviewDecision,mergeStateStatus
+gh api graphql -f query='query Threads($owner:String!,$name:String!,$pr:Int!){
+  repository(owner:$owner,name:$name){
+    pullRequest(number:$pr){
+      reviewThreads(first:100){
+        pageInfo{hasNextPage endCursor}
+        nodes{id isResolved isOutdated path line comments(first:1){nodes{body author{login}}}}
       }
     }
   }
-}' --jq '.data.repository.pullRequest.reviewThreads.nodes[] |
-    select(.isResolved == false and .isOutdated == false) |
-    {id, path, line, severity: (.comments.nodes[0].body | .[0:80])}'
+}' -f owner=OWNER -f name=REPO -F pr=123 --jq '.data.repository.pullRequest.reviewThreads'
 ```
+
+Use actual literal owner, repository and PR values; `123` is an example.
+Inspect `pageInfo`: a first page is not proof that every thread was reviewed.
+For subsequent pages, use a literal cursor variable and `after:$cursor` in the
+query. Keep the document and variable values literal in each command.
+
+Supported transport is one query document through literal `-f query=...`,
+`-f` string or `-F` scalar variables and optional `--jq`. Comments and quoted
+words such as "mutation" are data. Extra operations, fragments/directives,
+variable defaults, file-valued GraphQL fields and mutable `--input` documents
+are not modeled; rewrite to this supported literal form instead of bypassing
+the gate. A read query needs no local mutation task.
 
 ### 2. Classify each open thread
 
@@ -129,25 +136,54 @@ Cross-reference: the python-exceptions skill for except-pattern fixes; the libra
 ### 4. Resolve threads for FIXed and REPLY items
 
 ```bash
-# Resolve (closes the thread; no merge-block effect)
-gh api graphql -f query='mutation {
-  resolveReviewThread(input:{threadId:"PRRT_xxx"}) {
-    thread { isResolved }
-  }
-}'
+# Resolve a reviewed thread; this may satisfy a required thread-resolution check,
+# but is not merge approval or permission to bypass the queue.
+gh api graphql -f query='mutation Resolve($id:ID!){
+  resolveReviewThread(input:{threadId:$id}){thread{id isResolved}}
+}' -f id=PRRT_actual_thread_id
 
-# Reply-then-resolve (for REPLY items)
-# There's no single mutation for "add reply then resolve"; do it as two calls.
-# Use mcp__github__add_reply_to_pull_request_comment or gh api with the REST
-# comments endpoint, then resolveReviewThread.
+# Reply to the existing review comment, then resolve its thread separately.
+gh api repos/OWNER/REPO/pulls/123/comments/456/replies -X POST -f body='The specific fix and its actual validation evidence.'
+# A body field implies POST; -X POST is optional. A single literal --jq is supported.
+# For an existing regular body file: -F body=@/absolute/path/reply.md --jq .html_url
 ```
+
+Both writes are bounded to the actual existing PR/thread/comment through a
+fresh repository/PR identity lookup and one current-session task. Its canonical
+`ticket` (or canonical `task_id`) must identify that PR, an actual GitHub-linked
+closing issue, or an explicit `Refs`/`References` declaration in the freshly read
+PR body. Quoted, fenced, hypothetical or negated mentions are not declarations.
+A bare `#123` means the PR's repository; a central ticket in another repository
+needs its full `owner/repository#123` or canonical issue URL. An ordinary authorized author task may remain
+`implementing`. For existing external comment/review assignments in `reviewing`
+or `verifying`, record the already granted `role: "comment-only"` and its
+`authorized_by` reference in that same task; do not ask for permission again.
+A merely planned, read-only or review-only assignment does not acquire posting
+or resolution authority from a status label. Resolve task ambiguity through the
+existing `CCP_TASK_ID` binding. No fake local path or per-repository permission
+registry substitutes for this remote identity and existing grant.
+
+Only the named resolution and existing-review-comment reply forms are modeled;
+extra API fields/operations, duplicate output filters, non-POST methods and
+uninspectable `--input` bodies remain denied.
+Unknown or changed identity/permissions require diagnosis, not an operator UI
+workaround or an unchanged retry. Preserve actual review/owner holds; continue
+independent authorized work. These operations do not dismiss a review, approve
+a PR, merge, enqueue, change project state or release another person's hold.
 
 ### 5. Dismiss stale CHANGES_REQUESTED reviews
 
-```bash
-gh api --method PUT \
-  "repos/OWNER/REPO/pulls/$PR/reviews/$REVIEW_ID/dismissals" \
-  -f message="Addressed in <commit-sha>. See resolved threads above."
+Dismissal and approval are separate actions, not authorized by the bounded
+thread-resolution/reply grant above. This slice does not model their API or
+CLI writes. Preserve the actual role/owner authority; diagnose an unsupported
+operation while continuing independent review work. Do not use the resolution
+or reply exception to perform dismissal or approval.
+
+Reference only: this HTTP shape is not an executable command or a modeled grant.
+
+```text
+PUT /repos/OWNER/REPO/pulls/123/reviews/456/dismissals
+Body: {"message":"Addressed in <commit-sha>. See resolved threads above."}
 ```
 
 ### 6. Re-approve if your own approval got dismissed by force-push
@@ -157,7 +193,7 @@ Force-push dismisses existing reviews on the old commit. If you previously appro
 ### 7. Verify
 
 ```bash
-gh pr view $PR --repo OWNER/REPO --json reviewDecision,mergeStateStatus
+gh pr view 123 --repo OWNER/REPO --json reviewDecision,mergeStateStatus
 # Goal: reviewDecision = "APPROVED" (or ""), mergeStateStatus = "CLEAN" or "BEHIND"
 ```
 
