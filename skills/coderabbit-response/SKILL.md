@@ -61,8 +61,7 @@ GitHub's review decision rule: a reviewer's latest *non-COMMENTED, non-DISMISSED
 
 Check what GitHub considers active:
 ```bash
-gh api "repos/OWNER/REPO/pulls/$PR/reviews" \
-  --jq '.[] | {user: .user.login, state, commit: (.commit_id[0:7]), submitted_at}'
+gh api repos/OWNER/REPO/pulls/123/reviews --jq '.[] | {user: .user.login, state, commit: (.commit_id[0:7]), submitted_at}'
 ```
 
 Look for any `coderabbitai[bot]` entry with `state: CHANGES_REQUESTED` that hasn't been dismissed. That's the one blocking you.
@@ -86,7 +85,7 @@ Look for any `coderabbitai[bot]` entry with `state: CHANGES_REQUESTED` that hasn
 ### 1. Pull the review state
 
 ```bash
-gh pr view $PR --repo OWNER/REPO --json reviewDecision,mergeStateStatus
+gh pr view 123 --repo OWNER/REPO --json reviewDecision,mergeStateStatus
 gh api graphql -f query='query Threads($owner:String!,$name:String!,$pr:Int!){
   repository(owner:$owner,name:$name){
     pullRequest(number:$pr){
@@ -96,8 +95,7 @@ gh api graphql -f query='query Threads($owner:String!,$name:String!,$pr:Int!){
       }
     }
   }
-}' -f owner=OWNER -f name=REPO -F pr=123 \
-  --jq '.data.repository.pullRequest.reviewThreads'
+}' -f owner=OWNER -f name=REPO -F pr=123 --jq '.data.repository.pullRequest.reviewThreads'
 ```
 
 Use actual literal owner, repository and PR values; `123` is an example.
@@ -145,8 +143,7 @@ gh api graphql -f query='mutation Resolve($id:ID!){
 }' -f id=PRRT_actual_thread_id
 
 # Reply to the existing review comment, then resolve its thread separately.
-gh api repos/OWNER/REPO/pulls/123/comments/456/replies -X POST \
-  -f body='The specific fix and its actual validation evidence.'
+gh api repos/OWNER/REPO/pulls/123/comments/456/replies -X POST -f body='The specific fix and its actual validation evidence.'
 # A body field implies POST; -X POST is optional. A single literal --jq is supported.
 # For an existing regular body file: -F body=@/absolute/path/reply.md --jq .html_url
 ```
@@ -182,10 +179,11 @@ CLI writes. Preserve the actual role/owner authority; diagnose an unsupported
 operation while continuing independent review work. Do not use the resolution
 or reply exception to perform dismissal or approval.
 
-```bash
-gh api --method PUT \
-  "repos/OWNER/REPO/pulls/$PR/reviews/$REVIEW_ID/dismissals" \
-  -f message="Addressed in <commit-sha>. See resolved threads above."
+Reference only: this HTTP shape is not an executable command or a modeled grant.
+
+```text
+PUT /repos/OWNER/REPO/pulls/123/reviews/456/dismissals
+Body: {"message":"Addressed in <commit-sha>. See resolved threads above."}
 ```
 
 ### 6. Re-approve if your own approval got dismissed by force-push
@@ -195,7 +193,7 @@ Force-push dismisses existing reviews on the old commit. If you previously appro
 ### 7. Verify
 
 ```bash
-gh pr view $PR --repo OWNER/REPO --json reviewDecision,mergeStateStatus
+gh pr view 123 --repo OWNER/REPO --json reviewDecision,mergeStateStatus
 # Goal: reviewDecision = "APPROVED" (or ""), mergeStateStatus = "CLEAN" or "BEHIND"
 ```
 
