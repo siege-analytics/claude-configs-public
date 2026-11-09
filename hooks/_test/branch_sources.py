@@ -153,6 +153,10 @@ class BranchSources(unittest.TestCase):
             ['worktree', 'add', '-b', 'feature/x', '/unused', 'origin/main'],
             ['checkout', '-b', 'feature/x'], ['switch', '-c', 'feature/x'],
             ['branch', 'feature/x'], ['worktree', 'add', '/unused'],
+            ['switch', '-c', 'feature/x', 'origin/main^0'],
+            ['switch', '-c', 'feature/x', 'main^{commit}'],
+            ['switch', '-c', 'feature/x', 'HEAD^0'],
+            ['switch', '-c', 'feature/x', '@'],
         ]
         for args in routes:
             with self.subTest(args=args), self.assertRaises(UnknownShape):

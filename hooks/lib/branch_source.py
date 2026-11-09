@@ -125,8 +125,12 @@ def check(item, inspect, *, release_source=None):
     resolved = inspect(cwd, 'rev-parse', '--verify', '--quiet', source + '^{commit}')
     if release_source and resolved == release_source:
         return  # Trusted caller's exact release grant is independent of develop.
-    role = re.sub(r'^(?:refs/heads/|refs/remotes/[^/]+/|origin/)', '', source)
-    if source == 'HEAD':
+    # Revision suffixes do not change an explicitly named main/HEAD source.
+    base = re.split(r'[\^~:@]', source, maxsplit=1)[0]
+    if not base and source.startswith('@'):
+        base = 'HEAD'
+    role = re.sub(r'^(?:refs/heads/|refs/remotes/[^/]+/|origin/)', '', base)
+    if base == 'HEAD':
         role = inspect(cwd, 'symbolic-ref', '--quiet', '--short', 'HEAD')
     if role in MAIN_NAMES:
         raise UnknownShape('normal development cannot branch from main; use known develop or bin/prepare-task-branch.py. An already-authorized release/backport uses its selected own Task branch_source_authorization exact-source record')
