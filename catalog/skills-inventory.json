@@ -9026,10 +9026,10 @@
     },
     {
       "canonical_source": "skills/coderabbit-response/SKILL.md",
-      "characters": 11964,
-      "content_sha256": "3dc42eccd3c755b84f60553e4cb646a46bf57d159f36bdb62cb00515b5ec18bc",
+      "characters": 12007,
+      "content_sha256": "5caf0749a14ac60cda667fb36b583e9a05912af6115ea6b9d0493595a0d1f199",
       "description": "Triage and respond to CodeRabbit (or similar bot) review findings on a PR. Decides which comments to fix, which to resolve-with-reply, and which to dismiss; manages the stale-review-blocks-merge problem.",
-      "estimated_tokens": 2991,
+      "estimated_tokens": 3002,
       "frontmatter_name": "coderabbit-response",
       "generated_outputs": [
         "dist/nested/skills/coderabbit-response",
@@ -9046,7 +9046,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 246,
+      "lines": 244,
       "owner": [
         "unknown"
       ],
@@ -12797,9 +12797,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2626096,
+    "characters": 2626139,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 656602,
+    "estimated_tokens": 656613,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12820,7 +12820,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1229702
+      "unclassified": 1229745
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12832,7 +12832,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 307468
+      "unclassified": 307479
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
