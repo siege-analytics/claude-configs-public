@@ -45,7 +45,7 @@ def check(payload):
     if branch in {'develop', 'main', 'master'}:
         raise ValueError('protected ref creation requires explicit develop-from-main bootstrap with create-only semantics')
     if sha or source not in {'develop', 'refs/heads/develop'}:
-        raise ValueError('normal GitHub branch creation requires explicit develop source; main, default-source and unverified SHA sources cannot substitute')
+        raise ValueError('normal GitHub branch creation requires explicit develop source; main, default-source and unverified SHA sources cannot substitute. For an already-authorized release/backport, use the CLI with its selected own Task branch_source_authorization exact-source record; no new approval is required')
 
 
 def main():

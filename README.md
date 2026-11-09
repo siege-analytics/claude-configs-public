@@ -432,6 +432,8 @@ Standing-order continuity ships in two forms. Claude Code / Codex-style consumer
 
 `main` is the source of truth (nested layout with tokens). Build outputs are published to `release/nested` and `release/flat` by CI on pushes to `main` only; a source tag push alone does not publish them. **Pin downstream consumers to a release-branch tag (`v1.0.0-nested` / `v1.0.0-flat`), not the source tag** -- the source has the build infrastructure but tokens are unresolved.
 
+Normal feature, fix, documentation and configuration work starts from `develop`, including consumer projects whose default branch is main. The branch preparation helper safely bootstraps a missing remote develop under the standing instruction; existing develop refs remain usable offline. Explicitly authorized version backports keep their exact task-bound source. See [develop-guard](skills/develop-guard/SKILL.md).
+
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the slug-token convention, build-script details, and contributor workflow.
 
 ## Contributing

@@ -18,7 +18,7 @@ import sys
 sys.dont_write_bytecode = True
 
 from task_actions import UnknownShape, shell_tokens, released_read_verdict, action as classify_action
-from branch_source import check as check_branch_source
+from branch_source import check as check_branch_source, task_release_source
 
 PROTECTED = {"main", "master", "develop", "dev", "development", "staging", "next", "integration"}
 BUILTINS = set("add am annotate apply archive bisect blame branch bundle cat-file check-attr check-ignore check-mailmap check-ref-format checkout checkout-index cherry cherry-pick clean clone column commit config count-objects credential describe diff diff-files diff-index diff-tree difftool fast-export fast-import fetch filter-branch fmt-merge-msg for-each-ref format-patch fsck gc get-tar-commit-id grep hash-object help index-pack init instaweb interpret-trailers log ls-files ls-remote ls-tree mailinfo mailsplit maintenance merge merge-base merge-file merge-index merge-one-file merge-tree mergetool mktag mktree multi-pack-index mv name-rev notes pack-objects pack-redundant pack-refs patch-id prune prune-packed pull push range-diff read-tree rebase reflog remote repack replace request-pull rerere reset restore rev-list rev-parse revert rm send-email send-pack shortlog show show-branch show-index show-ref sparse-checkout stage stash status stripspace submodule subtree switch symbolic-ref tag unpack-file unpack-objects update-index update-ref update-server-info var verify-commit verify-pack verify-tag version whatchanged worktree write-tree".split())
@@ -510,7 +510,13 @@ def main():
         for item in items:
             if options.policy == "branch":
                 if in_scope(item["cwd"]):
-                    check_branch_source(item, inspect_git)
+                    try:
+                        check_branch_source(item, inspect_git)
+                    except UnknownShape:
+                        release = task_release_source(item, inspect_git, command=command)
+                        if not release:
+                            raise
+                        check_branch_source(item, inspect_git, release_source=release)
                 if item["args"][0] == "commit" and in_scope(item["cwd"]):
                     branch = inspect_git(item["cwd"], "symbolic-ref", "--quiet", "--short", "HEAD")
                     if branch in PROTECTED:

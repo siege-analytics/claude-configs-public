@@ -277,6 +277,76 @@ class BranchSources(unittest.TestCase):
                         text=True, capture_output=True)
                     self.assertEqual(result.returncode, expected, result.stderr)
 
+    def test_plain_checkout_remote_tag_and_sha_detach_without_branch_creation(self):
+        self.develop()
+        self.run_git(self.repo, 'tag', 'v1', self.main)
+        before = self.inspect('for-each-ref', '--format=%(refname)', 'refs/heads')
+        for source in ['origin/main', 'v1', self.main]:
+            item = {'args': ['checkout', source], 'cwd': str(self.repo)}
+            check(item, inspect_git)
+            self.run_git(self.repo, 'checkout', source)
+            self.assertEqual(self.inspect('rev-parse', '--abbrev-ref', 'HEAD'), 'HEAD')
+            self.assertEqual(self.inspect('for-each-ref', '--format=%(refname)', 'refs/heads'), before)
+        # With no local main, bare checkout main guesses origin/main and creates
+        # a branch. That different operation must retain main-source rejection.
+        self.run_git(self.repo, 'branch', '-D', 'main')
+        with self.assertRaises(UnknownShape):
+            check({'args': ['checkout', 'main'], 'cwd': str(self.repo)}, inspect_git)
+
+    def test_existing_own_task_exact_release_grant_is_runtime_wired(self):
+        import task_keyed_gates as fixture
+        self.develop()
+        self.run_git(self.repo, 'tag', 'v0.15.6', self.main)
+        self.run_git(self.repo, 'checkout', 'develop')
+        (self.repo / 'tracked').write_text('normal develop advances\n')
+        self.run_git(self.repo, 'commit', '-am', 'develop advances')
+        self.run_git(self.repo, 'push', 'origin', 'develop')
+        gates = fixture.Gates(methodName='runTest')
+        gates.setUp()
+        try:
+            gates.repo = self.repo
+            gate = gates.task('authorized-version-backport', self.repo)
+            file = gate / 'think-gate.json'
+            data = json.loads(file.read_text())
+            grant = {'kind': 'release-backport', 'source_ref': 'v0.15.6', 'source_commit': self.main,
+                     'destination_branch': 'backport/approved', 'user_grant_reference': 'user-message: explicit v0.15.6 backport instruction'}
+            command = 'git switch -c backport/approved v0.15.6'
+            payload = fixture.craft_payload(tool_name='Bash', cwd=str(self.repo), tool_input={'command': command})
+            env = dict(gates.env, CLAUDE_SCOPED_OWNERS=self.base.name)
+            def branch_check(request=payload):
+                return subprocess.run(['bash', str(ROOT / 'hooks/git/branch-guard.sh')],
+                    input=json.dumps(request), text=True, capture_output=True, env=env)
+            self.assertEqual(branch_check().returncode, 2)  # Name alone grants nothing.
+            data['branch_source_authorization'] = grant
+            file.write_text(json.dumps(data))
+            result = branch_check()
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            # Ordinary task/lifecycle hooks also accept this already-granted work.
+            self.assertEqual(gates.hook(command, cwd=self.repo, env=env).returncode, 0)
+            self.run_git(self.repo, 'switch', '-c', 'backport/approved', 'v0.15.6')
+            self.assertEqual(self.inspect('rev-parse', 'HEAD'), self.main)
+            for key, value in [('status', 'planned'), ('status', 'designing'), ('status', 'reviewing'), ('status', 'complete'), ('sessionId', 'foreign'), ('role', 'reviewer'), ('role', 'read-only'), ('role', 'comment-only')]:
+                changed = dict(data, **{key: value})
+                file.write_text(json.dumps(changed))
+                self.assertEqual(branch_check().returncode, 2, (key, value))
+            for key, value in [('destination_branch', 'other/branch'), ('source_commit', 'f' * 40),
+                               ('source_ref', 'other-tag'), ('user_grant_reference', '')]:
+                changed = dict(data, branch_source_authorization=dict(grant, **{key: value}))
+                file.write_text(json.dumps(changed))
+                self.assertEqual(branch_check().returncode, 2, key)
+            file.write_text(json.dumps(data))
+            other = dict(payload, tool_input={'command': 'git switch -c other/branch v0.15.6'})
+            self.assertEqual(branch_check(other).returncode, 2)
+            changed = dict(data, scope_paths=[str(self.repo / 'unrelated')])
+            file.write_text(json.dumps(changed))
+            self.assertEqual(branch_check().returncode, 2)
+            file.write_text(json.dumps(data))
+            self.run_git(self.repo, 'commit', '--allow-empty', '-m', 'distinct backport source')
+            self.run_git(self.repo, 'tag', '-f', 'v0.15.6', 'HEAD')
+            self.assertEqual(branch_check().returncode, 2)  # Approved tag moved.
+        finally:
+            gates.tearDown()
+
     def test_native_github_sources_and_create_only_bootstrap(self):
         spec = importlib.util.spec_from_file_location('native_branch', ROOT / 'hooks/git/native-branch-source.py')
         native = importlib.util.module_from_spec(spec)

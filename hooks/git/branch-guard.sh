@@ -54,6 +54,10 @@ if [[ ! -f "$GIT_POLICY" ]]; then
     echo "BLOCKED: Git operation policy helper is unavailable." >&2
     exit 2
 fi
+# Transport only actual hook identity/action metadata; candidate command text
+# cannot supply a release exception. Existing session anchors select the own Task.
+CCP_HOOK_INPUT_JSON=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/../lib/hook_payload.py" 2>/dev/null || true)
+export CCP_HOOK_INPUT_JSON
 GIT_RESULT=$(printf '%s' "$COMMAND" | python3 "$GIT_POLICY" --cwd "${CWD:-$PWD}" --policy branch 2>&1)
 GIT_STATUS=$?
 if [[ "$GIT_STATUS" -ne 0 ]]; then

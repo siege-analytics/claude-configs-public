@@ -114,7 +114,7 @@ def check(item, inspect, *, release_source=None):
             return  # Switching an existing branch preserves its existing work.
         if item['args'][0] == 'checkout' and inspect(cwd, 'ls-files', '--error-unmatch', '--', source):
             return  # Existing tracked-path restoration is not branch creation.
-        if item['args'][0] == 'worktree' and inspect(cwd, 'rev-parse', '--verify', '--quiet', source + '^{commit}'):
+        if item['args'][0] in {'checkout', 'worktree'} and inspect(cwd, 'rev-parse', '--verify', '--quiet', source + '^{commit}'):
             return  # Explicit remote ref/tag/SHA without -b creates detached review.
         # Git's DWIM can create a branch from a uniquely named remote branch.
         # Treat that as creation; never certify it from the command name alone.
@@ -129,10 +129,73 @@ def check(item, inspect, *, release_source=None):
     if source == 'HEAD':
         role = inspect(cwd, 'symbolic-ref', '--quiet', '--short', 'HEAD')
     if role in MAIN_NAMES:
-        raise UnknownShape('normal development cannot branch from main; use verified origin/develop or bin/prepare-task-branch.py')
+        raise UnknownShape('normal development cannot branch from main; use known develop or bin/prepare-task-branch.py. An already-authorized release/backport uses its selected own Task branch_source_authorization exact-source record')
     tips = {value for ref in ('refs/remotes/origin/develop', 'refs/heads/develop')
             if (value := inspect(cwd, 'rev-parse', '--verify', '--quiet', ref + '^{commit}'))}
     if not tips:
         raise UnknownShape('develop is unavailable locally; run bin/prepare-task-branch.py (it verifies remote absence before bootstrap)')
     if resolved not in tips:
         raise UnknownShape('normal development must branch from known develop; use develop/origin/develop or bin/prepare-task-branch.py')
+
+
+def task_release_source(item, inspect, *, command):
+    """Read an optional exact release grant from the selected own Task only.
+
+    No command argument, branch naming convention or environment switch grants
+    an exception. Hook metadata transports identity through the existing session
+    anchor; the existing task resolver owns scope and lifecycle selection.
+    """
+    import importlib.util
+    import json
+    from pathlib import Path
+    candidate = creation(item['args'])
+    if candidate is None:
+        return None
+    name, source = candidate
+    raw = os.environ.get('CCP_HOOK_INPUT_JSON')
+    workspace = os.environ.get('CRAFT_AGENT_WORKSPACE')
+    if not raw or not workspace:
+        return None
+    try:
+        payload = json.loads(raw)
+        if payload.get('tool_name') != 'Bash' or not isinstance(payload.get('tool_input'), dict) or payload['tool_input'].get('command') != command:
+            return None
+        path = Path(__file__).with_name('resolve-think-gate.py')
+        spec = importlib.util.spec_from_file_location('branch_task_resolver', path)
+        resolver = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(resolver)
+        # Selection reuses the entire actual action, including assigned worktree
+        # paths and explicit task binding; a repo-only lookup cannot expand it.
+        selected = resolver.resolve_action(workspace, payload)
+        gate = selected.get('gate')
+        if selected.get('error') or not gate or gate['data'].get('status') != 'implementing':
+            return None
+        role = str(gate['data'].get('role', '')).lower()
+        if re.search(r'read.only|review.only', role) or role in {'reviewer', 'comment-only'}:
+            return None
+        grant = gate['data'].get('branch_source_authorization')
+        keys = {'kind', 'source_ref', 'source_commit', 'destination_branch', 'user_grant_reference'}
+        if not isinstance(grant, dict) or set(grant) != keys:
+            return None
+        if grant['kind'] != 'release-backport' or grant['destination_branch'] != name:
+            return None
+        if not isinstance(grant['user_grant_reference'], str) or not grant['user_grant_reference'].strip():
+            return None
+        commit = grant['source_commit']
+        ref = grant['source_ref']
+        if not isinstance(commit, str) or not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', commit):
+            return None
+        if not isinstance(ref, str) or not ref or source not in {ref, commit}:
+            return None
+        if inspect(item['cwd'], 'rev-parse', '--verify', '--quiet', ref + '^{commit}') != commit:
+            return None
+        if inspect(item['cwd'], 'rev-parse', '--verify', '--quiet', source + '^{commit}') != commit:
+            return None
+        # Explicit repository ownership must cover this actual Git target too.
+        declared = gate['data'].get('repo_root')
+        actual = inspect(item['cwd'], 'rev-parse', '--show-toplevel')
+        if not declared or not resolver._same_repo(declared, actual):
+            return None
+        return commit
+    except (OSError, ValueError, TypeError, KeyError, ImportError, AttributeError):
+        return None

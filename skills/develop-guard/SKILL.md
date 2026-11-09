@@ -69,7 +69,32 @@ exact source, such as the user's requested release tag. Keep that scoped release
 work separate from ordinary development. A `hotfix/*`, `release/*` or `promote/*`
 name, PR label, repository default, or equal tree alone grants no source exception.
 The trusted task caller must supply the already-authorized exact source; never
-infer permission from candidate command text. Detached exact-commit review
+infer permission from candidate command text.
+
+For a previously authorized CLI version release/backport, record this optional
+object on its existing own implementing Task's `think-gate.json` (not a new gate
+or permission registry), preserving its current identity and assigned scope:
+
+```json
+"branch_source_authorization": {
+  "kind": "release-backport",
+  "source_ref": "refs/tags/v0.15.6",
+  "source_commit": "<exact full commit SHA>",
+  "destination_branch": "backport/specific_version_fix",
+  "user_grant_reference": "<reference to the existing explicit user instruction>"
+}
+```
+
+The runtime resolver selects the current own Task for the actual command,
+requires implementing lifecycle and existing scope, verifies the approved ref's
+exact commit and exact destination branch, and supplies the source exception to
+the parser. Invoke the CLI with that exact ref or commit; no new approval is
+needed for work already covered by the recorded instruction. Foreign, planned,
+stale-source or mismatched-branch records cannot authorize the operation. Native
+GitHub creation uses develop for normal work; its exceptional release diagnostic
+points to this supported CLI Task route rather than inventing a name/label bypass.
+
+Detached exact-commit review
 worktrees do not create development branches and remain available for inspection.
 
 For the Siege scaffold, K5 retains feature/fix -> develop -> main and exact current
