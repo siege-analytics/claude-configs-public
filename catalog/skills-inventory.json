@@ -5007,6 +5007,7 @@
         "bin/_test/wire_enforcement_automations_test.py",
         "bin/_test/work_cycle_test.py",
         "hooks/_test/artifact_result_followup.py",
+        "hooks/_test/branch_sources.py",
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/coordination_alias.test.sh",
@@ -5532,6 +5533,8 @@
         "bin/_test/work_cycle_test.py",
         "hooks/_test/artifact_result_followup.test.sh",
         "hooks/_test/block_log_advisory_utc.test.sh",
+        "hooks/_test/branch_sources.py",
+        "hooks/_test/branch_sources.test.sh",
         "hooks/_test/broad_staging.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
@@ -5895,6 +5898,7 @@
         "bin/_test/skill_lifecycle_test.py",
         "bin/_test/think_package_test.py",
         "bin/_test/work_cycle_test.py",
+        "hooks/_test/branch_sources.py",
         "hooks/_test/coordination_alias.test.sh",
         "hooks/_test/craft_workspace_trust.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -6111,10 +6115,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 28689,
-      "content_sha256": "a5ad6bbedefa2266de1dfe0d320f84d8779585c88cc523fb7d22333cb78840e4",
+      "characters": 28947,
+      "content_sha256": "5730bf147c7b62f7ae1b81d404a2a1e24bc1789d5d1447578f74314bc547a910",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7173,
+      "estimated_tokens": 7237,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -7574,7 +7578,6 @@
         "skills/_django-rest-framework-rules.md",
         "skills/code-review/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
-        "skills/develop-guard/SKILL.md",
         "skills/django-rest-framework/SKILL.md",
         "skills/merge/SKILL.md",
         "skills/publish-flat-layout/SKILL.md",
@@ -8699,10 +8702,10 @@
     },
     {
       "canonical_source": "skills/branch/SKILL.md",
-      "characters": 6751,
-      "content_sha256": "e06dc6c37739198035bdb5df56762c91ac701325e2cce7386c4d2be3a5b50795",
+      "characters": 6571,
+      "content_sha256": "3de279257e6a9ac704acd29d630ee0fb43efa79ac932f6ad3a3bf5df46e60009",
       "description": "Create and manage git branches using a consistent naming convention (type/descriptive_string) that mirrors ticket taxonomy.",
-      "estimated_tokens": 1688,
+      "estimated_tokens": 1643,
       "frontmatter_name": "branch",
       "generated_outputs": [
         "dist/nested/skills/branch",
@@ -8721,18 +8724,18 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 172,
+      "lines": 161,
       "owner": [
         "unknown"
       ],
       "project": null,
       "quality": {
         "completeness": 0,
-        "cross_references": 50,
+        "cross_references": 100.0,
         "grade": "F",
         "provenance": 0,
         "structure": 95.0,
-        "total": 36.25
+        "total": 48.75
       },
       "rule_definitions": [],
       "slug": "branch",
@@ -8763,6 +8766,8 @@
         "bin/_test/self_review_disclosure_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/block_log_advisory_utc.test.sh",
+        "hooks/_test/branch_sources.py",
+        "hooks/_test/branch_sources.test.sh",
         "hooks/_test/branch_state_advisory.test.sh",
         "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/coordinator_status_guard.test.sh",
@@ -9218,6 +9223,7 @@
         "bin/_test/self_review_disclosure_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/artifact_result_followup.py",
+        "hooks/_test/branch_sources.py",
         "hooks/_test/branch_state_advisory.test.sh",
         "hooks/_test/broad_staging.test.sh",
         "hooks/_test/catalog_guard.test.sh",
@@ -9366,10 +9372,10 @@
     },
     {
       "canonical_source": "skills/create-pr/SKILL.md",
-      "characters": 14513,
-      "content_sha256": "893826211510fa1d87009244e1784ed978704e65da6b9381646d58a90cc7c1e5",
+      "characters": 14989,
+      "content_sha256": "423630e4b701317e7baf937b97c07487046f232541c965fe3be830abc3c71aed",
       "description": "Create a pull request with structured description, linked tickets, and commit narrative. Enforces bidirectional linking.",
-      "estimated_tokens": 3629,
+      "estimated_tokens": 3748,
       "frontmatter_name": "create-pr",
       "generated_outputs": [
         "dist/nested/skills/create-pr",
@@ -9398,7 +9404,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 391,
+      "lines": 393,
       "owner": [
         "unknown"
       ],
@@ -9696,10 +9702,10 @@
     },
     {
       "canonical_source": "skills/develop-guard/SKILL.md",
-      "characters": 16992,
-      "content_sha256": "8715b63114bf38d5e5287d0a830c8ad9f179e884ba7063f1d0240aa4e84ecba8",
-      "description": "Enforce the curation invariant -- main-role (main, master, prod, production, trunk, stable, release) is the project's best, ready-to-use work; develop-role (develop, dev, development, next, integration, staging, develop-next) is the origin where experiments compete for main. Detect repo mode (Gitflow vs GitHub Flow). Prevent direct feature-PRs to main-role when develop-role is the workflow.",
-      "estimated_tokens": 4248,
+      "characters": 7740,
+      "content_sha256": "e23b7eb535fba698a48352bc2806d8c67555876a2611de4cebe9997f2801728c",
+      "description": "Normal development starts at develop. Verify remote refs, bootstrap a missing develop safely, and preserve separately authorized release sources.",
+      "estimated_tokens": 1935,
       "frontmatter_name": "develop-guard",
       "generated_outputs": [
         "dist/nested/skills/develop-guard",
@@ -9707,6 +9713,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "README.md",
         "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -9715,24 +9722,26 @@
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
         "skills/_session-coordination-rules.md",
+        "skills/branch/SKILL.md",
+        "skills/create-pr/SKILL.md",
         "skills/merge/SKILL.md",
         "skills/stalled-session-recovery/host-controls.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 223,
+      "lines": 137,
       "owner": [
         "unknown"
       ],
       "project": null,
       "quality": {
         "completeness": 0,
-        "cross_references": 100.0,
+        "cross_references": 50,
         "grade": "F",
         "provenance": 0,
-        "structure": 100.0,
-        "total": 50.0
+        "structure": 80.0,
+        "total": 32.5
       },
       "rule_definitions": [],
       "slug": "develop-guard",
@@ -10450,10 +10459,10 @@
     },
     {
       "canonical_source": "skills/merge/SKILL.md",
-      "characters": 4145,
-      "content_sha256": "01491f42bc8f99ae13c7bcd060c29e44745eb28b0553bf1197a3772797dafc8d",
+      "characters": 4304,
+      "content_sha256": "77b50483997318100ded7dddc348159342cd4ac353f507ae378011253490f04f",
       "description": "Merge a reviewed branch or pull request using the target project's approved topology, method and readiness conditions. Use for integration, release or hotfix merges; project policy supplies the applicable route and authority.",
-      "estimated_tokens": 1037,
+      "estimated_tokens": 1076,
       "frontmatter_name": "merge",
       "generated_outputs": [
         "dist/nested/skills/merge",
@@ -11136,6 +11145,8 @@
         "bin/_test/work_cycle_test.py",
         "hooks/_test/artifact_result_followup.test.sh",
         "hooks/_test/block_log_advisory_utc.test.sh",
+        "hooks/_test/branch_sources.py",
+        "hooks/_test/branch_sources.test.sh",
         "hooks/_test/broad_staging.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
@@ -12362,6 +12373,7 @@
         "bin/_test/registered_receipt_provider_test.py",
         "bin/_test/review_risk_test.py",
         "bin/_test/think_package_test.py",
+        "hooks/_test/branch_sources.py",
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
@@ -12797,9 +12809,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2626139,
+    "characters": 2617600,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 656613,
+    "estimated_tokens": 654477,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12820,7 +12832,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1229745
+      "unclassified": 1221206
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12832,7 +12844,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 307479
+      "unclassified": 305343
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
