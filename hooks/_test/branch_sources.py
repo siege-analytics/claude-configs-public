@@ -179,6 +179,47 @@ class BranchSources(unittest.TestCase):
             check(item, inspect_git, release_source='f' * 40)
         check({'args': ['worktree', 'add', '--detach', '/review', self.main], 'cwd': str(self.repo)}, inspect_git)
 
+    def test_short_option_clusters_keep_creation_source_checks(self):
+        self.develop()
+        env = dict(os.environ, CLAUDE_SCOPED_OWNERS=self.base.name)
+        for sub, flags in [('checkout', '-qb'), ('switch', '-qc')]:
+            with self.subTest(sub=sub):
+                args = [sub, flags, 'feature/cluster-' + sub, 'origin/main']
+                command = shlex.join(['git', *args])
+                result = subprocess.run([sys.executable, str(ROOT / 'hooks/lib/git_command.py'),
+                    '--cwd', str(self.repo), '--policy', 'branch'], input=command,
+                    text=True, capture_output=True, env=env)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                # Git really interprets these as creation, including attached names.
+                for option in [flags, flags + 'feature/attached-' + sub]:
+                    candidate = [sub, option, *([] if option != flags else ['feature/cluster-' + sub]), 'origin/main']
+                    with self.assertRaises(UnknownShape):
+                        check({'args': candidate, 'cwd': str(self.repo)}, inspect_git)
+                    candidate[-1] = 'origin/develop'
+                    check({'args': candidate, 'cwd': str(self.repo)}, inspect_git)
+                args[-1] = 'origin/develop'
+                self.run_git(self.repo, *args)
+                self.assertEqual(self.inspect('branch', '--show-current'), 'feature/cluster-' + sub)
+
+    def test_main_ref_aliases_do_not_become_develop_sources_at_equal_commit(self):
+        self.develop()
+        self.run_git(self.repo, 'symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main')
+        # All aliases resolve successfully, so rejection cannot rely on SHA inequality.
+        sources = ['heads/main', 'remotes/origin/main', 'origin/HEAD', 'refs/remotes/origin/HEAD']
+        for source in sources:
+            for suffix in ['', '^0']:
+                with self.subTest(source=source + suffix):
+                    self.assertEqual(self.inspect('rev-parse', '--verify', source + suffix + '^{commit}'), self.main)
+                    item = {'args': ['switch', '-c', 'feature/alias', source + suffix], 'cwd': str(self.repo)}
+                    with self.assertRaises(UnknownShape):
+                        check(item, inspect_git)
+                    check(item, inspect_git, release_source=self.main)
+        self.run_git(self.repo, 'symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/develop')
+        self.run_git(self.repo, 'tag', 'known@develop', self.main)
+        self.run_git(self.repo, 'remote', 'set-url', 'origin', str(self.base / 'offline.git'))
+        for source in ['heads/develop', 'remotes/origin/develop', 'origin/HEAD', 'known@develop']:
+            check({'args': ['switch', '-c', 'feature/develop', source], 'cwd': str(self.repo)}, inspect_git)
+
     def test_cli_guard_enforces_all_creation_routes_and_leaves_switches_alone(self):
         self.develop()
         env = dict(os.environ, CLAUDE_SCOPED_OWNERS=self.base.name)

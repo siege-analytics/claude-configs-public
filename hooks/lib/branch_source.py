@@ -36,6 +36,14 @@ def creation(args):
     i = 0
     while i < len(rest):
         arg = rest[i]
+        if sub in {'checkout', 'switch'}:
+            # Git accepts boolean short options before a creation option in one
+            # word (e.g. -qb name or -qcname). Keep its name/source visible to
+            # the same creation/reset checks as separately written options.
+            cluster = re.fullmatch(r'-([qftlmp]+)([bBcC])(.*)', arg)
+            if cluster:
+                rest[i:i + 1] = ['-' + flag for flag in cluster[1]] + ['-' + cluster[2] + cluster[3]]
+                arg = rest[i]
         if arg == '--':
             if sub == 'checkout' and branch is None:
                 return None  # Explicit path restoration does not create a branch.
@@ -126,12 +134,13 @@ def check(item, inspect, *, release_source=None):
     if release_source and resolved == release_source:
         return  # Trusted caller's exact release grant is independent of develop.
     # Revision suffixes do not change an explicitly named main/HEAD source.
-    base = re.split(r'[\^~:@]', source, maxsplit=1)[0]
+    base = re.split(r'\^|~|@\{|:', source, maxsplit=1)[0]
     if not base and source.startswith('@'):
         base = 'HEAD'
-    role = re.sub(r'^(?:refs/heads/|refs/remotes/[^/]+/|origin/)', '', base)
-    if base == 'HEAD':
-        role = inspect(cwd, 'symbolic-ref', '--quiet', '--short', 'HEAD')
+    # Git expands heads/main and remotes/origin/main and follows symbolic refs
+    # such as origin/HEAD. Equal commits do not make those develop sources.
+    canonical_ref = inspect(cwd, 'rev-parse', '--symbolic-full-name', base)
+    role = re.sub(r'^(?:refs/heads/|refs/remotes/[^/]+/|origin/)', '', canonical_ref or base)
     if role in MAIN_NAMES:
         raise UnknownShape('normal development cannot branch from main; use known develop or bin/prepare-task-branch.py. An already-authorized release/backport uses its selected own Task branch_source_authorization exact-source record')
     tips = {value for ref in ('refs/remotes/origin/develop', 'refs/heads/develop')
