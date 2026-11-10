@@ -40,7 +40,7 @@ import sys
 import glob
 import stat
 import subprocess
-from task_actions import action, canonical
+from task_actions import action, canonical, github_ticket_reference
 from session_anchor import correct_environ as _correct_session_environ
 
 # A mis-tagged CRAFT_SESSION_DIR must not decide whose gates apply (#1099). Fix
@@ -771,6 +771,15 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         return shape  # No gate lookup for recognized reads/approved diagnostics.
     if shape.get("error"):
         return {**shape, "gate": None, "error": "Cannot resolve mutation targets: " + shape["error"]}
+    if shape.get('review_actions'):
+        if shape.get('remote_actions'):
+            return {**shape, 'gate': None, 'error': 'Split review and project remote operations; each has its own grant.'}
+        remote = select_review_task(workspace, shape, cwd)
+        if not remote.get('gate') or not shape['paths']:
+            return {**shape, **remote, 'remote_only_authorized': bool(remote.get('gate')) and not shape['paths']}
+        local = select_task(workspace, shape['paths'], shape.get('binding') or task_binding())
+        if not local.get('gate') or canonical(local['gate']['path']) != canonical(remote['gate']['path']):
+            return {**shape, 'gate': None, 'error': 'Review and local mutations must belong to the same own task; split this action.'}
     if shape.get('remote_actions'):
         remote = select_project_task(workspace, shape)
         if not remote.get('gate') or not shape['paths']:
@@ -818,6 +827,104 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         result["task"] = task_identity(tg["data"])
         result["tier"] = task_tier(tg["data"], shape["paths"], command, cwd)
     return result
+
+
+def select_review_task(workspace: str, shape: dict, cwd: str) -> dict:
+    """A review write uses the existing own-task grant, never cwd authority."""
+    def deny(message):
+        return {'gate': None, 'error': 'GitHub review scope: ' + message}
+    if not session_id_from_env(): return deny('verified current-session identity required')
+    binding = shape.get('binding') or task_binding()
+    if shape.get('binding') and task_binding() and binding != task_binding():
+        return deny('conflicting explicit task bindings')
+    if (os.environ.get('GH_HOST') or 'github.com') != 'github.com' or os.environ.get('GH_REPO'):
+        return deny('ambient GitHub host/repository override unsupported')
+    if len(shape['review_actions']) != 1:
+        return deny('one bounded review operation per invocation required')
+    target = shape['review_actions'][0]
+    query = ('query($id:ID!){node(id:$id){... on PullRequestReviewThread{'
+             'id __typename viewerCanResolve isResolved pullRequest{number body headRefOid '
+             'repository{nameWithOwner} closingIssuesReferences(first:100){nodes{number repository{nameWithOwner}}}}}}}')
+    try:
+        import importlib.util
+        import time
+        spec = importlib.util.spec_from_file_location('review_reader', os.path.join(os.path.dirname(__file__), 'craft-settings-router.py'))
+        runner = importlib.util.module_from_spec(spec); spec.loader.exec_module(runner)
+        deadline = time.monotonic() + 3.0
+
+        def read(arguments):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0: raise ValueError('review identity read deadline exhausted')
+            code, output, _ = runner.execute_hook(shlex.join(['gh'] + arguments), b'', dict(os.environ), remaining)
+            if code or len(output.encode()) > 65536: raise ValueError('bounded review identity lookup failed')
+            return json.loads(output)
+
+        if target['kind'] == 'resolve-review-thread':
+            node = read(['api', 'graphql', '-f', 'query=' + query, '-f', 'id=' + target['thread_id']])['data']['node']
+            if (not isinstance(node, dict) or node.get('__typename') != 'PullRequestReviewThread'
+                    or node.get('id') != target['thread_id'] or node.get('viewerCanResolve') is not True):
+                return deny('thread identity or current resolution permission does not match')
+            pr = node['pullRequest']
+        else:
+            repository, number = target['repository'], target['number']
+            comment = read(['api', 'repos/' + repository + '/pulls/comments/' + str(target['comment_id'])])
+            if not isinstance(comment, dict) or type(comment.get('id')) is not int or comment['id'] != target['comment_id']:
+                return deny('actual review comment identity differs')
+            url = comment.get('pull_request_url')
+            link = re.fullmatch(r'https://api\.github\.com/repos/([^/]+/[^/]+)/pulls/([1-9][0-9]*)', url) if isinstance(url, str) else None
+            if not link or link[1].casefold() != repository.casefold() or int(link[2]) != number:
+                return deny('actual review comment does not belong to the declared repository/PR')
+            owner, name = repository.split('/')
+            query = ('query($owner:String!,$name:String!,$pr:Int!){repository(owner:$owner,name:$name){pullRequest(number:$pr){'
+                     'number body headRefOid repository{nameWithOwner} closingIssuesReferences(first:100){nodes{number repository{nameWithOwner}}}}}}')
+            pr = read(['api', 'graphql', '-f', 'query=' + query, '-f', 'owner=' + owner,
+                       '-f', 'name=' + name, '-F', 'pr=' + str(number)])['data']['repository']['pullRequest']
+        if not isinstance(pr, dict): return deny('missing PR identity')
+        repository = pr['repository']['nameWithOwner']
+        if (not isinstance(repository, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+', repository)
+                or type(pr['number']) is not int or pr['number'] < 1):
+            return deny('invalid thread repository/PR identity')
+        if target['kind'] == 'reply-review-comment' and (repository.casefold() != target['repository'].casefold() or pr['number'] != target['number']):
+            return deny('actual PR identity differs from the reply target')
+        tickets = {repository.lower() + '#' + str(pr['number'])}
+        links = pr.get('closingIssuesReferences', {})
+        if not isinstance(links, dict) or not isinstance(links.get('nodes'), list) or len(links['nodes']) > 100:
+            return deny('invalid bounded linked-ticket evidence')
+        for issue in links['nodes']:
+            if not isinstance(issue, dict) or not isinstance(issue.get('repository'), dict):
+                return deny('malformed linked-ticket identity')
+            owner = issue['repository'].get('nameWithOwner')
+            if (not isinstance(owner, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+', owner)
+                    or type(issue.get('number')) is not int or issue['number'] < 1):
+                return deny('malformed linked-ticket identity')
+            tickets.add(owner.lower() + '#' + str(issue['number']))
+        body = pr.get('body')
+        if body is None: body = ''
+        if not isinstance(body, str): return deny('uninspectable actual PR body')
+        owners = []
+        for gate in _session_thinks(workspace):
+            data = gate['data']; value = data.get('ticket') or data.get('task_id', '')
+            match = re.fullmatch(r'([A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+)#([1-9][0-9]*)', value) if isinstance(value, str) else None
+            if not match: continue
+            if value.lower() not in tickets and not github_ticket_reference(body, int(match[2]), match[1],
+                                                                            kind='reference', source_repo=repository):
+                continue
+            alias = data.get('task_id', '')
+            if isinstance(alias, str) and re.fullmatch(r'[^/\s]+/[^#\s]+#[1-9][0-9]*', alias) and alias.lower() != value.lower():
+                return deny('conflicting canonical ticket/task_id')
+            if not binding or task_identity(data) == binding: owners.append(gate)
+        if len(owners) != 1: return deny('one unambiguous own task bound to this PR or its linked ticket required')
+        gate = owners[0]; data = gate['data']; role = str(data.get('role', '')).lower()
+        if re.search(r'read.only|review.only', role) or role == 'reviewer':
+            return deny('read-only/review-only assignment cannot post or resolve without its existing comment-only grant')
+        status = data.get('status')
+        if status != 'implementing' and not (status in {'reviewing', 'verifying'} and role == 'comment-only'
+                                               and isinstance(data.get('authorized_by'), str) and data['authorized_by'].strip()):
+            return deny('existing author or explicit comment-only review grant required; planned/read-only work is insufficient')
+        return {'gate': gate, 'review_target': {'repository': repository, 'number': pr['number'],
+                                               'operation': target['kind']}, 'error': ''}
+    except (OSError, ValueError, TypeError, KeyError, ImportError) as error:
+        return deny('cannot verify actual thread/PR/task binding: ' + str(error))
 
 
 def project_policy() -> list:
