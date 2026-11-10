@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: read-only gh queries may use a quoted variable as an option value (#1165)
+
+- `for q in a b; do gh issue list --search "$q"; done` and `gh issue list --search="$q"` are proven reads and no longer need a task gate. The read classifier admits an expansion only when it is a whole double-quoted word that is the value of a value-taking long option of a gh read subcommand, where the gh flag parser always consumes it as that value.
+- Every other expansion stays unproven: positional words, unquoted values, short options, values after `--`, other guarded verbs and `gh api`. Writes through expansions (`cp "$S/f" "$D/"`, `echo x > "$F"`) still need a task gate. `echo "EXIT=$?"` was already a proven read.
+
 ### Fixed: repository-owned metadata authority (#1261)
 
 - Derive metadata grants from the first repository-owned origin, including local includes and worktree-only configuration. Global origins cannot donate repository authority; legitimate global trust and authentication remain available.

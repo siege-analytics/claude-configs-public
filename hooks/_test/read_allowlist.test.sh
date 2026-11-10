@@ -355,5 +355,40 @@ docker image ls; docker image rm a
 docker system prune -af
 docker rmi a
 EOF
+
+echo "== #1165: a double-quoted expansion that is the value of a gh read option is a read =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect allow "$O" "$c"; done <<'EOF'
+echo "EXIT=$?"
+for q in a b; do gh issue list --search "$q"; done
+for q in a b; do gh issue list --search="$q" --state open; done
+gh pr list --search "$q" --json number --jq ".[].number"
+gh search issues --owner "$o" bug
+gh issue list --search "${q:---web}"
+gh issue list --search "$q" | wc -l
+EOF
+echo "== #1165: every other expansion, and writes through expansions, still need a task gate =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+cp "$S/f" "$D/"
+echo x > "$F"
+gh search issues "$q"
+gh issue view "$n"
+gh issue list --search $q
+gh issue list --search=$q
+gh issue list "--search=$q"
+gh issue list --search "$q"x
+gh issue list --search "$q" --web
+gh issue list --label --search "$q"
+gh issue list --search a -- "$q"
+gh issue list -S "$q"
+gh issue list --search "$q" -R "$r"
+gh issue edit 1 --title "$t"
+gh issue create --title "$t"
+gh api "repos/o/r/issues/$n"
+gh issue list --search "$q" > out.txt
+gh issue list --search "$q"; rm -rf x
+timeout 30 gh issue list --search "$q"
+find . "$x"
+rg "$p" --pre "$c"
+EOF
 printf 'read_allowlist: %d passed, %d failed\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))
