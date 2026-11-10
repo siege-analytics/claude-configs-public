@@ -386,6 +386,8 @@
     },
     {
       "id": "ask-questions",
+      "prose_request": true,
+      "prohibition_qualifiers": ["as a group", "at once", "together", "in a batch", "in one batch", "in bulk", "in one message", "in a single message", "in one go", "up front", "upfront", "in a list"],
       "priority": 80,
       "verbs": [
         "question",
@@ -409,7 +411,6 @@
         "do not ask questions",
         "don't ask me questions",
         "do not ask me questions",
-        "don\u2019t ask",
         "never ask",
         "never go one question",
         "do not ask your",
@@ -419,10 +420,7 @@
         "no need to ask",
         "only ask questions if",
         "only ask me questions if",
-        "stop asking",
-        "'ask",
-        "'i ask",
-        "\"ask"
+        "stop asking"
       ],
       "skills": [
         "ask-questions"
@@ -430,6 +428,7 @@
     },
     {
       "id": "ask-questions-explicit",
+      "prose_request": true,
       "priority": 80,
       "terms": [
         "ask me questions one at a time",
@@ -438,13 +437,10 @@
       "exclude_terms": [
         "don't ask",
         "do not ask",
-        "don\u2019t ask",
         "never ask",
         "no need to ask",
         "only ask",
-        "stop asking",
-        "'ask",
-        "\"ask"
+        "stop asking"
       ],
       "skills": [
         "ask-questions"
