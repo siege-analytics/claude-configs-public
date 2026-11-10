@@ -214,7 +214,7 @@ class GuardArtifactLane(unittest.TestCase):
         for case in REVIEW_CASES['B1']:
             with self.subTest(case['file'] + ':' + case['name']):
                 if case.get('held'):
-                    self.skipTest(case['held'])
+                    self.skipTest('held N2: run when the structural B1 decision lands; see plans/gate-bypass-1164.md')
                 result = guard(case['body'])
                 self.assertEqual(result.returncode, case['expected_exit'], result.stderr)
 
