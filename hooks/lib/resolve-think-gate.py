@@ -216,19 +216,41 @@ def session_dirs(workspace: str, session_id: str = "") -> "list[str]":
     return out
 
 
-def _git_origin(path: str) -> str:
+_METADATA_GIT_REDIRECT_ENV = frozenset({
+    "GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE",
+    "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_NAMESPACE",
+    "GIT_CONFIG", "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT",
+})
+
+
+def _metadata_git_redirect(name: str) -> bool:
+    return name in _METADATA_GIT_REDIRECT_ENV or name.startswith(("GIT_CONFIG_KEY_", "GIT_CONFIG_VALUE_"))
+
+
+def _metadata_git_environment() -> dict[str, str]:
+    """Observe the granted physical repository, not a caller's Git target.
+
+    Same location/config isolation as the canary's private-repository reads;
+    ordinary Git action classification deliberately retains its ambient env.
+    """
+    environment = {key: value for key, value in os.environ.items() if not _metadata_git_redirect(key)}
+    environment["GIT_NO_REPLACE_OBJECTS"] = "1"
+    return environment
+
+
+def _git_origin(path: str, *, git_environment: Optional[dict] = None) -> str:
     try:
         return subprocess.check_output(
             ["git", "-C", path, "config", "--get", "remote.origin.url"],
             text=True,
             stderr=subprocess.DEVNULL,
-            timeout=3,
+            timeout=3, env=git_environment,
         ).strip()
     except Exception:
         return ""
 
 
-def _target_repo(path: str) -> str:
+def _target_repo(path: str, *, git_environment: Optional[dict] = None) -> str:
     directory = canonical(path)
     while not os.path.isdir(directory):
         parent = os.path.dirname(directory)
@@ -238,16 +260,16 @@ def _target_repo(path: str) -> str:
     try:
         return canonical(subprocess.check_output(
             ["git", "-C", directory, "rev-parse", "--show-toplevel"],
-            text=True, stderr=subprocess.DEVNULL, timeout=3).strip())
+            text=True, stderr=subprocess.DEVNULL, timeout=3, env=git_environment).strip())
     except Exception:
         return ""
 
 
-def _scope_diagnostic(gate: dict, expected_repo: str) -> str:
+def _scope_diagnostic(gate: dict, expected_repo: str, *, git_environment: Optional[dict] = None) -> str:
     declared = str(gate["data"].get("repo_root", ""))
     return (f"Task gate scope rejected: {gate['path']} declares repo_root={declared} "
-            f"(origin={_git_origin(declared) or '<none>'}); expected target repo={expected_repo} "
-            f"(origin={_git_origin(expected_repo) or '<none>'}). "
+            f"(origin={_git_origin(declared, git_environment=git_environment) or '<none>'}); expected target repo={expected_repo} "
+            f"(origin={_git_origin(expected_repo, git_environment=git_environment) or '<none>'}). "
             "Set repo_root to the task's TARGET repository, not the session CWD/workspace repository.")
 
 
@@ -324,7 +346,7 @@ def _project_repo_field(manifest_path: str) -> str:
     return ""
 
 
-def _same_repo(gate_repo: str, repo_root: str) -> bool:
+def _same_repo(gate_repo: str, repo_root: str, *, git_environment: Optional[dict] = None) -> bool:
     if not gate_repo:
         return True
     if not repo_root:
@@ -335,8 +357,8 @@ def _same_repo(gate_repo: str, repo_root: str) -> bool:
     except (OSError, TypeError, ValueError) as exc:
         print(f"[resolve-think-gate] Cannot compare repository identity: {exc}", file=sys.stderr)
         return False
-    gate_origin = _git_origin(gate_repo)
-    repo_origin = _git_origin(repo_root)
+    gate_origin = _git_origin(gate_repo, git_environment=git_environment)
+    repo_origin = _git_origin(repo_root, git_environment=git_environment)
     return bool(gate_origin and repo_origin and gate_origin == repo_origin)
 
 
@@ -529,7 +551,8 @@ def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
             "Then satisfy only this task's effective review tier; see [skill:think].")
 
 
-def select_task(workspace: str, paths: list[str], binding: str = "", session_id: str = "") -> dict:
+def select_task(workspace: str, paths: list[str], binding: str = "", session_id: str = "",
+                *, git_environment: Optional[dict] = None) -> dict:
     """Resolve all targets to one owner. Explicit binding disambiguates, not expands scope."""
     if not (session_id or session_id_from_env()):
         return {"gate": None, "error": session_unresolved_message()}
@@ -541,11 +564,11 @@ def select_task(workspace: str, paths: list[str], binding: str = "", session_id:
     for path in paths:
         scores = []
         rejected = []
-        expected_repo = _target_repo(path)
+        expected_repo = _target_repo(path, git_environment=git_environment)
         for gate in candidates:
             declared = str(gate["data"].get("repo_root", ""))
-            if declared and expected_repo and not _same_repo(declared, expected_repo):
-                rejected.append(_scope_diagnostic(gate, expected_repo))
+            if declared and expected_repo and not _same_repo(declared, expected_repo, git_environment=git_environment):
+                rejected.append(_scope_diagnostic(gate, expected_repo, git_environment=git_environment))
                 continue
             matching = [len(p.split(os.sep)) for p in _scopes(gate) if _within(path, p)]
             if matching:
@@ -861,11 +884,15 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
         return deny('ambient GitHub host override is unproven')
     if os.environ.get('GH_REPO') and any(not target['repository'] for target in shape['metadata_posts']):
         return deny('implicit repository under GH_REPO is unproven; use a literal --repo or canonical URL')
+    if any(_metadata_git_redirect(name) for name in os.environ) and any(
+            not target['repository'] for target in shape['metadata_posts']):
+        return deny('implicit repository under ambient Git redirection is unproven; use a literal --repo or canonical URL')
+    inspection_environment = _metadata_git_environment()
     cache = {}
     def repository(root):
         if root not in cache:
             from urllib.parse import urlsplit
-            raw = _git_origin(root)
+            raw = _git_origin(root, git_environment=inspection_environment)
             scp = re.fullmatch(r'git@github\.com:([^?#]+)', raw, re.I)
             if scp:
                 path = scp[1]
@@ -881,21 +908,21 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
             cache[root] = path.casefold() if re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', path) and not any(x in {'.', '..'} for x in path.split('/')) else ''
         return cache[root]
     def implicit_repository(cwd):
-        root = _target_repo(cwd)
+        root = _target_repo(cwd, git_environment=inspection_environment)
         if not root:
             return ''
         try:
             remotes = subprocess.check_output(['git', '-C', root, 'remote'],
-                text=True, stderr=subprocess.DEVNULL, timeout=3).splitlines()
+                text=True, stderr=subprocess.DEVNULL, timeout=3, env=inspection_environment).splitlines()
             resolved = subprocess.run(['git', '-C', root, 'config', '--get-regexp',
-                r'^remote\..*\.gh-resolved$'], capture_output=True, timeout=3)
+                r'^remote\..*\.gh-resolved$'], capture_output=True, timeout=3, env=inspection_environment)
             # gh can prefer upstream/github or an explicitly resolved default.
             # Resolve such targets explicitly instead of borrowing origin.
             if remotes != ['origin'] or resolved.returncode != 1:
                 return ''
             effective = subprocess.check_output(['git', '-C', root, 'remote',
                 'get-url', '--all', 'origin'], text=True,
-                stderr=subprocess.DEVNULL, timeout=3).splitlines()
+                stderr=subprocess.DEVNULL, timeout=3, env=inspection_environment).splitlines()
             if len(effective) != 1:
                 return ''
             from urllib.parse import urlsplit
@@ -921,10 +948,10 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
             continue
         allowed = set()
         for scope in _scopes(gate):
-            root = _target_repo(scope)
+            root = _target_repo(scope, git_environment=inspection_environment)
             if not root:
                 continue
-            proof = select_task(workspace, [scope], identity)
+            proof = select_task(workspace, [scope], identity, git_environment=inspection_environment)
             if proof.get('gate') and canonical(proof['gate']['path']) == canonical(gate['path']):
                 slug = repository(root)
                 if slug: allowed.add(slug)

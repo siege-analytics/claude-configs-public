@@ -198,6 +198,101 @@ class Reporting(unittest.TestCase):
         self.assertEqual(outcomes['universal-mutation-gate.sh'][0], 2, outcomes)
         self.assertEqual(outcomes['destructive-guard.sh'][0], 0, outcomes)
 
+    def git_scope_fixture(self):
+        from unittest.mock import patch
+        import task_keyed_gates as fixture
+        # Isolate fixture construction before deliberately supplying hostile
+        # Git variables to candidate inspection. Never redirect the caller repo.
+        clean = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
+        clean.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1')
+        context = patch.dict(os.environ, clean, clear=True)
+        context.start(); self.addCleanup(context.stop)
+        f = fixture.Gates(); f.setUp(); self.addCleanup(f.tearDown)
+        foreign = f.ws / 'foreign'; foreign.mkdir()
+        for repo, origin in [(f.repo, 'https://github.com/example/target.git'),
+                             (foreign, 'https://github.com/other/foreign.git')]:
+            if repo == foreign:
+                subprocess.run(['git', 'init', '-q', str(repo)], env=f.env, check=True)
+            subprocess.run(['git', '-C', str(repo), 'remote', 'add', 'origin', origin],
+                           env=f.env, check=True)
+        gate = f.task('metadata-own-scope', f.repo)
+        redirected = dict(f.env, GIT_DIR=str(foreign / '.git'),
+                          GIT_WORK_TREE=str(foreign), GIT_INDEX_FILE=str(foreign / '.git/index'))
+        return fixture, f, foreign, gate, redirected
+
+    def test_ambient_git_cannot_borrow_metadata_scope_in_full_chain(self):
+        fixture, f, foreign, gate, redirected = self.git_scope_fixture()
+        hooks = [ROOT / h['command'].split('/claude-configs-public/', 1)[1]
+                 for group in json.loads((ROOT / 'hooks/settings-snippet.json').read_text())['hooks']['PreToolUse']
+                 if group.get('matcher') == 'Bash' for h in group['hooks']]
+        self.assertEqual(len(hooks), 16)
+        def chain(command, environment):
+            payload = fixture.craft_payload(tool_name='Bash', cwd=str(f.repo), tool_input={'command': command})
+            return {hook.name: subprocess.run(['bash', str(hook)], input=json.dumps(payload),
+                    env=environment, cwd=f.repo, capture_output=True, text=True, timeout=15)
+                    for hook in hooks}
+        own = 'gh issue comment 50 --repo example/target --body report'
+        other = 'gh issue comment 50 --repo other/foreign --body report'
+        implicit = 'gh issue comment 50 --body report'
+        # The ambient environment really targets B; candidate posts never run.
+        observed = subprocess.check_output(['git', '-C', str(f.repo), 'config', '--get',
+                   'remote.origin.url'], env=redirected, text=True).strip()
+        self.assertEqual(observed, 'https://github.com/other/foreign.git')
+        for environment in [f.env, redirected]:
+            with self.subTest(redirected=environment is redirected):
+                own_results = chain(own, environment)
+                self.assertTrue(all(p.returncode == 0 for p in own_results.values()),
+                                {n: p.stderr for n, p in own_results.items()})
+                self.assertEqual(chain(other, environment)['universal-mutation-gate.sh'].returncode, 2)
+        self.assertTrue(all(p.returncode == 0 for p in chain(implicit, f.env).values()))
+        denied = chain(implicit, redirected)['universal-mutation-gate.sh']
+        self.assertEqual(denied.returncode, 2); self.assertIn('literal --repo', denied.stderr)
+
+    def test_metadata_git_config_injection_keeps_explicit_continuation(self):
+        fixture, f, foreign, gate, redirected = self.git_scope_fixture()
+        for injected in [dict(GIT_CONFIG_COUNT='1', GIT_CONFIG_KEY_0='remote.origin.url',
+                              GIT_CONFIG_VALUE_0='https://github.com/other/foreign.git'),
+                         dict(GIT_CONFIG_PARAMETERS="'remote.origin.url=https://github.com/other/foreign.git'")]:
+            environment = dict(f.env, **injected)
+            observed = subprocess.check_output(['git', '-C', str(f.repo), 'config', '--get',
+                       'remote.origin.url'], env=environment, text=True).strip()
+            self.assertEqual(observed, 'https://github.com/other/foreign.git')
+            for target, expected in [('example/target', 0), ('other/foreign', 2)]:
+                self.assertEqual(f.hook('gh issue comment 50 --repo ' + target + ' --body report',
+                                 cwd=f.repo, env=environment).returncode, expected)
+            self.assertEqual(f.hook('gh issue comment 50 --body report', cwd=f.repo,
+                                   env=environment).returncode, 2)
+
+    def test_metadata_nested_owner_proof_uses_physical_repository(self):
+        fixture, f, foreign, gate, redirected = self.git_scope_fixture()
+        data = json.loads((gate / 'think-gate.json').read_text())
+        data['repo_root'] = str(foreign)  # Contradicts its physical A scope.
+        (gate / 'think-gate.json').write_text(json.dumps(data))
+        for environment in [f.env, redirected]:
+            for target in ['example/target', 'other/foreign']:
+                result = f.hook('gh issue comment 50 --repo ' + target + ' --body report',
+                                cwd=f.repo, env=environment)
+                self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_metadata_inspection_does_not_scrub_ordinary_git_targets_or_mutate_environment(self):
+        from unittest.mock import patch
+        fixture, f, foreign, gate, redirected = self.git_scope_fixture()
+        with patch.dict(os.environ, redirected, clear=True):
+            before = dict(os.environ)
+            post = fixture.r.resolve_action(str(f.ws), fixture.craft_payload(tool_name='Bash',
+                cwd=str(f.repo), tool_input={'command': 'gh issue comment 50 --repo example/target --body report'}))
+            self.assertTrue(post.get('gate'), post)
+            self.assertEqual(dict(os.environ), before)
+            self.assertEqual(fixture.r._target_repo(str(f.repo)), str(foreign.resolve()))
+            shape = fixture.r.action('git add note.txt', str(f.repo))
+            self.assertTrue(shape['paths'], shape)
+            self.assertTrue(all(str(foreign.resolve()) == p or str(foreign.resolve()) + os.sep in p
+                                for p in shape['paths']), shape)
+            ordinary = fixture.r.resolve_action(str(f.ws), fixture.craft_payload(tool_name='Bash',
+                cwd=str(f.repo), tool_input={'command': 'git add note.txt'}))
+            self.assertIsNone(ordinary.get('gate'), ordinary)
+            self.assertEqual(dict(os.environ), before)
+
     def test_preparation_reports_do_not_require_implementation_artifacts(self):
         import task_keyed_gates as fixture
         f = fixture.Gates(); f.setUp(); self.addCleanup(f.tearDown)
