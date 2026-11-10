@@ -11,6 +11,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 ### Fixed: descriptive metadata comments
 
 - Standalone literal GitHub issue creation, issue/PR comments, body-only edits and comment-mode reviews no longer require owner-signoff, future-plan or blocker wording. Task/target authority remains in UMG; shell composition, unsupported shapes and state-changing operations do not inherit the reporting lane (#1245).
+- After own-Task and actual remote-target proof, pure metadata reports can post investigation/design/review evidence before implementation without circular code-artifact requirements. Local writes and protected state actions retain their normal gates (#1245).
 
 ### Fixed: coordinator roles and reproducible evidence
 
