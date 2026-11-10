@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: registered child worktree targeting
+
+- Verify writer isolation from actual Git ownership and the registered worktree backpointer; accept sibling worktrees without prompt magic or a required directory name. Keep read-only reviews and existing directories outside Git supported (#1256).
+- Bound backpointer reads and match the host's path normalization. BREAKING for writer spawns using inherited, relative, tilde or unexpanded HOME directories: prepare the worktree first, keep the parent in its own workspace, and pass the child's existing literal absolute path as `workingDirectory`. This changes target verification, not authorization (#1256).
+
 ### BREAKING: normal development branches require develop
 
 - Normal feature, fix, documentation and configuration branch creation now requires a verified develop source. Implicit HEAD, main aliases and repository defaults do not substitute for develop. Migrate by using `bin/prepare-task-branch.py --branch <task-branch> --worktree <new-path>` (with `--repo` when needed): it creates an isolated task worktree and can create missing remote develop from verified main/default with an atomic create-only lease. Known cached develop remains usable offline with freshness reported (#1229).
