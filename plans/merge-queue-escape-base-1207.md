@@ -160,3 +160,4 @@ Revert proofs were run on the working tree, restoring each line afterwards:
 | Rework trigger | Root skip | Check cost | Rework cost | Ratio |
 |---|---|---|---|---|
 | Stack test expected 27 GraphQL-inclusive reads, observed 22 | Assumed every guard consults the helper for `gh api` | 1 grep | 1 test edit | 1:1 |
+| Pre-push blocked six times in sequence: Class-Audit, Tier C evidence trailers, em-dash copied from a hook template, `Working as:` role, peer-review shelf citation, rule citations in a commit body | Did not read `hooks/git/self-review.sh` and the push-time fingerprint scan in full before the first push | 1 full read of the hook | 4 additive evidence commits | 1:4 |
