@@ -540,9 +540,9 @@ def _git_clone_conditional_transport() -> bool:
     return inspect()
 
 
-def _git_clone_config_value(key: str, git_dir: str | None) -> bytes | None:
+def _git_clone_config_value(key: str, git_dir: str | None, config: tuple = ()) -> bytes | None:
     if git_dir is None:
-        result = _git_bootstrap_read(['config', '--get', key])
+        result = _git_bootstrap_read(['config', '--get', key], config)
         if result.returncode not in {0, 1}:
             raise UnknownShape('cannot inspect Git clone transport configuration')
         return (result.stdout[:-1] if result.stdout.endswith(b'\n') else result.stdout) if result.returncode == 0 else None
@@ -550,7 +550,7 @@ def _git_clone_config_value(key: str, git_dir: str | None) -> bytes | None:
     # context even before metadata exists. Capture only; never log user config
     # or identity values. This retains the existing trusted-user-config boundary
     # (including user hooks/SSH commands), rather than claiming a sandbox.
-    result = _git_bootstrap_read(['var', '-l'], git_dir=git_dir)
+    result = _git_bootstrap_read(['var', '-l'], config, git_dir=git_dir)
     if result.returncode:
         raise UnknownShape('cannot inspect destination Git clone transport configuration')
     prefix = key.encode('utf-8') + b'='
@@ -571,7 +571,8 @@ def _git_clone_effective_source(source: str, *, git_dir: str | None = None) -> s
     valid = _git_bootstrap_read(['check-ref-format', 'refs/remotes/' + remote_name + '/probe'])
     if not remote_name or valid.returncode:
         raise UnknownShape('unsupported Git clone remote name')
-    if _git_clone_config_value('remote.' + remote_name + '.vcs', git_dir) is not None:
+    if _git_clone_config_value('remote.' + remote_name + '.vcs', git_dir,
+                               (('remote.' + remote_name + '.url', source),)) is not None:
         raise UnknownShape('unsupported Git clone custom remote transport')
     resolved = _git_bootstrap_read(['ls-remote', '--get-url', '--', remote_name],
                                    (('remote.' + remote_name + '.url', source),), git_dir=git_dir)
