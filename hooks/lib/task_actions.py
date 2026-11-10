@@ -440,6 +440,84 @@ def _git_toplevel(directory: str) -> str:
 
 
 
+
+def _git_bootstrap_read(arguments: list[str], config: tuple = ()):
+    """Fixed read-only Git lookup without enclosing-repository configuration."""
+    import tempfile
+    try:
+        with tempfile.TemporaryDirectory(prefix='git-bootstrap-read-') as scratch:
+            neutral = os.path.realpath(scratch)
+            environment = dict(os.environ)
+            environment['GIT_CEILING_DIRECTORIES'] = os.path.dirname(neutral)
+            if config:
+                environment['GIT_CONFIG_COUNT'] = str(len(config))
+                for index, (key, value) in enumerate(config):
+                    environment['GIT_CONFIG_KEY_' + str(index)] = key
+                    environment['GIT_CONFIG_VALUE_' + str(index)] = value
+            result = subprocess.run(['git', '-C', neutral, *arguments], env=environment,
+                                    capture_output=True, timeout=3)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise UnknownShape('cannot inspect clone-equivalent Git configuration') from error
+    if len(result.stdout) > 8192:
+        raise UnknownShape('Git bootstrap lookup output exceeds bounded metadata')
+    return result
+
+
+def _git_clone_local_kind(source: str, cwd: str) -> str | None:
+    """Git clone's two local-path searches, including gitfiles and suffixes.
+
+    Repository candidates precede regular bundle candidates. Git's own bounded
+    resolve-git-dir reader recognizes bare metadata and gitfile indirection;
+    no candidate clone, transport or helper executes during this lookup.
+    """
+    base = os.path.abspath(os.path.join(cwd, source))
+    for suffix in ('/.git', '', '.git/.git', '.git'):
+        candidate = base + suffix
+        if not (os.path.isdir(candidate) or os.path.isfile(candidate)):
+            continue
+        resolved = _git_bootstrap_read(['rev-parse', '--resolve-git-dir', candidate])
+        if resolved.returncode == 0:
+            if base != canonical(base):
+                raise UnknownShape('Git clone local source has a symlink alias')
+            return 'repository'
+        if resolved.returncode not in {1, 128}:
+            raise UnknownShape('cannot establish Git clone local metadata')
+    for suffix in ('.bundle', ''):
+        candidate = base + suffix
+        if os.path.isfile(candidate):
+            if candidate != canonical(candidate):
+                raise UnknownShape('Git clone local bundle has a symlink alias')
+            return 'bundle'
+    return None
+
+
+def _git_clone_effective_source(source: str) -> str:
+    # Clone assigns its literal repository argument to the new remote; it does
+    # not interpret that argument as a remote name in the caller's repository.
+    # An invocation-only remote URL models this assignment while retaining the
+    # real system/global config ordering (including a configured default name).
+    name = _git_bootstrap_read(['config', '--get', 'clone.defaultRemoteName'])
+    if name.returncode not in {0, 1}:
+        raise UnknownShape('cannot resolve Git clone default remote name')
+    raw_name = name.stdout[:-1] if name.stdout.endswith(b'\n') else name.stdout
+    try:
+        remote_name = raw_name.decode('utf-8') if name.returncode == 0 else 'origin'
+    except UnicodeError as error:
+        raise UnknownShape('unsupported Git clone remote name') from error
+    valid = _git_bootstrap_read(['check-ref-format', 'refs/remotes/' + remote_name + '/probe'])
+    if not remote_name or valid.returncode:
+        raise UnknownShape('unsupported Git clone remote name')
+    resolved = _git_bootstrap_read(['ls-remote', '--get-url', '--', remote_name],
+                                   (('remote.' + remote_name + '.url', source),))
+    if resolved.returncode:
+        raise UnknownShape('cannot resolve effective Git clone source')
+    value = resolved.stdout[:-1] if resolved.stdout.endswith(b'\n') else resolved.stdout
+    try:
+        return value.decode('utf-8')
+    except UnicodeError as error:
+        raise UnknownShape('effective Git clone source is not supported UTF-8') from error
+
+
 def _git_bootstrap_destination(operation: dict) -> str | None:
     """Bound fresh repository creation; all other Git mutations keep toplevel ownership.
 
@@ -498,11 +576,7 @@ def _git_bootstrap_destination(operation: dict) -> str | None:
     # the destination. An exact empty command override copies none, without
     # changing persistent configuration or requiring another authorization.
     if not empty_template:
-        try:
-            template = subprocess.run(['git', '-C', cwd, 'config', '--path', '--get', 'init.templateDir'],
-                                      capture_output=True, timeout=3)
-        except (OSError, subprocess.SubprocessError, UnicodeError) as error:
-            raise UnknownShape('cannot inspect Git bootstrap template configuration') from error
+        template = _git_bootstrap_read(['config', '--path', '--get', 'init.templateDir'])
         template_value = template.stdout[:-1] if template.stdout.endswith(b'\n') else template.stdout
         if template.returncode not in {0, 1} or template_value != b'' or 'GIT_TEMPLATE_DIR' in os.environ:
             raise UnknownShape('configured Git bootstrap template has unmodeled write aliases; use --template= for this invocation')
@@ -516,31 +590,34 @@ def _git_bootstrap_destination(operation: dict) -> str | None:
         source, destination = operands
         if source.startswith('-') or not source:
             raise UnknownShape('invalid Git clone source')
-        raw_source = os.path.abspath(os.path.join(cwd, source))
-        # --get-url expands configured URL rewrites locally; it never contacts
-        # a remote or invokes its transport helper. Validate that one expansion,
-        # but leave the actual candidate command unchanged (no second rewrite).
-        try:
-            resolved = subprocess.run(['git', '-C', cwd, 'ls-remote', '--get-url', '--', source],
-                                      capture_output=True, timeout=3)
-        except (OSError, subprocess.SubprocessError, UnicodeError) as error:
-            raise UnknownShape('cannot resolve effective Git clone source') from error
-        if resolved.returncode or len(resolved.stdout) > 8192:
-            raise UnknownShape('cannot resolve bounded effective Git clone source')
-        source_bytes = resolved.stdout[:-1] if resolved.stdout.endswith(b'\n') else resolved.stdout
-        try:
-            source = source_bytes.decode('utf-8')
-        except UnicodeError as error:
-            raise UnknownShape('effective Git clone source is not supported UTF-8') from error
+        raw_kind = _git_clone_local_kind(source, cwd)
+        independent = '--no-local' in seen_flags and '--local' not in seen_flags
+        if raw_kind and '://' in source:
+            raise UnknownShape('local Git source shadows a transport URL; use an explicit filesystem path with --no-local')
+        if raw_kind == 'repository' and not independent:
+            raise UnknownShape('local repository or gitfile clone needs unambiguous --no-local for independent objects')
+        if raw_kind:
+            # Git absolute_pathdup preserves the literal suffix/slashes, unlike
+            # realpath/normpath. Resolve initial relative input in the real cwd,
+            # before entering the neutral configuration lookup.
+            clone_argument = source if os.path.isabs(source) else os.path.join(cwd, source)
+        else:
+            if ':' not in source:
+                raise UnknownShape('Git clone source is neither a local candidate nor a transport')
+            clone_argument = source
+        source = _git_clone_effective_source(clone_argument)
         if not source or '\n' in source or '\r' in source or source.startswith('-'):
             raise UnknownShape('invalid effective Git clone source')
-        # A literal existing directory cannot borrow an apparently remote URL
-        # classification to bypass independent-object semantics.
-        if os.path.isdir(raw_source) and ('--no-local' not in seen_flags or '--local' in seen_flags):
-            raise UnknownShape('local repository clone needs unambiguous --no-local for independent objects')
+        effective_kind = _git_clone_local_kind(source, cwd)
+        if effective_kind and '://' in source:
+            raise UnknownShape('effective local Git source has ambiguous transport syntax; use an explicit filesystem path')
+        if effective_kind == 'repository' and not independent:
+            raise UnknownShape('effective local repository or gitfile needs unambiguous --no-local for independent objects')
         # Only built-in network transports or existing local inputs, never
         # remote helpers, file URLs, option-like sources or inferred targets.
-        if '://' in source:
+        if effective_kind:
+            pass  # The real local-path lookup precedes transport interpretation.
+        elif '://' in source:
             from urllib.parse import urlsplit
             try:
                 url = urlsplit(source)
@@ -555,13 +632,7 @@ def _git_bootstrap_destination(operation: dict) -> str | None:
             if not re.fullmatch(r'[A-Za-z0-9_.-]+@[A-Za-z0-9_.-]+:[A-Za-z0-9_./-]+', source):
                 raise UnknownShape('unsupported Git clone transport')
         else:
-            original = os.path.abspath(os.path.join(cwd, source))
-            if original != canonical(original) or not os.path.exists(original):
-                raise UnknownShape('Git clone local source must exist without symlink aliases')
-            if not os.path.isfile(original) and not os.path.isdir(original):
-                raise UnknownShape('Git clone local source must be a file or directory')
-            if os.path.isdir(original) and ('--no-local' not in seen_flags or '--local' in seen_flags):
-                raise UnknownShape('local repository clone needs unambiguous --no-local for independent objects, not hardlinks or borrowed alternates')
+            raise UnknownShape('effective Git clone local source does not exist')
     if not destination or destination.startswith('-'):
         raise UnknownShape('invalid Git bootstrap destination')
     target = os.path.abspath(os.path.join(cwd, destination))
@@ -585,10 +656,13 @@ def _git_bootstrap_destination(operation: dict) -> str | None:
         probe = target if os.path.isdir(target) else os.path.dirname(target)
         try:
             existing = subprocess.run(['git', '-C', probe, 'rev-parse', '--absolute-git-dir'],
-                                      text=True, capture_output=True, timeout=3)
+                                      capture_output=True, timeout=3)
         except (OSError, subprocess.SubprocessError) as error:
             raise UnknownShape('cannot inspect Git bootstrap metadata') from error
-        existing_metadata = canonical(existing.stdout.strip()) if existing.returncode == 0 else ''
+        existing_value = existing.stdout[:-1] if existing.stdout.endswith(b'\n') else existing.stdout
+        if existing.returncode == 0 and not existing_value:
+            raise UnknownShape('cannot establish Git bootstrap metadata identity')
+        existing_metadata = canonical(os.fsdecode(existing_value)) if existing.returncode == 0 else ''
         if existing_metadata in {target, os.path.join(target, '.git')} or os.path.lexists(os.path.join(target, '.git')):
             raise UnknownShape('Git init bootstrap cannot reinitialize existing repository metadata')
         if existing.returncode not in {0, 128}:

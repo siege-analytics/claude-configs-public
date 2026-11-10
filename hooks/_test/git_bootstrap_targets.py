@@ -369,6 +369,117 @@ class GitBootstrap(unittest.TestCase):
         for obj in (source/'.git/objects').rglob('*'):
             if obj.is_file():self.assertEqual(obj.stat().st_nlink,1)
 
+    def assert_independent_objects(self, source_gitdir, target_gitdir):
+        originals=[p for p in (source_gitdir/'objects').rglob('*') if p.is_file()]
+        copied=[p for p in (target_gitdir/'objects').rglob('*') if p.is_file()]
+        self.assertTrue(originals);self.assertTrue(copied)
+        original_ids={(p.stat().st_dev,p.stat().st_ino) for p in originals}
+        for obj in copied:
+            self.assertNotIn((obj.stat().st_dev,obj.stat().st_ino),original_ids)
+            self.assertEqual(obj.stat().st_nlink,1)
+        for obj in originals:self.assertEqual(obj.stat().st_nlink,1)
+        self.assertFalse((target_gitdir/'objects/info/alternates').exists())
+
+    def test_gitfile_pointer_requires_no_local_and_actual_clone_is_independent(self):
+        pointer=self.ws/'pointer';pointer.write_text('gitdir: '+str(self.source/'.git')+'\n')
+        target=self.ws/'gitfile-clone';self.task(target)
+        args=['git','clone','--template=','--mirror',str(pointer),str(target)]
+        self.assertTrue(self.shape(args).get('error'))
+        self.f.assertGate(2,shlex.join(args),cwd=self.ws)
+        self.assertFalse(target.exists())
+        self.run_allowed(['git','clone','--template=','--mirror','--no-local',str(pointer),str(target)],target)
+        self.assert_independent_objects(self.source/'.git',target)
+
+    def test_git_suffix_beats_literal_remote_looking_source(self):
+        for index,source in enumerate(('a@b:c','https://h/r')):
+            with self.subTest(source=source):
+                candidate=self.ws/(source+'.git');candidate.parent.mkdir(parents=True,exist_ok=True)
+                subprocess.run(['git','clone','--template=','--mirror','--no-local',str(self.source),str(candidate)],check=True,capture_output=True,env=self.f.env)
+                target=self.ws/('suffix-clone-'+str(index));self.task(target)
+                args=['git','clone','--template=','--mirror',source,str(target)]
+                self.assertTrue(self.shape(args).get('error'))
+                self.f.assertGate(2,shlex.join(args),cwd=self.ws)
+                self.assertFalse(target.exists())
+                if '://' in source:
+                    # Native Git cannot use --no-local on this URL-shadow form:
+                    # its literal absolute path becomes an unsupported protocol.
+                    self.assertTrue(self.shape(['git','clone','--template=','--mirror','--no-local',source,str(target)]).get('error'))
+                    safe_source=str(candidate)
+                else:
+                    safe_source=source
+                self.run_allowed(['git','clone','--template=','--mirror','--no-local',safe_source,str(target)],target)
+                self.assert_independent_objects(candidate,target)
+                actual=subprocess.check_output(['git','-C',str(target),'config','--local','remote.origin.url'],text=True,env=self.f.env)
+                self.assertEqual(actual,os.path.join(str(self.ws),safe_source)+'\n')
+
+    def test_bundle_suffix_is_a_read_input_not_a_repository_alias(self):
+        target=self.ws/'bundle-suffix-clone'
+        self.run_allowed(['git','clone','--template=','--mirror','saved',str(target)],target)
+        self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],text=True),'preserve me\n')
+        self.assertFalse((target/'objects/info/alternates').exists())
+
+    def test_parent_config_and_source_remote_names_do_not_sanitize_helper(self):
+        parent=self.f.repo;target=self.ws/'parent-config-target';self.task(target)
+        literal='reviewfixture1240::x'
+        subprocess.run(['git','-C',str(parent),'config','url.https://example.invalid/.insteadOf','reviewfixture1240::'],check=True,env=self.f.env)
+        old=subprocess.check_output(['git','-C',str(parent),'ls-remote','--get-url','--',literal],text=True,env=self.f.env)
+        self.assertEqual(old,'https://example.invalid/x\n')
+        original=tempfile.TemporaryDirectory
+        # Even a scratch below that repository must stop upward discovery.
+        with patch('tempfile.TemporaryDirectory',side_effect=lambda **kw: original(prefix=kw['prefix'],dir=parent)):
+            args=['git','clone','--template=',literal,str(target)]
+            self.assertTrue(self.shape(args,parent).get('error'))
+        self.f.assertGate(2,shlex.join(args),cwd=parent)
+        global_config=self.ws/'global-source-alias.config'
+        global_config.write_text('[remote "'+literal+'"]\n url = https://example.invalid/safe\n')
+        with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(global_config)}):
+            misleading=subprocess.check_output(['git','-C',str(self.ws),'ls-remote','--get-url','--',literal],text=True)
+            self.assertEqual(misleading,'https://example.invalid/safe\n')
+            self.assertTrue(self.shape(args,parent).get('error'))
+        self.assertFalse(target.exists())
+
+    def test_parent_template_ignored_but_real_global_URL_rewrite_preserved(self):
+        parent=self.f.repo;target=self.ws/'ignore-parent-template';outside=self.ws/'parent-template-outside';outside.mkdir()
+        template=self.ws/'parent-template';template.mkdir();(template/'objects').symlink_to(outside,target_is_directory=True)
+        subprocess.run(['git','-C',str(parent),'config','init.templateDir',str(template)],check=True,env=self.f.env)
+        self.run_allowed(['git','clone','--mirror',str(self.bundle),str(target)],target,cwd=parent)
+        self.assertEqual(list(outside.iterdir()),[])
+        global_config=self.ws/'global-rewrite.config'
+        global_config.write_text('[url "ssh://git@example.invalid/"]\n insteadOf = https://example.invalid/\n')
+        subprocess.run(['git','-C',str(parent),'config','url.ext::must-not-run .insteadOf','https://example.invalid/'],check=True,env=self.f.env)
+        with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(global_config)}):
+            from task_actions import _git_clone_effective_source
+            self.assertEqual(_git_clone_effective_source('https://example.invalid/repo'),'ssh://git@example.invalid/repo')
+            shape=self.shape(['git','clone','https://example.invalid/repo',str(self.ws/'network-rewrite')],parent)
+            self.assertFalse(shape.get('error'),shape)
+
+    def test_global_default_remote_and_URL_order_match_actual_clone(self):
+        other=self.ws/'other-source'
+        subprocess.run(['git','clone','--template=','--no-local',str(self.source),str(other)],check=True,capture_output=True,env=self.f.env)
+        (other/'note.txt').write_text('other source\n')
+        subprocess.run(['git','-C',str(other),'add','note.txt'],check=True,env=self.f.env)
+        subprocess.run(['git','-C',str(other),'-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','other'],check=True,env=self.f.env)
+        config=self.ws/'global-remote-order.config'
+        config.write_text('[clone]\n defaultRemoteName = upstream=name\n[remote "upstream=name"]\n url = '+str(other)+'\n')
+        self.f.env['GIT_CONFIG_GLOBAL']=str(config)
+        target=self.ws/'global-remote-target'
+        with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(config)}):
+            from task_actions import _git_clone_effective_source
+            self.assertEqual(_git_clone_effective_source(str(self.source)),str(other))
+            self.run_allowed(['git','clone','--template=','--mirror','--no-local',str(self.source),str(target)],target)
+        self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],text=True,env=self.f.env),'other source\n')
+        self.assert_independent_objects(other/'.git',target)
+
+    def test_existing_bare_whitespace_name_keeps_exact_metadata_identity(self):
+        bare=self.ws/'existing-bare '
+        subprocess.run(['git','init','--template=','--bare','-q',str(bare)],check=True,env=self.f.env)
+        original=(bare/'HEAD').read_bytes();self.task(bare)
+        args=['git','init',str(bare)]
+        self.assertTrue(self.shape(args).get('error'))
+        self.f.assertGate(2,shlex.join(args),cwd=self.ws)
+        self.assertEqual((bare/'HEAD').read_bytes(),original)
+        self.assertFalse((bare/'.git').exists())
+
     def test_inherited_git_targeting_environment_denies_bootstrap(self):
         for key in ('GIT_DIR','GIT_WORK_TREE','GIT_TEMPLATE_DIR','GIT_CONFIG_COUNT','GIT_SSH_COMMAND'):
             with self.subTest(key=key),patch.dict(os.environ,{key:str(self.source)}):
