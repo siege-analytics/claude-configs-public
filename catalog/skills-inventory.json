@@ -6116,10 +6116,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 30436,
-      "content_sha256": "015c80a514530ce3e7e1de734dd72a45aac5a8b0b367f3b29822030125d4a133",
+      "characters": 30704,
+      "content_sha256": "348e15ab83a4cb01ee5d8bf48277fbd873e9878ddd7e0433de4573d3f5b50eba",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7609,
+      "estimated_tokens": 7676,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -12810,9 +12810,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2620386,
+    "characters": 2620654,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 655173,
+    "estimated_tokens": 655240,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12833,7 +12833,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1223992
+      "unclassified": 1224260
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12845,7 +12845,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 306039
+      "unclassified": 306106
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

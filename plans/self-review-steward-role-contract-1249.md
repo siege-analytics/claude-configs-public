@@ -42,3 +42,7 @@ Run documented Core canonical refresh/check and client build/check; existing cli
 ## Quantified claims
 
 At source review: client build/check passed;15 policy,27 board and24 admission tests passed from named logs under /tmp/role-contract-client-*.log. Core documented canonical refresh/check passed, recorded in /tmp/role-contract-core-refresh.log. All counts come from actual summaries; no installed app/model or hosted CI pass is claimed.
+
+## Board-first follow-up
+
+The current direct owner refinement makes TC primarily steward boards (ownership, status, priorities and dependencies), dispatching and following delivery through owning hubs. Bounded direct execution remains a practical option when it advances the outcome without an ownership collision; return implementation to the hub when available. This is not a new approval step or reason to halt/undo current work. Root independently read the actual portable follow-up diff and accepted it in the coordination thread. The same narrow default/exception is reconciled in both native client introductions; no runtime policy or installed state changes.

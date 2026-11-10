@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **198**
-- Characters: **2,620,386**
-- Estimated tokens: **655,173** (character/4 estimate)
+- Characters: **2,620,654**
+- Estimated tokens: **655,240** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 110 | 1,223,992 | 306,039 |
+| unclassified | 110 | 1,224,260 | 306,106 |
 
 ## Largest source items
 
@@ -47,8 +47,8 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--top-design` | reference-shelf | 38,675 | 9,669 | `skills/shelves/design/top-design/SKILL.md` |
 | `writing-claims` | rule | 31,339 | 7,835 | `skills/_writing-claims-rules.md` |
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
+| `session-coordination` | rule | 30,704 | 7,676 | `skills/_session-coordination-rules.md` |
 | `shelves--one-page-marketing` | reference-shelf | 30,696 | 7,674 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
-| `session-coordination` | rule | 30,436 | 7,609 | `skills/_session-coordination-rules.md` |
 | `writing-rules` | rule | 30,148 | 7,537 | `skills/_writing-rules-rules.md` |
 | `self-review` | skill | 29,789 | 7,448 | `skills/self-review/SKILL.md` |
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
