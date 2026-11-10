@@ -528,6 +528,36 @@ def _expands(kind, text):
     return False
 
 
+# The parameter expansions modeled as non-executing inside a double-quoted gh
+# option value: a plain name or positional/special parameter, bare or braced,
+# optionally with a default whose word is literal (`${q:---web}`). Everything
+# else is unproven, because bash can run code or yield several words while
+# expanding it: transformations (`${q@P}` runs command substitutions stored in
+# q), indirection (`${!q}`), array subscripts (arithmetic evaluation), `"$@"`
+# (one word per parameter), substring/replace/length, assignment, and nested
+# expansions in a default (review 5849675552 on #1273).
+PLAIN_PARAM = re.compile(
+    r"\$(?:[A-Za-z_][A-Za-z0-9_]*|[0-9?#$!*-]"
+    r"|\{(?:[A-Za-z_][A-Za-z0-9_]*|[0-9]+|[?#$!*-])(?::?-[^$`\\{}\"']*)?\})")
+
+
+def modeled_dq_expansions(text):
+    """True when every expansion in a double-quoted part is a PLAIN_PARAM."""
+    i = 0
+    while i < len(text):
+        if text[i] == "\\":
+            i += 2
+            continue
+        if text[i] == "$" and i + 1 < len(text) and text[i + 1] in EXPANDS and text[i + 1] != "'":
+            m = PLAIN_PARAM.match(text, i)
+            if not m:
+                return False
+            i = m.end()
+            continue
+        i += 1
+    return True
+
+
 def gh_value_expansions_only(text, found):
     """True when every expansion in this gh read command is a double-quoted,
     whole-word value of a value-taking long option (#1165): `--search "$q"` or
@@ -560,8 +590,9 @@ def gh_value_expansions_only(text, found):
                     if i + 1 >= len(words):
                         return False
                     value = words[i + 1]
-                    if literal[i + 1] is None and not (len(value) == 1 and value[0][0] == "dq"):
-                        return False   # the value must be one double-quoted word
+                    if literal[i + 1] is None and not (len(value) == 1 and value[0][0] == "dq"
+                                                       and modeled_dq_expansions(value[0][1])):
+                        return False   # one double-quoted word whose expansions are modeled
                     i += 2
                     continue
                 if "=" not in lit:
@@ -574,7 +605,7 @@ def gh_value_expansions_only(text, found):
         # attached form `--opt="$q"` (bare `--opt=` then one double-quoted part).
         if (len(word) == 2 and word[0][0] == "bare" and word[1][0] == "dq"
                 and word[0][1].endswith("=") and word[0][1][:-1] in GH_VALUE_LONG
-                and not _expands("bare", word[0][1])):
+                and not _expands("bare", word[0][1]) and modeled_dq_expansions(word[1][1])):
             i += 1
             continue
         return False

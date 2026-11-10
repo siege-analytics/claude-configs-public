@@ -8,6 +8,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 - `for q in a b; do gh issue list --search "$q"; done` and `gh issue list --search="$q"` are proven reads and no longer need a task gate. The read classifier admits an expansion only when it is a whole double-quoted word that is the value of a value-taking long option of a gh read subcommand, where the gh flag parser always consumes it as that value.
 - Every other expansion stays unproven: positional words, unquoted values, short options, values after `--`, other guarded verbs and `gh api`. Writes through expansions (`cp "$S/f" "$D/"`, `echo x > "$F"`) still need a task gate. `echo "EXIT=$?"` was already a proven read.
+- The expansion inside such a value must also be a modeled, non-executing form: a plain variable or positional/special parameter (`$q`, `${q}`, `$1`, `$?`), optionally with a literal default (`${q:---web}`). Transformations such as `${q@P}` (which runs command substitutions stored in `q`), indirection, array subscripts, `"$@"`, substring/replace/length, assignment and nested expansions in a default stay unproven and need a task gate.
 
 ### Fixed: repository-owned metadata authority (#1261)
 

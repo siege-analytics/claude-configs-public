@@ -64,6 +64,7 @@ From a copied hook tree under `env -i`, no task gate (`cache/r1165/repro.py`, no
   - walking the remaining words as pflag would, every word that carries an expansion is either the separate value of a known value-taking long option and wholly one double-quoted part (`--search "$q"`), or the attached form `--opt="$q"` (bare `--opt=` followed by one double-quoted part).
 - The walk refuses (keeps the unproven verdict 4) on any short option or cluster, any long option without `=` that is not known to take a value (alignment unproven), any expansion after `--`, and any positional expansion.
 - `main()` keeps its existing gate: a guarded verb with an expansion returns 4 unless this function proves the expansions are value words. `gh_ok` then still decides the subcommand and `--web`.
+- Rework for review 5849675552 (on c71d746): a value slot does not prove the expansion in it is inert. `modeled_dq_expansions()` now requires every `$` expansion in the double-quoted value part (separate and attached forms) to match `PLAIN_PARAM`: a name, a positional or special parameter other than `@`, bare or braced, optionally with a `-`/`:-` default whose word contains no `$`, backtick, backslash, brace or quote. Everything else returns 4: `${q@P}` and other transformations, `${!q}`, array subscripts, `"$@"` (one word per parameter), substring, replace, length, `:=` and nested expansions in a default. This is an allowlist of modeled syntax, not an `@P` blacklist.
 
 ## Peer review
 
@@ -73,6 +74,11 @@ From a copied hook tree under `env -i`, no task gate (`cache/r1165/repro.py`, no
   - Revert proof: the same harness with the classifier restored from `origin/develop` fails exactly the 6 new gh allow cases (378 passed, 6 failed). The new `echo "EXIT=$?"` case passes on both, matching the reproduction.
 - Negative paths exercised: `gh search issues "$q"`, `gh issue view "$n"`, `--search $q`, `--search=$q`, `"--search=$q"`, `--search "$q"x`, `--search "$q" --web`, `--label --search "$q"` (the value is consumed by `--label`), `--search a -- "$q"`, `-S "$q"`, `-R "$r"`, `gh issue edit/create --title "$t"`, `gh api ".../$n"`, a redirect to a file, a chained `rm`, a `timeout` wrapper, `find . "$x"`, `rg "$p" --pre "$c"`, and AC2/AC3.
 - Full hook suite and CI-equivalent steps: recorded in the PR body for the pushed head.
+- Rework for review 5849675552:
+  - Red on c71d746: a 26-case classifier probe found all 16 unmodeled forms proven (0) and the 10 supported positives at 0.
+  - Private Bash 5.3.20 controlled-marker proof: gh was a shell function stub and the only possible side effect was a marker file in a private temp directory. With `q='$(touch "$dir/marker")'`, `--search "${q@P}"` and `--search="${q@P}"` created the marker. `--search "$q"`, `--search="$q"` and `--search "${q:---web}"` passed the text through literally and created nothing. No GitHub command ran.
+  - Green: the harness gains a direct classifier section (6 at 0, 13 at 4) and 6 no-Task hook block cases (separate, attached and loop `${q@P}`, `${!q}`, `${a[i]}`, `"$@"`). With the fix it is 409 passed, 0 failed. Revert proof with the c71d746 classifier: 390 passed, 19 failed, exactly the 19 new negatives.
+  - Per the review, only the affected read-allowlist harness was run for this rework, not the unrelated full suite.
 
 ## Lead review
 
@@ -80,14 +86,17 @@ From a copied hook tree under `env -i`, no task gate (`cache/r1165/repro.py`, no
 - AC2 and AC3: still refused, by the unchanged `_action()` path.
 - QA: every existing case in the #1057 harness is unchanged; only the new allow cases change verdict, as the revert proof shows.
 - Rework ledger: the first draft computed "literal" words as unquoted-only, which would have treated a quoted plain value (`"is:open"`) as an expansion; corrected before any test run so literalness depends only on expansion.
+- Rework ledger: independent review 5849675552 (P1) showed that c71d746 checked where an expansion sat but not what it was, so `${q@P}` ran code stored in an ambient variable under a proven-read verdict. `"$@"` (several words, so an option such as `--web` could be injected) was a second instance of the same class, found while modeling the syntax. Both are fixed by the `PLAIN_PARAM` allowlist above.
 
 ## Quantified claims
 
 - Harness: 384 passed, 0 failed with the change; 378 passed, 6 failed with the develop classifier.
+- Harness after the review-5849675552 rework: 409 passed, 0 failed; 390 passed, 19 failed with the c71d746 classifier.
 - Reproduction: 15 cases on develop b2c4fcf, 2 AC1b cases changed verdict, 13 unchanged.
 
 ## Known limits
 
 - Short-option values (`-S "$q"`) and wrappers (`timeout 30 gh ...`) stay unproven; nobody reported them, and modeling them would widen the change.
 - The option table lists long options that take a value on the gh read subcommands in scope. An option that gh adds later is not admitted until it is added to the table.
-- Findings from the author's adversarial pass are listed above; the independent hostile review is still to run.
+- Findings from the author's adversarial pass are listed above. Independent review 5849675552 found one P1, addressed by the rework; the new head needs its own independent acceptance.
+- A plain `$q` is modeled as inert. If the ambient shell made `q` a nameref (`declare -n`) to an array element with a computed subscript, bash would evaluate that subscript. That is ambient shell state the classifier cannot see, and it applies equally to `echo "$q"`, which develop already proves read-only. It is outside this change.
