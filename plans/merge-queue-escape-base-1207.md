@@ -7,6 +7,7 @@ propagation-deferred: commission forbids issue writes; the PR body reproduces th
 ## Assumptions
 
 Domain(s): software engineering
+Working as: software engineer (implementer), tech lead (self-review)
 Geospatial cross-cut: no
 Goal source: siege-analytics/claude-configs-public#1207 corrections authorized by the operator on 2026-11-07 ("Please feel free to make meritorious corrections"), scoped by the Siege Claude Hub commission. The scope is the hostile review of #1207 at 7b6f424 plus main 9f47b035: blocker B1, the exempt-base operator decision, non-blocking follow-up 1, and docs/CHANGELOG corrections.
 Goal source verification: `scripts/discipline/evaluate-ticket.sh siege-analytics/claude-configs-public#1207` returns BLOCK (missing Context/Goal, evidence token, design reference, Assumptions). The commission prohibits editing the #1207 body, so the exemption below applies.
