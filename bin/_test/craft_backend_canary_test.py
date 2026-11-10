@@ -261,6 +261,32 @@ class CanaryPacketTest(unittest.TestCase):
                          for path in base.rglob("*") if path.is_file() or path.is_symlink()}
                 self.assertEqual(before, after)
 
+    def test_materialization_preserves_caller_under_inherited_git_targeting(self):
+        caller = self.temp / "ambient-caller"
+        subprocess.run(["git", "clone", "--quiet", "--no-hardlinks", str(ROOT), str(caller)],
+                       check=True, capture_output=True, timeout=120)
+        watched = [caller / ".git" / name for name in ("HEAD", "index", "config")]
+        watched += [caller / "skills" / "KERNEL.md"]
+        before = {str(path): path.read_bytes() for path in watched}
+        inherited = {
+            "GIT_DIR": str(caller / ".git"), "GIT_WORK_TREE": str(caller),
+            "GIT_COMMON_DIR": str(caller / ".git"), "GIT_INDEX_FILE": str(caller / ".git/index"),
+            "GIT_OBJECT_DIRECTORY": str(caller / ".git/objects"),
+            "GIT_ALTERNATE_OBJECT_DIRECTORIES": str(caller / ".git/objects"),
+            "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "core.worktree",
+            "GIT_CONFIG_VALUE_0": str(caller), "CANARY_UNRELATED_CONTROL": "retained",
+        }
+        destination = self.temp / "isolated-source"
+        destination.mkdir()
+        with mock.patch.dict(os.environ, inherited):
+            environment_before = dict(os.environ)
+            canary.materialize_source(self.value, destination)
+            self.assertEqual(dict(os.environ), environment_before)
+            self.assertEqual(canary.git_environment()["CANARY_UNRELATED_CONTROL"], "retained")
+        self.assertEqual({str(path): path.read_bytes() for path in watched}, before)
+        self.assertEqual(canary.run_git(["rev-parse", "HEAD"], cwd=destination), self.value["pins"]["source_revision"])
+        self.assertTrue((destination / ".git").is_dir())
+
     def test_materialize_and_external_record_attest_exact_existing_bytes(self):
         # Probe execution must preserve the hashed payload even when the caller
         # has not globally disabled Python bytecode writes (the ordinary CI/CLI case).

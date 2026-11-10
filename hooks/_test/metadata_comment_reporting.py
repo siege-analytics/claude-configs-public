@@ -232,6 +232,33 @@ class Reporting(unittest.TestCase):
                                         text=True, capture_output=True, cwd=f.repo, timeout=15)
                 self.assertEqual(result.returncode, 0, (hook.name, command, result.stderr))
 
+    def test_labeled_issue_creation_retains_task_and_repository_proof(self):
+        import shutil
+        import task_keyed_gates as fixture
+        f = fixture.Gates(); f.setUp(); self.addCleanup(f.tearDown)
+        subprocess.run(['git', '-C', str(f.repo), 'remote', 'add', 'origin',
+                        'https://github.com/example/target.git'], check=True, timeout=15)
+        f.task('example/target#31', f.b, status='designing', artifacts=False)
+        settings = json.loads((ROOT / 'hooks/settings-snippet.json').read_text())
+        hooks = [ROOT / h['command'].split('/claude-configs-public/', 1)[1]
+                 for group in settings['hooks']['PreToolUse'] if group.get('matcher') == 'Bash'
+                 for h in group['hooks']]
+        self.assertEqual(len(hooks), 16)
+        commands = ["gh issue create --repo example/target --title Report --body 'Missing evidence; review pending.' " + flags
+                    for flags in ['--label tooling', '-l bug --label=tooling', "--label 'bug,tooling'"]]
+        for command in commands:
+            payload = fixture.craft_payload(tool_name='Bash', cwd=str(f.repo), tool_input={'command': command})
+            for hook in hooks:
+                result = subprocess.run(['bash', str(hook)], input=json.dumps(payload), env=f.env,
+                                        text=True, capture_output=True, cwd=f.repo, timeout=15)
+                self.assertEqual(result.returncode, 0, (hook.name, command, result.stderr))
+            self.assertEqual(f.hook(command.replace('--repo example/target', '--repo foreign/repo')).returncode, 2)
+            self.assertEqual(f.hook(command + ' && touch ' + str(f.b / 'code.txt')).returncode, 2)
+        self.assertEqual(f.hook(commands[0].replace('--label tooling', "--label ''")).returncode, 2)
+        shutil.rmtree(f.ws / 'sessions/one/tasks')
+        for command in commands:
+            self.assertEqual(f.hook(command).returncode, 2)
+
     def test_issue_create_uses_actual_1251_bodies_without_word_gates(self):
         import shlex
         import task_keyed_gates as fixture

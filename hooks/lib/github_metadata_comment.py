@@ -46,14 +46,14 @@ def metadata_comment(command, cwd, *, details=None):
     value_flags = {'--body': 'body', '-b': 'body', '--body-file': 'file', '-F': 'file',
                    '--repo': 'repo', '-R': 'repo'}
     if verb == 'create':
-        value_flags.update({'--title': 'title', '-t': 'title'})
+        value_flags.update({'--title': 'title', '-t': 'title', '--label': 'label', '-l': 'label'})
     i = 0
     while i < len(args):
         word = args[i]
         flag, separator, attached = word.partition('=')
         if flag in value_flags:
             key = value_flags[flag]
-            if key in values:
+            if key in values and key != 'label':
                 return False
             if separator:
                 value = attached
