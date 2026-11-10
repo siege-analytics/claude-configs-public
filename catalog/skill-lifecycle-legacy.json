@@ -2972,8 +2972,8 @@
   },
   "schema_version": 1,
   "summary": {
-    "authoritative_item_count": 198,
+    "authoritative_item_count": 199,
     "legacy_exception_count": 198,
-    "metadata_complete_count": 0
+    "metadata_complete_count": 1
   }
 }

@@ -323,7 +323,7 @@ prevention_path = "needs: ticket-body scanner that greps for AC\\d+ lines and re
 originating_arc = { session-id = "260525-long-swan", incident-name = "epic-655-falsifiable-ac-2026-08-30" }
 [[failure_mode]]
 name = "decision-dump-without-checklist-gate"
-description = "Hub asks the operator to decide on a vague bundle of topics instead of presenting the full decision checklist and collecting answers one at a time before decision-dependent spoke coordination."
+description = "Hub asks the operator to decide on a vague bundle of topics instead of presenting the full decision checklist and collecting answers one at a time, per the ask-questions skill, before routing any answer to spokes."
 rule_id = ["session-coordination:5"]
 enforcement = "code-review"
 tooling_status = "judgment"

@@ -88,6 +88,21 @@ All notable changes to this project are documented here. Versioning follows [Sem
     - A type-6 block such as `<blockquote>` or `<div>` runs to the next blank line, not to its closing tag. A type-7 tag cannot interrupt a paragraph, but can start after a blank line, heading or thematic break.
     - HTML comments, CDATA, inline code, and HTML `pre`, `code`, `blockquote` and similar container content no longer supply headings or keywords. Container closure is name-aware: a mismatched closing tag cannot end an open container. Fenced code is unchanged.
   - The unchanged Tier C mutation gate therefore refuses the tested wrong-ticket, outsider, HTML-quoted, Markdown-quoted, indented-example and CRLF front-matter shapes. The filters are bounded parsers, not a full Markdown/HTML renderer.
+### Added: ask-questions operator question protocol
+
+- New `ask-questions` skill: the single procedure for asking the operator questions, run as a survey.
+  - Show the full list once, together with the first question in the same message, then ask one question per turn with context, choices, pros and cons, a recommendation and a default.
+  - A default chooses only within existing authorization and never stands in for a protected-action confirmation.
+  - An explicit stop ("don't ask", "stop asking") ends the survey at once. A stop or revocation of an action applies immediately, before the remaining answers arrive.
+  - After each answer, go straight to the next question. Answers are not routed, tickets are not updated and no work starts on them in between.
+  - After the last answer, summarize, then route and act on everything in one batch. Running work never pauses or blocks.
+  - The resolver loads it for question-session requests such as "ask questions", "ask me questions", "ask your questions", "ask me decision questions" and "one question at a time" (#1056). "I have decision questions for you" does not load it: the operator having questions is not a request for a survey.
+  - Matching is scoped to ";" clauses. A clause that prohibits asking ("never ask", "don't ask questions") or quotes the phrase as data is excluded without erasing a request in another clause.
+  - Finish-without-asking requests ("No need to ask me any questions; just ship it.", "only ask questions if ...") do not load it.
+  - A second route catches explicit one-at-a-time requests in read-only or docs-update prompts, and any negation in the prompt suppresses it.
+  - Known limits, tracked in #1225: clauses do not split at ".", so "Don't ask questions as a group. Ask your questions one at a time." is still missed, and quoted-payload exclusion is heuristic.
+- `strategic-agency:4` and `autonomy:2`/`autonomy:3` now defer the operator question format and sequence to the skill. The next question preempts background work, and answers reach tickets only after the last one (#1056).
+- `session-coordination:5` now defers to the skill for the question procedure and keeps only the hub rule: no answer routing or answer-based spoke briefing until the survey is finished, with running work unaffected. The per-slice release and question-grouping text is removed. Its #1231 owner-grant additions are kept in the survey rule: settled decisions are summarized with their source and conditions, and further explicit owner instructions about collecting answers are honored (#1056).
 
 ### Fixed: task scopes and evidence execution
 
