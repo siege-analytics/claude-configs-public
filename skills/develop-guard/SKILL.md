@@ -22,13 +22,13 @@ fetch or failed remote query is not proof of absence.
 
 Use the canonical preparation helper from the installed source package:
 
-Replace `/absolute/installed/claude-configs-public` with the actual installed
-source package backing the active hooks, not the consumer project directory.
-Use its canonical helper path; a copied or project-local helper is not equivalent.
+Replace `/absolute/installed/claude-configs-public` with the canonical package
+root backing the active hooks: its `bin/` is a sibling of that active `hooks/`
+directory. This may be a workspace, source, or project-local nested installation.
+Use that package's helper; a copied or unrelated helper is not equivalent.
 
 ```bash
-python3 /absolute/installed/claude-configs-public/bin/prepare-task-branch.py --repo /absolute/project \
-  --branch feature/ticket_description --worktree /absolute/unique-task-worktree
+python3 /absolute/installed/claude-configs-public/bin/prepare-task-branch.py --repo /absolute/project --branch feature/ticket_description --worktree /absolute/unique-task-worktree
 ```
 
 It preserves the active checkout and all local work, attempts a fresh fetch,

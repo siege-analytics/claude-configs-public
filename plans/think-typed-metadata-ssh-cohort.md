@@ -1,3 +1,8 @@
+---
+ticket_refs:
+  - siege-analytics/claude-configs-public#1260: existing source work; review and integration recorded on PR 1261
+---
+
 # Next source cohort preparation — #1260
 
 Tracking: https://github.com/siege-analytics/claude-configs-public/issues/1260

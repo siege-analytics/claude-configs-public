@@ -107,14 +107,13 @@ Use the canonical helper from the installed source package. It fetches, verifies
 remote develop, safely bootstraps it if absent, and creates an isolated task
 worktree without disturbing active work:
 
-Replace `/absolute/installed/claude-configs-public` with the actual installed
-source package backing the active hooks, not the consumer project directory.
-Use its canonical helper path; a copied or project-local helper is not equivalent.
+Replace `/absolute/installed/claude-configs-public` with the canonical package
+root backing the active hooks: its `bin/` is a sibling of that active `hooks/`
+directory. This may be a workspace, source, or project-local nested installation.
+Use that package's helper; a copied or unrelated helper is not equivalent.
 
 ```bash
-python3 /absolute/installed/claude-configs-public/bin/prepare-task-branch.py --repo /absolute/project \
-  --branch feature/geographic_enrichment_phase1 \
-  --worktree /absolute/unique-task-worktree
+python3 /absolute/installed/claude-configs-public/bin/prepare-task-branch.py --repo /absolute/project --branch feature/geographic_enrichment_phase1 --worktree /absolute/unique-task-worktree
 ```
 
 The helper does not change the caller's working directory. Before editing,

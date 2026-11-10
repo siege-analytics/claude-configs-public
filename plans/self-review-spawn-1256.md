@@ -1,3 +1,8 @@
+---
+ticket_refs:
+  - siege-analytics/claude-configs-public#1256: existing source work; review and integration recorded on PR 1261
+---
+
 # Self-review — sibling worktree spawn isolation (#1256 item 3)
 
 ## Assumptions
