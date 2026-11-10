@@ -54,6 +54,13 @@ Posted before any source edit: https://github.com/siege-analytics/claude-configs
 - Sequencing assumption: no caller relies on per-target git re-evaluation within one call. Verified by reading every caller.
 - Post-mortem applicability: a performance defect with no prior shipped fix, not a regression; no post-mortem trigger.
 
+## Inventoried shapes
+Added after the work commit 834e18ab was pushed. That commit's message lacks the `Inventoried-shape:` trailer the installed self-review hook requires for executable diffs. Pushed history is not amended, so this record and the follow-up commit's trailer carry the measurement. All measurements predate the first source edit unless marked.
+- Topology (repository identity per target), measured on develop 8043c583 with a git PATH shim and three own-session gates in another repository: 13 git subprocesses per operand (1 `rev-parse --show-toplevel` + 2 `_same_repo` origin reads + 2 `_scope_diagnostic` origin reads per foreign gate). Same-origin checkouts: 7 per operand (`AssertionError: 98 != 700`, measured after the edit against the unmodified develop checkout).
+- Config-state: candidate gate JSON `repo_root` / `scope_paths` are read per candidate and are unchanged by this work.
+- Branch base: develop 8043c583 (`git rev-parse origin/develop FETCH_HEAD` after `git fetch origin develop` → 8043c583b81f976c5bc95d620fe4212921c7dfb3 for both, immediately before commit).
+- Data-shape, plan-shape, version-resolution: N/A (no data stores, query plans or dependency resolution touched).
+
 ## Self-hosted gate disclosure
 The worktree's `.claude/settings.json` registers repo-relative hooks (`hooks/bash/universal-mutation-gate.sh`, `hooks/resolver/pipeline-state-guard.sh`). From the first edit of `hooks/lib/resolve-think-gate.py` onward, the authoring session's own mutation-gate decisions partly ran the modified resolver, so every local ALLOW after that edit is self-hosted and is not independent evidence of safety.
 
@@ -100,6 +107,7 @@ Hostile S2-2: when `rev-parse --show-toplevel` fails, `expected_repo` is empty a
 | hostile S2-1 (signal exit cached as definitive) | treated every CalledProcessError as definitive without checking negative return codes | 1 min | fix + 3 tests + suite restart | 1:20 |
 | full suite restarted on final code | started the suite before hostile review returned | 0 | ~15 min suite time | n/a |
 | issue refs removed from new comments (writing-code:2) | did not re-read the shelf before writing comments | 1 min | 4 comment edits | 1:4 |
+| PR create blocked: work commit lacks `Inventoried-shape:` trailer | read the repo copy of the trailer contract but not the installed hook's v2.4 check before committing | 1 min | follow-up commit (pushed history not amended) | 1:10 |
 
 ## Evidence-predates-work
 Artifact: plans/self-review-long-arg-timeout-1167.md
