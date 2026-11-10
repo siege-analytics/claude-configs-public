@@ -220,6 +220,19 @@ class BranchSources(unittest.TestCase):
         for source in ['heads/develop', 'remotes/origin/develop', 'origin/HEAD', 'known@develop']:
             check({'args': ['switch', '-c', 'feature/develop', source], 'cwd': str(self.repo)}, inspect_git)
 
+    def test_attached_orphan_option_keeps_existing_orphan_rejection(self):
+        self.develop()
+        for args in [['checkout', '--orphan=feature/orphan', 'origin/main'],
+                     ['switch', '--orphan=feature/orphan'],
+                     ['checkout', '--orphan', 'feature/orphan', 'origin/develop']]:
+            with self.subTest(args=args), self.assertRaises(UnknownShape):
+                check({'args': args, 'cwd': str(self.repo)}, inspect_git)
+        # This is real creation syntax, not an unknown option that Git rejects.
+        self.run_git(self.repo, 'checkout', '--orphan=feature/orphan', 'origin/main')
+        self.assertEqual(self.inspect('symbolic-ref', '--short', 'HEAD'), 'feature/orphan')
+        # Explicit path restoration still does not create a branch.
+        check({'args': ['checkout', '--', '--orphan=literal-path'], 'cwd': str(self.repo)}, inspect_git)
+
     def test_cli_guard_enforces_all_creation_routes_and_leaves_switches_alone(self):
         self.develop()
         env = dict(os.environ, CLAUDE_SCOPED_OWNERS=self.base.name)

@@ -62,8 +62,8 @@ def creation(args):
             branch = arg.partition('=')[2]
         elif arg in {'--detach', '-d'} and sub in {'checkout', 'switch', 'worktree'}:
             detached = True
-        elif arg in {'-q', '--quiet', '-f', '--force', '--no-track', '--no-guess', '--no-checkout', '--lock', '--orphan'}:
-            if arg == '--orphan':
+        elif arg in {'-q', '--quiet', '-f', '--force', '--no-track', '--no-guess', '--no-checkout', '--lock', '--orphan'} or arg.startswith('--orphan='):
+            if arg == '--orphan' or arg.startswith('--orphan='):
                 raise UnknownShape('orphan creation does not originate at develop')
         elif arg in {'-t', '--track'}:
             tracking = True
