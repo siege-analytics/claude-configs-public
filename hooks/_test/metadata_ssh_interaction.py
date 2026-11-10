@@ -35,6 +35,10 @@ class Interaction(unittest.TestCase):
                 result = self.f.hook(command)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_actual_state_operation_does_not_borrow_reporting_task(self):
+        command = "gh api repos/example/target/issues/31 -X PATCH -f state=closed -f body='## Pre-Mortem'"
+        self.assertEqual(self.f.hook(command).returncode, 2)
+
     def test_configured_standalone_contract_is_preserved(self):
         root = Path(__file__).resolve().parents[2]
         settings = json.loads((root / 'hooks/settings-snippet.json').read_text())

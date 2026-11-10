@@ -237,12 +237,6 @@ class GuardArtifactLane(unittest.TestCase):
             with self.subTest(case['file'] + ':' + case['name']):
                 self.assertEqual(guard(case['body']).returncode, 0)
 
-    def test_actual_state_operation_does_not_borrow_comment_contract(self):
-        command = 'gh api repos/o/r/issues/1164 -X PATCH -f state=closed -f body=' + shlex.quote(MARKER)
-        result = subprocess.run(['bash', str(GUARD)], input=json.dumps({
-            'tool_name': 'Bash', 'cwd': str(ROOT), 'tool_input': {'command': command}}),
-            text=True, capture_output=True, env=ENV, timeout=60)
-        self.assertEqual(result.returncode, 2, result.stderr)
 
 
 class WriterGateChain(unittest.TestCase):

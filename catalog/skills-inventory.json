@@ -3,13 +3,13 @@
     "discovery_parity": {
       "extra": [],
       "missing": [],
-      "source_count": 198,
+      "source_count": 199,
       "status": "matched"
     },
     "duplicate_rule_ids": {},
     "generated_output_plan": {
       "destination_collisions": [],
-      "source_count": 198,
+      "source_count": 199,
       "status": "derived-from-build.py"
     },
     "ignored_sources": [],
@@ -53,6 +53,7 @@
       "writing-tests",
       "analysis",
       "api-integration",
+      "ask-questions",
       "branch",
       "cascading-documentation",
       "ci-billing-failure-merge",
@@ -449,6 +450,7 @@
       "shelves--team",
       "analysis",
       "api-integration",
+      "ask-questions",
       "branch",
       "cascading-documentation",
       "ci-billing-failure-merge",
@@ -4076,10 +4078,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 16552,
-      "content_sha256": "969e9c69a7511ef5a8114df86eeb7eb6ccf4dcf0b7585c4ebfdca9be674f5c68",
+      "characters": 16929,
+      "content_sha256": "51f985f036a6eb590e41244f5adafa4f0c5665e003cfab6fddfb6db9e8a21fe9",
       "description": "unknown",
-      "estimated_tokens": 4138,
+      "estimated_tokens": 4233,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -4096,13 +4098,14 @@
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
         "skills/_session-coordination-rules.md",
+        "skills/ask-questions/SKILL.md",
         "skills/stalled-session-recovery/host-controls.md",
         "skills/think/SKILL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 201,
+      "lines": 203,
       "owner": [
         "unknown"
       ],
@@ -4928,6 +4931,7 @@
         "skills/_writing-releases-rules.md",
         "skills/_writing-tests-rules.md",
         "skills/api-integration/SKILL.md",
+        "skills/ask-questions/SKILL.md",
         "skills/commit/SKILL.md",
         "skills/databricks/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
@@ -5016,6 +5020,7 @@
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/gate_bypass_1164.py",
         "hooks/_test/git_bootstrap_targets.py",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/github_project_reads.py",
@@ -5023,6 +5028,7 @@
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
         "hooks/_test/metadata_comment_reporting.py",
+        "hooks/_test/metadata_ssh_interaction.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/quoted_mutation_operands.py",
         "hooks/_test/read_allowlist.test.sh",
@@ -5035,6 +5041,7 @@
         "hooks/_test/sed_stdin_reader.py",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
@@ -5570,6 +5577,7 @@
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
+        "hooks/_test/metadata_ssh_interaction.test.sh",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/own_session_operands.test.sh",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
@@ -5593,6 +5601,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/task_keyed_gates.test.sh",
@@ -6124,10 +6133,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 31053,
-      "content_sha256": "e78ea70bb073b0a7974d2c770c770d0d3bb5e6b8046a30ce8ba787625dca1162",
+      "characters": 32243,
+      "content_sha256": "a71e81e517a477f36a994d139c88686920e0ea95b9bceff3c0e188ec88a56ed3",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7764,
+      "estimated_tokens": 8061,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6153,12 +6162,13 @@
         "skills/KERNEL.md",
         "skills/_tandem-agent-rules.md",
         "skills/_ticket-lifecycle-rules.md",
+        "skills/ask-questions/SKILL.md",
         "skills/drive-while-away/SKILL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 176,
+      "lines": 175,
       "owner": [
         "unknown"
       ],
@@ -6458,10 +6468,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 3874,
-      "content_sha256": "697ae62a652ae1e3bcf07c61e576f3879a960a3cab7cdb5863b85be0b098eaec",
+      "characters": 3858,
+      "content_sha256": "512b9bd8d4b7becc72de18297c0788e31117fd22828cca1cb5044bdaf9be7234",
       "description": "Always-on. Mission-first doctrine for hubs and workers. Skills exist to help agents accomplish strategic goals by deriving and advancing tactical goals with bounded initiative. Agents should keep moving when tactical ordering is safe and non-critical, and should ask for guidance when the choice affects strategy, authorization, risk, or operator control.",
-      "estimated_tokens": 969,
+      "estimated_tokens": 965,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -6475,6 +6485,7 @@
         "catalog/skill-lifecycle-legacy.json",
         "docs/instruction-architecture.md",
         "skills/KERNEL.md",
+        "skills/ask-questions/SKILL.md",
         "skills/think/SKILL.md"
       ],
       "kind": "rule",
@@ -8710,6 +8721,53 @@
       "verification": "unknown"
     },
     {
+      "canonical_source": "skills/ask-questions/SKILL.md",
+      "characters": 10239,
+      "content_sha256": "5add9c6562c15ebd0ef2fa636b7916005d78f90f9410ec940222cf4d761d68d1",
+      "description": "Operator question protocol. Use whenever you need answers or decisions from the operator, or when the operator asks you to ask questions. Treat it as a survey: show the complete question list once, together with the first question; ask exactly one question per turn with context, choices, pros and cons, a recommendation and a default; go straight to the next question after each answer without routing answers, updating tickets or starting work on them; after the last answer, summarize and then route and act on all answers in one batch. It never freezes or blocks running work. The single canonical procedure; session-coordination:5 defers to it for hubs.",
+      "estimated_tokens": 2560,
+      "frontmatter_name": "ask-questions",
+      "generated_outputs": [
+        "dist/nested/skills/ask-questions",
+        "dist/flat/skills/ask-questions"
+      ],
+      "generated_outputs_verified": true,
+      "inbound_source_references": [
+        "RESOLVER.md",
+        "bin/_test/resolve_load_set_test.py",
+        "catalog/generated-source-authority.json",
+        "plans/self-review-1056-ask-questions.md",
+        "skills/_autonomy-rules.md",
+        "skills/_session-coordination-rules.md",
+        "skills/_strategic-agency-rules.md"
+      ],
+      "kind": "skill",
+      "last_reviewed": "2026-11-06",
+      "lifecycle": "active",
+      "lines": 119,
+      "owner": [
+        "unknown"
+      ],
+      "project": null,
+      "quality": {
+        "completeness": 20,
+        "cross_references": 100.0,
+        "grade": "D",
+        "provenance": 20,
+        "structure": 100.0,
+        "total": 60.0
+      },
+      "rule_definitions": [],
+      "slug": "ask-questions",
+      "source_path": "skills/ask-questions/SKILL.md",
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
+      "tier": "unclassified",
+      "tier_basis": "no committed tier metadata",
+      "verification": "bin/_test/resolve_load_set_test.py"
+    },
+    {
       "canonical_source": "skills/branch/SKILL.md",
       "characters": 6571,
       "content_sha256": "3de279257e6a9ac704acd29d630ee0fb43efa79ac932f6ad3a3bf5df46e60009",
@@ -9152,10 +9210,10 @@
     },
     {
       "canonical_source": "skills/commit/SKILL.md",
-      "characters": 22623,
-      "content_sha256": "64778c1bd151dae3086d0a19a6c199c293ef90c362c27224490bc9a856ed8a49",
+      "characters": 23275,
+      "content_sha256": "50aafc5e0d45d2eef061613896d4c1ecc23c3568ed86447fb390ee4dca4c3f57",
       "description": "Create git commits with descriptive messages that link to tickets and explain the why. Enforces ticket references.",
-      "estimated_tokens": 5656,
+      "estimated_tokens": 5819,
       "frontmatter_name": "commit",
       "generated_outputs": [
         "dist/nested/skills/commit",
@@ -9192,7 +9250,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 421,
+      "lines": 422,
       "owner": [
         "unknown"
       ],
@@ -9265,6 +9323,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
@@ -10549,6 +10608,8 @@
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/fixtures/metadata-issues-1251.json",
+        "hooks/_test/gate_bypass_1164.py",
+        "hooks/_test/gate_bypass_1164_review_cases.json",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/github_merge_queue.test.sh",
         "hooks/_test/metadata_comment_reporting.py",
@@ -11201,6 +11262,7 @@
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
+        "hooks/_test/metadata_ssh_interaction.test.sh",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/own_session_operands.test.sh",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
@@ -11222,6 +11284,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/task_keyed_gates.test.sh",
         "hooks/_test/test_evidence.py",
@@ -12291,6 +12354,7 @@
         "plans/self-review-658.md",
         "plans/self-review-659.md",
         "plans/self-review-660.md",
+        "plans/self-review-native-git-receipts-1256.md",
         "plans/strict-test-evidence-1063.md",
         "skills/RESOLVER.md",
         "skills/_testing-frameworks-rules.md",
@@ -12427,6 +12491,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
         "hooks/_test/test_guard.test.sh",
@@ -12842,45 +12907,45 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2621961,
+    "characters": 2634403,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 655567,
-    "item_count": 198,
+    "estimated_tokens": 658678,
+    "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
       "project-skill": 3,
       "reference-shelf": 69,
       "rule": 37,
       "shelf-router": 15,
-      "skill": 73
+      "skill": 74
     },
     "quality_grade_counts": {
       "C": 6,
-      "D": 18,
+      "D": 19,
       "F": 133,
       "unknown": 41
     },
-    "quality_low_grade_count": 151,
+    "quality_low_grade_count": 152,
     "tier_characters": {
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1225567
+      "unclassified": 1238009
     },
     "tier_counts": {
       "on-demand": 15,
       "project": 4,
       "reference": 69,
-      "unclassified": 110
+      "unclassified": 111
     },
     "tier_estimated_tokens": {
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 306433
+      "unclassified": 309544
     },
     "unknown_lifecycle_count": 198,
-    "unknown_owner_count": 194,
+    "unknown_owner_count": 195,
     "without_source_references_count": 0,
     "without_test_evidence_count": 99
   }

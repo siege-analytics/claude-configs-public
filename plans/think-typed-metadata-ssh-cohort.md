@@ -42,3 +42,15 @@ Start from fresh canonical develop in a new isolated worktree. Inspect exact acc
 - [ ] AC5: Preparation does not modify main/develop, live settings, clients or held publication lanes; known full-SHA producer fix comes from #1255.
   - Falsifiable-by: any protected/live/client mutation or manual metric-hash workaround appears in the task's actions/diff.
   - Tool: Git ref/status audit and review.
+
+## Composition decisions and receipts
+
+- Initial plan commit: de397acf, before source merges. Future baseline #1255 was merged locally first; no protected ref or client was changed.
+- #1170 conflict: retained both independent Git bootstrap and SSH helper families. The naive combined SSH flag calculation admitted a foreign local metadata post beside allowed SSH in both command orders at the UMG layer. This was not claimed as a whole configured-chain escape. The actual fixture returned 0 where 2 was required, then passed after preserving metadata-post obligations in classifier, resolver and UMG early-admission boundaries.
+- Standalone own report and standalone allowed SSH pass the actual configured hook chain. Own combined post+SSH has resolver/UMG Task proof but remains rejected by the existing coordinator composition contract; no new composed reporting format is introduced.
+- #1212 conflict: coordinator-status-guard.sh and its canonical scenario suite retain #1255 behavior. pipeline_state.py and the historical JSON corpus are byte-identical to accepted 6617bd8. B1 texts and old expected results remain evidence data, while assertions now test descriptive metadata operations without held wording/fresh-GO cases. Real state changes remain separately guarded.
+- Changelog describes current typed behavior instead of reintroducing the superseded B1 linguistic requirements. Historical review plan/corpus remain intact.
+- #1216, #1257 and #1259 source changes merged through ordinary two-parent commits. Derived catalogs are retained provisionally then regenerated with the actual combined producer; no metric SHA is hand-written.
+- All six accepted input SHAs pass merge-base --is-ancestor against local 172399ca. All local first-parent composition merges have two parents. This is source preparation only; #1255 publication and fresh canonical-develop reconciliation remain future eligibility predicates owned by Root.
+- Observed focused validation: SSH 179 scenarios; metadata reporting 10; interaction 4 (including actual configured standalone controls); coordinator 80 scenarios plus 10 metadata tests; artifact follow-up 14; complete historical B1/B2 suite 4 methods; bootstrap 35; reader safety 20; spawn 14 shell controls plus 15 structural tests; load-set resolver passed. No historical corpus rows were skipped.
+- Actual combined build and inventory, review-risk, progressive-loading, generated-authority and kernel-budget producers completed successfully. Their freshness checks passed; derived files were not hand-edited. The source-only candidate still requires Root's independent integration review and later canonical-develop reconciliation; these test results do not claim publication readiness or a broader composed-post contract.

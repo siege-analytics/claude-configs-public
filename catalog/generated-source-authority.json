@@ -186,29 +186,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "3cb03e90c26c72b17cdf0bebad2b74bbf57a55bba888368bebdb3cc65e23b33c"
+          "tree_sha256": "5270b07ce1b2169a42ae9b5f085899df13042a864d4dde6bd0fd14bf81672a04"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "3cb03e90c26c72b17cdf0bebad2b74bbf57a55bba888368bebdb3cc65e23b33c"
+          "tree_sha256": "5270b07ce1b2169a42ae9b5f085899df13042a864d4dde6bd0fd14bf81672a04"
         },
         "flat": {
           "destination": "dist/flat/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "3cb03e90c26c72b17cdf0bebad2b74bbf57a55bba888368bebdb3cc65e23b33c"
+          "tree_sha256": "5270b07ce1b2169a42ae9b5f085899df13042a864d4dde6bd0fd14bf81672a04"
         },
         "nested": {
           "destination": "dist/nested/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "3cb03e90c26c72b17cdf0bebad2b74bbf57a55bba888368bebdb3cc65e23b33c"
+          "tree_sha256": "5270b07ce1b2169a42ae9b5f085899df13042a864d4dde6bd0fd14bf81672a04"
         }
       },
       "canonical_source": "skills/_autonomy-rules.md",
       "kind": "rule",
       "slug": "autonomy",
       "source_file_count": 1,
-      "source_tree_sha256": "3cb03e90c26c72b17cdf0bebad2b74bbf57a55bba888368bebdb3cc65e23b33c"
+      "source_tree_sha256": "1f73cb8421bfe8a17ca75490ca10e5cf0eae4ed7be2de1a2632201fdda37d1f3"
     },
     {
       "artifacts": {
@@ -737,29 +737,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "9df893c35403c3ddb28d0b56bf82e199e9106f7f71fa382f9c850ee2ec8cd762"
+          "tree_sha256": "c867851c6232e667bb2380d50e5533742e2e94e63c9258802ca947cea08c075d"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "9df893c35403c3ddb28d0b56bf82e199e9106f7f71fa382f9c850ee2ec8cd762"
+          "tree_sha256": "c867851c6232e667bb2380d50e5533742e2e94e63c9258802ca947cea08c075d"
         },
         "flat": {
           "destination": "dist/flat/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "9df893c35403c3ddb28d0b56bf82e199e9106f7f71fa382f9c850ee2ec8cd762"
+          "tree_sha256": "c867851c6232e667bb2380d50e5533742e2e94e63c9258802ca947cea08c075d"
         },
         "nested": {
           "destination": "dist/nested/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "9df893c35403c3ddb28d0b56bf82e199e9106f7f71fa382f9c850ee2ec8cd762"
+          "tree_sha256": "c867851c6232e667bb2380d50e5533742e2e94e63c9258802ca947cea08c075d"
         }
       },
       "canonical_source": "skills/_session-coordination-rules.md",
       "kind": "rule",
       "slug": "session-coordination",
       "source_file_count": 1,
-      "source_tree_sha256": "296383b04f510138decba873bebb47b0b6011ea70eb0342c0e67860f3d6c45af"
+      "source_tree_sha256": "70cac88a97bf5eb75760f8d1265e760a095170af2c0be08c94040c825aebca75"
     },
     {
       "artifacts": {
@@ -824,29 +824,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_strategic-agency-rules.md",
           "file_count": 1,
-          "tree_sha256": "382aebecedbfef2e212e175c6d64ffc02953868c248d87190864b58f031a07dd"
+          "tree_sha256": "a5dce9b61c0175123d0d5b3deece0e8302c952291b117377f86831da128180f2"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_strategic-agency-rules.md",
           "file_count": 1,
-          "tree_sha256": "382aebecedbfef2e212e175c6d64ffc02953868c248d87190864b58f031a07dd"
+          "tree_sha256": "a5dce9b61c0175123d0d5b3deece0e8302c952291b117377f86831da128180f2"
         },
         "flat": {
           "destination": "dist/flat/skills/_strategic-agency-rules.md",
           "file_count": 1,
-          "tree_sha256": "382aebecedbfef2e212e175c6d64ffc02953868c248d87190864b58f031a07dd"
+          "tree_sha256": "a5dce9b61c0175123d0d5b3deece0e8302c952291b117377f86831da128180f2"
         },
         "nested": {
           "destination": "dist/nested/skills/_strategic-agency-rules.md",
           "file_count": 1,
-          "tree_sha256": "382aebecedbfef2e212e175c6d64ffc02953868c248d87190864b58f031a07dd"
+          "tree_sha256": "a5dce9b61c0175123d0d5b3deece0e8302c952291b117377f86831da128180f2"
         }
       },
       "canonical_source": "skills/_strategic-agency-rules.md",
       "kind": "rule",
       "slug": "strategic-agency",
       "source_file_count": 1,
-      "source_tree_sha256": "382aebecedbfef2e212e175c6d64ffc02953868c248d87190864b58f031a07dd"
+      "source_tree_sha256": "78adf98f22d82ca15b463addaa78562dd221bee97a8138f0b79f09bd4508a749"
     },
     {
       "artifacts": {
@@ -1253,6 +1253,35 @@
       "slug": "api-integration",
       "source_file_count": 1,
       "source_tree_sha256": "2431e20da6706ddb2ab1b39bc94cd08c7d41ca7dc2c09b73f4729456b20cd57d"
+    },
+    {
+      "artifacts": {
+        "claude-code": {
+          "destination": "dist/claude-code/skills/ask-questions",
+          "file_count": 1,
+          "tree_sha256": "50623efb8342b66ae123b669f12a5b466cb18d7b916dc6b564d565d9f95f8cd6"
+        },
+        "craft-agent": {
+          "destination": "dist/craft-agent/skills/ask-questions",
+          "file_count": 1,
+          "tree_sha256": "50623efb8342b66ae123b669f12a5b466cb18d7b916dc6b564d565d9f95f8cd6"
+        },
+        "flat": {
+          "destination": "dist/flat/skills/ask-questions",
+          "file_count": 1,
+          "tree_sha256": "50623efb8342b66ae123b669f12a5b466cb18d7b916dc6b564d565d9f95f8cd6"
+        },
+        "nested": {
+          "destination": "dist/nested/skills/ask-questions",
+          "file_count": 1,
+          "tree_sha256": "50623efb8342b66ae123b669f12a5b466cb18d7b916dc6b564d565d9f95f8cd6"
+        }
+      },
+      "canonical_source": "skills/ask-questions/SKILL.md",
+      "kind": "skill",
+      "slug": "ask-questions",
+      "source_file_count": 1,
+      "source_tree_sha256": "635a828a6e92ef884e1e0a53903448c9599fb4e1f53e24963a3606417f5d9d6c"
     },
     {
       "artifacts": {
@@ -5752,11 +5781,11 @@
   ],
   "schema_version": 1,
   "summary": {
-    "artifact_snapshot_count": 804,
-    "canonical_source_count": 198,
+    "artifact_snapshot_count": 808,
+    "canonical_source_count": 199,
     "destination_collision_count": 0,
-    "generated_file_mapping_count": 2940,
-    "source_owned_file_count": 735,
+    "generated_file_mapping_count": 2944,
+    "source_owned_file_count": 736,
     "support_source_count": 3,
     "unowned_generated_file_count": 0
   },
@@ -5820,27 +5849,27 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_coverage.md",
           "file_count": 1,
-          "tree_sha256": "a3c88bd7648e5c4dd582311f9ecd70e31f828914ec51afb79058c50965ad086d"
+          "tree_sha256": "b64eaf5d5c434192c932da3d8b46056ad02b8a3ead267fe5607ec4f55e444090"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_coverage.md",
           "file_count": 1,
-          "tree_sha256": "a3c88bd7648e5c4dd582311f9ecd70e31f828914ec51afb79058c50965ad086d"
+          "tree_sha256": "b64eaf5d5c434192c932da3d8b46056ad02b8a3ead267fe5607ec4f55e444090"
         },
         "flat": {
           "destination": "dist/flat/skills/_coverage.md",
           "file_count": 1,
-          "tree_sha256": "a3c88bd7648e5c4dd582311f9ecd70e31f828914ec51afb79058c50965ad086d"
+          "tree_sha256": "b64eaf5d5c434192c932da3d8b46056ad02b8a3ead267fe5607ec4f55e444090"
         },
         "nested": {
           "destination": "dist/nested/skills/_coverage.md",
           "file_count": 1,
-          "tree_sha256": "a3c88bd7648e5c4dd582311f9ecd70e31f828914ec51afb79058c50965ad086d"
+          "tree_sha256": "b64eaf5d5c434192c932da3d8b46056ad02b8a3ead267fe5607ec4f55e444090"
         }
       },
       "canonical_source": "skills/_coverage.md",
       "source_file_count": 1,
-      "source_tree_sha256": "d57240f84bc36819010263afa9451f25170026deb2c7db754edc4dfd8ce5bcb6"
+      "source_tree_sha256": "9bcef528ec16e78a57328369eaea1df9b87244010b40790e35ede1ad00c8fd19"
     }
   ]
 }
