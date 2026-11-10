@@ -31,6 +31,45 @@ class Safety(unittest.TestCase):
         self.git("commit", "-q", "--allow-empty", "-m", "seed")
         self.git("remote", "add", "origin", "https://github.com/siege-analytics/synthetic.git")
 
+    def test_bundle_inspection_reads_are_not_bundle_mutations(self):
+        bundle = self.g.ws / 'preserved.bundle'
+        self.git('bundle', 'create', str(bundle), 'HEAD')
+        for command in ['git bundle list-heads ' + str(bundle),
+                        'git bundle list-heads ' + str(bundle) + ' HEAD',
+                        'git bundle list-heads ' + str(bundle) + ' | wc -l',
+                        'git bundle verify ' + str(bundle),
+                        'git bundle verify --quiet ' + str(bundle)]:
+            self.g.assertGate(0, command, env=self.env)
+        absent = self.g.ws/'must-not-create.bundle'
+        for tail in ['create '+str(absent)+' HEAD', 'unbundle '+str(bundle),
+                     'list-heads --output='+str(absent)+' '+str(bundle),
+                     'list-heads '+str(bundle)+' --unexpected',
+                     'verify --unexpected '+str(bundle), 'verify '+str(bundle)+' extra']:
+            self.g.assertGate(2, 'git bundle '+tail, env=self.env)
+        self.g.assertGate(2, 'git bundle list-heads '+str(bundle)+' && touch '+str(self.repo/'outside'), env=self.env)
+        self.assertFalse(absent.exists())
+        self.assertFalse((self.repo/'outside').exists())
+
+    def test_bare_fsck_reads_preserve_actual_repository(self):
+        import hashlib
+        mirror = self.g.ws/'mirror.git'
+        self.git('clone', '--mirror', str(self.repo), str(mirror))
+        def inventory():
+            return {str(p.relative_to(mirror)): (p.stat().st_mode, hashlib.sha256(p.read_bytes()).hexdigest())
+                    for p in mirror.rglob('*') if p.is_file()}
+        before = inventory()
+        for flags in ['', '--full --strict', '--connectivity-only --no-dangling', '--no-reflogs --unreachable']:
+            command = 'git -C '+str(mirror)+' fsck '+flags
+            self.g.assertGate(0, command, env=self.env)
+            subprocess.run(['git', '-C', str(mirror), 'fsck', *flags.split()], env=self.env,
+                           check=True, capture_output=True, timeout=15)
+        for flags in ['--lost-found', '--full --lost-found', '--unexpected', '--output=outside']:
+            self.g.assertGate(2, 'git -C '+str(mirror)+' fsck '+flags, env=self.env)
+        self.g.assertGate(2, 'git -C '+str(mirror)+' fsck --full && touch '+str(self.repo/'outside'), env=self.env)
+        self.assertEqual(inventory(), before)
+        self.assertFalse((mirror/'lost-found').exists())
+        self.assertFalse((self.repo/'outside').exists())
+
     def ascii_environment(self):
         environment = dict(self.env, LC_ALL='C', LANG='C', PYTHONUTF8='0', PYTHONCOERCECLOCALE='0')
         environment.pop('PYTHONIOENCODING', None)

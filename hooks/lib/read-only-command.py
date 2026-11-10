@@ -156,6 +156,20 @@ def git_ok(args):
         return not any(a in {"expire", "delete", "drop", "write"} for a in rest)
     if sub in GIT_READ:
         return True
+    if sub == "fsck":
+        flags = {'--full', '--strict', '--connectivity-only', '--no-dangling', '--dangling',
+                 '--no-reflogs', '--reflogs', '--unreachable', '--cache', '--root', '--tags',
+                 '--name-objects', '--progress', '--no-progress', '--verbose', '-v'}
+        return all(a in flags or a and not a.startswith('-') for a in rest)
+    if sub == "bundle":
+        if rest[:1] == ['list-heads']:
+            return len(rest) >= 2 and all(x and not x.startswith('-') for x in rest[1:])
+        if rest[:1] == ['verify']:
+            tail = rest[1:]
+            if tail[:1] in (['-q'], ['--quiet']):
+                tail = tail[1:]
+            return len(tail) == 1 and bool(tail[0]) and not tail[0].startswith('-')
+        return False
     if sub == "hash-object":   # computes object names; only -w writes into the object store
         return not hash_object_writes(rest)
     if sub == "fetch":   # remote-tracking refs only: no refspec that names a local ref
