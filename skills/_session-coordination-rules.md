@@ -127,7 +127,7 @@ These rules are mandatory. The carve-out in rule 2 (operator override) lives ins
 
 ## Cross-references
 
-- `[rule:writing-claims]` writing-claims:1-3 cover claims about prior actions. Declaring "I am at-rest" is itself a claim about what you will and will not do next; honor it (rule 2) or rescind it through the operator-override carve-out.
+- `[rule:writing-claims]` writing-claims:1-3 cover claims about prior actions. Declaring "I am at-rest" is a claim scoped to the named thread and predicate. Honor that cadence (rule 2); resume when its actual event arrives or the predicate changes, without requiring operator rescission of a self-imposed checkpoint. The operator-override carve-out also applies. Actual owner holds retain their release conditions; reconcile superseded summaries under `[rule:standing-approval]` “Hold provenance and satisfaction”.
 - `[rule:writing-prose]` writing-prose:5 covers future-tense commitments to action. A baton declaration is the present-tense sibling: "the next move is yours, not mine."
 - `[rule:tandem-agent]` handles the role-contract and authorization side of multi-agent work; this file handles cadence and baton clarity.
 - `[skill:drive-while-away]` handles operator-handoff cadence for autonomous sessions. session-coordination rules are the agent-to-agent analog.

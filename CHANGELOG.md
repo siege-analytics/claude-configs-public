@@ -10,6 +10,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Every other expansion stays unproven: positional words, unquoted values, short options, values after `--`, other guarded verbs and `gh api`. Writes through expansions (`cp "$S/f" "$D/"`, `echo x > "$F"`) still need a task gate. `echo "EXIT=$?"` was already a proven read.
 - The expansion inside such a value must also be a modeled, non-executing form: a plain variable or positional/special parameter (`$q`, `${q}`, `$1`, `$?`), optionally with a literal default (`${q:---web}`). Transformations such as `${q@P}` (which runs command substitutions stored in `q`), indirection, array subscripts, `"$@"`, substring/replace/length, assignment and nested expansions in a default stay unproven and need a task gate.
 
+### Fixed: scoped hold provenance and review follow-through (#1271)
+
+- Distinguish review findings, failed checks and actual owner holds; apply completed evidence or authorized dispositions without a renewed acknowledgment loop. Preserve genuine readiness and financial/product decisions in their scope.
+- Keep review findings actionable toward acceptance, correct superseded operative hold summaries, and allow predicate-driven re-entry from self-imposed at-rest checkpoints.
+
 ### Fixed: repository-owned metadata authority (#1261)
 
 - Derive metadata grants from the first repository-owned origin, including local includes and worktree-only configuration. Global origins cannot donate repository authority; legitimate global trust and authentication remain available.
