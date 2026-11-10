@@ -5033,6 +5033,7 @@
         "hooks/_test/sed_stdin_reader.py",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
@@ -5587,6 +5588,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/task_keyed_gates.test.sh",
@@ -6116,10 +6118,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 29573,
-      "content_sha256": "b2cdff67ffc12002d35dc695a70d5b9c14449530ef0f5c2982ebaf353bebba3e",
+      "characters": 30166,
+      "content_sha256": "4d02731a27cfac7a459b9e312761b1dffd76de3c06ba3762d77228d73723f681",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7394,
+      "estimated_tokens": 7542,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -9252,6 +9254,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
@@ -11196,6 +11199,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/task_keyed_gates.test.sh",
         "hooks/_test/test_evidence.py",
@@ -12396,6 +12400,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
         "hooks/_test/test_guard.test.sh",
@@ -12810,9 +12815,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2619523,
+    "characters": 2620116,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 654958,
+    "estimated_tokens": 655106,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12833,7 +12838,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1223129
+      "unclassified": 1223722
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12845,7 +12850,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 305824
+      "unclassified": 305972
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

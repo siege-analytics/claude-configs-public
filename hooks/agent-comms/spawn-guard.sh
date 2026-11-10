@@ -19,6 +19,7 @@ python3 - 3<<<"$INPUT" <<'PY'
 import json
 import os
 import re
+import stat
 import subprocess
 import sys
 
@@ -37,7 +38,17 @@ name = str(tool_input.get("name") or "")
 model = str(tool_input.get("model") or "")
 permission = str(tool_input.get("permissionMode") or "")
 thinking = str(tool_input.get("thinkingLevel") or "")
-working_directory = str(tool_input.get("workingDirectory") or os.getcwd())
+parent_directory = payload.get("cwd") or os.getcwd()
+if not isinstance(parent_directory, str):
+    parent_directory = os.getcwd()
+raw_working_directory = tool_input.get("workingDirectory")
+literal_absolute_directory = (
+    isinstance(raw_working_directory, str)
+    and os.path.isabs(raw_working_directory)
+    and not re.search(r"\$\{HOME\}|\$HOME(?=/|$)", raw_working_directory)
+)
+# The host lexically normalizes before the OS follows symlinks. Do the same.
+working_directory = os.path.realpath(os.path.normpath(raw_working_directory)) if literal_absolute_directory else None
 labels_key_present = "labels" in tool_input
 raw_labels = tool_input.get("labels")
 valid_labels = (
@@ -87,21 +98,74 @@ if not rules_bound:
 
 write_like = bool(re.search(r'\b(implement|fix|edit|write|commit|push|pr|pull request|modify|change files)\b', haystack))
 read_only_declared = bool(re.search(r'\b(do not modify|no file edits|read-only|passive analysis|reviewer, not an implementer)\b', haystack))
-worktree_declared = bool(re.search(r'\b(git worktree|worktree-isolated|worktree isolated|/worktrees?/|\.worktrees/)\b', haystack + "\n" + working_directory.lower()))
-if write_like and not read_only_declared and not worktree_declared:
+def git_workspace(directory):
+    """Read actual Git ownership, never infer isolation from words or paths."""
+    # This gate is scoped to actual Git workspaces. Plain existing directories
+    # need no Git executable or metadata service to retain their normal route.
+    current = os.path.realpath(directory)
+    while not os.path.lexists(os.path.join(current, ".git")):
+        parent = os.path.dirname(current)
+        if parent == current:
+            return None
+        current = parent
+    env = dict(os.environ, LC_ALL="C", GIT_OPTIONAL_LOCKS="0")
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
+        env.pop(key, None)
+
+    def query(*args):
+        return subprocess.run(
+            ["git", "-C", directory, "rev-parse", *args],
+            check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, timeout=2, env=env,
+        )
+
+    inside = query("--is-inside-work-tree")
+    if inside.returncode:
+        raise ValueError("Git workspace metadata could not be read")
+    if inside.stdout.strip() != "true":
+        raise ValueError("target is not a Git working tree")
+    values = []
+    for option in ("--show-toplevel", "--absolute-git-dir", "--git-common-dir"):
+        result = query(option)
+        if result.returncode or not result.stdout:
+            raise ValueError("Git worktree ownership could not be resolved")
+        values.append(os.path.realpath(os.path.join(directory, result.stdout.rstrip("\n"))))
+    return tuple(values)
+
+
+if write_like and not read_only_declared:
     try:
-        inside_git = subprocess.run(
-            ["git", "-C", working_directory, "rev-parse", "--is-inside-work-tree"],
-            check=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            text=True,
-            timeout=2,
-        ).stdout.strip() == "true"
-    except Exception:
-        inside_git = False
-    if inside_git:
-        errors.append("write-capable child sessions in a Git repo must use a git worktree or be declared read-only/no-file-edits")
+        if working_directory is None:
+            raise ValueError("write-capable child requires an explicit absolute workingDirectory; pass the actual existing path instead of relative, tilde, unexpanded HOME, or inherited defaults")
+        if not os.path.exists(working_directory):
+            raise ValueError("workingDirectory does not exist; prepare it before spawning the writer")
+        if not os.path.isdir(working_directory):
+            raise ValueError("workingDirectory is not a directory")
+        target = git_workspace(working_directory)
+        if target is not None:
+            root, git_dir, common_dir = target
+            if git_dir == common_dir:
+                raise ValueError("workingDirectory is a primary Git checkout, not an isolated linked worktree")
+            # Git's per-worktree backpointer binds this admin directory to its
+            # registered root. Copying a .git pointer elsewhere proves nothing.
+            descriptor = os.open(os.path.join(git_dir, "gitdir"), os.O_RDONLY | os.O_NONBLOCK)
+            try:
+                metadata = os.fstat(descriptor)
+                if not stat.S_ISREG(metadata.st_mode) or not 0 < metadata.st_size <= 4096:
+                    raise ValueError("registered worktree backpointer must be a small regular file")
+                pointer = os.read(descriptor, 4097)
+                if not pointer or len(pointer) > 4096:
+                    raise ValueError("registered worktree backpointer is empty or oversized")
+            finally:
+                os.close(descriptor)
+            registered = os.path.realpath(os.path.join(git_dir, os.fsdecode(pointer).rstrip("\n")))
+            if registered != os.path.realpath(os.path.join(root, ".git")) or os.path.commonpath([working_directory, root]) != root:
+                raise ValueError("workingDirectory does not match the registered Git worktree root")
+            parent = git_workspace(os.path.realpath(parent_directory))
+            if parent is not None and parent[0] == root:
+                raise ValueError("child workingDirectory reuses the parent's Git worktree")
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        errors.append(str(error) + "; prepare a separate registered Git worktree and pass its workingDirectory before spawning, or keep an explicitly read-only assignment")
 
 if re.search(r'\bsend_agent_message\b|\bset_session_status\b|\breply back\b|\breturn findings\b', haystack):
     if "send_agent_message" not in haystack:
