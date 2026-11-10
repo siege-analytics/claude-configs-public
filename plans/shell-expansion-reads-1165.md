@@ -89,6 +89,7 @@ From a copied hook tree under `env -i`, no task gate (`cache/r1165/repro.py`, no
 - QA: every existing case in the #1057 harness is unchanged; only the new allow cases change verdict, as the revert proof shows.
 - Rework ledger: the first draft computed "literal" words as unquoted-only, which would have treated a quoted plain value (`"is:open"`) as an expansion; corrected before any test run so literalness depends only on expansion.
 - Rework ledger: independent review 5849675552 (P1) showed that c71d746 checked where an expansion sat but not what it was, so `${q@P}` ran code stored in an ambient variable under a proven-read verdict. `"$@"` (several words, so an option such as `--web` could be injected) was a second instance of the same class, found while modeling the syntax. Both are fixed by the `PLAIN_PARAM` allowlist above.
+- Post-mortem applicability: the defect passed self-review but was caught by the independent review before merge, so nothing shipped and the post-mortem trigger for shipped code does not apply. The lesson is recorded in the rework ledger above: a value slot proves where an expansion lands, not what it does, so the expansion syntax has to be modeled too.
 
 ## Quantified claims
 
