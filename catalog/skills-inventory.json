@@ -4076,10 +4076,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 16339,
-      "content_sha256": "76b093d7f510439b3e9fcdee877b7628a71900982f357de57a459d3f19e23373",
+      "characters": 16552,
+      "content_sha256": "969e9c69a7511ef5a8114df86eeb7eb6ccf4dcf0b7585c4ebfdca9be674f5c68",
       "description": "unknown",
-      "estimated_tokens": 4085,
+      "estimated_tokens": 4138,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -5022,6 +5022,7 @@
         "hooks/_test/github_project_scope.py",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
+        "hooks/_test/metadata_comment_reporting.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/quoted_mutation_operands.py",
         "hooks/_test/read_allowlist.test.sh",
@@ -6118,10 +6119,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 29922,
-      "content_sha256": "a86aaed5b1ff56011d0614bc2d2b59c89050e5bcccfc6795c940718d9f88fe3e",
+      "characters": 31053,
+      "content_sha256": "e78ea70bb073b0a7974d2c770c770d0d3bb5e6b8046a30ce8ba787625dca1162",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7481,
+      "estimated_tokens": 7764,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6152,7 +6153,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 174,
+      "lines": 176,
       "owner": [
         "unknown"
       ],
@@ -9238,6 +9239,7 @@
         "hooks/_test/detect_ai_fingerprints.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/fixtures/metadata-issues-1251.json",
         "hooks/_test/git_bootstrap_targets.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
@@ -9327,6 +9329,7 @@
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/metadata_comment_reporting.py",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
       "tier": "unclassified",
@@ -10535,8 +10538,10 @@
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/fixtures/metadata-issues-1251.json",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/github_merge_queue.test.sh",
+        "hooks/_test/metadata_comment_reporting.py",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/pr_base_guard.test.sh",
         "hooks/_test/progressive_loading.test.sh",
@@ -11762,6 +11767,7 @@
         "bin/_test/review_risk_test.py",
         "bin/_test/selected_registration_test.py",
         "bin/_test/self_review_disclosure_test.py",
+        "hooks/_test/fixtures/metadata-issues-1251.json",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/progressive_loading.test.sh",
@@ -12817,9 +12823,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2620617,
+    "characters": 2621961,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 655231,
+    "estimated_tokens": 655567,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12840,7 +12846,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1224223
+      "unclassified": 1225567
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12852,7 +12858,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 306097
+      "unclassified": 306433
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

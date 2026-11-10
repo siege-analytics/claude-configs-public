@@ -12,10 +12,14 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 - Standalone literal GitHub issue creation, issue/PR comments, body-only edits and comment-mode reviews no longer require owner-signoff, future-plan or blocker wording. Task/target authority remains in UMG; shell composition, unsupported shapes and state-changing operations do not inherit the reporting lane (#1245).
 
+### Fixed: coordinator roles and reproducible evidence
+
+- Clarify Traffic Cop's board-first coordination through owning hubs, hub delivery and merge responsibility, and the bounded direct-execution option within existing grants (#1249).
+- Record the full source revision in legacy rule bundles so repository abbreviation settings cannot drift canonical size metrics (#1249).
+
 ### Fixed: task-scoped fresh Git repositories
 
 - Allow bounded `git init` and explicitly targeted `git clone` within the owning active Task's directory scope without borrowing an enclosing repository. Existing metadata, path aliases and foreign ownership remain guarded. Use per-command `--template=` when a custom template is outside the modeled route; local repository inputs, including Git-directory pointer files, require `--no-local` for independent objects. Clone source checks use the actual nonrepository configuration context. These alternatives change no persistent Git configuration or owner grant (#1240, #1242).
-
 
 ### BREAKING: normal development branches require develop
 

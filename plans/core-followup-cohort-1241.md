@@ -27,3 +27,40 @@ No main/develop direct pushes, force merges, review/check bypasses, new grants/r
 ## Observed provenance correction
 
 An ordinary client preparation branch was created from develop and then fast-forwarded to main because the file trees matched. The correction used normal main-to-develop synchronization, followed by a fresh ordinary branch from the resulting develop. Equal contents do not establish develop provenance. The coordination paragraph now says so without adding a mechanical merge ban, changing the explicit owner release/backport exception, or removing honestly reported offline cached-develop use. Already reconciled develop needs no additional sync; a known release-ancestry gap follows the normal sync route before the next ordinary branch.
+
+## Final source cohort preparation
+
+The original exact PR #1248 checkpoint `835de4769f5518988498e32918f348c0688ff3f4` passed required hosted build42746801765 and topology, but an independent actual-Git conditional transport counterexample prevented its publication. A fresh normal develop-based integration preserves that checkpoint and adds the reviewed repairs rather than treating the earlier green CI as a correctness waiver.
+
+- Destination transport issue #1252 / PR #1253: `0b87c541d8f10e83636421e4b86a4f20c7a5110d`, runtime SHA256 `e69cbb933e962dadacdee775dd395f35fd8c7c68f2a724dc1a2cbf7c98c084f2`, bootstrap test SHA256 `73082c043459df519f1e6c9f4414d296312ee8f7b3fff855bf3f6ae77c2b86e0`. Root accepted exact final source and closed the configured-peer disposition at issue1252 comment6758527643. Source35, canonical/package byte closure and genuine native commit/prepush evidence pass; source-PR hosted CI runs in parallel.
+- Coordinator role contract issue #1249 / PR #1250: latest reviewed `cd61018c9a5b88ad1a748eb00e9c77d5395b79f0`, including the923 board-first followup and deterministic fullSHA builder amendment accepted at issue1249 comment6758483409. Earlier923 hosted CI exposed abbreviation-length metric drift and is not reported as passing. Preserve the existing cohort scoped-pause sentence and develop provenance sentence.
+- Reporting metadata issues #1245/#1251: final normal native head `1034bae75cfeed987dedb10541b43808bfa899a2`, tree `c49c7b8f5edf5459733647b7aa3e2ae10a866246`. Root final source acceptance is issue1245 comment6758723417. The actual source-owner ten-input producer passed80 coordinator checks (including9 behavioral methods/all16-hook target controls),32 destructive checks and7 compatibility methods. Its78 scanner rows are individually dispositioned, not a clean scan or exhaustive coverage claim. No earlier8026/ffc freeze is substituted.
+
+## Assumptions
+
+Each source is accepted only at its actual reviewed pin. Supported two-parent native merges retain source ancestry and individual review evidence. Generated-conflict snapshots are temporary private checkpoints, not publication proof; regenerate all four catalogs on the final combined tracked source. Trusted user Git hooks/SSH configuration retains its existing boundary; the clone repair is not a sandbox.
+
+## Peer review
+
+Root source acceptance and configured Claude peer findings are retained in the linked source PRs and issue1252 comment6758527643. Conditional template and matching onbranch claims did not reproduce under actual Git controls. Conditional URL and selected vcs helpers did reproduce and were repaired. No automatic further external review round or new user approval is introduced.
+
+## Lead review
+
+The preliminary combined module matches the five accepted URL repair function ASTs from0b87 exactly; every other task_actions function/class AST matches accepted835, preserving the CP union. Source role integration merged without authored conflicts and retains the prior scoped-pause/develop statements. Final metadata interaction and all non-generated deltas require exact combined review.
+
+## Quantified claims
+
+The reviewed URL source passed all35 actual-Git methods, with both16-hook native-shaped creation chains. Original835 hosted build succeeded in34m40s. These are input-specific results; the final combined source/package producer and final hosted exact-head CI remain separate and must be recorded before publication.
+
+Pre-mortem-artifact: plans/core-followup-cohort-1241.md
+Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1252#issuecomment-6758415790
+
+The hasconfig-selected vcs counterexample also reproduced under actual private Git; the final lookup receives the same assigned remote URL as the URL reader. Its additional regression passes, with no further condition ban or destination precondition. Superseded source-PR f92 CI was cancelled, not a pass. Role builder source is exact SHA2566a07e6f1516d7de4574a0c934a5c6ac6ba0a44144011e0a88f253af90306b178; inline fixture is exact1bbbf71c00fd6d60f0e1e216c7b41a087875c18a9f88383477d4c6f2fe40f227, with17 actual source tests reported by its author and genuine native producer/push.
+
+Final metadata source merged without runtime conflicts. Independent per-function/class three-way reconstruction of task_actions (basece, prior combined2f6145e7, accepted1034) matches every actual AST; _action is the sole independently reconstructed overlapping function. The autonomy paragraph combines the exact accepted actor/task/action sentence with the existing full owner-continuity and inherited-memory text. Changelog conflict resolution retains both accepted sets of notes, plus accurate role/fullSHA release notes. No source enforcement exception or limit is removed. Canonical develop was freshly fetched asce before joint generation; fetch again before final push and normally reconcile any new base.
+
+## Superseded reporting checkpoint
+
+Before the combined producer started, Root reproduced a real preimplementation reporting deadlock on1034: proper own-Task/same-repo posts during design/review still required implementation artifacts. The old generation log is a superseded checkpoint, not final validation. The focused9b61/855b amendment was independently accepted at issue1245 comment6758913919 and its actual native followup head must be merged before final generation/tests.
+
+Root also selected full reviewed queue admission PR1246 headb4e52b19a390d3cc4441dac09907e3a2af98749b for the final cohort, unless already in actualdevelop. Independent source review5836617511 covers24 queue cases,8 revert cases and the full9-commit stack/fork proof; static CLI limitations remain qualified. Run the affected24 queue cases in the joint producer. Do not add1170/1216 source.
