@@ -107,9 +107,17 @@ Revert proofs were run on the working tree, restoring each line afterwards:
 
 ## Peer review
 
-- Syntax: `ast.parse` passes on the three changed Python files.
-- Scope: `git diff --stat origin/develop` touches only the helper, its resolver call site (two lines), its test, its doc, CHANGELOG and this artifact. `hooks/lib/task_actions.py` is untouched.
-- Scanner: `skills/detect-ai-fingerprints/scan.sh --working` reports no finding on changed lines. Remaining findings are pre-existing whole-file handler findings at unchanged lines.
+- Gate 1, syntax: `ast.parse` on the three changed `.py` files gives all parse clean (exit 0). Every commit's pre-commit hooks then passed.
+- Gate 2, tests: `python3 -m unittest github_merge_queue` reports 24 passed (OK) at bfa0e78. The hook scenario suite gives 72/75 PASS. Its 3 failures reproduce identically on pristine bf1a423 (see Quantified claims).
+- Gates 3 and 4, docs and notebooks: N/A. There is no doc build or notebook in this repository for these paths.
+- writing-code:7 (silent swallow): checked by `scan.sh --working`, clean on changed lines.
+  - `ProofUnavailable` is raised, never swallowed.
+  - The CLI-only `except ProofUnavailable: return None` is a typed, documented fallback to the ordinary task path, and is covered by tests.
+  - The remaining scanner findings sit at unchanged lines.
+- writing-tests:5 (named handlers tested): `test_unreadable_proof_is_typed_and_only_cli_falls_back` asserts `assertRaises(ProofUnavailable)` and `assertRaises(ValueError)` for the new handlers. Each behavioral fixture fails under its revert proof (R1-R5b).
+- writing-claims:2 (countable claims): every count in this artifact and the PR body comes from a command whose output is quoted under Quantified claims.
+- writing-prose:1-4: `scan.sh` reports no prose finding on changed lines. An adverb in the doc was rewritten after the first scan.
+- Scope: `git diff --stat origin/develop...HEAD` touches only the helper, its resolver call site (two lines), its test, its doc, CHANGELOG and this artifact. `hooks/lib/task_actions.py` is untouched.
 
 ## Lead review
 
@@ -117,6 +125,7 @@ Revert proofs were run on the working tree, restoring each line afterwards:
 - The shared lexer class remains open outside the queue lane, and is deferred to PR #1170's owner.
 - The exempt-base policy fails closed in both forms. `None` never reaches the audit.
 - Blast radius: the helper's nine runtime callers (resolver plus eight guards) see narrower admission and one extra GraphQL read.
+- Post-mortem applicability: B1 and the follow-up-1 regression are shipped defects on main 9f47b035, found by the input hostile review. A post-mortem is the hub's and Root's decision; this worker does not produce one. This PR records the root cause, the lexer and GraphQL disagreeing on backslashes, in the Design section.
 
 ## Findings
 
