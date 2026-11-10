@@ -9207,6 +9207,7 @@
         "bin/_test/effective_policy_test.py",
         "bin/_test/frontmatter_validation_test.py",
         "bin/_test/gate_contract_test.py",
+        "bin/_test/inline_delivery_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/native_push_test.py",
         "bin/_test/notebook_edit_guards_test.py",

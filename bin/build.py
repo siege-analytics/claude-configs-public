@@ -1333,7 +1333,7 @@ def build_rules_bundle(
     version = _get_version()
     try:
         commit = subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"],
+            ["git", "rev-parse", "HEAD"],
             cwd=REPO_ROOT,
             text=True,
             timeout=120,
