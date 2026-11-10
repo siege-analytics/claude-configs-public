@@ -40,11 +40,12 @@ if mode=='huge': print('x'*1100000); sys.exit(0)
 if mode=='envrepo' and (os.environ.get('GH_REPO')!='siege-analytics/siege_utilities' or '--repo' in args): sys.exit(98)
 head='0'*40 if mode=='stale' else '8801a13290e9a8cb72e7a2a92fc4c4e7522f954e'
 base='main' if mode=='mainbase' else 'develop'
+repo='siege-analytics/claude-configs-public' if mode=='otherrepo' else 'siege-analytics/siege_utilities'
 if args[:2]==['pr','view']:
- print(json.dumps(dict(id='PR_test',number=1794,url='https://github.com/siege-analytics/siege_utilities/pull/1794',headRefOid=head,baseRefName=base)))
+ print(json.dumps(dict(id='PR_test',number=1794,url='https://github.com/'+repo+'/pull/1794',headRefOid=head,baseRefName=base)))
 elif args[:4]==['api','--hostname','github.com','graphql'] and len(args)==8 and args[4]==args[6]=='-f' and args[7].startswith('id='):
  node=args[7][3:] if mode!='othernode' else 'PR_other'
- print(json.dumps(dict(data=dict(node=dict(id=node,number=1794,baseRefName=base,headRefOid=head,repository=dict(nameWithOwner='siege-analytics/siege_utilities'))))))
+ print(json.dumps(dict(data=dict(node=dict(id=node,number=1794,baseRefName=base,headRefOid=head,repository=dict(nameWithOwner=repo))))))
 elif args[:3]==['api','--hostname','github.com'] and args[3] in ('repos/siege-analytics/siege_utilities/rules/branches/develop','repos/siege-analytics/siege_utilities/rules/branches/main'):
  print(json.dumps([] if mode=='noqueue' else [{'type':'merge_queue'}]))
 else: sys.exit(99)
@@ -120,6 +121,17 @@ else: sys.exit(99)
         for row in rows:  # The audit names the real target, not only a node string.
             self.assertEqual((row['repository'],row['pr'],row['base'],row['form']),('siege-analytics/siege_utilities',1794,'develop','graphql'))
         self.assertTrue(all(x['remote_success'] is False for x in rows))
+
+    def test_audit_records_server_base_repository_not_ambient_routing(self):
+        self.env['GH_REPO'] = 'siege-analytics/siege_utilities'
+        self.mode.write_text('otherrepo')  # The node's base repository differs from ambient routing.
+        self.hook(GQL)
+        rows = [json.loads(line) for line in self.audit.read_text().splitlines()]
+        self.assertEqual([(row['repository'], row['pr'], row['base']) for row in rows],
+                         [('siege-analytics/claude-configs-public', 1794, 'develop')])
+        result = self.hook(CLI+' --repo siege-analytics/siege_utilities', 2)  # Server identity outranks the request.
+        self.assertIn('PR repository mismatch', result.stderr)
+        self.assertEqual(len(self.audit.read_text().splitlines()), 1)
 
     def test_shell_escapes_cannot_change_validated_literal_bytes(self):
         node = 'PR_kwDO\\u004f94Kgc8AAAABJOmLuA'

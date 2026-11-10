@@ -37,7 +37,12 @@ Verified against origin/develop 6cae44ad3c09c3cf6fb980428bbc5ca5ee330c31:
 - `craft-settings-router.py` `RoutingError` subclasses `ValueError`. Runner timeout (`HookTimeout`) and the output bound raise it.
 - The ordinary path denies any `gh api` mutation ("GraphQL is not modeled", `task_actions.py` `github_project_action`). A non-exempt GraphQL request therefore stays denied.
 - `Queue enqueue denied` is asserted by `hooks/_test/github_merge_queue.py` and by `hooks/_test/github_project_scope.py`, the latter for GraphQL commands only. The new form-specific label keeps the GraphQL wording.
-- A live read-only `gh api graphql` probe of the node shape was blocked by the mutation gate. The `PullRequest` fields `id number baseRefName headRefOid repository{nameWithOwner}` are therefore inference from the public schema. A wrong shape fails closed.
+- 2026-11-07: the mutation gate blocked a live read-only `gh api graphql` probe.
+- 2026-11-09, after merging develop bf1a423, which models GraphQL queries as reads:
+  - The gate's GraphQL parser still rejects the inline fragment in `node(id:){... on PullRequest{...}}`, so the exact lookup query was not probed.
+  - The fragment-free equivalent `repository(owner:,name:){pullRequest(number:1226){id number baseRefName headRefOid repository{nameWithOwner}}}` returned exactly those fields live: string id, integer number, `develop`, a 40-hex head, `siege-analytics/claude-configs-public`.
+  - The `node(id:)`/fragment wrapper is standard GraphQL but remains unprobed. A wrong wrapper fails closed.
+- Develop bf1a423 added a `github_graphql` pre-classification to `parse()`, so non-enqueue GraphQL returns `None`. Its ordinary path still raises "Unsupported GraphQL mutation" for any mutation except `resolveReviewThread`, so a non-exempt enqueue remains denied.
 
 ## Design
 
@@ -78,6 +83,7 @@ Implementation may proceed: yes.
 | 2 | `test_only_policy_bases_are_exempt` (policy constant; main base: no-task CLI and GraphQL deny with no rules read; task CLI allowed without exemption; guard predicate exits 1; GraphQL still denied) |
 | 2 | `test_graphql_lookup_failure_or_mismatch_is_not_exempt` (fail, bad, huge, hang, stale and othernode deny, even with a task) |
 | 2 | `test_exact_graphql_variables_and_literal_use_one_node_lookup` (exactly one node read each; audit carries repository, number, base and form) |
+| 2 | `test_audit_records_server_base_repository_not_ambient_routing` (the GraphQL audit records the node's server-reported base repository, not ambient `GH_REPO`; a CLI `--repo` that disagrees with the server URL denies) |
 | 3 | `test_cli_proof_read_failure_keeps_task_scope_without_exemption` (no task: deny; owned: allow, no audit; predicate exits 1; `GH_HOST` CLI keeps task, GraphQL denies; stale head still denies with `Pinned merge denied:`) |
 | 3 | `test_unreadable_proof_is_typed_and_only_cli_falls_back` (in-process: `ProofUnavailable` raised, CLI `verify` returns `None`, GraphQL raises `ValueError`; a stale head is not `ProofUnavailable`) |
 | 4 | `unavailable_helper_controls` asserts the form-specific labels |
@@ -90,6 +96,7 @@ Revert proofs were run on the working tree, restoring each line afterwards:
 - R2b: the GraphQL base check removed. The main-base fixture fails, because no-task GraphQL is admitted.
 - R2c: the GraphQL lookup replaced by the old no-read return. The lookup-failure, one-lookup/audit and main-base fixtures fail.
 - R3: the CLI `None` fallback removed. The read-failure fixture fails, because every owned mode is denied.
+- R4: the GraphQL audit repository taken from ambient `GH_REPO`. The base-repository fixture fails: it records `siege_utilities` instead of `claude-configs-public`.
 
 ## Peer review
 
@@ -109,7 +116,7 @@ Revert proofs were run on the working tree, restoring each line afterwards:
 | ID | Priority | Description | Resolution |
 |----|----------|-------------|------------|
 | L1 | P3 | GraphQL form does not read branch rules; it relies on the server to reject a non-queue base | noted; deferred to hub |
-| L2 | P3 | Live GraphQL node shape unverified (gate blocks read-only probe) | noted; fails closed |
+| L2 | P3 | `PullRequest` field shape verified live; the `node(id:)` inline-fragment wrapper is unprobed because the gate parser rejects fragments | noted; fails closed |
 
 ## Canary and rollback
 
