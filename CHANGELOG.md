@@ -4,6 +4,10 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: task-owned worktree materialization
+
+- Bounded explicit-source `git worktree add` under its own Task uses actual branch and working changes for review risk, with at least Tier B. Unchanged checked-out workflow/release files no longer impose Tier C by themselves. Assigned sibling destinations retain ordinary ownership checks; actual risky changes, risky destination paths, declared Tier C and unavailable Git evidence retain their floor. Normal new branches still require develop; existing-branch and detached review keep their separate source rules. Unsupported forms and unproven clones gain no exemption (#1171).
+
 ### BREAKING: new metadata posts bind their actual remote repository
 
 - New issue/comment/review-comment posts reuse one current own Task and its actual declared repository scope (or its own canonical ticket). Unrelated repositories, ambiguous Tasks and unproven targets cannot borrow the command cwd. Reuse the existing Task with a literal `--repo` or canonical URL; a stable task id can precede ticket creation. Existing text-only artifact-edit permissions remain unchanged; this adds no owner-signoff field or per-comment approval ritual (#1245, #1251).
