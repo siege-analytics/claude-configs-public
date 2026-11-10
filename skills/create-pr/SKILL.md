@@ -20,8 +20,8 @@ base, not authority to rewrite an existing branch.
 
 1. Understand the full scope of the PR
    1. Run `git log "$REVIEW_BASE_COMMIT"..HEAD --oneline` to see all commits
-   2. Run `git diff "$REVIEW_BASE_COMMIT"..HEAD --stat` to see all files changed
-   3. Run `git diff "$REVIEW_BASE_COMMIT"..HEAD` to review the actual changes if needed
+   2. Run `git diff "$REVIEW_BASE_COMMIT"...HEAD --stat` to see all files changed
+   3. Run `git diff "$REVIEW_BASE_COMMIT"...HEAD` to review the actual changes if needed
    4. Read the related ticket(s) to understand the intended outcome
 2. **Verify ticket references exist** (see Ticket enforcement below)
    1. Check that all commits on the branch reference tickets

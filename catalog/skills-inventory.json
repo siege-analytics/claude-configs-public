@@ -6137,10 +6137,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 32243,
-      "content_sha256": "a71e81e517a477f36a994d139c88686920e0ea95b9bceff3c0e188ec88a56ed3",
+      "characters": 32814,
+      "content_sha256": "c77b57bf264a71b727f20971741a3decb9a8c9d036502b92ad88067029126203",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 8061,
+      "estimated_tokens": 8204,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -8773,10 +8773,10 @@
     },
     {
       "canonical_source": "skills/branch/SKILL.md",
-      "characters": 7284,
-      "content_sha256": "2df49e62ae85f5a9312c9736bea269a1cfaf74f9ad3f59c23cced931a0578fad",
+      "characters": 7353,
+      "content_sha256": "bc2840a05557c987620f7a86016ec931a35c97c62f8c0ce99f9706bb01a94218",
       "description": "Create and manage git branches using a consistent naming convention (type/descriptive_string) that mirrors ticket taxonomy.",
-      "estimated_tokens": 1821,
+      "estimated_tokens": 1839,
       "frontmatter_name": "branch",
       "generated_outputs": [
         "dist/nested/skills/branch",
@@ -8790,12 +8790,13 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
-        "skills/RESOLVER.md"
+        "skills/RESOLVER.md",
+        "skills/_session-coordination-rules.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 172,
+      "lines": 171,
       "owner": [
         "unknown"
       ],
@@ -9455,8 +9456,8 @@
     },
     {
       "canonical_source": "skills/create-pr/SKILL.md",
-      "characters": 15814,
-      "content_sha256": "c21993eea4952228dfcbf00c63c08959a773a9e53fd3cd5a72a9c72f0be44cb4",
+      "characters": 15816,
+      "content_sha256": "4c8b398c28c70f41bd562e2aba25912dd8beb0771ae21f75fe8c96714be2d0b8",
       "description": "Create a pull request with structured description, linked tickets, and commit narrative. Enforces bidirectional linking.",
       "estimated_tokens": 3954,
       "frontmatter_name": "create-pr",
@@ -9785,10 +9786,10 @@
     },
     {
       "canonical_source": "skills/develop-guard/SKILL.md",
-      "characters": 8021,
-      "content_sha256": "bec7ccdba95a7f495d59fc6c5238b3e2ccaf62c5af4d970f701fbae9faac6884",
+      "characters": 8094,
+      "content_sha256": "9dced87a1474468ee6eaff4d4f22b8d8588bd3796910fbe38fd22d460ef22c3c",
       "description": "Normal development starts at develop. Verify remote refs, bootstrap a missing develop safely, and preserve separately authorized release sources.",
-      "estimated_tokens": 2006,
+      "estimated_tokens": 2024,
       "frontmatter_name": "develop-guard",
       "generated_outputs": [
         "dist/nested/skills/develop-guard",
@@ -12924,9 +12925,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2636436,
+    "characters": 2637151,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 659187,
+    "estimated_tokens": 659366,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -12947,7 +12948,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1240042
+      "unclassified": 1240757
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12959,7 +12960,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 310053
+      "unclassified": 310232
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

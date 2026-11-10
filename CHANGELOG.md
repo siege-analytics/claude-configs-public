@@ -140,6 +140,8 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Fixed: gate artifact posts and one-pass trailer rejections
 
+The coordinator-status-guard format and completion-evidence wording checks described in the historical artifact-post bullets below are superseded by the typed standalone-report contract (#1260). They do not gate current report posts. Pipeline artifact-credit recognition and actual workflow-state checks remain enforced.
+
 - coordinator-status-guard now accepts gate-required think-pipeline artifacts. These are the pre-mortem, investigation fact sheet, junior/senior review and design note posts that the Tier C artifacts-posted gate needs.
   - Format: the comment's first line is a heading naming the artifact, with a `Ticket:`/`Task-ID:` line (or `#N` in the heading).
   - The status-tone rules do not apply to these posts, so the "(followed)" workaround is no longer needed.
