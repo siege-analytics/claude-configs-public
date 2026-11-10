@@ -57,11 +57,11 @@ expect_pass "(k) echo \"migrate 2026->2027\" (arrow in echo string)" "$HOOK" "$(
 expect_pass "(l) grep \"cat .* >\" report.txt (literal redirect op in grep pattern)" "$HOOK" "$(make_payload 'grep \"cat .* >\" report.txt')"
 expect_pass "(m) grep \"append >> file\" report.txt (literal >> in grep pattern)" "$HOOK" "$(make_payload 'grep \"append >> file\" report.txt')"
 
-# --- Governance issue reporting: evidence-bearing create/comment pass without a think-gate ---
+# --- New metadata posts require a verified own Task and target repository ---
 
 printf 'follow-up evidence\n' > "$TMP_DIR/body.md"
-expect_pass "(n0) gh issue create with title and body-file passes as governance reporting" "$HOOK" "$(make_payload 'gh issue create --repo siege-analytics/claude-configs-public --title followup --body-file body.md')"
-expect_pass "(n1) gh issue comment with target and body-file passes as governance reporting" "$HOOK" "$(make_payload 'gh issue comment 123 --body-file body.md')"
+expect_block "(n0) gh issue create with title and body-file cannot borrow unbound governance authority" "$HOOK" "$(make_payload 'gh issue create --repo siege-analytics/claude-configs-public --title followup --body-file body.md')"
+expect_block "(n1) gh issue comment with target and body-file requires verified own Task authority" "$HOOK" "$(make_payload 'gh issue comment 123 --body-file body.md')"
 expect_block "(n2) gh issue create without body still blocks" "$HOOK" "$(make_payload 'gh issue create --title followup')"
 expect_block "(n3) gh issue close remains mutation-gated" "$HOOK" "$(make_payload 'gh issue close 123')"
 expect_pass "(n4) existing issue title maintenance needs no task gate" "$HOOK" "$(make_payload 'gh issue edit 123 --title changed')"

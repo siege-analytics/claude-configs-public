@@ -186,29 +186,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "177f470e0a986c20d4e8c45ce1a4fbc183387671bc7c2f31654a7fae3ef91eb5"
+          "tree_sha256": "3cb03e90c26c72b17cdf0bebad2b74bbf57a55bba888368bebdb3cc65e23b33c"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "177f470e0a986c20d4e8c45ce1a4fbc183387671bc7c2f31654a7fae3ef91eb5"
+          "tree_sha256": "3cb03e90c26c72b17cdf0bebad2b74bbf57a55bba888368bebdb3cc65e23b33c"
         },
         "flat": {
           "destination": "dist/flat/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "177f470e0a986c20d4e8c45ce1a4fbc183387671bc7c2f31654a7fae3ef91eb5"
+          "tree_sha256": "3cb03e90c26c72b17cdf0bebad2b74bbf57a55bba888368bebdb3cc65e23b33c"
         },
         "nested": {
           "destination": "dist/nested/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "177f470e0a986c20d4e8c45ce1a4fbc183387671bc7c2f31654a7fae3ef91eb5"
+          "tree_sha256": "3cb03e90c26c72b17cdf0bebad2b74bbf57a55bba888368bebdb3cc65e23b33c"
         }
       },
       "canonical_source": "skills/_autonomy-rules.md",
       "kind": "rule",
       "slug": "autonomy",
       "source_file_count": 1,
-      "source_tree_sha256": "177f470e0a986c20d4e8c45ce1a4fbc183387671bc7c2f31654a7fae3ef91eb5"
+      "source_tree_sha256": "3cb03e90c26c72b17cdf0bebad2b74bbf57a55bba888368bebdb3cc65e23b33c"
     },
     {
       "artifacts": {
@@ -737,29 +737,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "96789f69c74e35eacd28b597f42a68f1ca4da7e9a43edd438793455ac1120ee4"
+          "tree_sha256": "9df893c35403c3ddb28d0b56bf82e199e9106f7f71fa382f9c850ee2ec8cd762"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "96789f69c74e35eacd28b597f42a68f1ca4da7e9a43edd438793455ac1120ee4"
+          "tree_sha256": "9df893c35403c3ddb28d0b56bf82e199e9106f7f71fa382f9c850ee2ec8cd762"
         },
         "flat": {
           "destination": "dist/flat/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "96789f69c74e35eacd28b597f42a68f1ca4da7e9a43edd438793455ac1120ee4"
+          "tree_sha256": "9df893c35403c3ddb28d0b56bf82e199e9106f7f71fa382f9c850ee2ec8cd762"
         },
         "nested": {
           "destination": "dist/nested/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "96789f69c74e35eacd28b597f42a68f1ca4da7e9a43edd438793455ac1120ee4"
+          "tree_sha256": "9df893c35403c3ddb28d0b56bf82e199e9106f7f71fa382f9c850ee2ec8cd762"
         }
       },
       "canonical_source": "skills/_session-coordination-rules.md",
       "kind": "rule",
       "slug": "session-coordination",
       "source_file_count": 1,
-      "source_tree_sha256": "ccdf62cb51cbac408fd2db621d9b3bb896d588264d3a675bcb2c4869f5a874e7"
+      "source_tree_sha256": "296383b04f510138decba873bebb47b0b6011ea70eb0342c0e67860f3d6c45af"
     },
     {
       "artifacts": {
@@ -5377,29 +5377,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/stalled-session-recovery",
           "file_count": 2,
-          "tree_sha256": "7a6ef82931482ed2a160e67c8760d9a82974087ebaabeeea86e1fca58762aeca"
+          "tree_sha256": "39a3545091ccd173ca24fcc7b4409c6800a713cd90ac8f4424d7f531ad355daa"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/stalled-session-recovery",
           "file_count": 2,
-          "tree_sha256": "7a6ef82931482ed2a160e67c8760d9a82974087ebaabeeea86e1fca58762aeca"
+          "tree_sha256": "39a3545091ccd173ca24fcc7b4409c6800a713cd90ac8f4424d7f531ad355daa"
         },
         "flat": {
           "destination": "dist/flat/skills/stalled-session-recovery",
           "file_count": 2,
-          "tree_sha256": "7a6ef82931482ed2a160e67c8760d9a82974087ebaabeeea86e1fca58762aeca"
+          "tree_sha256": "39a3545091ccd173ca24fcc7b4409c6800a713cd90ac8f4424d7f531ad355daa"
         },
         "nested": {
           "destination": "dist/nested/skills/stalled-session-recovery",
           "file_count": 2,
-          "tree_sha256": "7a6ef82931482ed2a160e67c8760d9a82974087ebaabeeea86e1fca58762aeca"
+          "tree_sha256": "39a3545091ccd173ca24fcc7b4409c6800a713cd90ac8f4424d7f531ad355daa"
         }
       },
       "canonical_source": "skills/stalled-session-recovery/SKILL.md",
       "kind": "skill",
       "slug": "stalled-session-recovery",
       "source_file_count": 2,
-      "source_tree_sha256": "7952ff870115aedbf8f3eb3e83bb417c1babdaea62dfd9681860539b89b21687"
+      "source_tree_sha256": "1434018a831e3ec8d720de3eeca0ab6fd79d0fb86de60f43408a5e5edac73cb4"
     },
     {
       "artifacts": {

@@ -2,6 +2,8 @@
 """Actual prompt-hook delivery remains complete inside its declared byte budget."""
 from __future__ import annotations
 
+import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -9,6 +11,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -254,6 +258,46 @@ class InlineDelivery(unittest.TestCase):
         self.assertNotIn(b'<project-resident>', output)
         self.assertNotIn(prefix, output)
         self.assertIn(b'selector unavailable; kernel only', output)
+
+    def test_bundle_provenance_is_independent_of_git_abbreviation(self):
+        spec = importlib.util.spec_from_file_location('bundle_build_fixture', ROOT / 'bin/build.py')
+        build = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = build
+        spec.loader.exec_module(build)
+        repo = self.case / 'bundle-source'
+        repo.mkdir()
+        skills = repo / 'skills'
+        skills.mkdir()
+        (skills / 'RULES.md').write_text('# Fixture policy\nKeep the complete policy.\n')
+        env = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
+        env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_SYSTEM=os.devnull,
+                   GIT_CONFIG_NOSYSTEM='1')
+
+        def git(*args):
+            return subprocess.check_output(['git', '-C', str(repo), *args],
+                                           env=env, stderr=subprocess.PIPE, timeout=10).decode().strip()
+
+        git('init', '--template=')
+        git('add', 'skills/RULES.md')
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+            '-c', 'commit.gpgsign=false', 'commit', '-m', 'fixture')
+        head = git('rev-parse', 'HEAD')
+        outputs, abbreviations, metadata = [], [], []
+        for length in (7, 16):
+            git('config', 'core.abbrev', str(length))
+            abbreviations.append(git('rev-parse', '--short', 'HEAD'))
+            output = self.case / ('bundle-' + str(length))
+            with mock.patch.multiple(build, REPO_ROOT=repo, SOURCE_SKILLS=skills,
+                                     DIST=output, BUILD_EPOCH=1700000000), \
+                    mock.patch.dict(os.environ, env, clear=True), redirect_stdout(io.StringIO()):
+                build.build_rules_bundle({})
+            outputs.append((output / 'RULES_BUNDLE.md').read_bytes())
+            metadata.append(json.loads((output / 'RULES_BUNDLE.json').read_text()))
+        self.assertEqual([len(value) for value in abbreviations], [7, 16])
+        self.assertEqual(outputs[0], outputs[1])
+        self.assertEqual([item['source_commit'] for item in metadata], [head, head])
+        self.assertIn(head.encode(), outputs[0])
+        self.assertGreater(len(outputs[0]), 0)
 
     def test_reference_copy_refuses_fifo_without_blocking(self):
         fifo = self.case / 'source-fifo'
