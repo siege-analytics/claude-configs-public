@@ -133,7 +133,17 @@ Revert proofs were run on the working tree, restoring each line afterwards:
 
 - "one fixed read-only node(id:) lookup": `test_exact_graphql_variables_and_literal_use_one_node_lookup` asserts exactly one `graphql` read per admitted command.
 - "eight publication guards": `git grep -l -- '--queue-required' hooks/git hooks/bash` lists 8 files.
-- Suite counts and hosted CI results are recorded in the PR body from the exact runs.
+- Queue suite: 24 tests pass. `python3 -m unittest github_merge_queue` from `hooks/_test` reports "Ran 24 tests ... OK" at bfa0e78.
+- Hook scenario suite plus the skill-inventory and lifecycle steps, run per command at 6d201da: 72 of 75 commands pass. The queue fixture added in bfa0e78 was verified separately, above.
+- The three failing commands fail identically on a pristine `git archive` export of develop bf1a423, with `dist/` built:
+  - `ca_enforcement_runtime.test.sh`: 12 passed, 4 failed (the F4 spoofed-`CRAFT_*` and PATH-`ps` ancestry checks).
+  - `session_signal_resolution.test.sh`: 16 passed, 2 failed ("repo-matched singleton not bound under unknown session").
+  - `universal_mutation_gate_empty_reporoot.test.sh`: "--session-known should be 0 with no session env".
+  - All three depend on the host Craft session environment the runner executes inside.
+- `validate-local.py --mode full`, run at b76fcbf before the merge, passed every step up to "Local validation command adapter". It stops at the first failure.
+  - That step's `test_python_symlink_spelling_mismatch_is_not_realpathed_away` also fails on pristine bf1a423 on this host.
+  - After the merge, `validate-local.py --mode check` passes.
+- Hosted CI results are recorded in the PR body from the exact pushed head.
 
 ## Rework ledger
 
