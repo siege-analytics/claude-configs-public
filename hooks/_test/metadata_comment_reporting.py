@@ -260,8 +260,13 @@ class Reporting(unittest.TestCase):
             for target, expected in [('example/target', 0), ('other/foreign', 2)]:
                 self.assertEqual(f.hook('gh issue comment 50 --repo ' + target + ' --body report',
                                  cwd=f.repo, env=environment).returncode, expected)
+            # --get sees the appended B value, but actual primary fetch/gh
+            # remains local A (independently verified by safe gh issue-list).
+            primary = subprocess.check_output(['git', '-C', str(f.repo), 'remote',
+                      'get-url', 'origin'], env=environment, text=True).strip()
+            self.assertEqual(primary, 'https://github.com/example/target.git')
             self.assertEqual(f.hook('gh issue comment 50 --body report', cwd=f.repo,
-                                   env=environment).returncode, 2)
+                                   env=environment).returncode, 0)
 
     def test_metadata_nested_owner_proof_uses_physical_repository(self):
         fixture, f, foreign, gate, redirected = self.git_scope_fixture()
@@ -292,6 +297,139 @@ class Reporting(unittest.TestCase):
                 cwd=str(f.repo), tool_input={'command': 'git add note.txt'}))
             self.assertIsNone(ordinary.get('gate'), ordinary)
             self.assertEqual(dict(os.environ), before)
+
+    def origin_scope_fixture(self):
+        import shutil
+        fixture, f, foreign, gate, redirected = self.git_scope_fixture()
+        shutil.rmtree(f.ws / 'sessions/one/tasks')
+        gate = f.task('example/target#31', f.a)
+        return fixture, f, foreign, gate
+
+    def test_nonrepository_origin_cannot_donate_scope_but_own_ticket_remains(self):
+        fixture, f, foreign, gate = self.origin_scope_fixture()
+        subprocess.run(['git', '-C', str(f.repo), 'remote', 'remove', 'origin'], env=f.env, check=True)
+        config = f.ws / 'ambient.cfg'
+        config.write_text('[remote "origin"]\n url = https://github.com/other/foreign.git\n')
+        environments = [dict(f.env, GIT_CONFIG_GLOBAL=str(config)),
+                        dict(f.env, GIT_CONFIG_SYSTEM=str(config))]
+        environments[1].pop('GIT_CONFIG_NOSYSTEM', None)
+        hooks = [ROOT / h['command'].split('/claude-configs-public/', 1)[1]
+                 for group in json.loads((ROOT / 'hooks/settings-snippet.json').read_text())['hooks']['PreToolUse']
+                 if group.get('matcher') == 'Bash' for h in group['hooks']]
+        self.assertEqual(len(hooks), 16)
+        own = 'gh issue comment 31 --repo example/target --body report'
+        for command in [own, 'gh issue comment 50 --repo other/foreign --body report',
+                        'gh issue comment 50 --repo example/target --body report']:
+            payload = fixture.craft_payload(tool_name='Bash', cwd=str(f.repo), tool_input={'command': command})
+            outcomes = {h.name: subprocess.run(['bash', str(h)], input=json.dumps(payload),
+                        env=environments[0], cwd=f.repo, capture_output=True, text=True, timeout=15)
+                        for h in hooks}
+            if command == own:
+                self.assertTrue(all(p.returncode == 0 for p in outcomes.values()),
+                                {n: p.stderr for n, p in outcomes.items()})
+            else:
+                self.assertEqual(outcomes['universal-mutation-gate.sh'].returncode, 2)
+        for environment in [f.env, *environments]:
+            self.assertEqual(f.hook(own, cwd=f.repo, env=environment).returncode, 0)
+            for command in ['gh issue comment 50 --repo other/foreign --body report',
+                            'gh issue comment 50 --repo example/target --body report',
+                            'gh issue create --repo example/target --title report --body report',
+                            'gh pr comment 31 --repo example/target --body report']:
+                self.assertEqual(f.hook(command, cwd=f.repo, env=environment).returncode, 2)
+        # The canonical ticket is not an escape around physical ownership proof.
+        data = json.loads((gate / 'think-gate.json').read_text());data['repo_root'] = str(foreign)
+        (gate / 'think-gate.json').write_text(json.dumps(data))
+        self.assertEqual(f.hook(own, cwd=f.repo, env=environments[0]).returncode, 2)
+
+    def test_origin_authority_uses_first_repository_value_and_local_includes(self):
+        fixture, f, foreign, gate, redirected = self.git_scope_fixture()
+        def git(*args):
+            return subprocess.check_output(['git', '-C', str(f.repo), *args], env=f.env, text=True).strip()
+        git('config', '--add', 'remote.origin.url', 'https://github.com/other/foreign.git')
+        self.assertEqual(git('config', '--get', 'remote.origin.url'), 'https://github.com/other/foreign.git')
+        self.assertEqual(git('remote', 'get-url', 'origin'), 'https://github.com/example/target.git')
+        for target, expected in [('example/target', 0), ('other/foreign', 2)]:
+            self.assertEqual(f.hook('gh issue comment 50 --repo ' + target + ' --body report', cwd=f.repo).returncode, expected)
+        self.assertEqual(f.hook('gh issue comment 50 --body report', cwd=f.repo).returncode, 0)
+        git('config', '--unset-all', 'remote.origin.url')
+        included = f.ws / 'owned-include.cfg'
+        included.write_text('[remote "origin"]\n url = https://github.com/example/target.git\n')
+        git('config', 'include.path', str(included))
+        self.assertEqual(f.hook('gh issue comment 50 --repo example/target --body report', cwd=f.repo).returncode, 0)
+        self.assertEqual(f.hook('gh issue comment 50 --repo other/foreign --body report', cwd=f.repo).returncode, 2)
+
+    def test_origin_authority_supports_worktree_order_and_worktree_only_config(self):
+        import shutil
+        fixture, f, foreign, gate, redirected = self.git_scope_fixture()
+        def git(*args):
+            return subprocess.check_output(['git', '-C', str(f.repo), *args], env=f.env, text=True).strip()
+        (f.repo / 'note').write_text('fixture')
+        git('add', 'note')
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+            '-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgsign=false', 'commit', '-qm', 'fixture')
+        git('config', 'extensions.worktreeConfig', 'true')
+        worktree = f.ws / 'sibling'
+        git('-c', 'core.hooksPath=/dev/null', 'worktree', 'add', '-q', '-b', 'fixture-sibling', str(worktree))
+        subprocess.run(['git', '-C', str(worktree), 'config', '--worktree', 'remote.origin.url',
+                        'https://github.com/other/foreign.git'], env=f.env, check=True)
+        shutil.rmtree(f.ws / 'sessions/one/tasks')
+        gate = f.task('metadata-worktree-scope', worktree)
+        # Declared main and actual worktree share the owned primary A URL,
+        # despite the worktree's later B value. Nested comparison must agree.
+        self.assertEqual(f.hook('gh issue comment 50 --repo example/target --body report', cwd=worktree).returncode, 0)
+        self.assertEqual(f.hook('gh issue comment 50 --repo other/foreign --body report', cwd=worktree).returncode, 2)
+        self.assertEqual(f.hook('gh issue comment 50 --body report', cwd=worktree).returncode, 0)
+        git('config', '--unset-all', 'remote.origin.url')
+        data = json.loads((gate / 'think-gate.json').read_text()); data['repo_root'] = str(worktree)
+        (gate / 'think-gate.json').write_text(json.dumps(data))
+        self.assertEqual(f.hook('gh issue comment 50 --repo other/foreign --body report', cwd=worktree).returncode, 0)
+        self.assertEqual(f.hook('gh issue comment 50 --body report', cwd=worktree).returncode, 0)
+
+    def test_global_trust_auth_and_actual_command_cwd_remain_usable(self):
+        fixture, f, foreign, gate, redirected = self.git_scope_fixture()
+        config = f.ws / 'trusted-global.cfg'
+        config.write_text('[safe]\n directory = ' + str(f.repo) + '\n[credential]\n helper = cache\n[core]\n worktree = ' + str(foreign) + '\n')
+        environment = dict(f.env, GIT_CONFIG_GLOBAL=str(config), GIT_TEST_ASSUME_DIFFERENT_OWNER='1')
+        observed = subprocess.run(['git', '-C', str(f.repo), 'rev-parse', '--show-toplevel'],
+                                 env=environment, text=True, capture_output=True)
+        self.assertEqual(observed.returncode, 0, observed.stderr)
+        self.assertEqual(observed.stdout.strip(), str(f.repo.resolve()))
+        for command in ['gh issue comment 50 --repo example/target --body report',
+                        'gh issue comment 50 --body report']:
+            result = f.hook(command, cwd=f.repo, env=environment)
+            self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(f.hook('gh issue comment 50 --repo other/foreign --body report', cwd=f.repo, env=environment).returncode, 2)
+
+    def test_first_owned_origin_is_exact_and_invalid_values_do_not_fall_through(self):
+        fixture, f, foreign, gate, redirected = self.git_scope_fixture()
+        for first in ['', ' https://github.com/example/target.git',
+                      'https://github.com/example/target.git ',
+                      'https://github.com/example/target.git\n',
+                      'https://github.com/example/target.git\t']:
+            subprocess.run(['git', '-C', str(f.repo), 'config', '--replace-all', 'remote.origin.url', first], env=f.env, check=True)
+            subprocess.run(['git', '-C', str(f.repo), 'config', '--add', 'remote.origin.url',
+                            'https://github.com/example/target.git'], env=f.env, check=True)
+            self.assertEqual(f.hook('gh issue comment 50 --repo example/target --body report', cwd=f.repo).returncode, 2, repr(first))
+
+    def test_local_origin_and_canonical_ticket_do_not_require_worktree_git_option(self):
+        from unittest.mock import patch
+        fixture, f, foreign, gate = self.origin_scope_fixture()
+        actual_run = subprocess.run
+        calls = []
+        def older_git(args, *positional, **keywords):
+            calls.append(args)
+            if '--worktree' in args:
+                return subprocess.CompletedProcess(args, 129, stdout='', stderr='unknown option: worktree')
+            return actual_run(args, *positional, **keywords)
+        with patch('subprocess.run', side_effect=older_git):
+            observed = fixture.r._git_origin(str(f.repo), git_environment=fixture.r._metadata_git_environment())
+            self.assertEqual(observed, 'https://github.com/example/target.git')
+            self.assertFalse(any('--worktree' in args for args in calls))
+            subprocess.run(['git', '-C', str(f.repo), 'remote', 'remove', 'origin'], env=f.env, check=True)
+            self.assertEqual(fixture.r._git_origin(str(f.repo), git_environment=fixture.r._metadata_git_environment()), '')
+            own = fixture.r.resolve_action(str(f.ws), fixture.craft_payload(tool_name='Bash',
+                cwd=str(f.repo), tool_input={'command': 'gh issue comment 31 --repo example/target --body report'}))
+            self.assertTrue(own.get('gate'), own)
 
     def test_preparation_reports_do_not_require_implementation_artifacts(self):
         import task_keyed_gates as fixture

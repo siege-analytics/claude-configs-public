@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: repository-owned metadata authority (#1261)
+
+- Derive metadata grants from the first repository-owned origin, including local includes and worktree-only configuration. Global origins cannot donate repository authority; legitimate global trust and authentication remain available.
+- Preserve exact canonical-ticket comments after physical Task ownership proof when no owned origin exists. Observe implicit GitHub defaults separately with the actual command environment; ordinary Git classification remains unchanged.
+
 ### Fixed: metadata repository scope under ambient Git targeting (#1261)
 
 - Prove metadata Task scope against its physical repository using isolated, explicit Git inspection environments, including nested owner comparisons. Explicit own-repository posts remain valid; ambient Git location/config variables cannot lend that grant to another repository.
