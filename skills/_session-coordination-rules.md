@@ -8,7 +8,7 @@ These nine rules apply to multi-session work where two or more agents exchange `
 
 ## The nine coordination rules
 
-**session-coordination:1. Declare your processing state when you cannot immediately respond.** When inbound messages from a partner are accumulating faster than you can substantively reply -- deep in another task, slow tool calls, queue backlog -- send a brief `at-rest` or `queue-draining` acknowledgment to the partner before going silent. Silence without declaration looks like a stall to the partner and to any operator monitoring the thread. The declaration must say what you are draining (specific thread, specific queue, specific predicate for re-engaging) and the form of the next signal you will emit.
+**session-coordination:1. Declare your processing state when you cannot immediately respond.** When inbound messages from a partner are accumulating faster than you can substantively reply -- deep in another task, slow tool calls, queue backlog -- send a brief `at-rest` or `queue-draining` acknowledgment to the partner before going silent. Silence without declaration looks like a stall to the partner and to any operator monitoring the thread. The declaration must say what you are draining (specific thread, specific queue, specific predicate for re-engaging) and the form of the next signal you will emit. Scope the pause to that thread or dependency; an at-rest predicate in a handoff does not suspend other eligible assigned work or require a new message before continuing it.
 
 Example acceptable: `Queue-draining on the B1 staging thread. Going silent until I have the PR URL to send. Will re-ping then.`
 

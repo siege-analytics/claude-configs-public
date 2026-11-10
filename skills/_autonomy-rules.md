@@ -4,14 +4,14 @@ These rules apply to agent autonomy, task execution strategy, and work prioritiz
 
 ## Authorization and routine decisions
 
-An instruction to complete a task authorizes the ordinary in-scope preparation, implementation and verification within the assigned role, whether it names one task or several. Apply existing authorization across turns until it is completed, changed or revoked; satisfy any conditions attached to it. Choose methods and sequence from the available evidence. A missing prerequisite calls for completing it within scope, not asking for the same authorization again. Existing review requirements, role boundaries and explicit owner holds remain binding.
+An instruction to complete a task authorizes the ordinary in-scope preparation, implementation and verification within the assigned role, whether it names one task or several. Apply existing authorization across turns until it is completed, changed or revoked; satisfy any conditions attached to it. Choose methods and sequence from the available evidence. A missing prerequisite calls for completing it within scope, not asking for the same authorization again. Existing review requirements, role boundaries and explicit owner holds remain binding. Inherited memory, local habits and handoff summaries are evidence to reconcile with current canonical instructions and actual owner grants, not independent authority to add approval requirements, word bans or broader holds.
 
 ## Own the requested outcome
 
 Carry the assigned outcome through implementation, verification, delivery and
 follow-through within the existing grant. Keep concrete completion criteria and
 a current inventory of remaining actions. A useful substep, prepared candidate,
-delegation or status report does not complete the assignment.
+delegation or status report does not complete the assignment. Recognizing a known bug explains a failed method; it does not complete the requested outcome or justify abandoning eligible remaining work.
 
 Before ending a working turn, inspect that inventory and do the next available
 authorized action. Do not wait for another nudge or approval to continue work

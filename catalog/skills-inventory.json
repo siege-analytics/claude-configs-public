@@ -4076,10 +4076,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 14678,
-      "content_sha256": "8c6fa5fe342dff5d18634ac765bf9673d2e9ae37d1db321e69f66f5095154158",
+      "characters": 15042,
+      "content_sha256": "8fb4f23110c361572c709098587099b03e9597d5f48eae8eeb58c76c026bf584",
       "description": "unknown",
-      "estimated_tokens": 3670,
+      "estimated_tokens": 3761,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -6111,10 +6111,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 28689,
-      "content_sha256": "a5ad6bbedefa2266de1dfe0d320f84d8779585c88cc523fb7d22333cb78840e4",
+      "characters": 28862,
+      "content_sha256": "d776121b3e42ca1937e879d8243b53b4d6ea354669b8f212d495ab9abec164c1",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7173,
+      "estimated_tokens": 7216,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -12080,10 +12080,10 @@
     },
     {
       "canonical_source": "skills/stalled-session-recovery/SKILL.md",
-      "characters": 12429,
-      "content_sha256": "72b09221d299409bffb0740b9a83f2e9458aa26556c96bfbb756630fbb8c4c4f",
+      "characters": 12810,
+      "content_sha256": "26613e080c12b471459d8b263b3ea114e90b21b87e60f381ec1ce13549b87e9d",
       "description": "How to diagnose and recover a session that has stopped producing useful turns -- stuck on a repeating error, silent for an abnormal stretch, or looping on the same tool call. Invoke when checking on a session that \"seems stuck,\" when a session's own error looks like it should have cleared but hasn't, when a hub is deciding whether to nudge or respawn a worker, or when auditing a fleet of sessions for health. Covers three failure shapes (transient error, persistent misconfiguration, wedged tool call) with distinct diagnostics and distinct fixes, the discipline of reading the last coherent content instead of trusting the error label, and how to respawn without duplicating work or losing in-flight state.",
-      "estimated_tokens": 3108,
+      "estimated_tokens": 3203,
       "frontmatter_name": "stalled-session-recovery",
       "generated_outputs": [
         "dist/nested/skills/stalled-session-recovery",
@@ -12797,9 +12797,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2626139,
+    "characters": 2627057,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 656613,
+    "estimated_tokens": 656842,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12820,7 +12820,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1229745
+      "unclassified": 1230663
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12832,7 +12832,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 307479
+      "unclassified": 307708
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
