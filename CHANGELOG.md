@@ -23,10 +23,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
   - A completion word is treated as hypothetical in two cases only:
     - A modal directly precedes it, optionally with adverbs and linking verbs ("CI could be green", "should not be merged", "to be done"). Without a linking verb, only `go` and `complete` are hedged; a bare `to` ("set to done") hedges nothing.
     - It sits in a conditional clause (if, when, unless, until, once, ...) followed by a non-empty consequent in the same sentence ("if CI is green, deploy"). An unsplit conditional opener no longer hides the assertion after it.
-  - Evidence is a separate test from claim masking. These never supply owner/merge/rollout evidence:
-    - an interrogative clause, whatever wraps it: surrounding quotes, a Markdown quote marker, a field label ("Approval question: ..."), a missing question mark or a `?!` tail;
+  - Evidence is a separate test from claim masking. In the tested shapes, these do not supply owner/merge/rollout evidence:
+    - an interrogative clause with the tested wrappers: surrounding quotes, a Markdown quote marker, a field label ("Approval question: ..."), a missing question mark after an inverted auxiliary, or a `?!` tail;
     - a clause governed by a modal auxiliary ("Could the owner have approved the rollout?");
     - text under a hypothetical field.
+  - **Known open residual (N2), not fixed here:** a modal clause can still supply owner evidence across a parenthetical separator ("Owner: could, in principle, already have approved the rollout."). A quoted conditional opener escapes conditional detection, and a wh-question without a question mark is accepted. Its four reviewer cases are recorded and skipped, not passed. It is left to the separate B1 redesign.
   - Modal detection reads the original case and treats URIs as opaque. A date ("May 5"), a name that does not open a sentence ("operator Will", "Owner: Will approved", "The owner Will has approved") or a URL path segment (`/may/`, `/will/`) is not a modal. A capitalized May/Will that governs a base verb ("May have approved", "Owner: Will approve") still is, so ambiguous wording fails closed.
   - A finite auxiliary plus participle in a field value ("Owner: has approved the rollout", "had approved", "has signed off") is a statement, not an inverted question, and supplies evidence. An auxiliary followed by its subject ("Has the owner approved the rollout") is still a question.
   - Each evidence predicate must match within one line.
@@ -34,15 +35,17 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - The pipeline-state writer counts a posted comment toward `junior-senior-gate.json` and `artifacts-posted-gate.json` only when:
   - its author is the authenticated `gh` login, or has the GitHub-attested OWNER, MEMBER or COLLABORATOR role;
   - no ticket declaration names only other tickets. A declaration is a Ticket/Task/Issue/Refs/`ticket_refs` key, or an artifact heading, with its entire value.
-    - The value includes indented and list-item continuation lines, across blank lines, so YAML `ticket_refs:` lists, folded values and wrapped `Ticket:` values count.
+    - The value includes indented and list-item continuation lines, across blank lines, so YAML `ticket_refs:` lists, folded values and wrapped `Ticket:` values count. A 4+-space line after a blank line outside a list is an indented code block and, like fenced code, names no ticket.
     - YAML front matter is judged as one region of the raw comment, not parsed: every ticket reference in it must be the current ticket. Front matter naming the current ticket together with any other ticket is excluded, and blank lines, comments, flow collections, folded scalars or an unrecognized key cannot hide a foreign reference. Front matter naming only other tickets, even as a bibliography, is excluded too.
     - A reference written as inline code (`` `other/repo#9` ``) still names its ticket.
     - The identity rule is strict and applies to `Refs` too: a separate `Refs:` list naming only other tickets excludes an otherwise current-ticket artifact, so `Refs` is not a free-form bibliography.
-  - One CommonMark block classifier decides which text is eligible, and headings, keyword stems and body ticket identity all read only that text:
+  - Comment line endings are normalized (CRLF and lone CR to LF) before identity and classification, so a CRLF body cannot skip the front-matter region.
+  - One CommonMark block classifier decides which text is eligible. Every artifact signal (headings and keyword stems) reads the same eligible text, and body ticket identity reads it too, plus 4+-space paragraph continuations, so a wrapped declaration value still counts:
+    - Blockquote lines (`> ...`) and their lazy paragraph continuations, and indented code outside a list, supply no heading, no keyword and no ticket declaration. A 4+-space line continuing a paragraph supplies no heading or keyword either.
     - Lines inside a CommonMark HTML block (types 1-7, including processing instructions, declarations and `<div>` or `<span>` examples) are raw HTML. They supply no heading, no keyword and no ticket declaration, so a foreign `Ticket:` inside an HTML comment or `<pre>` example no longer excludes a real current-ticket artifact after it.
     - A type-6 block such as `<blockquote>` or `<div>` runs to the next blank line, not to its closing tag. A type-7 tag cannot interrupt a paragraph, but can start after a blank line, heading or thematic break.
     - HTML comments, CDATA, inline code, and HTML `pre`, `code`, `blockquote` and similar container content no longer supply headings or keywords. Container closure is name-aware: a mismatched closing tag cannot end an open container. Fenced code is unchanged.
-  - The unchanged Tier C mutation gate therefore refuses the tested wrong-ticket, outsider and HTML-quoted shapes. The filters are bounded parsers, not a full Markdown/HTML renderer.
+  - The unchanged Tier C mutation gate therefore refuses the tested wrong-ticket, outsider, HTML-quoted, Markdown-quoted, indented-example and CRLF front-matter shapes. The filters are bounded parsers, not a full Markdown/HTML renderer.
 
 ### Fixed: task scopes and evidence execution
 

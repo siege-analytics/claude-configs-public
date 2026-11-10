@@ -87,6 +87,9 @@ STEMS = ('current behavior intended behavior steps to get there success criteria
          'verified evidence severity: tiger risks pre-mortem elephant mitigation')
 
 
+ROOT_MIXED = '---\nticket_refs: [o/r#1164, other/repo#2]\nrelated: other/repo#3\n---\n' + H + '\n'
+
+
 def comment(body, author='task-owner', association='NONE'):
     return {'id': 1, 'user': {'login': author}, 'author_association': association, 'body': body}
 
@@ -165,6 +168,26 @@ B2 = {
                                         'task-owner', True),
     'inline_code_tag_cannot_hide_foreign_ticket': ([comment('See `<pre>` here.\nTicket: other/repo#9\n' + H)],
                                                    'task-owner', False),
+    # Root review of 16e1a61: line endings are normalized before identity and
+    # classification; quoted and indented examples never supply a signal.
+    'root_mixed_front_matter_lf': ([comment(ROOT_MIXED)], 'task-owner', False),
+    'root_mixed_front_matter_crlf': ([comment(ROOT_MIXED.replace('\n', '\r\n'))], 'task-owner', False),
+    'mixed_front_matter_cr_only': ([comment(ROOT_MIXED.replace('\n', '\r'))], 'task-owner', False),
+    'foreign_front_matter_crlf': ([comment(('---\nticket_refs: [other/repo#2]\n---\n' + H + '\n').replace('\n', '\r\n'))],
+                                  'task-owner', False),
+    'current_front_matter_crlf_counts': ([comment(('---\nticket_refs: [o/r#1164]\n---\n' + H + '\n').replace('\n', '\r\n'))],
+                                         'task-owner', True),
+    'plain_headings_crlf_count': ([comment(('Ticket: o/r#1164\n' + H + '\n').replace('\n', '\r\n'))], 'task-owner', True),
+    'root_quoted_keyword_stems': ([comment('Ticket: o/r#1164\nExample only:\n> ' + STEMS)], 'task-owner', False),
+    'quoted_stems_lazy_continuation': ([comment('Ticket: o/r#1164\n\n> Example only:\n' + STEMS)], 'task-owner', False),
+    'root_indented_keyword_stems': ([comment('Ticket: o/r#1164\nExample only:\n    ' + STEMS)], 'task-owner', False),
+    'indented_code_stems_after_blank': ([comment('Ticket: o/r#1164\nExample only:\n\n    ' + STEMS)], 'task-owner', False),
+    'tab_indented_code_stems': ([comment('Ticket: o/r#1164\nExample only:\n\n\t' + STEMS)], 'task-owner', False),
+    'visible_keyword_stems_count': ([comment('Ticket: o/r#1164\n' + STEMS)], 'task-owner', True),
+    'list_continuation_stems_count': ([comment('Ticket: o/r#1164\n- Notes:\n\n    ' + STEMS)], 'task-owner', True),
+    'real_headings_after_quote_count': ([comment('Ticket: o/r#1164\n> quoted aside\n\n' + H)], 'task-owner', True),
+    'quoted_foreign_ticket_example_counts': ([comment('Ticket: o/r#1164\n> Ticket: other/repo#9\n\n' + H)], 'task-owner', True),
+    'indented_wrapped_foreign_ticket_excludes': ([comment('Ticket:\n    other/repo#9\n\n' + H)], 'task-owner', False),
 }
 
 COMMENT_QUERY = '.[] | {author: .user.login, association: .author_association, body: .body} | @json'
@@ -214,7 +237,7 @@ class GuardArtifactLane(unittest.TestCase):
         for case in REVIEW_CASES['B1']:
             with self.subTest(case['file'] + ':' + case['name']):
                 if case.get('held'):
-                    self.skipTest('held N2: run when the structural B1 decision lands; see plans/gate-bypass-1164.md')
+                    self.skipTest('held N2: open residual left to the separate B1 redesign; run with that follow-up; see plans/gate-bypass-1164.md')
                 result = guard(case['body'])
                 self.assertEqual(result.returncode, case['expected_exit'], result.stderr)
 

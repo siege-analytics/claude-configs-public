@@ -75,7 +75,7 @@ Container closure is name-aware (R3). A closing tag ends its own open element an
 
 - `hooks/_test/gate_bypass_1164.py` (run by `gate_bypass_1164.test.sh`):
   - B1: all 10 main-review payloads plus 24 extra shapes against the real guard (21 through fix round 2, 3 added in fix round 3). Refusals must name "asserts completion status".
-  - B2: all 13 main-review fixtures plus 36 extra shapes (27 through fix round 2, 9 added in fix round 3).
+  - B2: all 13 main-review fixtures plus 52 extra shapes (27 through fix round 2, 9 added in fix round 3, 16 added in fix round 4 for Root's CRLF, quoted and indented cases and their controls).
     - Each runs the real writer, then the unchanged universal-mutation-gate on both an existing and a missing hook target.
     - The writer reads from a fake `gh` that applies the writer's actual query to raw API records with real `jq`.
     - Refused cases need all four signals false with `api_reachable` true and gate exit 2. Counted cases need all four true and exit 0.
@@ -195,11 +195,25 @@ Findings: https://github.com/siege-analytics/claude-configs-public/pull/1212#iss
 - **N4 (B2):** a foreign `Ticket:` inside an HTML comment or `<pre>` example excluded real current-ticket artifacts after it. Fixed by reading body identity from the same eligible text, with inline code restored after the HTML filters.
 - **N5 (B1):** "Owner: has approved", "had approved" and "has signed off" were read as inverted questions; "Owner: Will approved" and "The owner Will/May has approved" were read as modals. Fixed by the finite-auxiliary-plus-participle rule and by treating a field value as not sentence-opening, with has/had/is/was/did/does marking a name.
 - **N6 (docs):** PR body updated to the current design and counts (B1 module 34 = 10 + 24, including the 31 = 10 + 21 of fix round 2), the structural-redesign note and the strict front-matter rule; the split owner/role attribution above is corrected.
-- **N2 (B1): HELD, not worked.** Modal scope does not carry across parenthetical separators ("Owner: could, in principle, already have approved the rollout"), a quoted conditional opener escapes conditional detection, and a wh-question without a mark is accepted. This waits on the Root/Dheeraj structural B1 decision. It is a known residual, not a risk acceptance; the four reviewer rows are in the corpus as `held`.
+- **N2 (B1): HELD, not worked.** Modal scope does not carry across parenthetical separators ("Owner: could, in principle, already have approved the rollout"), a quoted conditional opener escapes conditional detection, and a wh-question without a mark is accepted. It is left to the separate B1 redesign (Root's decision, review 6756411493). It is a known residual, not a risk acceptance; the four reviewer rows are in the corpus as `held`.
 - Observed, not changed: `Owner: Must approved the rollout.` and `The owner Will signed-off on the rollout.` stay refused (fail closed; the hyphenated form is not a recognized signoff predicate at develop either).
 
 The 23 B1 and 22 B2 round-3 reviewer cases are ported byte-for-byte, with develop 6cae44a / 530beaa / 28b34e1 observations, and re-run at develop / 28b34e1 / this head under the hook runtime (`/usr/bin/python3 -I -B`, 3.9.6).
 
+## Fix round 4 (Root review of 16e1a61)
+
+Findings: Root review 5836735985 on PR #1212 (COMMENTED, changes requested), with Root's executed writer-to-UMG controls.
+
+- **CRLF front matter (B2).** The mixed own/foreign front matter Root posted was excluded with LF line endings and counted with CRLF, because `FRONT_MATTER` matches `\n` only. Fixed: each comment body is normalized (CRLF and lone CR to LF) before identity and classification.
+- **Quoted and indented examples (B2).** Keyword stems under Markdown `> ` or four-space indentation counted as posted artifacts. Fixed in the shared block classifier:
+  - blockquote lines and their lazy paragraph continuations, and indented code outside a list, are ineligible;
+  - every artifact signal (headings and keyword stems) reads one signal text, which also drops a 4+-space paragraph continuation, so Root's indented example is excluded with or without a blank line before it;
+  - body identity keeps 4+-space paragraph continuations, so a wrapped foreign `Ticket:` value still excludes (`indented_wrapped_foreign_ticket_excludes`). It drops quoted and indented-code examples, as it already drops fenced code (the reviewer's `foreign-fenced-example-control`).
+  - Positive controls kept: plain headings, visible keyword stems, list-continuation stems, real headings after a quote, and current-only front matter in CRLF.
+- **CHANGELOG narrowed.** The interrogative/modal evidence statements now say "in the tested shapes", and name N2 as an open, skipped residual rather than claiming the class can never supply evidence.
+- **N2 skips.** Their reason now reads as an open residual left to the separate B1 redesign: Root has given the B1 decision, but the redesign is not implemented. They remain skipped, not passed.
+- **B1:** no new comment-wording rule was added. Root's #1245 lane and the design-only v2 are untouched by this round.
+
 ## Findings
 
-Hostile re-review of the fix-round-3 head is PENDING with the original cross-family reviewer.
+Hostile re-review of the fix-round-4 head is PENDING with Root.

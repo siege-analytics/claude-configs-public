@@ -607,7 +607,7 @@
    "candidate_exit": 0,
    "expected_exit": null,
    "finding": "N2",
-   "held": "N2: pending the Root/Dheeraj structural B1 decision; not a risk acceptance"
+   "held": "N2: open residual left to the separate B1 redesign (Root review 6756411493); not a risk acceptance"
   },
   {
    "file": "r3/evidence-boundary-B1.json",
@@ -628,7 +628,7 @@
    "candidate_exit": 0,
    "expected_exit": null,
    "finding": "N2",
-   "held": "N2: pending the Root/Dheeraj structural B1 decision; not a risk acceptance"
+   "held": "N2: open residual left to the separate B1 redesign (Root review 6756411493); not a risk acceptance"
   },
   {
    "file": "r3/evidence-boundary-B1.json",
@@ -749,7 +749,7 @@
    "candidate_exit": 0,
    "expected_exit": null,
    "finding": "N2",
-   "held": "N2: pending the Root/Dheeraj structural B1 decision; not a risk acceptance"
+   "held": "N2: open residual left to the separate B1 redesign (Root review 6756411493); not a risk acceptance"
   },
   {
    "file": "r3/evidence-extra-B1.json",
@@ -760,7 +760,7 @@
    "candidate_exit": 0,
    "expected_exit": null,
    "finding": "N2",
-   "held": "N2: pending the Root/Dheeraj structural B1 decision; not a risk acceptance"
+   "held": "N2: open residual left to the separate B1 redesign (Root review 6756411493); not a risk acceptance"
   },
   {
    "file": "r3/evidence-extra-B1.json",

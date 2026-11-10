@@ -70,6 +70,9 @@ HTML_BLOCK_OPENERS = (  # (start, end); end None means "a blank line ends it"
 
 THEMATIC_BREAK = re.compile(r' {0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$')
 ATX_HEADING = re.compile(r' {0,3}#{1,6}(?:[ \t]|$)')
+LIST_ITEM = re.compile(r' {0,3}(?:[-*+]|[0-9]{1,9}[.)])(?:[ \t]|$)')
+INDENTED = re.compile(r' {4}| {0,3}\t')
+FENCE_MARKER = re.compile(r' {0,3}(?:`{3,}|~{3,})')
 
 
 def container_tags(text):
@@ -79,13 +82,16 @@ def container_tags(text):
 
 
 def block_kinds(body):
-    """(kind, eligible text) for each body line, kind 'text', 'fence' or 'html' (#1164 F3, N3, N4).
+    """(kind, eligible text) for each body line (#1164 F3, N3, N4).
 
-    The one CommonMark 0.31 block classifier every consumer shares. Types 1-5
-    end at the line holding their end marker; types 6-7 end only at a blank
-    line, not at a closing tag. Type 7 cannot interrupt a paragraph; a blank
-    line, ATX heading, thematic break, setext underline or indented code line
-    leaves no paragraph open, so type 7 can start after one.
+    The one CommonMark 0.31 block classifier every consumer shares. Kinds:
+    'text', 'fence', 'html', 'quote' (a blockquote line or its lazy paragraph
+    continuation), 'code' (an indented code line outside a list) and 'indent'
+    (a 4+-space line continuing a paragraph). Types 1-5 end at the line
+    holding their end marker; types 6-7 end only at a blank line, not at a
+    closing tag. Type 7 cannot interrupt a paragraph; a blank line, ATX
+    heading, thematic break, setext underline or indented code line leaves no
+    paragraph open, so type 7 can start after one.
 
     An HTML-block line contributes no text. An element block (types 1, 6, 7)
     keeps its container tags, indented, so `<script></pre>` still hides what
@@ -93,7 +99,16 @@ def block_kinds(body):
     or CDATA block (types 2-5) keeps only tags after its end marker.
     """
     kinds, fence, block, paragraph = [], None, None, False
+    quote_paragraph, in_list, previous_blank = False, False, True
     for line in body.splitlines():
+        blank = not line.strip()
+        if blank:
+            quote_paragraph = False
+        elif LIST_ITEM.match(line):
+            in_list = True
+        elif previous_blank and not line[:1].isspace():
+            in_list = False
+        previous_blank = blank
         marker = re.match(r'^ {0,3}(`{3,}|~{3,})', line)
         if block is None and marker:
             token = marker.group(1)
@@ -122,6 +137,28 @@ def block_kinds(body):
             else:
                 kinds.append(('html', container_tags(line[closed.end():]) if closed else ''))
             continue
+        # A blockquote is quoted material, not the comment's own text (#1164,
+        # Root review of 16e1a61). A paragraph inside it continues on later
+        # unmarked lines until a blank line or another block starts.
+        if re.match(r' {0,3}>', line):
+            rest = re.sub(r'^ {0,3}> ?', '', line)
+            quote_paragraph = bool(rest.strip()) and not (
+                ATX_HEADING.match(rest) or THEMATIC_BREAK.match(rest) or FENCE_MARKER.match(rest))
+            paragraph = False
+            kinds.append(('quote', ''))
+            continue
+        if quote_paragraph and not blank and not (
+                ATX_HEADING.match(line) or THEMATIC_BREAK.match(line) or LIST_ITEM.match(line)
+                or any(start.match(line) for start, _ in HTML_BLOCK_OPENERS)):
+            kinds.append(('quote', ''))
+            continue
+        quote_paragraph = False
+        # Indented code outside a list is example text. A 4+-space line that
+        # continues a paragraph stays visible text ('indent'): identity still
+        # reads it, so a wrapped foreign Ticket/Refs value keeps excluding.
+        if INDENTED.match(line) and not blank and not in_list:
+            kinds.append(('indent' if paragraph else 'code', line))
+            continue
         openers = HTML_BLOCK_OPENERS + (((HTML_BLOCK_7, None),) if not paragraph else ())
         for number, (start, end) in enumerate(openers, 1):
             opened = start.match(line)
@@ -137,35 +174,46 @@ def block_kinds(body):
                 break
         else:
             kinds.append(('text', line))
-            if (not line.strip() or ATX_HEADING.match(line) or THEMATIC_BREAK.match(line)
+            if (blank or ATX_HEADING.match(line) or THEMATIC_BREAK.match(line)
                     or (paragraph and re.match(r' {0,3}=+[ \t]*$', line))):
                 paragraph = False
-            elif not paragraph and re.match(r' {4}| {0,3}\t', line):
-                paragraph = False  # an indented code line
             else:
                 paragraph = True
     return kinds
 
 
-def markdown_lines(body):
-    """Eligible body lines: fenced code dropped, HTML-block text removed (#1164 F3, N3).
+def markdown_lines(body, signal=False):
+    """Eligible body lines (#1164 F3, N3; Root review of 16e1a61).
 
-    Raw HTML-block content (processing instructions, declarations, <div>
-    examples) is never Markdown text: it reaches neither heading detection nor
-    keyword-stem matching nor ticket identity.
+    Fenced code is dropped. HTML-block text, blockquotes and indented code are
+    blank lines: none of them reaches heading detection, keyword-stem matching
+    or ticket identity. With signal=True (the text every artifact signal
+    reads), a 4+-space paragraph continuation is blank too, so indented
+    example text never counts as a posted artifact, with or without a blank
+    line before it.
     """
-    return [text for kind, text in block_kinds(body) if kind != 'fence']
+    lines = []
+    for kind, text in block_kinds(body):
+        if kind == 'fence':
+            continue
+        if kind in ('quote', 'code') or (kind == 'indent' and signal):
+            lines.append('')
+        else:
+            lines.append(text)
+    return lines
 
 
 def comment_views(body):
-    """(identity text, heading text) of one comment, both from the same eligible text.
+    """(identity text, signal text) of one comment.
 
+    Every artifact signal (headings and keyword stems) reads the signal text.
     Identity keeps inline-code content, so `other/repo#9` still names its
-    ticket (#1164 F2). Neither view sees HTML-block, HTML-comment, CDATA or
-    code/quote-container content (#1164 N4).
+    ticket (#1164 F2), and keeps 4+-space paragraph continuations, so a wrapped
+    declaration value still counts. Neither view sees HTML-block, HTML-comment,
+    CDATA, code/quote-container, blockquote or indented-code content (#1164 N4).
     """
-    visible = '\n'.join(markdown_lines(body))
-    return comment_text(visible, keep_code=True), comment_text(visible)
+    return (comment_text('\n'.join(markdown_lines(body)), keep_code=True),
+            comment_text('\n'.join(markdown_lines(body, signal=True))))
 
 
 def comment_text(visible, keep_code=False):
@@ -497,8 +545,11 @@ if status == 'implementing' and current_ticket:
                     if not ((actor_login and author.lower() == actor_login.lower())
                             or record.get('association') in APPROVED_ASSOCIATIONS):
                         continue
-                    identity, text = (view.lower() for view in comment_views(record['body']))
-                    if not declares_other_ticket(identity, record['body'].lower(), ticket_repo, issue_num):
+                    # One line-ending form before identity and classification:
+                    # a CRLF or CR body must not skip the front-matter region.
+                    comment_body = record['body'].replace('\r\n', '\n').replace('\r', '\n')
+                    identity, text = (view.lower() for view in comment_views(comment_body))
+                    if not declares_other_ticket(identity, comment_body.lower(), ticket_repo, issue_num):
                         texts.append(text)
                 comments = '\n# comment boundary\n'.join(texts)
                 junior_hits = sum(1 for s in junior_stems if s in comments)
