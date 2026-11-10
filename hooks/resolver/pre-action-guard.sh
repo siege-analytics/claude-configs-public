@@ -47,7 +47,8 @@ if [ "$BRANCH" = "HEAD" ]; then
     cat <<EOF
 <pre-action-guard>
 Advisory: working directory is in DETACHED HEAD state. Create a feature branch
-before making changes: git checkout -b feat/<scope>-<description>.
+before making changes: git switch -c feat/<scope>-<description> origin/develop.
+If origin/develop is missing, use bin/prepare-task-branch.py to verify and bootstrap it.
 Commits are still hard-blocked at commit/push time. Ref: #261, #450, #873
 </pre-action-guard>
 EOF
@@ -59,7 +60,8 @@ if echo "$BRANCH" | grep -qE "$PROTECTED"; then
     cat <<EOF
 <pre-action-guard>
 Advisory: working directory is on protected branch '$BRANCH'. Do NOT commit
-directly. Create a feature branch first: git checkout -b feat/<scope>-<description>.
+directly. Create a feature branch first: git switch -c feat/<scope>-<description> origin/develop.
+If origin/develop is missing, use bin/prepare-task-branch.py to verify and bootstrap it.
 Commits are still hard-blocked at commit/push time. Ref: #261, #450, #873
 </pre-action-guard>
 EOF

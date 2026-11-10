@@ -20,7 +20,7 @@ allowed-tools: Read Grep Glob Bash
    2. Tests should pass (run the test suite before opening the PR)
    3. No merge conflicts with the base branch
 4. Write the PR title and description (see PR structure below)
-5. Create the PR using the platform CLI
+5. Create a normal-development PR with an explicit develop base: `gh pr create --base develop` or `glab mr create --target-branch develop`. Do not let the CLI default branch select main. If develop is absent, use [skill:develop-guard] to bootstrap it safely first. An explicitly authorized release/backport uses its separately approved target.
 6. **Move each referenced ticket to In Review** per `[rule:ticket-lifecycle]` (or add `Status: In Review` comment when no mutable status field is available)
 7. **Update each referenced ticket with a comment linking back to the PR** (bidirectional linking)
 8. Add reviewers, labels, and project board assignment as appropriate
@@ -369,6 +369,8 @@ This skill is written GitHub-shaped (`gh` CLI, "pull request"). On GitLab, the s
 | `gh pr create --draft` | `glab mr create --draft` (same flag name) |
 | "pull request" terminology | "merge request (MR)" terminology |
 | `defaultBranchRef.name` (gh repo view) | `default_branch` (glab repo view --output json) |
+
+Default-branch metadata is descriptive; it does not select the normal feature source or PR base. Normal development uses develop even when the repository default is main.
 
 The structural requirements (commit-table, ticket-references, Testing section, bidirectional ticket linking, no AI attribution) bind both platforms identically. The `pr-base-guard.sh` hook (CCP#198/#201) enforces target-branch shape on both `gh pr create` and `glab mr create`.
 

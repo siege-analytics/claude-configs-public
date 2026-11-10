@@ -93,7 +93,8 @@ class ResidentDeliveryTest(unittest.TestCase):
                     self.assertIn("Feature and fix work targets `"+branch+"`",out)
                     self.assertIn("For the Siege scaffold repository",out)
                     self.assertIn("(`github.com/siege-analytics/claude-configs-public`)",out)
-                    self.assertIn("Other consumers follow their exact, independently approved project topology",out)
+                    self.assertIn("Normal development starts from verified `develop`",out)
+                    self.assertIn("Other consumers retain their independently approved release and deployment mechanics",out)
                     self.assertIn((payload/"skills/KERNEL.md").read_text(),out)
                     resident=out.split("<project-resident>\n",1)[1].split("\n</project-resident>",1)[0]
                     self.assertEqual(resident,(payload/"skills/RESIDENT.md").read_text())

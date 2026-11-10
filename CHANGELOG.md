@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### BREAKING: normal development branches require develop
+
+- Normal feature, fix, documentation and configuration branch creation now requires a verified develop source. Implicit HEAD, main aliases and repository defaults do not substitute for develop. Migrate by using `bin/prepare-task-branch.py --branch <task-branch> --worktree <new-path>` (with `--repo` when needed): it creates an isolated task worktree and can create missing remote develop from verified main/default with an atomic create-only lease. Known cached develop remains usable offline with freshness reported (#1229).
+- Existing branch switches and detached review remain available. An explicitly authorized release/backport retains its exact owning Task, repository, destination, source ref/commit and existing owner-grant requirements; it is not a general main-source exception (#1229).
+
+### Fixed: branch preparation and owner-grant continuity
+
+- Reject clustered creation flags, symbolic/full main aliases and attached orphan options consistently with the develop-source policy (#1229).
+- Bound refresh to remote-tracking refs without configured local-branch destinations, pruning or tag updates. Preserve other task branches, the caller's checkout and dirty tracked/untracked files (#1229, #1234).
+- Before missing-develop bootstrap, bind one effective read/write repository identity using command-local raw URL metadata. Preserve GitHub HTTPS/SSH transport pairs, normal URL rewrite semantics and explicit pushurl behavior; reject foreign or multiple write targets before writing. A racing develop creator remains protected by the empty compare-and-swap lease (#1234).
+- Preserve existing owner grants through status questions, agent relays and recoverable method failures. An agent's own approval question or hold summary does not create a new owner hold; actual owner conditions, reviews, role boundaries and publication checks still apply (#1231).
+
 ### Fixed: ssh is gated by host, not as a local cwd mutation
 
 - The mutation gate no longer treats `ssh` as a mutation of the working directory (#1160). `ssh` to a host on the operator-owned `hooks/lib/ssh-host-allowlist.json` (initially `cyberpower`) passes without a task gate, from any directory.
@@ -14,6 +26,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Local redirects, `tee` and chained commands keep their local targets. `scp`, `rsync` and `sftp` are unchanged.
 - The allowlist grant comes only from the fixed policy file itself. The loader opens it without following links and without blocking, then requires a regular, singly linked file of at most 4096 bytes, unique keys and exactly `{"hosts": [...]}`. A symlink, hard link, FIFO, oversized or malformed policy admits no host; the gate exits 2 naming the reason, and never stalls.
 - The new `remote_contact_only` flag is read only by the mutation gate. Other guards, including destructive-guard, still inspect ssh commands.
+- A GitHub project or review action beside ssh keeps its own task authorization; the ssh flag is never set when either is present.
 - Behavior change, accepted tradeoff: the allowlist is strict and global.
   - ssh to a non-allowlisted host, for example `ssh -T git@github.com`, used to pass under a covering task gate. It is now denied everywhere until the operator adds the host. A task gate cannot admit extra hosts.
   - An allowlisted contact is outbound contact only. It never selects a task gate, and it is not authorization for remote-side mutation, which stays operator policy.

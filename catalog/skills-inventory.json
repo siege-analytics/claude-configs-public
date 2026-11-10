@@ -4076,10 +4076,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 14678,
-      "content_sha256": "8c6fa5fe342dff5d18634ac765bf9673d2e9ae37d1db321e69f66f5095154158",
+      "characters": 15975,
+      "content_sha256": "e01f3e14467de4d97abdb8e9c1809f464025728ee9ad607bcb4afa7809075e8e",
       "description": "unknown",
-      "estimated_tokens": 3670,
+      "estimated_tokens": 3994,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -4095,13 +4095,14 @@
         "plans/coordination-dispatch-1187.md",
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
+        "skills/_session-coordination-rules.md",
         "skills/stalled-session-recovery/host-controls.md",
         "skills/think/SKILL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 190,
+      "lines": 201,
       "owner": [
         "unknown"
       ],
@@ -5007,9 +5008,11 @@
         "bin/_test/wire_enforcement_automations_test.py",
         "bin/_test/work_cycle_test.py",
         "hooks/_test/artifact_result_followup.py",
+        "hooks/_test/branch_sources.py",
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/coordination_alias.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5532,12 +5535,16 @@
         "bin/_test/work_cycle_test.py",
         "hooks/_test/artifact_result_followup.test.sh",
         "hooks/_test/block_log_advisory_utc.test.sh",
+        "hooks/_test/branch_sources.py",
+        "hooks/_test/branch_sources.test.sh",
         "hooks/_test/broad_staging.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/commit_detector.test.sh",
         "hooks/_test/coordination_alias.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
+        "hooks/_test/coordinator_mechanical_completion.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/craft_hook_router.test.sh",
         "hooks/_test/craft_workspace_trust.test.sh",
@@ -5894,6 +5901,7 @@
         "bin/_test/skill_lifecycle_test.py",
         "bin/_test/think_package_test.py",
         "bin/_test/work_cycle_test.py",
+        "hooks/_test/branch_sources.py",
         "hooks/_test/coordination_alias.test.sh",
         "hooks/_test/craft_workspace_trust.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -6111,10 +6119,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 28689,
-      "content_sha256": "a5ad6bbedefa2266de1dfe0d320f84d8779585c88cc523fb7d22333cb78840e4",
+      "characters": 29573,
+      "content_sha256": "b2cdff67ffc12002d35dc695a70d5b9c14449530ef0f5c2982ebaf353bebba3e",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7173,
+      "estimated_tokens": 7394,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6764,10 +6772,10 @@
     },
     {
       "canonical_source": "skills/_ticket-lifecycle-rules.md",
-      "characters": 3925,
-      "content_sha256": "2b90be484adfb55822b9faa180f73ab8ab09034bfb2bc866e57c9ad5f2616e76",
+      "characters": 5203,
+      "content_sha256": "21462f6dedacfafaf030612ea7eef791685be12e3ce087e06d3697de1ec85f50",
       "description": "Always-on ticket lifecycle status discipline. Ticket state must move at the point of action: work start, PR open, test/UAT handoff, blocker, unblock/resume, merge/verified close. Platform-agnostic; requires a comment when a platform lacks a mutable Status field.",
-      "estimated_tokens": 982,
+      "estimated_tokens": 1301,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_ticket-lifecycle-rules.md",
@@ -6790,7 +6798,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 78,
+      "lines": 97,
       "owner": [
         "unknown"
       ],
@@ -7574,7 +7582,6 @@
         "skills/_django-rest-framework-rules.md",
         "skills/code-review/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
-        "skills/develop-guard/SKILL.md",
         "skills/django-rest-framework/SKILL.md",
         "skills/merge/SKILL.md",
         "skills/publish-flat-layout/SKILL.md",
@@ -8699,10 +8706,10 @@
     },
     {
       "canonical_source": "skills/branch/SKILL.md",
-      "characters": 6751,
-      "content_sha256": "e06dc6c37739198035bdb5df56762c91ac701325e2cce7386c4d2be3a5b50795",
+      "characters": 6571,
+      "content_sha256": "3de279257e6a9ac704acd29d630ee0fb43efa79ac932f6ad3a3bf5df46e60009",
       "description": "Create and manage git branches using a consistent naming convention (type/descriptive_string) that mirrors ticket taxonomy.",
-      "estimated_tokens": 1688,
+      "estimated_tokens": 1643,
       "frontmatter_name": "branch",
       "generated_outputs": [
         "dist/nested/skills/branch",
@@ -8721,18 +8728,18 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 172,
+      "lines": 161,
       "owner": [
         "unknown"
       ],
       "project": null,
       "quality": {
         "completeness": 0,
-        "cross_references": 50,
+        "cross_references": 100.0,
         "grade": "F",
         "provenance": 0,
         "structure": 95.0,
-        "total": 36.25
+        "total": 48.75
       },
       "rule_definitions": [],
       "slug": "branch",
@@ -8763,7 +8770,10 @@
         "bin/_test/self_review_disclosure_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/block_log_advisory_utc.test.sh",
+        "hooks/_test/branch_sources.py",
+        "hooks/_test/branch_sources.test.sh",
         "hooks/_test/branch_state_advisory.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -9025,10 +9035,10 @@
     },
     {
       "canonical_source": "skills/coderabbit-response/SKILL.md",
-      "characters": 9030,
-      "content_sha256": "dc93217b093704a86deed1d21d38d00afcc2da49839a56a59181264a40482ff3",
+      "characters": 12007,
+      "content_sha256": "5caf0749a14ac60cda667fb36b583e9a05912af6115ea6b9d0493595a0d1f199",
       "description": "Triage and respond to CodeRabbit (or similar bot) review findings on a PR. Decides which comments to fix, which to resolve-with-reply, and which to dismiss; manages the stale-review-blocks-merge problem.",
-      "estimated_tokens": 2258,
+      "estimated_tokens": 3002,
       "frontmatter_name": "coderabbit-response",
       "generated_outputs": [
         "dist/nested/skills/coderabbit-response",
@@ -9045,7 +9055,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 208,
+      "lines": 244,
       "owner": [
         "unknown"
       ],
@@ -9217,10 +9227,12 @@
         "bin/_test/self_review_disclosure_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/artifact_result_followup.py",
+        "hooks/_test/branch_sources.py",
         "hooks/_test/branch_state_advisory.test.sh",
         "hooks/_test/broad_staging.test.sh",
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/commit_detector.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/detect_ai_fingerprints.test.sh",
         "hooks/_test/execution_risk.py",
@@ -9312,6 +9324,7 @@
       "source_path": "skills/compound/SKILL.md",
       "test_evidence": [
         "hooks/_test/catalog_guard.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
@@ -9364,10 +9377,10 @@
     },
     {
       "canonical_source": "skills/create-pr/SKILL.md",
-      "characters": 14513,
-      "content_sha256": "893826211510fa1d87009244e1784ed978704e65da6b9381646d58a90cc7c1e5",
+      "characters": 14989,
+      "content_sha256": "423630e4b701317e7baf937b97c07487046f232541c965fe3be830abc3c71aed",
       "description": "Create a pull request with structured description, linked tickets, and commit narrative. Enforces bidirectional linking.",
-      "estimated_tokens": 3629,
+      "estimated_tokens": 3748,
       "frontmatter_name": "create-pr",
       "generated_outputs": [
         "dist/nested/skills/create-pr",
@@ -9396,7 +9409,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 391,
+      "lines": 393,
       "owner": [
         "unknown"
       ],
@@ -9694,10 +9707,10 @@
     },
     {
       "canonical_source": "skills/develop-guard/SKILL.md",
-      "characters": 16992,
-      "content_sha256": "8715b63114bf38d5e5287d0a830c8ad9f179e884ba7063f1d0240aa4e84ecba8",
-      "description": "Enforce the curation invariant -- main-role (main, master, prod, production, trunk, stable, release) is the project's best, ready-to-use work; develop-role (develop, dev, development, next, integration, staging, develop-next) is the origin where experiments compete for main. Detect repo mode (Gitflow vs GitHub Flow). Prevent direct feature-PRs to main-role when develop-role is the workflow.",
-      "estimated_tokens": 4248,
+      "characters": 7740,
+      "content_sha256": "e23b7eb535fba698a48352bc2806d8c67555876a2611de4cebe9997f2801728c",
+      "description": "Normal development starts at develop. Verify remote refs, bootstrap a missing develop safely, and preserve separately authorized release sources.",
+      "estimated_tokens": 1935,
       "frontmatter_name": "develop-guard",
       "generated_outputs": [
         "dist/nested/skills/develop-guard",
@@ -9705,6 +9718,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "README.md",
         "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -9713,24 +9727,26 @@
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
         "skills/_session-coordination-rules.md",
+        "skills/branch/SKILL.md",
+        "skills/create-pr/SKILL.md",
         "skills/merge/SKILL.md",
         "skills/stalled-session-recovery/host-controls.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 223,
+      "lines": 137,
       "owner": [
         "unknown"
       ],
       "project": null,
       "quality": {
         "completeness": 0,
-        "cross_references": 100.0,
+        "cross_references": 50,
         "grade": "F",
         "provenance": 0,
-        "structure": 100.0,
-        "total": 50.0
+        "structure": 80.0,
+        "total": 32.5
       },
       "rule_definitions": [],
       "slug": "develop-guard",
@@ -10449,10 +10465,10 @@
     },
     {
       "canonical_source": "skills/merge/SKILL.md",
-      "characters": 4145,
-      "content_sha256": "01491f42bc8f99ae13c7bcd060c29e44745eb28b0553bf1197a3772797dafc8d",
+      "characters": 4304,
+      "content_sha256": "77b50483997318100ded7dddc348159342cd4ac353f507ae378011253490f04f",
       "description": "Merge a reviewed branch or pull request using the target project's approved topology, method and readiness conditions. Use for integration, release or hotfix merges; project policy supplies the applicable route and authority.",
-      "estimated_tokens": 1037,
+      "estimated_tokens": 1076,
       "frontmatter_name": "merge",
       "generated_outputs": [
         "dist/nested/skills/merge",
@@ -10514,6 +10530,7 @@
         "bin/_test/selected_generation_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/execution_risk.py",
@@ -11135,11 +11152,15 @@
         "bin/_test/work_cycle_test.py",
         "hooks/_test/artifact_result_followup.test.sh",
         "hooks/_test/block_log_advisory_utc.test.sh",
+        "hooks/_test/branch_sources.py",
+        "hooks/_test/branch_sources.test.sh",
         "hooks/_test/broad_staging.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/commit_detector.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
+        "hooks/_test/coordinator_mechanical_completion.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/craft_hook_router.test.sh",
         "hooks/_test/craft_workspace_trust.test.sh",
@@ -11951,8 +11972,10 @@
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/catalog_guard.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/read_allowlist.test.sh",
+        "hooks/_test/task_keyed_gates.py",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
       "tier": "unclassified",
@@ -12358,9 +12381,11 @@
         "bin/_test/registered_receipt_provider_test.py",
         "bin/_test/review_risk_test.py",
         "bin/_test/think_package_test.py",
+        "hooks/_test/branch_sources.py",
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/gate_registry.test.sh",
@@ -12793,9 +12818,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2621884,
+    "characters": 2619523,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 655550,
+    "estimated_tokens": 654958,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12816,7 +12841,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1225490
+      "unclassified": 1223129
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12828,7 +12853,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 306416
+      "unclassified": 305824
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

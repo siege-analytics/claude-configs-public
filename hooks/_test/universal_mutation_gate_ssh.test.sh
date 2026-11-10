@@ -182,6 +182,18 @@ s = t.action(sys.argv[3], sys.argv[2]); print(json.dumps([bool(s.get("remote_act
 printf '%s' "$shape" > "$T/out"
 [[ "$shape" == '[true, false, false]' ]] && record 1 "action(): project+ssh is never remote_contact_only or metadata_only" \
     || record 0 "action(): project+ssh is never remote_contact_only or metadata_only"
+# A review-thread resolution beside ssh keeps its task-owned review
+# authorization the same way: remote_contact_only never short-circuits it.
+REVIEW_RESOLVE="gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: \"PRRT_kwDOabc\"}) { thread { id } } }'"
+run bash/universal-mutation-gate.sh "$REVIEW_RESOLVE && ssh cyberpower uptime"
+[[ $? == 2 ]] && record 1 "review action beside ssh still needs its review task" \
+    || record 0 "review action beside ssh still needs its review task"
+shape="$(cd "$REPO" && "$REAL_PY" -c 'import sys,json; sys.path.insert(0, sys.argv[1]); import task_actions as t
+s = t.action(sys.argv[3], sys.argv[2]); print(json.dumps([bool(s.get("review_actions")), s.get("remote_contact_only"), s.get("metadata_only")]))' \
+    "$WS/hooks/lib" "$REPO" "$REVIEW_RESOLVE && ssh cyberpower uptime")"
+printf '%s' "$shape" > "$T/out"
+[[ "$shape" == '[true, false, false]' ]] && record 1 "action(): review+ssh is never remote_contact_only or metadata_only" \
+    || record 0 "action(): review+ssh is never remote_contact_only or metadata_only"
 
 echo "--- the operator-owned allowlist is the only source, and defects deny ---"
 variant() {  # variant <name> <allowlist contents | __absent__>
