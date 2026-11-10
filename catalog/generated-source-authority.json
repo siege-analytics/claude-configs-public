@@ -737,29 +737,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "e273de695afa7ba86e543a6b6a1371239790d49f31968f93cca334734d945cf2"
+          "tree_sha256": "c25ce8760628e4b6438c1f1b2337f6128052ae3eceb28f37670a4cafb6558d76"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "e273de695afa7ba86e543a6b6a1371239790d49f31968f93cca334734d945cf2"
+          "tree_sha256": "c25ce8760628e4b6438c1f1b2337f6128052ae3eceb28f37670a4cafb6558d76"
         },
         "flat": {
           "destination": "dist/flat/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "e273de695afa7ba86e543a6b6a1371239790d49f31968f93cca334734d945cf2"
+          "tree_sha256": "c25ce8760628e4b6438c1f1b2337f6128052ae3eceb28f37670a4cafb6558d76"
         },
         "nested": {
           "destination": "dist/nested/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "e273de695afa7ba86e543a6b6a1371239790d49f31968f93cca334734d945cf2"
+          "tree_sha256": "c25ce8760628e4b6438c1f1b2337f6128052ae3eceb28f37670a4cafb6558d76"
         }
       },
       "canonical_source": "skills/_session-coordination-rules.md",
       "kind": "rule",
       "slug": "session-coordination",
       "source_file_count": 1,
-      "source_tree_sha256": "98f4328d654dfb66333d5bbfeefd68028ec6d9fd8a7ec2368b5f0084cce53198"
+      "source_tree_sha256": "38db714dc8d8ce1e92145d07c1a0267318ad37d397490ebe16a8bab0463b54bd"
     },
     {
       "artifacts": {
@@ -795,29 +795,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_standing-approval-rules.md",
           "file_count": 1,
-          "tree_sha256": "2dedc58b5d5afd3e83cae6b384d7cebf87b25239c359eba5a4ec974417dcb9f0"
+          "tree_sha256": "64536ef976694ccf93f03c54f7a67d1e7d5d2819a5cb507ad0a7e18b834611e4"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_standing-approval-rules.md",
           "file_count": 1,
-          "tree_sha256": "2dedc58b5d5afd3e83cae6b384d7cebf87b25239c359eba5a4ec974417dcb9f0"
+          "tree_sha256": "64536ef976694ccf93f03c54f7a67d1e7d5d2819a5cb507ad0a7e18b834611e4"
         },
         "flat": {
           "destination": "dist/flat/skills/_standing-approval-rules.md",
           "file_count": 1,
-          "tree_sha256": "2dedc58b5d5afd3e83cae6b384d7cebf87b25239c359eba5a4ec974417dcb9f0"
+          "tree_sha256": "64536ef976694ccf93f03c54f7a67d1e7d5d2819a5cb507ad0a7e18b834611e4"
         },
         "nested": {
           "destination": "dist/nested/skills/_standing-approval-rules.md",
           "file_count": 1,
-          "tree_sha256": "2dedc58b5d5afd3e83cae6b384d7cebf87b25239c359eba5a4ec974417dcb9f0"
+          "tree_sha256": "64536ef976694ccf93f03c54f7a67d1e7d5d2819a5cb507ad0a7e18b834611e4"
         }
       },
       "canonical_source": "skills/_standing-approval-rules.md",
       "kind": "rule",
       "slug": "standing-approval",
       "source_file_count": 1,
-      "source_tree_sha256": "be4444bc68acf04217823b36e8384b4dc4999c20b751478e32d5b0b769ec0206"
+      "source_tree_sha256": "a33ee6c39cee9a808fb57e29c1b667689d67eb4ba76f4bfdb3fe6dca9e553259"
     },
     {
       "artifacts": {
@@ -853,29 +853,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_tandem-agent-rules.md",
           "file_count": 1,
-          "tree_sha256": "0235ee3a673ccc79f8646f1a0f16d268cdc21609a31565df45bf7bc20de9feb8"
+          "tree_sha256": "0ebebcefea4b8493dfa3c458fcc1f32d45fbb2812016393df37b8f281315313d"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_tandem-agent-rules.md",
           "file_count": 1,
-          "tree_sha256": "0235ee3a673ccc79f8646f1a0f16d268cdc21609a31565df45bf7bc20de9feb8"
+          "tree_sha256": "0ebebcefea4b8493dfa3c458fcc1f32d45fbb2812016393df37b8f281315313d"
         },
         "flat": {
           "destination": "dist/flat/skills/_tandem-agent-rules.md",
           "file_count": 1,
-          "tree_sha256": "0235ee3a673ccc79f8646f1a0f16d268cdc21609a31565df45bf7bc20de9feb8"
+          "tree_sha256": "0ebebcefea4b8493dfa3c458fcc1f32d45fbb2812016393df37b8f281315313d"
         },
         "nested": {
           "destination": "dist/nested/skills/_tandem-agent-rules.md",
           "file_count": 1,
-          "tree_sha256": "0235ee3a673ccc79f8646f1a0f16d268cdc21609a31565df45bf7bc20de9feb8"
+          "tree_sha256": "0ebebcefea4b8493dfa3c458fcc1f32d45fbb2812016393df37b8f281315313d"
         }
       },
       "canonical_source": "skills/_tandem-agent-rules.md",
       "kind": "rule",
       "slug": "tandem-agent",
       "source_file_count": 1,
-      "source_tree_sha256": "9274c91335be9ef9af17e15f3d5dcbc3345171bdb7a989fabe1620cc0f1a4f96"
+      "source_tree_sha256": "0d8be480d77666a1a83a7192c5fdd2ae599221e0003af01f5ce0d7243abf8e14"
     },
     {
       "artifacts": {
