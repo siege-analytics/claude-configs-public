@@ -59,6 +59,10 @@ if python3 -B - "$COMMAND" "$CWD" "$HOOK_DIR/../lib" <<'PY_METADATA'
 import sys
 sys.path.insert(0, sys.argv[3])
 from task_actions import action, released_read_verdict
+from github_metadata_comment import metadata_comment
+metadata = metadata_comment(sys.argv[1], sys.argv[2])
+if metadata is True:
+    sys.exit(0)
 sys.exit(0 if released_read_verdict(sys.argv[1]) == 0 or action(sys.argv[1], sys.argv[2]).get("metadata_only") else 1)
 PY_METADATA
 then
@@ -104,10 +108,10 @@ DENY_PATTERNS=(
     "general-mutation|curl[[:space:]]+.*-X[[:space:]]+(POST|PUT|PATCH|DELETE)|network mutation via curl"
 )
 
-# Governance issue reporting is a reporting surface, not an implementation
-# mutation. Allow only inspectable `gh issue create` / `gh issue comment`
-# commands with non-empty title/body evidence. Issue edit/close/delete/etc.
-# remain guarded shared-resource mutations.
+# Retained governance issue-create/reporting route. The shared typed metadata
+# recognizer above also handles standalone comments/body-only edits/comment
+# reviews; the existing whole-command metadata proof remains independent.
+# Unmodeled writes and actual state transitions retain their ordinary checks.
 is_governance_issue_reporting_command() {
     python3 - "$COMMAND" "$CWD" <<'PYCODE'
 import os, shlex, sys

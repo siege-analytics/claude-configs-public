@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### BREAKING: new metadata posts bind their actual remote repository
+
+- New issue/comment/review-comment posts reuse one current own Task and its actual declared repository scope (or its own canonical ticket). Unrelated repositories, ambiguous Tasks and unproven targets cannot borrow the command cwd. Reuse the existing Task with a literal `--repo` or canonical URL; a stable task id can precede ticket creation. Existing text-only artifact-edit permissions remain unchanged; this adds no owner-signoff field or per-comment approval ritual (#1245, #1251).
+
+### Fixed: descriptive metadata comments
+
+- Standalone literal GitHub issue creation, issue/PR comments, body-only edits and comment-mode reviews no longer require owner-signoff, future-plan or blocker wording. Task/target authority remains in UMG; shell composition, unsupported shapes and state-changing operations do not inherit the reporting lane (#1245).
+
 ### BREAKING: normal development branches require develop
 
 - Normal feature, fix, documentation and configuration branch creation now requires a verified develop source. Implicit HEAD, main aliases and repository defaults do not substitute for develop. Migrate by using `bin/prepare-task-branch.py --branch <task-branch> --worktree <new-path>` (with `--repo` when needed): it creates an isolated task worktree and can create missing remote develop from verified main/default with an atomic create-only lease. Known cached develop remains usable offline with freshness reported (#1229).

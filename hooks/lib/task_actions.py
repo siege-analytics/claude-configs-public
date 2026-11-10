@@ -819,7 +819,7 @@ def action(command: str, cwd: str) -> dict:
         # thinks; the targets found below still pick the owning task's gate.
         result.update(read_only=False, investigation=False, self_management=False,
                       veto="read-only-command: option writes or runs a program")
-        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') or result.get('review_actions') else [canonical(cwd)])
+        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') or result.get('review_actions') or result.get('metadata_posts') else [canonical(cwd)])
     return result
 
 
@@ -1186,6 +1186,7 @@ def _action(command: str, cwd: str) -> dict:
     remote_repos = []
     remote_actions = []
     review_actions = []
+    metadata_posts = []
     mutation_commands = 0
     commit_commands = 0
     unproven_companions = []
@@ -1273,6 +1274,16 @@ def _action(command: str, cwd: str) -> dict:
             remote = github_metadata_target(args, effective)
             if remote is not None:
                 remote_repos.append(remote)
+                self_managed = False
+                args, arg_globs = [], []
+                return
+            if args[:2] in (['gh', 'issue'], ['gh', 'pr']) and (
+                    args[2:3] == ['comment'] or args[1:3] == ['issue', 'create'] or args[2:3] == ['review'] and '--comment' in args[3:]):
+                from github_metadata_comment import metadata_comment
+                post = {}
+                if metadata_comment(shlex.join(args), effective, details=post) is not True:
+                    raise UnknownShape('unproven GitHub metadata post shape or target; use literal repository/target and body')
+                metadata_posts.append({**post, 'cwd': effective})
                 self_managed = False
                 args, arg_globs = [], []
                 return
@@ -1469,13 +1480,13 @@ def _action(command: str, cwd: str) -> dict:
             raise UnknownShape('separate configuration/file mutations from commit calls; run git commit -F FILE first, then a separately scoped cleanup command')
     except UnknownShape as e:
         return {"read_only": False, "paths": list(dict.fromkeys(paths + [effective])), "error": str(e), "binding": binding}
-    if remote_repos or remote_actions or review_actions:
+    if remote_repos or remote_actions or review_actions or metadata_posts:
         paths.extend(unproven_companions)
     return {"read_only": reads and not diagnostic and bool(tokens), "investigation": reads and diagnostic,
             "self_managed_shape": self_managed and not diagnostic, "directory_paths": [p for p in directory_paths if p not in file_paths], "directory_removals": directory_removals,
             # A path only removed, never also written in the same command (#1100).
             "file_removals": [p for p in file_removals if paths.count(p) == file_removals.count(p)],
-            "paths": list(dict.fromkeys(paths or ([] if remote_repos or remote_actions or review_actions else [effective]))),
+            "paths": list(dict.fromkeys(paths or ([] if remote_repos or remote_actions or review_actions or metadata_posts else [effective]))),
             "remote_repos": list(dict.fromkeys(remote_repos)),
-            "remote_actions": remote_actions, "review_actions": review_actions,
-            "metadata_only": bool(remote_repos) and not remote_actions and not review_actions and not paths and not diagnostic, "binding": binding}
+            "remote_actions": remote_actions, "review_actions": review_actions, "metadata_posts": metadata_posts,
+            "metadata_only": bool(remote_repos) and not remote_actions and not review_actions and not metadata_posts and not paths and not diagnostic, "binding": binding}

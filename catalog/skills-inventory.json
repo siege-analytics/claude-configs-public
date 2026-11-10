@@ -4076,10 +4076,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 15975,
-      "content_sha256": "e01f3e14467de4d97abdb8e9c1809f464025728ee9ad607bcb4afa7809075e8e",
+      "characters": 16188,
+      "content_sha256": "9b4ed89aaa5cf1d0e569414fc01a3caa67e0808b73ee97e84a8456a13d80ae29",
       "description": "unknown",
-      "estimated_tokens": 3994,
+      "estimated_tokens": 4047,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -5021,6 +5021,7 @@
         "hooks/_test/github_project_scope.py",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
+        "hooks/_test/metadata_comment_reporting.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/quoted_mutation_operands.py",
         "hooks/_test/read_allowlist.test.sh",
@@ -9234,6 +9235,7 @@
         "hooks/_test/detect_ai_fingerprints.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/fixtures/metadata-issues-1251.json",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/hook_path.test.sh",
@@ -9322,6 +9324,7 @@
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/metadata_comment_reporting.py",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
       "tier": "unclassified",
@@ -10530,8 +10533,10 @@
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/fixtures/metadata-issues-1251.json",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/github_merge_queue.test.sh",
+        "hooks/_test/metadata_comment_reporting.py",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/pr_base_guard.test.sh",
         "hooks/_test/progressive_loading.test.sh",
@@ -11756,6 +11761,7 @@
         "bin/_test/review_risk_test.py",
         "bin/_test/selected_registration_test.py",
         "bin/_test/self_review_disclosure_test.py",
+        "hooks/_test/fixtures/metadata-issues-1251.json",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/progressive_loading.test.sh",
@@ -12810,9 +12816,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2619523,
+    "characters": 2619736,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 654958,
+    "estimated_tokens": 655011,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12833,7 +12839,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1223129
+      "unclassified": 1223342
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12845,7 +12851,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 305824
+      "unclassified": 305877
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

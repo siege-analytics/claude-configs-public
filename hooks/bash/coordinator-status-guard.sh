@@ -3,22 +3,12 @@
 # Enforces: coordinator lane/status transitions must carry evidence.
 # Trigger: PreToolUse on Bash commands that update GitHub issues/PRs.
 #
-# Blocks coordinator-style completion/status comments and issue closes when
-# owner signoff, merge/branch, and rollout evidence are absent, or when
-# unresolved blockers are mentioned in the same completion claim.
-#
-# Think-pipeline artifacts (#1164): a comment whose first non-blank line is a
-# heading naming a pre-mortem, investigation/fact sheet, junior/senior review or
-# design note, and which carries a `Ticket: #N` / `Task-ID:` line (or `#N` in
-# that heading), is a gate-required artifact, not a lane update. The status-tone
-# rules (future plan, completion+blocker mix, blocked reason) do not apply to it.
-# Completion vocabulary still needs the same owner/merge/rollout evidence as in
-# an unmarked comment, except on skill-defined hypothetical fields (Scenario,
-# Mitigation, Success criteria, ...) or lines that open with a conditional.
-# Comment actions only; close, reopen, ready, PR review and API state fields
-# never take this lane.
-#
-# Ref: claude-configs-public#609, #1164
+# Standalone literal issue/PR comments, body-only edits and comment-mode reviews
+# describe work; their vocabulary does not authorize a workflow transition.
+# This hook leaves Task/target authorization to UMG and artifact validation to
+# its existing consumers. Unsupported/compound posts cannot borrow this lane.
+# Actual close/reopen/ready, approval and API state changes retain their proof.
+# Ref: claude-configs-public#609, #1164, #1245
 
 set -uo pipefail
 source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
@@ -81,6 +71,21 @@ sys.path.insert(0, sys.argv[2])
 import task_actions
 from task_actions import action as classify_action
 import os
+# Standalone descriptive CLI posts are metadata, not workflow transitions.
+# UMG owns task/target authority; this lane grants no permission to execute gh.
+from github_metadata_comment import metadata_comment
+
+metadata = metadata_comment(command, sys.argv[3])
+# Preserve the existing whole-command typed metadata proof, including its
+# supported cd/edit-last forms. A comment member cannot donate this verdict.
+if metadata is False and classify_action(command, sys.argv[3] or os.getcwd()).get('metadata_only'):
+    sys.exit(0)
+if metadata is not None:
+    if metadata:
+        sys.exit(0)
+    print('BLOCKED: metadata-comment lane requires one literal supported body-only command; state operations and shell composition retain their own checks.', file=sys.stderr)
+    sys.exit(2)
+
 # Text edits to existing artifacts are not coordinator state transitions.
 shape = classify_action(command, sys.argv[3] or os.getcwd())
 if shape.get("read_only") or shape.get("metadata_only"):
