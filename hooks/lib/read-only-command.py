@@ -446,6 +446,172 @@ def segment_expansions(command):
     return segs
 
 
+# Long options of gh read subcommands that always take a value. gh parses flags
+# with pflag, which consumes the next word as the value of such an option, so a
+# double-quoted expansion there is one value word and never an option (#1165).
+GH_VALUE_LONG = {
+    "--search", "--label", "--state", "--limit", "--json", "--jq", "--template", "--repo",
+    "--author", "--assignee", "--base", "--head", "--milestone", "--mention", "--app",
+    "--sort", "--order", "--owner", "--language", "--branch", "--status", "--workflow",
+    "--user", "--event", "--commit", "--created", "--updated",
+}
+GH_VALUE_COMMANDS = {"issue", "pr", "search", "run", "repo", "release", "workflow", "label"}
+
+
+def quoted_words(text):
+    """Split one simple command into words, keeping each word's quoting as
+    (kind, text) parts: "bare", "dq" (double-quoted) or "sq" (single-quoted).
+    Escapes are resolved as bash does; None when the quoting is unbalanced."""
+    words, parts, part, kind, q, i = [], [], "", None, None, 0
+
+    def flush_part():
+        nonlocal part, kind
+        if kind is not None:
+            parts.append((kind, part))
+        part, kind = "", None
+
+    while i < len(text):
+        c = text[i]
+        nxt = text[i + 1] if i + 1 < len(text) else ""
+        if q == "'":
+            if c == "'":
+                q = None
+                flush_part()
+            else:
+                part += c
+        elif q == '"':
+            if c == "\\" and nxt in '$`"\\':
+                part += "\\" + nxt   # keep the escape visible: an escaped $ is literal
+                i += 1
+            elif c == '"':
+                q = None
+                flush_part()
+            else:
+                part += c
+        elif c in "'\"":
+            flush_part()
+            q, kind = c, ("sq" if c == "'" else "dq")
+        elif c in " \t":
+            flush_part()
+            if parts:
+                words.append(parts)
+            parts = []
+        else:
+            if kind != "bare":
+                flush_part()
+                kind = "bare"
+            if c == "\\" and nxt:
+                part += "\\" + nxt
+                i += 1
+            else:
+                part += c
+        i += 1
+    if q is not None:
+        return None
+    flush_part()
+    if parts:
+        words.append(parts)
+    return words
+
+
+def _expands(kind, text):
+    """True when a part contains an unescaped `$` that starts an expansion."""
+    i = 0
+    while i < len(text):
+        if text[i] == "\\":
+            i += 2
+            continue
+        if text[i] == "$" and i + 1 < len(text) and (text[i + 1] in EXPANDS or text[i + 1] == '"') \
+                and not (kind == "dq" and text[i + 1] == "'"):
+            return True
+        i += 1
+    return False
+
+
+# The parameter expansions modeled as non-executing inside a double-quoted gh
+# option value: a plain name or positional/special parameter, bare or braced,
+# optionally with a default whose word is literal (`${q:---web}`). Everything
+# else is unproven, because bash can run code or yield several words while
+# expanding it: transformations (`${q@P}` runs command substitutions stored in
+# q), indirection (`${!q}`), array subscripts (arithmetic evaluation), `"$@"`
+# (one word per parameter), substring/replace/length, assignment, and nested
+# expansions in a default (review 5849675552 on #1273).
+PLAIN_PARAM = re.compile(
+    r"\$(?:[A-Za-z_][A-Za-z0-9_]*|[0-9?#$!*-]"
+    r"|\{(?:[A-Za-z_][A-Za-z0-9_]*|[0-9]+|[?#$!*-])(?::?-[^$`\\{}\"']*)?\})")
+
+
+def modeled_dq_expansions(text):
+    """True when every expansion in a double-quoted part is a PLAIN_PARAM."""
+    i = 0
+    while i < len(text):
+        if text[i] == "\\":
+            i += 2
+            continue
+        if text[i] == "$" and i + 1 < len(text) and text[i + 1] in EXPANDS and text[i + 1] != "'":
+            m = PLAIN_PARAM.match(text, i)
+            if not m:
+                return False
+            i = m.end()
+            continue
+        i += 1
+    return True
+
+
+def gh_value_expansions_only(text, found):
+    """True when every expansion in this gh read command is a double-quoted,
+    whole-word value of a value-taking long option (#1165): `--search "$q"` or
+    `--search="$q"`. Positional, unquoted, short-option and attached-unquoted
+    expansions stay unproven, as does anything after `--`."""
+    if found != {"$"}:
+        return False   # globs and braces can still produce options
+    words = quoted_words(text)
+    if not words:
+        return False
+    # A word's literal text, or None when any part of it expands.
+    literal = [None if any(_expands(k, t) for k, t in w) else "".join(t for _, t in w) for w in words]
+    start = 0
+    while start < len(words) and literal[start] in SHELL_WORDS:
+        start += 1
+    if literal[start:start + 1] != ["gh"] or len(words) < start + 3:
+        return False
+    command, verb = literal[start + 1], literal[start + 2]
+    if command not in GH_VALUE_COMMANDS or verb is None or (command != "search" and verb not in GH_READ_VERBS):
+        return False
+    i = start + 3
+    while i < len(words):
+        word, lit = words[i], literal[i]
+        if lit is not None:
+            if lit == "--":
+                return not any(literal[j] is None for j in range(i + 1, len(words)))
+            if lit.startswith("--"):
+                name = lit.split("=", 1)[0]
+                if "=" not in lit and name in GH_VALUE_LONG:
+                    if i + 1 >= len(words):
+                        return False
+                    value = words[i + 1]
+                    if literal[i + 1] is None and not (len(value) == 1 and value[0][0] == "dq"
+                                                       and modeled_dq_expansions(value[0][1])):
+                        return False   # one double-quoted word whose expansions are modeled
+                    i += 2
+                    continue
+                if "=" not in lit:
+                    return False   # an option not known to take a value: alignment unproven
+            elif lit.startswith("-") and lit != "-":
+                return False   # short options and clusters are not modeled here
+            i += 1
+            continue
+        # A word carrying an expansion outside a known value slot: only the
+        # attached form `--opt="$q"` (bare `--opt=` then one double-quoted part).
+        if (len(word) == 2 and word[0][0] == "bare" and word[1][0] == "dq"
+                and word[0][1].endswith("=") and word[0][1][:-1] in GH_VALUE_LONG
+                and not _expands("bare", word[0][1]) and modeled_dq_expansions(word[1][1])):
+            i += 1
+            continue
+        return False
+    return True
+
+
 def lead_verbs(text):
     """The verb a simple command runs, plus the one a wrapper runs."""
     try:
@@ -494,7 +660,7 @@ def main(command):
     # into an option: $VAR / ${X:--delete} / $'..' / a glob matching `-delete` /
     # brace expansion. Not provable either way, so "unproven" (4), never 0.
     for text, exp in segment_expansions(command):
-        if exp and lead_verbs(text) & (GUARDED | VETO_ONLY | {"?"}):
+        if exp and lead_verbs(text) & (GUARDED | VETO_ONLY | {"?"}) and not gh_value_expansions_only(text, exp):
             return 4
     if "\n" in command.strip("\n") or "\r" in command:
         return 1   # multi-line commands are not proven read-only (siege#1057 safelist policy)

@@ -355,5 +355,81 @@ docker image ls; docker image rm a
 docker system prune -af
 docker rmi a
 EOF
+
+echo "== #1165: a double-quoted expansion that is the value of a gh read option is a read =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect allow "$O" "$c"; done <<'EOF'
+echo "EXIT=$?"
+for q in a b; do gh issue list --search "$q"; done
+for q in a b; do gh issue list --search="$q" --state open; done
+gh pr list --search "$q" --json number --jq ".[].number"
+gh search issues --owner "$o" bug
+gh issue list --search "${q:---web}"
+gh issue list --search "$q" | wc -l
+EOF
+echo "== #1165: every other expansion, and writes through expansions, still need a task gate =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+cp "$S/f" "$D/"
+echo x > "$F"
+gh search issues "$q"
+gh issue view "$n"
+gh issue list --search $q
+gh issue list --search=$q
+gh issue list "--search=$q"
+gh issue list --search "$q"x
+gh issue list --search "$q" --web
+gh issue list --label --search "$q"
+gh issue list --search a -- "$q"
+gh issue list -S "$q"
+gh issue list --search "$q" -R "$r"
+gh issue edit 1 --title "$t"
+gh issue create --title "$t"
+gh api "repos/o/r/issues/$n"
+gh issue list --search "$q" > out.txt
+gh issue list --search "$q"; rm -rf x
+timeout 30 gh issue list --search "$q"
+find . "$x"
+rg "$p" --pre "$c"
+EOF
+# Review 5849675552 on #1273: a quoted value slot does not prove the expansion
+# inside it is inert. Bash5 `${q@P}` runs command substitutions stored in q, so
+# only plain parameters and a literal default are modeled; every other form is
+# unproven (4) in the classifier and needs a task gate in the hook.
+classify() {  # classify <want exit> <command>
+    local got; python3 "$ROOT/hooks/lib/read-only-command.py" "$2"; got=$?
+    if [[ "$got" == "$1" ]]; then PASS=$((PASS + 1)); else FAIL=$((FAIL + 1)); printf '  FAIL  classifier want %s got %s: %s\n' "$1" "$got" "$2"; fi
+}
+echo "== #1165 review: only plain parameters and a literal default are modeled in a gh value (classifier) =="
+while IFS= read -r c; do [[ -n "$c" ]] && classify 0 "$c"; done <<'EOF'
+gh issue list --search "$q"
+gh issue list --search="$q"
+gh issue list --search "${q}"
+gh issue list --search "${q:---web}"
+gh issue list --search "is:open $q label:$l"
+gh issue list --search "$1"
+EOF
+while IFS= read -r c; do [[ -n "$c" ]] && classify 4 "$c"; done <<'EOF'
+gh issue list --search "${q@P}"
+gh issue list --search="${q@P}"
+gh issue list --search "x${q@P}"
+gh issue list --search "${q@Q}"
+gh issue list --search "${!q}"
+gh issue list --search "${a[i]}"
+gh issue list --search "${q:0:1}"
+gh issue list --search "${q/a/b}"
+gh issue list --search "${#q}"
+gh issue list --search "${q:-$r}"
+gh issue list --search "${q:-${r@P}}"
+gh issue list --search "${q:=x}"
+gh issue list --search "$@"
+EOF
+echo "== #1165 review: unmodeled parameter expansions in a gh value need a task gate (hook) =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+gh issue list --search "${q@P}"
+gh issue list --search="${q@P}"
+for q in a b; do gh issue list --search "${q@P}"; done
+gh issue list --search "${!q}"
+gh issue list --search "${a[i]}"
+gh issue list --search "$@"
+EOF
 printf 'read_allowlist: %d passed, %d failed\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))
