@@ -21,6 +21,10 @@ All notable changes to this project are documented here. Versioning follows [Sem
 ### Fixed: task-scoped fresh Git repositories
 
 - Allow bounded `git init` and explicitly targeted `git clone` within the owning active Task's directory scope without borrowing an enclosing repository. Existing metadata, path aliases and foreign ownership remain guarded. Use per-command `--template=` when a custom template is outside the modeled route; local repository inputs, including Git-directory pointer files, require `--no-local` for independent objects. Clone source checks use the actual nonrepository configuration context. These alternatives change no persistent Git configuration or owner grant (#1240, #1242).
+### Fixed: registered child worktree targeting
+
+- Verify writer isolation from actual Git ownership and the registered worktree backpointer; accept sibling worktrees without prompt magic or a required directory name. Keep read-only reviews and existing directories outside Git supported (#1256).
+- Bound backpointer reads and match the host's path normalization. BREAKING for writer spawns using inherited, relative, tilde or unexpanded HOME directories: prepare the worktree first, keep the parent in its own workspace, and pass the child's existing literal absolute path as `workingDirectory`. This changes target verification, not authorization (#1256).
 
 ### BREAKING: normal development branches require develop
 
