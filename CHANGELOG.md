@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: metadata repository scope under ambient Git targeting (#1261)
+
+- Prove metadata Task scope against its physical repository using isolated, explicit Git inspection environments, including nested owner comparisons. Explicit own-repository posts remain valid; ambient Git location/config variables cannot lend that grant to another repository.
+- Redirected implicit GitHub defaults require a literal repository or canonical URL. Ordinary Git mutations keep their actual ambient targets; no global environment or permission registry changes.
+
+
 ### Fixed: private canary repositories and labeled reports
 
 - Canary source materialization and its child Git operations ignore inherited repository-location and command-config environment overrides, preserving the caller repository while retaining unrelated environment values. Historical source/package pins and external approval requirements remain unchanged (#1261).
