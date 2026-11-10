@@ -71,6 +71,97 @@ class BranchSources(unittest.TestCase):
         self.assertEqual(tip, self.main)
         self.assertEqual(self.inspect('branch', '--show-current'), 'main')
 
+    def test_bootstrap_rejects_foreign_and_multiple_push_destinations(self):
+        other = self.base / 'other.git'
+        self.run_git(self.base, 'init', '--bare', str(other))
+        for targets in [(other,), (self.remote, other)]:
+            subprocess.run(['git', '-C', str(self.repo), 'config', '--unset-all', 'remote.origin.pushurl'], capture_output=True)
+            for target in targets:
+                self.run_git(self.repo, 'config', '--add', 'remote.origin.pushurl', str(target))
+            with self.assertRaises(prepare_task.PreparationError):
+                prepare_task.prepare(self.repo, 'feature/rejected', self.base / 'task')
+            for target in (self.remote, other):
+                self.assertEqual(self.run_git(target, 'for-each-ref', '--format=%(refname)', 'refs/heads/develop'), '')
+            self.assertFalse((self.base / 'task').exists())
+
+    def test_explicit_pushurl_retains_normal_push_instead_of_suppression(self):
+        other = self.base / 'other.git'
+        self.run_git(self.base, 'init', '--bare', str(other))
+        self.run_git(self.repo, 'config', 'remote.origin.pushurl', str(self.remote))
+        self.run_git(self.repo, 'config', 'url.' + str(other) + '.pushInsteadOf', str(self.remote))
+        self.assertEqual(prepare_task.prepare(self.repo, 'feature/rewrite', self.base / 'task'), self.main)
+        self.assertEqual(self.run_git(self.remote, 'rev-parse', 'refs/heads/develop'), self.main)
+        self.assertEqual(self.run_git(other, 'for-each-ref', '--format=%(refname)'), '')
+
+    def test_raw_urls_are_not_rewritten_twice(self):
+        raw = str(self.base / 'raw-alias')
+        other = self.base / 'other.git'
+        self.run_git(self.base, 'init', '--bare', str(other))
+        self.run_git(self.repo, 'remote', 'set-url', 'origin', raw)
+        self.run_git(self.repo, 'config', 'remote.origin.pushurl', raw)
+        self.run_git(self.repo, 'config', 'url.' + str(self.remote) + '.insteadOf', raw)
+        self.run_git(self.repo, 'config', 'url.' + str(other) + '.insteadOf', str(self.remote))
+        self.assertEqual(prepare_task.prepare(self.repo, 'feature/raw', self.base / 'task'), self.main)
+        self.assertEqual(self.run_git(self.remote, 'rev-parse', 'refs/heads/develop'), self.main)
+        self.assertEqual(self.run_git(other, 'for-each-ref', '--format=%(refname)'), '')
+
+    def test_implicit_push_rewrite_to_foreign_repository_cannot_bootstrap(self):
+        other = self.base / 'other.git'
+        self.run_git(self.base, 'init', '--bare', str(other))
+        self.run_git(self.repo, 'config', 'url.' + str(other) + '.pushInsteadOf', str(self.remote))
+        with self.assertRaises(prepare_task.PreparationError):
+            prepare_task.prepare(self.repo, 'feature/foreign-rewrite', self.base / 'task')
+        for target in (self.remote, other):
+            self.assertEqual(self.run_git(target, 'for-each-ref', '--format=%(refname)', 'refs/heads/develop'), '')
+
+    def test_bootstrap_pins_same_repository_endpoint_before_push(self):
+        other = self.base / 'other.git'
+        self.run_git(self.base, 'init', '--bare', str(other))
+        self.run_git(self.repo, 'config', 'remote.origin.pushurl', self.remote.as_uri())
+        real_run = subprocess.run
+        def redirect(argv, **kwargs):
+            if 'push' in argv and '--force-with-lease=refs/heads/develop:' in argv:
+                self.assertIn('remote.' + argv[argv.index('--') + 1] + '.pushurl=' + self.remote.as_uri(), argv)
+                self.run_git(self.repo, 'config', 'remote.origin.pushurl', str(other))
+            return real_run(argv, **kwargs)
+        with patch.object(prepare_task.subprocess, 'run', side_effect=redirect):
+            self.assertEqual(prepare_task.prepare(self.repo, 'feature/pinned', self.base / 'task'), self.main)
+        self.assertEqual(self.run_git(other, 'for-each-ref', '--format=%(refname)'), '')
+
+    def test_endpoint_identity_allows_github_transport_pairs_only_for_same_repository(self):
+        identity = lambda value: prepare_task.endpoint_identity(self.repo, value)
+        expected = identity('https://github.com/Owner/Repo.git')
+        for value in ['git@github.com:owner/repo.git', 'ssh://git@github.com:22/OWNER/REPO', 'https://github.com:443/owner/repo/']:
+            self.assertEqual(identity(value), expected)
+        for value in ['git@github.com:owner/other.git', 'https://elsewhere.invalid/owner/repo', 'ssh://git@github.com:2222/owner/repo']:
+            self.assertNotEqual(identity(value), expected)
+
+    def test_refresh_ignores_configured_local_branch_destination_and_pruning(self):
+        self.develop()
+        self.run_git(self.repo, 'checkout', '-b', 'feature/otherTask')
+        (self.repo / 'tracked').write_text('other task commit\n')
+        self.run_git(self.repo, 'commit', '-am', 'other task')
+        other_tip = self.inspect('rev-parse', 'HEAD')
+        self.run_git(self.repo, 'checkout', 'main')
+        self.run_git(self.repo, 'config', '--replace-all', 'remote.origin.fetch', '+refs/heads/main:refs/heads/feature/otherTask')
+        self.run_git(self.repo, 'config', 'fetch.prune', 'true')
+        self.run_git(self.repo, 'update-ref', 'refs/remotes/origin/retainedTask', other_tip)
+        (self.repo / 'tracked').write_bytes(b'dirty tracked\n')
+        (self.repo / 'untracked').write_bytes(b'dirty untracked\n')
+        before = self.inspect('status', '--porcelain')
+        prepare_task.prepare(self.repo, 'feature/bounded', self.base / 'task')
+        self.assertEqual(self.inspect('rev-parse', 'refs/heads/feature/otherTask'), other_tip)
+        self.assertEqual(self.inspect('rev-parse', 'refs/remotes/origin/retainedTask'), other_tip)
+        self.assertEqual(self.inspect('branch', '--show-current'), 'main')
+        self.assertEqual(self.inspect('status', '--porcelain'), before)
+        self.assertEqual((self.repo / 'tracked').read_bytes(), b'dirty tracked\n')
+        self.assertEqual((self.repo / 'untracked').read_bytes(), b'dirty untracked\n')
+
+    def test_existing_develop_does_not_require_matching_push_endpoint(self):
+        self.develop()
+        self.run_git(self.repo, 'config', 'remote.origin.pushurl', str(self.base / 'unavailable.git'))
+        self.assertEqual(prepare_task.prepare(self.repo, 'feature/known', self.base / 'task'), self.main)
+
     def test_network_failure_is_not_absence(self):
         self.run_git(self.repo, 'remote', 'set-url', 'origin', str(self.base / 'unavailable.git'))
         with self.assertRaises(prepare_task.PreparationError):
