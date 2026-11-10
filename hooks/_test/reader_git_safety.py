@@ -228,7 +228,7 @@ class Safety(unittest.TestCase):
     def test_read_guard_and_native_shell_descendants_leave_inventory_unchanged(self):
         directory = self.repo.parent / "bytecode-control"
         directory.mkdir()
-        for name in ("git_command.py", "task_actions.py", "read-only-command.py"):
+        for name in ("git_command.py", "branch_source.py", "task_actions.py", "read-only-command.py"):
             shutil.copy2(ROOT / "hooks/lib" / name, directory / name)
         def inventory():
             return {p.relative_to(directory).as_posix(): p.read_bytes() for p in directory.rglob("*") if p.is_file()}

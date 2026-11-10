@@ -42,7 +42,8 @@ if [[ "$BRANCH" =~ $PROTECTED ]]; then
     cat <<EOF
 <branch-state-guard>
 Advisory: on protected branch '$BRANCH'. Do NOT commit directly here. Create a
-feature branch before making changes: git checkout -b feat/<description>.
+feature branch before making changes: git switch -c feat/<description> origin/develop.
+If origin/develop is missing, use bin/prepare-task-branch.py to verify and bootstrap it.
 The commit itself is still hard-blocked at push/commit time by branch-guard.
 Ref: #261, #450, #873
 </branch-state-guard>
