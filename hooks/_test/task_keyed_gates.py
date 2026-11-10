@@ -161,7 +161,7 @@ class Gates(unittest.TestCase):
                 self.assertGate(2, command, cwd=self.ws)
         status = self.metadata_guard('coordinator-status-guard.sh',
                                      'gh issue comment 123 --repo example/target --body completed')
-        self.assertEqual(status.returncode, 2, status.stderr)
+        self.assertEqual(status.returncode, 0, status.stderr)  # Descriptive words are not a state transition (#1245).
         self.assertFalse((self.b / 'bad.md').exists())
 
     def test_metadata_companions_need_independent_released_read_proof(self):

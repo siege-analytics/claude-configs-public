@@ -770,6 +770,17 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         return shape  # No gate lookup for recognized reads/approved diagnostics.
     if shape.get("error"):
         return {**shape, "gate": None, "error": "Cannot resolve mutation targets: " + shape["error"]}
+    post_selected = None
+    if shape.get('metadata_posts'):
+        if shape.get('remote_actions') or shape.get('review_actions'):
+            return {**shape, 'gate': None, 'error': 'Split metadata posts from separately granted remote operations.'}
+        post_selected = select_metadata_post_task(workspace, shape)
+        if not post_selected.get('gate'):
+            return {**shape, **post_selected}
+        if shape['paths']:
+            local = select_task(workspace, shape['paths'], shape.get('binding') or task_binding())
+            if not local.get('gate') or canonical(local['gate']['path']) != canonical(post_selected['gate']['path']):
+                return {**shape, 'gate': None, 'error': 'Metadata posts and local mutations require the same own Task.'}
     if shape.get('review_actions'):
         if shape.get('remote_actions'):
             return {**shape, 'gate': None, 'error': 'Split review and project remote operations; each has its own grant.'}
@@ -801,7 +812,7 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     binding = shape.get("binding") or task_binding()
     if shape.get("binding") and task_binding() and shape["binding"] != task_binding():
         return {**shape, "gate": None, "error": "Conflicting explicit task bindings."}
-    selected = select_task(workspace, shape["paths"], binding)
+    selected = post_selected or select_task(workspace, shape["paths"], binding)
     result = {**shape, **selected}
     if result["gate"]:
         tg = result["gate"]
@@ -826,6 +837,73 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         result["task"] = task_identity(tg["data"])
         result["tier"] = task_tier(tg["data"], shape["paths"], command, cwd)
     return result
+
+
+def select_metadata_post_task(workspace: str, shape: dict) -> dict:
+    """Bind descriptive remote posts to existing own-Task repository authority.
+
+    Repository paths below prove already declared scope; they are not invented
+    filesystem mutation targets. Normal Task lifecycle/artifact checks remain.
+    """
+    def deny(message):
+        return {'gate': None, 'error': 'GitHub metadata target scope: ' + message}
+    if not session_id_from_env():
+        return deny('verified current-session identity required')
+    binding = shape.get('binding') or task_binding()
+    if shape.get('binding') and task_binding() and binding != task_binding():
+        return deny('conflicting explicit Task bindings')
+    if (os.environ.get('GH_HOST') or 'github.com').casefold() != 'github.com':
+        return deny('ambient GitHub host override is unproven')
+    if os.environ.get('GH_REPO') and any(not target['repository'] for target in shape['metadata_posts']):
+        return deny('implicit repository under GH_REPO is unproven; use a literal --repo or canonical URL')
+    cache = {}
+    def repository(root):
+        if root not in cache:
+            from urllib.parse import urlsplit
+            raw = _git_origin(root)
+            scp = re.fullmatch(r'git@github\.com:([^?#]+)', raw, re.I)
+            if scp:
+                path = scp[1]
+            else:
+                try:
+                    url = urlsplit(raw)
+                    if url.scheme not in {'https', 'ssh'} or (url.hostname or '').casefold() != 'github.com' or url.query or url.fragment:
+                        cache[root] = ''; return ''
+                    path = url.path.lstrip('/')
+                except ValueError:
+                    cache[root] = ''; return ''
+            path = re.sub(r'\.git$', '', path)
+            cache[root] = path.casefold() if re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', path) and not any(x in {'.', '..'} for x in path.split('/')) else ''
+        return cache[root]
+    owners = []
+    for gate in _session_thinks(workspace):
+        data = gate['data']; identity = task_identity(data)
+        if binding and identity != binding:
+            continue
+        allowed = set()
+        for scope in _scopes(gate):
+            root = _target_repo(scope)
+            if not root:
+                continue
+            proof = select_task(workspace, [scope], identity)
+            if proof.get('gate') and canonical(proof['gate']['path']) == canonical(gate['path']):
+                slug = repository(root)
+                if slug: allowed.add(slug)
+        if not allowed:
+            continue
+        ticket = re.fullmatch(r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*)', identity)
+        matched = True
+        for target in shape['metadata_posts']:
+            actual = target['repository'] or repository(_target_repo(target['cwd']))
+            own_ticket = bool(ticket and target['resource'] == 'issue' and target['operation'] == 'comment'
+                              and actual == ticket[1].casefold() and target['selector'] == ticket[2])
+            if not actual or actual not in allowed and not own_ticket:
+                matched = False; break
+        if matched:
+            owners.append(gate)
+    if len(owners) != 1:
+        return deny('one unambiguous own Task with actual repository scope or its canonical ticket is required; do not borrow cwd for another remote repository')
+    return {'gate': owners[0], 'error': ''}
 
 
 def select_review_task(workspace: str, shape: dict, cwd: str) -> dict:

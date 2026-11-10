@@ -4,9 +4,18 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### BREAKING: new metadata posts bind their actual remote repository
+
+- New issue/comment/review-comment posts reuse one current own Task and its actual declared repository scope (or its own canonical ticket). Unrelated repositories, ambiguous Tasks and unproven targets cannot borrow the command cwd. Reuse the existing Task with a literal `--repo` or canonical URL; a stable task id can precede ticket creation. Existing text-only artifact-edit permissions remain unchanged; this adds no owner-signoff field or per-comment approval ritual (#1245, #1251).
+
+### Fixed: descriptive metadata comments
+
+- Standalone literal GitHub issue creation, issue/PR comments, body-only edits and comment-mode reviews no longer require owner-signoff, future-plan or blocker wording. Task/target authority remains in UMG; shell composition, unsupported shapes and state-changing operations do not inherit the reporting lane (#1245).
+
 ### Fixed: task-scoped fresh Git repositories
 
 - Allow bounded `git init` and explicitly targeted `git clone` within the owning active Task's directory scope without borrowing an enclosing repository. Existing metadata, path aliases and foreign ownership remain guarded. Use per-command `--template=` when a custom template is outside the modeled route; local repository inputs, including Git-directory pointer files, require `--no-local` for independent objects. Clone source checks use the actual nonrepository configuration context. These alternatives change no persistent Git configuration or owner grant (#1240, #1242).
+
 
 ### BREAKING: normal development branches require develop
 
