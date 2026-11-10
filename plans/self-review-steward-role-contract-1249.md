@@ -10,10 +10,11 @@ ticket_refs:
 
 The current owner explicitly requested this role correction. The portable Core paragraph is authored in session coordination; native client Hub and Traffic Cop remain client-owned whole overrides. The Core branch starts at verified origin/develop ce21650c. Concurrent frozen1245/1248 candidates are not edited; later integration must preserve their disjoint rule1 and dispatch changes.
 
+Goal source: #1249 owner role correction and exact-head CI42749705665 failure requiring deterministic generated evidence.
 Goal source verification: PASS: #1249 records the requested correction and checkable boundaries.
 Pre-author-inventory: canonical session coordination and client Hub/Traffic Cop role, priority and check-in clauses read; exclusive authored client ownership handed off by integration owner.
 Pre-mortem-artifact: this artifact, failure boundaries below.
-Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1249#issuecomment-6757965741 — independent exact authored-source acceptance; final direct PR head review remains separate.
+Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1249#issuecomment-6758483409 — independent review of the complete two-file provenance repair; role source acceptance remains https://github.com/siege-analytics/claude-configs-public/issues/1249#issuecomment-6757965741. Final exact-head PR/CI receipts remain separate.
 
 Failure boundaries: the change must not make TC a universal approval or sole-merge role; transfer product-domain workers to another steward; replace independent review with implementer/hub approval; treat planning or a status exchange as a new hold; or grant protected production operations. Keep existing owner conditions and host capabilities. Revert the source commit and regenerate to roll back; no installed state is changed.
 
@@ -46,3 +47,13 @@ At source review: client build/check passed;15 policy,27 board and24 admission t
 ## Board-first follow-up
 
 The current direct owner refinement makes TC primarily steward boards (ownership, status, priorities and dependencies), dispatching and following delivery through owning hubs. Bounded direct execution remains a practical option when it advances the outcome without an ownership collision; return implementation to the hub when available. This is not a new approval step or reason to halt/undo current work. Root independently read the actual portable follow-up diff and accepted it in the coordination thread. The same narrow default/exception is reconciled in both native client introductions; no runtime policy or installed state changes.
+
+## Actual hosted-CI provenance repair
+
+Exact923dfa1e CI42749705665 failed only at progressive metrics after the inline20 shell and16 Python delivery checks passed. Full build logged441291 bundle characters; committed metadata expected441293. The old builder called `git rev-parse --short HEAD` twice in its compatibility banner. This long-lived object store abbreviates to8 characters and fresh CI to7, producing the exact2-character drift. Local postcommit check still passed, demonstrating checkout-dependent provenance, not an omitted role regeneration.
+
+One builder argument change uses the full actual revision. It preserves real bundle character counting, all budget checks and source role wording. No metric normalization, ignored bytes, weakened threshold, account setting or installed runtime is introduced. A meaningful private Git regression uses the same commit with actual local core.abbrev7 and16: before the fix both full outputs differ (18 characters); afterward Markdown outputs are byte-identical and JSON carries the identical full commit. The fixture uses an explicit empty template, private-only Git configuration and a fixed supported source epoch; no network, user config, hook bypass or live repository mutation.
+
+Pre-mortem/canary: full revision must retain actual identity, not an ambiguous prefix; fixed data and policy content remain intact. The regression checks actual generated artifacts. Rollback is a normal additive source revert followed by canonical regeneration; no installation or data migration exists to undo. Parent role changes remain unchanged by this repair.
+
+Independent review: Root read the complete builder/test diff and accepted it in the durable Hostile-review-artifact above. The test execution counts are the author's actual runs, not falsely attributed to Root. Full affected suites passed: inline delivery17 (3.913s), project composition22 (7.236s), consumer runtime4 isolated layouts, plus the full documented canonical refresh/check (/tmp/role-contract-provenance-refresh.log). Red counterexample log is /tmp/role-contract-provenance-red.log; green log /tmp/role-contract-provenance-green.log. New exact-head hosted full CI is required after push and is not claimed by these local receipts.
