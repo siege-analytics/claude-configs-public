@@ -28,3 +28,11 @@ Run the public test-evidence producer against the exact two Python source paths,
 
 Pre-mortem-artifact: plans/git-clone-conditional-context-1252.md
 Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1252#issuecomment-6758296031
+
+## Configured Claude v4 disposition
+
+The configured independent peer accepted the gitdir parser/mkdir model and raised two further static possibilities. Actual private Git with matching onbranch master/main and init.defaultBranch did not select the conditional URL rewrite at clone transport: HTTPS was rejected by an ext-only protocol ceiling, and no helper marker appeared. No onbranch restriction was added. Both unconditional and destination-conditioned remote.origin.vcs did execute a private git-remote-fixture marker despite an unchanged HTTPS URL. The amendment therefore reads the selected remote's vcs setting in the same exact context and rejects custom transport, extending conditional transport discovery to that key. These controls are actual Git, not mocks. Trusted user hooks/SSH configuration retains its existing boundary; this is not a sandbox claim or a general global-config ban.
+
+Git's config builtin does not activate destination gitdir conditions before metadata exists, even with explicit --git-dir. The corrected selected-key reader uses captured, bounded git var -l only for the destination context; the ordinary neutral path retains structured config --get. No raw config/identity output is logged. Repeated normal overrides retain last-value behavior and remote subsection case is preserved. Focused controls also retain ordinary unrelated multiline values, equals signs, trailing path spaces and repeated default remote names.
+
+Root final exact-source acceptance and configured-peer disposition: https://github.com/siege-analytics/claude-configs-public/issues/1252#issuecomment-6758415790. This closes the bounded source review, not hosted CI or publication.

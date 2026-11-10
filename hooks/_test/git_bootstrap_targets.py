@@ -548,15 +548,17 @@ class GitBootstrap(unittest.TestCase):
     def test_conditional_remote_selection_matches_actual_clone_and_rejects_helper(self):
         target=self.ws/'conditional-remote';target.mkdir()
         included=self.ws/'remote-selection.config'
-        included.write_text('[clone]\n defaultRemoteName = conditional\n')
+        included.write_text('[clone]\n defaultRemoteName = UPstream\n')
         config=self.ws/'remote-global.config'
-        config.write_text('[includeIf "gitdir:'+str(target/'.git')+'"]\n path = '+str(included)+'\n[remote "conditional"]\n url = '+str(self.source)+'\n')
+        config.write_text('[includeIf "gitdir:'+str(target/'.git')+'"]\n path = '+str(included)+'\n[remote "UPstream"]\n url = '+str(self.source)+'\n')
         environment={'GIT_CONFIG_GLOBAL':str(config),'GIT_ALLOW_PROTOCOL':'file'}
         self.f.env.update(environment)
         with patch.dict(os.environ,environment):
             args=['git','clone','--template=','--no-local','https://example.invalid/source',str(target)]
+            from task_actions import _git_clone_effective_source
+            self.assertEqual(_git_clone_effective_source('https://example.invalid/source',git_dir=str(target/'.git')),str(self.source))
             self.run_allowed(args,target)
-            remote=subprocess.check_output(['git','-C',str(target),'config','--local','--get','remote.conditional.url'],env=self.f.env,text=True)
+            remote=subprocess.check_output(['git','-C',str(target),'config','--local','--get','remote.UPstream.url'],env=self.f.env,text=True)
             self.assertEqual(remote,'https://example.invalid/source\n')
             self.assert_independent_objects(self.source/'.git',target/'.git')
         # A conditional remote URL alone is also transport configuration.
@@ -576,6 +578,51 @@ class GitBootstrap(unittest.TestCase):
         with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(config)}):
             self.run_allowed(['git','clone','--template=','--no-local',str(self.source),str(target)],target)
         self.assert_independent_objects(self.source/'.git',target/'.git')
+
+    def test_remote_vcs_helper_is_transport_even_without_URL_rewrite(self):
+        for conditional in (False,True):
+            with self.subTest(conditional=conditional):
+                target=self.ws/('vcs-target-'+str(conditional));target.mkdir()
+                marker=self.ws/('vcs-marker-'+str(conditional));helpers=self.ws/('helpers-'+str(conditional));helpers.mkdir()
+                helper=helpers/'git-remote-fixture';helper.write_text('#!/bin/sh\n/usr/bin/touch '+shlex.quote(str(marker))+'\nexit 1\n');helper.chmod(0o755)
+                included=self.ws/'vcs-include.config';included.write_text('[remote "origin"]\n vcs = fixture\n')
+                config=self.ws/'vcs-global.config';config.write_text(('[includeIf "gitdir:'+str(target/'.git')+'"]\n path = '+str(included)+'\n') if conditional else included.read_text())
+                environment={'GIT_CONFIG_GLOBAL':str(config),'GIT_ALLOW_PROTOCOL':'fixture','PATH':str(helpers)+':'+os.environ['PATH']}
+                self.f.env.update(environment)
+                args=['git','clone','--template=','https://example.invalid/source',str(target)]
+                self.task(target)
+                with patch.dict(os.environ,environment):
+                    self.assertIn('unsupported Git clone custom remote transport',self.shape(args).get('error',''))
+                    self.f.assertGate(2,shlex.join(args),cwd=self.ws)
+                    self.assertFalse(marker.exists());self.assertEqual(list(target.iterdir()),[])
+                    actual=subprocess.run(args,cwd=self.ws,env=self.f.env,capture_output=True,timeout=10)
+                    self.assertNotEqual(actual.returncode,0);self.assertTrue(marker.exists())
+
+    def test_matching_onbranch_default_does_not_select_transport_during_clone(self):
+        for branch in ('master','main'):
+            with self.subTest(branch=branch):
+                target=self.ws/('onbranch-'+branch);target.mkdir();marker=self.ws/('onbranch-marker-'+branch)
+                included=self.ws/'onbranch-include.config';included.write_text('[url "ext::/usr/bin/touch '+str(marker)+'"]\n insteadOf = https://example.invalid/source\n')
+                config=self.ws/'onbranch-global.config';config.write_text('[init]\n defaultBranch = '+branch+'\n[includeIf "onbranch:'+branch+'"]\n path = '+str(included)+'\n[protocol "ext"]\n allow = always\n')
+                environment={'GIT_CONFIG_GLOBAL':str(config),'GIT_ALLOW_PROTOCOL':'ext'};self.f.env.update(environment)
+                with patch.dict(os.environ,environment):
+                    args=['git','clone','--template=','https://example.invalid/source',str(target)]
+                    self.assertFalse(self.shape(args).get('error'))
+                    actual=subprocess.run(args,cwd=self.ws,env=self.f.env,capture_output=True,timeout=10)
+                    self.assertNotEqual(actual.returncode,0);self.assertIn(b"transport 'https' not allowed",actual.stderr)
+                    self.assertFalse(marker.exists())
+
+    def test_destination_lookup_preserves_unrelated_multiline_equals_and_spaces(self):
+        target=self.ws/'unrelated-config-values';target.mkdir()
+        environment=self.conditional_config(target,'ssh://git@example.invalid/safe')
+        config=Path(environment['GIT_CONFIG_GLOBAL'])
+        config.write_text(config.read_text()+'[alias]\n multiline = "first\\nsecond=value "\n[core]\n hooksPath = "ordinary hooks=path "\n[clone]\n defaultRemoteName = previous\n defaultRemoteName = origin\n')
+        before=config.read_bytes()
+        with patch.dict(os.environ,environment):
+            from task_actions import _git_clone_effective_source
+            self.assertEqual(_git_clone_effective_source('https://example.invalid/source',git_dir=str(target/'.git')),'ssh://git@example.invalid/safe')
+            self.assertFalse(self.shape(['git','clone','https://example.invalid/source',str(target)]).get('error'))
+        self.assertEqual(config.read_bytes(),before);self.assertEqual(list(target.iterdir()),[])
 
     def test_inherited_git_targeting_environment_denies_bootstrap(self):
         for key in ('GIT_DIR','GIT_WORK_TREE','GIT_TEMPLATE_DIR','GIT_CONFIG_COUNT','GIT_SSH_COMMAND'):

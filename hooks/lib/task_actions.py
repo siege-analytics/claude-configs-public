@@ -499,7 +499,7 @@ def _git_clone_conditional_transport() -> bool:
     No glob matching is implemented here: when a gitdir include can affect the
     selected remote or its URL, the lookup uses the exact destination context.
     """
-    pattern = r'^(include\.path|includeif\..*\.path|url\..*\.insteadof|remote\..*\.url|clone\.defaultremotename)$'
+    pattern = r'^(include\.path|includeif\..*\.path|url\..*\.insteadof|remote\..*\.(url|vcs)|clone\.defaultremotename)$'
     visited = set()
 
     def inspect(path=None, conditional=False, depth=0):
@@ -540,22 +540,39 @@ def _git_clone_conditional_transport() -> bool:
     return inspect()
 
 
+def _git_clone_config_value(key: str, git_dir: str | None) -> bytes | None:
+    if git_dir is None:
+        result = _git_bootstrap_read(['config', '--get', key])
+        if result.returncode not in {0, 1}:
+            raise UnknownShape('cannot inspect Git clone transport configuration')
+        return (result.stdout[:-1] if result.stdout.endswith(b'\n') else result.stdout) if result.returncode == 0 else None
+    # Unlike the config builtin, var initializes the explicit destination Git
+    # context even before metadata exists. Capture only; never log user config
+    # or identity values. This retains the existing trusted-user-config boundary
+    # (including user hooks/SSH commands), rather than claiming a sandbox.
+    result = _git_bootstrap_read(['var', '-l'], git_dir=git_dir)
+    if result.returncode:
+        raise UnknownShape('cannot inspect destination Git clone transport configuration')
+    prefix = key.encode('utf-8') + b'='
+    values = [line[len(prefix):] for line in result.stdout.split(b'\n') if line.startswith(prefix)]
+    return values[-1] if values else None
+
+
 def _git_clone_effective_source(source: str, *, git_dir: str | None = None) -> str:
     # Clone assigns its literal repository argument to the new remote; it does
     # not interpret that argument as a remote name in the caller's repository.
     # An invocation-only remote URL models this assignment while retaining the
     # real system/global config ordering (including a configured default name).
-    name = _git_bootstrap_read(['config', '--get', 'clone.defaultRemoteName'], git_dir=git_dir)
-    if name.returncode not in {0, 1}:
-        raise UnknownShape('cannot resolve Git clone default remote name')
-    raw_name = name.stdout[:-1] if name.stdout.endswith(b'\n') else name.stdout
+    raw_name = _git_clone_config_value('clone.defaultremotename', git_dir)
     try:
-        remote_name = raw_name.decode('utf-8') if name.returncode == 0 else 'origin'
+        remote_name = raw_name.decode('utf-8') if raw_name is not None else 'origin'
     except UnicodeError as error:
         raise UnknownShape('unsupported Git clone remote name') from error
     valid = _git_bootstrap_read(['check-ref-format', 'refs/remotes/' + remote_name + '/probe'])
     if not remote_name or valid.returncode:
         raise UnknownShape('unsupported Git clone remote name')
+    if _git_clone_config_value('remote.' + remote_name + '.vcs', git_dir) is not None:
+        raise UnknownShape('unsupported Git clone custom remote transport')
     resolved = _git_bootstrap_read(['ls-remote', '--get-url', '--', remote_name],
                                    (('remote.' + remote_name + '.url', source),), git_dir=git_dir)
     if resolved.returncode:

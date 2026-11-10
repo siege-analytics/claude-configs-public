@@ -8777,6 +8777,7 @@
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/gate_registry.test.sh",
+        "hooks/_test/git_bootstrap_targets.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/hub_concurrency_gate.test.sh",
