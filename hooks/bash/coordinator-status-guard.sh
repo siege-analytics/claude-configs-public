@@ -86,6 +86,24 @@ if metadata is not None:
     print('BLOCKED: metadata-comment lane requires one literal supported body-only command; state operations and shell composition retain their own checks.', file=sys.stderr)
     sys.exit(2)
 
+# A PR-creation description is not an existing lane's status transition.
+# This is only a status-text exemption: do not add PR creation to the shared
+# metadata-post lane. UMG, review, topology and destructive-action guards still
+# authorize the operation. A composed command cannot borrow this verdict.
+try:
+    from git_command import SAFE_ENV, literal_prefix
+    create_tokens = task_actions.shell_tokens(command)
+    create_words, create_environment = literal_prefix(
+        [word for word, _, _ in create_tokens], strict=True)
+    if (not any(operator or globs for _, operator, globs in create_tokens)
+            and not any(name not in SAFE_ENV for name in create_environment)
+            and len(create_words) >= 3
+            and create_words[0].rsplit('/', 1)[-1] == 'gh'
+            and create_words[1:3] == ['pr', 'create']):
+        sys.exit(0)
+except ValueError:
+    pass  # Unresolved syntax retains the existing conservative checks.
+
 # Text edits to existing artifacts are not coordinator state transitions.
 shape = classify_action(command, sys.argv[3] or os.getcwd())
 if shape.get("read_only") or shape.get("metadata_only"):

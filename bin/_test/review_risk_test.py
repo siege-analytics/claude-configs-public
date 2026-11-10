@@ -197,6 +197,7 @@ REQUIRED_HELPER_EDGES = {
 hooks/bash/destructive-guard.sh|hooks/lib/github-merge-queue.py
 hooks/bash/destructive-guard.sh|hooks/lib/github_metadata_comment.py
 hooks/bash/coordinator-status-guard.sh|hooks/lib/github_metadata_comment.py
+hooks/bash/coordinator-status-guard.sh|hooks/lib/git_command.py
 hooks/bash/destructive-guard.sh|hooks/lib/github-mechanical-completion.py
 hooks/bash/destructive-guard.sh|hooks/lib/hook_payload.py
 hooks/bash/coordinator-status-guard.sh|hooks/lib/github-mechanical-completion.py
@@ -304,7 +305,7 @@ hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
 hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "4acf40047bbd9189743f53e9b0325a176d31d6bead2e7e35b6107c50ab995513"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "5f3d25b2e3e5307fb3f753e67a1372dc9770dade80ce647a591f2eb564f64933"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "f77d145b554f600b409d683d2374cc183e14a344ad6f52fe54bb8782ab758fae"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
