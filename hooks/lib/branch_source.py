@@ -116,6 +116,7 @@ def check(item, inspect, *, release_source=None):
         derived = name[len('<path-derived:'):-1]
         if inspect(cwd, 'rev-parse', '--verify', '--quiet', 'refs/heads/' + derived + '^{commit}'):
             return  # Git reuses an existing basename branch without creating it.
+        name = derived  # Check the real newly created name, not its placeholder.
     if name == '<existing-or-guessed>':
         local = inspect(cwd, 'rev-parse', '--verify', '--quiet', 'refs/heads/' + source + '^{commit}')
         if local:
