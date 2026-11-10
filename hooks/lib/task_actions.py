@@ -497,7 +497,7 @@ def _git_toplevel(directory: str) -> str:
 
 
 
-def _git_bootstrap_read(arguments: list[str], config: tuple = ()):
+def _git_bootstrap_read(arguments: list[str], config: tuple = (), *, git_dir: str | None = None):
     """Fixed read-only Git lookup without enclosing-repository configuration."""
     import tempfile
     try:
@@ -510,7 +510,8 @@ def _git_bootstrap_read(arguments: list[str], config: tuple = ()):
                 for index, (key, value) in enumerate(config):
                     environment['GIT_CONFIG_KEY_' + str(index)] = key
                     environment['GIT_CONFIG_VALUE_' + str(index)] = value
-            result = subprocess.run(['git', '-C', neutral, *arguments], env=environment,
+            context = ['--git-dir=' + git_dir] if git_dir is not None else []
+            result = subprocess.run(['git', '-C', neutral, *context, *arguments], env=environment,
                                     capture_output=True, timeout=3)
     except (OSError, subprocess.SubprocessError) as error:
         raise UnknownShape('cannot inspect clone-equivalent Git configuration') from error
@@ -547,24 +548,89 @@ def _git_clone_local_kind(source: str, cwd: str) -> str | None:
     return None
 
 
-def _git_clone_effective_source(source: str) -> str:
+def _git_clone_conditional_transport() -> bool:
+    """Discover potentially relevant transport includes; Git evaluates their conditions.
+
+    Read inactive include files as data only, using Git's own config/path parser.
+    No glob matching is implemented here: when a gitdir include can affect the
+    selected remote or its URL, the lookup uses the exact destination context.
+    """
+    pattern = r'^(include\.path|includeif\..*\.path|url\..*\.insteadof|remote\..*\.(url|vcs)|clone\.defaultremotename)$'
+    visited = set()
+
+    def inspect(path=None, conditional=False, depth=0):
+        if depth > 10 or len(visited) > 64:
+            raise UnknownShape('Git clone conditional configuration exceeds bounded inspection')
+        if path is not None:
+            identity = (path, conditional)
+            if identity in visited or not os.path.exists(path):
+                return False
+            visited.add(identity)
+        args = ['config', *(['--file', path] if path is not None else []),
+                '--null', '--path', '--no-includes', '--show-origin', '--get-regexp', pattern]
+        result = _git_bootstrap_read(args)
+        if result.returncode not in {0, 1}:
+            raise UnknownShape('cannot inspect Git clone conditional URL configuration')
+        fields = result.stdout.split(b'\0')
+        if fields[-1] != b'' or (len(fields) - 1) % 2:
+            raise UnknownShape('unsupported Git clone configuration records')
+        for index in range(0, len(fields) - 1, 2):
+            origin, record = fields[index:index + 2]
+            key, separator, value = record.partition(b'\n')
+            if not separator:
+                raise UnknownShape('unsupported Git clone configuration value')
+            if key.startswith((b'url.', b'remote.')) or key == b'clone.defaultremotename':
+                if conditional:
+                    return True
+                continue
+            if not origin.startswith(b'file:'):
+                raise UnknownShape('unsupported Git clone include origin')
+            include = os.fsdecode(value)
+            if not os.path.isabs(include):
+                include = os.path.join(os.path.dirname(os.fsdecode(origin[5:])), include)
+            gitdir = key.startswith((b'includeif.gitdir:', b'includeif.gitdir/i:'))
+            if inspect(os.path.abspath(include), conditional or gitdir, depth + 1):
+                return True
+        return False
+
+    return inspect()
+
+
+def _git_clone_config_value(key: str, git_dir: str | None) -> bytes | None:
+    if git_dir is None:
+        result = _git_bootstrap_read(['config', '--get', key])
+        if result.returncode not in {0, 1}:
+            raise UnknownShape('cannot inspect Git clone transport configuration')
+        return (result.stdout[:-1] if result.stdout.endswith(b'\n') else result.stdout) if result.returncode == 0 else None
+    # Unlike the config builtin, var initializes the explicit destination Git
+    # context even before metadata exists. Capture only; never log user config
+    # or identity values. This retains the existing trusted-user-config boundary
+    # (including user hooks/SSH commands), rather than claiming a sandbox.
+    result = _git_bootstrap_read(['var', '-l'], git_dir=git_dir)
+    if result.returncode:
+        raise UnknownShape('cannot inspect destination Git clone transport configuration')
+    prefix = key.encode('utf-8') + b'='
+    values = [line[len(prefix):] for line in result.stdout.split(b'\n') if line.startswith(prefix)]
+    return values[-1] if values else None
+
+
+def _git_clone_effective_source(source: str, *, git_dir: str | None = None) -> str:
     # Clone assigns its literal repository argument to the new remote; it does
     # not interpret that argument as a remote name in the caller's repository.
     # An invocation-only remote URL models this assignment while retaining the
     # real system/global config ordering (including a configured default name).
-    name = _git_bootstrap_read(['config', '--get', 'clone.defaultRemoteName'])
-    if name.returncode not in {0, 1}:
-        raise UnknownShape('cannot resolve Git clone default remote name')
-    raw_name = name.stdout[:-1] if name.stdout.endswith(b'\n') else name.stdout
+    raw_name = _git_clone_config_value('clone.defaultremotename', git_dir)
     try:
-        remote_name = raw_name.decode('utf-8') if name.returncode == 0 else 'origin'
+        remote_name = raw_name.decode('utf-8') if raw_name is not None else 'origin'
     except UnicodeError as error:
         raise UnknownShape('unsupported Git clone remote name') from error
     valid = _git_bootstrap_read(['check-ref-format', 'refs/remotes/' + remote_name + '/probe'])
     if not remote_name or valid.returncode:
         raise UnknownShape('unsupported Git clone remote name')
+    if _git_clone_config_value('remote.' + remote_name + '.vcs', git_dir) is not None:
+        raise UnknownShape('unsupported Git clone custom remote transport')
     resolved = _git_bootstrap_read(['ls-remote', '--get-url', '--', remote_name],
-                                   (('remote.' + remote_name + '.url', source),))
+                                   (('remote.' + remote_name + '.url', source),), git_dir=git_dir)
     if resolved.returncode:
         raise UnknownShape('cannot resolve effective Git clone source')
     value = resolved.stdout[:-1] if resolved.stdout.endswith(b'\n') else resolved.stdout
@@ -661,7 +727,20 @@ def _git_bootstrap_destination(operation: dict) -> str | None:
             if ':' not in source:
                 raise UnknownShape('Git clone source is neither a local candidate nor a transport')
             clone_argument = source
-        source = _git_clone_effective_source(clone_argument)
+        git_dir = None
+        if _git_clone_conditional_transport():
+            target = os.path.abspath(os.path.join(cwd, destination))
+            if target != canonical(target):
+                raise UnknownShape('Git bootstrap destination has a symlink alias')
+            if not os.path.isdir(target):
+                raise UnknownShape('conditional Git clone URL lookup needs an existing empty destination; create that directory within the same Task scope, then retry')
+            try:
+                if os.listdir(target):
+                    raise UnknownShape('Git clone requires an empty destination')
+            except OSError as error:
+                raise UnknownShape('cannot inspect Git clone destination') from error
+            git_dir = target if seen_flags & {'--bare', '--mirror'} else os.path.join(target, '.git')
+        source = _git_clone_effective_source(clone_argument, git_dir=git_dir)
         if not source or '\n' in source or '\r' in source or source.startswith('-'):
             raise UnknownShape('invalid effective Git clone source')
         effective_kind = _git_clone_local_kind(source, cwd)

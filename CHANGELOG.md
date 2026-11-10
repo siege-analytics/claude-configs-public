@@ -15,6 +15,8 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Fixed: branch preparation and owner-grant continuity
 
+- Resolve fresh clone transport settings in the destination Git context, including conditional remote names and URL rewrites. When those settings require it, create the empty destination within the existing Task scope before retrying; ordinary fresh cloning remains supported (#1252).
+
 - Reject clustered creation flags, symbolic/full main aliases and attached orphan options consistently with the develop-source policy (#1229).
 - Bound refresh to remote-tracking refs without configured local-branch destinations, pruning or tag updates. Preserve other task branches, the caller's checkout and dirty tracked/untracked files (#1229, #1234).
 - Before missing-develop bootstrap, bind one effective read/write repository identity using command-local raw URL metadata. Preserve GitHub HTTPS/SSH transport pairs, normal URL rewrite semantics and explicit pushurl behavior; reject foreign or multiple write targets before writing. A racing develop creator remains protected by the empty compare-and-swap lease (#1234).
