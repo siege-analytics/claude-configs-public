@@ -6,9 +6,9 @@ source "$ROOT/hooks/_test/run_scenarios.sh"
 HOOK="$ROOT/hooks/agent-comms/spawn-guard.sh"
 
 payload() {
-  python3 - "$1" <<'PY'
+  python3 - "$1" "$ROOT" <<'PY'
 import json, sys
-print(json.dumps({"tool_input": json.loads(sys.argv[1])}))
+print(json.dumps({"cwd": sys.argv[2], "tool_input": json.loads(sys.argv[1])}))
 PY
 }
 
@@ -73,7 +73,7 @@ prompts = {
 }
 models = {"read-only": "claude-opus-4-8"}
 thinking = {"read-only": "high"}
-print(json.dumps({"tool_input": {
+print(json.dumps({"cwd": root, "tool_input": {
   "name": "Read-only review" if kind == "read-only" else "Implementation",
   "prompt": prompts[kind],
   "permissionMode": "allow-all",
@@ -96,8 +96,8 @@ expect_block \
   "$HOOK" \
   "$(payload '{"name":"Implementation","prompt":"Use RESOLVER.md and spawn-protocol. Implement fix 248 and commit changes.","permissionMode":"allow-all","labels":["implementation"],"model":"claude-sonnet-5","thinkingLevel":"medium","enabledSourceSlugs":[]}')"
 
-expect_pass \
-  "write-capable git child with worktree instruction passes" \
+expect_block \
+  "worktree promise does not isolate a write-capable child" \
   "$HOOK" \
   "$(payload_with_root with-worktree)"
 
@@ -105,5 +105,7 @@ expect_pass \
   "read-only git child without worktree passes" \
   "$HOOK" \
   "$(payload_with_root read-only)"
+
+python3 "$ROOT/hooks/_test/spawn_worktree_isolation.py" || exit 1
 
 report

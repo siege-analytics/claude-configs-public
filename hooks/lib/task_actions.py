@@ -804,6 +804,290 @@ def _git_bootstrap_destination(operation: dict) -> str | None:
         if existing.returncode not in {0, 128}:
             raise UnknownShape('cannot establish absent Git bootstrap metadata')
     return target
+# ssh contacts another machine and writes nothing local by itself, so it is
+# gated by destination, not by the cwd (#1160). Only hosts on the operator-owned
+# allowlist pass, and only with options whose effects stay remote. Anything
+# else is denied even under a covering task gate: options that run or write
+# locally (ProxyCommand, LocalCommand, -F, -E, -S/-M, forwards, -f) and ssh run
+# through another path, an assignment or a command wrapper. The one wrapped
+# form modeled is the bounded literal `timeout <N> ssh ...`. scp, rsync and
+# sftp keep their local operands and are not handled here.
+# Fixed canonical policy path beside the installed hook library; the final
+# component is opened without following links (#1160).
+SSH_ALLOWLIST = os.path.join(os.path.realpath(os.path.dirname(os.path.abspath(__file__))), "ssh-host-allowlist.json")
+SSH_ALLOWLIST_MAX_BYTES = 4096
+SSH_EXECUTABLES = {"ssh", "/usr/bin/ssh"}
+_SSH_TIMEOUT = re.compile(r"[0-9]+(?:\.[0-9]+)?[smhd]?")  # GNU timeout DURATION
+# Command wrappers and how to find the command each one runs: options that
+# take a separate value, and positional words before the command. Only the
+# wrapped executable is classified; other argument text is never searched.
+_WRAPPER_VALUES = {
+    "timeout": {"-k", "--kill-after", "-s", "--signal"},
+    "gtimeout": {"-k", "--kill-after", "-s", "--signal"},
+    "nohup": set(), "setsid": set(), "unbuffer": set(), "builtin": set(), "nocorrect": set(), "noglob": set(),
+    "nice": {"-n", "--adjustment"},
+    "time": {"-f", "--format", "-o", "--output"},
+    "xargs": {"-a", "--arg-file", "-d", "--delimiter", "-E", "--eof", "-I", "--replace", "-L", "--max-lines",
+              "-n", "--max-args", "-P", "--max-procs", "-s", "--max-chars"},
+    "sudo": {"-u", "--user", "-g", "--group", "-h", "--host", "-p", "--prompt", "-C", "--close-from",
+             "-R", "--chroot", "-D", "--chdir", "-T", "--command-timeout", "-r", "--role", "-t", "--type",
+             "-U", "--other-user"},
+    "doas": {"-u", "-C"},
+    "stdbuf": {"-i", "--input", "-o", "--output", "-e", "--error"},
+    "caffeinate": {"-t", "-w"},
+    "watch": {"-n", "--interval", "-q", "--equexit"},
+    "flock": {"-w", "--wait", "--timeout", "-E", "--conflict-exit-code"},
+    "script": {"-t", "-T", "--log-timing", "-I", "--log-in", "-O", "--log-out", "-B", "--log-io", "-E", "--echo",
+               "-m", "--logging-format", "-o", "--output-limit"},
+    "ionice": {"-c", "--class", "-n", "--classdata"},
+    "taskset": set(),
+    "chrt": {"-T", "--sched-runtime", "-P", "--sched-period", "-D", "--sched-deadline"},
+    "arch": {"-arch", "-e", "-d"},
+    "env": {"-u", "--unset", "-C", "--chdir"},
+    "command": set(),
+    "exec": {"-a"},
+}
+_WRAPPER_POSITIONALS = {"timeout": 1, "gtimeout": 1, "taskset": 1, "chrt": 1, "flock": 1}
+_WRAPPER_NO_COMMAND = {  # options after which the wrapper runs no command
+    "command": {"-v", "-V"}, "ionice": {"-p", "--pid", "-P", "--pgid", "-u", "--uid"},
+    "taskset": {"-p", "--pid"}, "chrt": {"-p", "--pid"}, "sudo": {"-e", "--edit", "-l", "--list", "-v", "--validate"},
+}
+_WRAPPER_STRINGS = {"env": {"-S", "--split-string"}, "flock": {"-c", "--command"}, "script": {"-c", "--command"}}
+_SSH_LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
+_SSH_HOST = re.compile(_SSH_LABEL + r"(?:\." + _SSH_LABEL + r")*")
+_SSH_LOGIN = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]*")
+_SSH_FLAGS = set("46aCnqTtvx")  # no-value flags with no local effect
+_SSH_VALUES = set("lop")         # -l login, -o option, -p port
+_SSH_CONFIG = {  # -o keys whose effects stay remote, and their accepted values
+    "batchmode": r"yes|no",
+    "compression": r"yes|no",
+    "connecttimeout": r"[0-9]{1,5}",
+    "connectionattempts": r"[0-9]{1,3}",
+    "serveraliveinterval": r"[0-9]{1,5}",
+    "serveralivecountmax": r"[0-9]{1,3}",
+    "loglevel": r"quiet|fatal|error|info|verbose|debug|debug1|debug2|debug3",
+    "requesttty": r"yes|no|force|auto",
+    "port": r"[0-9]{1,5}",
+    "user": _SSH_LOGIN.pattern,
+}
+
+
+def _unique_keys(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate key {key!r}")
+        result[key] = value
+    return result
+
+
+def ssh_allowlist():
+    """Allowed ssh hosts and the allowlist source. Any defect admits no host.
+
+    The grant comes only from the fixed policy file itself: a symlink, a hard
+    link, a FIFO or other non-regular file, an oversized file, duplicate or
+    unknown keys, or a malformed host list all deny every host. The open is
+    non-blocking, so a FIFO cannot stall the hook (#1160).
+    """
+    try:
+        flags = os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
+        if os.path.islink(SSH_ALLOWLIST):
+            raise ValueError("is a symbolic link; it must be the policy file itself")
+        fd = os.open(SSH_ALLOWLIST, flags)  # O_NOFOLLOW still refuses a link swapped in after the check
+        try:
+            info = os.fstat(fd)  # inspect the opened descriptor before any read
+            if not stat.S_ISREG(info.st_mode):
+                raise ValueError("not a regular file")
+            if info.st_nlink != 1:
+                raise ValueError(f"has {info.st_nlink} hard links; it must have exactly one")
+            if info.st_size > SSH_ALLOWLIST_MAX_BYTES:
+                raise ValueError(f"larger than {SSH_ALLOWLIST_MAX_BYTES} bytes")
+            raw = os.read(fd, SSH_ALLOWLIST_MAX_BYTES + 1)
+        finally:
+            os.close(fd)
+        if len(raw) > SSH_ALLOWLIST_MAX_BYTES:
+            raise ValueError(f"larger than {SSH_ALLOWLIST_MAX_BYTES} bytes")
+        data = json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_keys)
+        if not isinstance(data, dict) or set(data) != {"hosts"}:
+            raise ValueError('the policy must be exactly {"hosts": [...]}')
+        hosts = data["hosts"]
+        if not isinstance(hosts, list) or not all(isinstance(h, str) and _SSH_HOST.fullmatch(h) for h in hosts):
+            raise ValueError('"hosts" must be a list of hostnames')
+        return frozenset(h.lower() for h in hosts), SSH_ALLOWLIST
+    # Broad on purpose. A defect surfaces as OSError (missing file, symlink),
+    # ValueError (checks above, malformed JSON, bad UTF-8) or RecursionError
+    # (deeply nested JSON inside the size cap; /usr/bin/python3 3.9.6 raises it
+    # for a 4090-byte policy). Every one must deny all hosts, so the gate exits
+    # 2 and names the reason.
+    except Exception as exc:
+        return frozenset(), f"{SSH_ALLOWLIST} (unusable: {exc})"
+
+
+def _ssh_option(flag: str, value: str) -> None:
+    if flag == "p" and re.fullmatch(r"[0-9]{1,5}", value):
+        return
+    if flag == "l" and _SSH_LOGIN.fullmatch(value):
+        return
+    if flag == "o":
+        # ssh reads `-o` as one config line: `Key=Value` or `Key Value`.
+        match = re.fullmatch(r"\s*([A-Za-z]+)(?:\s*=\s*|\s+)(\S+)\s*", value)
+        if match and re.fullmatch(_SSH_CONFIG.get(match[1].lower(), r"(?!)"), match[2], re.IGNORECASE):
+            return
+        raise UnknownShape(f"ssh -o {value!r} is not allowed: only {', '.join(sorted(_SSH_CONFIG))} "
+                           "with plain values stay remote (#1160)")
+    raise UnknownShape(f"ssh -{flag} {value!r} is not a plain {'port' if flag == 'p' else 'login'} (#1160)")
+
+
+def _ssh_host(destination: str) -> str:
+    if destination.startswith("ssh://"):
+        match = re.fullmatch(r"ssh://(?:([^@/?#]+)@)?([^@:/?#]+)(?::[0-9]{1,5})?/?", destination)
+        user, host = (match[1], match[2]) if match else ("", "")
+    else:
+        user, _, host = destination.rpartition("@")  # ssh splits at the last @
+    if not _SSH_HOST.fullmatch(host) or user and not re.fullmatch(r"[A-Za-z0-9_.@-]+", user):
+        raise UnknownShape(f"ssh destination {destination!r} is not a plain [user@]host (#1160)")
+    return host.lower()
+
+
+def ssh_destination(args: list[str]) -> str:
+    """Destination host of a literal `ssh` argv, or UnknownShape.
+
+    Like ssh.c, options are parsed before the destination and again after it
+    until `--` or the first other word; the rest is the remote command, which
+    runs remotely and names no local target.
+    """
+    words, host, index, ended = args[1:], None, 0, False
+    while index < len(words):
+        word = words[index]
+        if not ended and word == "--":
+            ended = True
+            index += 1
+            if host is not None:
+                break
+            continue
+        if not ended and word.startswith("-") and word != "-":
+            position = 1
+            while position < len(word):
+                flag = word[position]
+                if flag in _SSH_FLAGS:
+                    position += 1
+                    continue
+                if flag not in _SSH_VALUES:
+                    raise UnknownShape(f"ssh option -{flag} is not allowed: it has local effects or is not "
+                                       "modeled by the mutation gate (#1160)")
+                value = word[position + 1:]
+                if not value:
+                    index += 1
+                    if index >= len(words):
+                        raise UnknownShape(f"ssh option -{flag} is missing its value")
+                    value = words[index]
+                _ssh_option(flag, value)
+                break
+            index += 1
+            continue
+        if host is not None:
+            break
+        host = _ssh_host(word)
+        index += 1
+    if host is None:
+        raise UnknownShape("ssh requires a literal destination host (#1160)")
+    return host
+
+
+def _command_string(text: str) -> list[str]:
+    try:
+        return shlex.split(text)
+    except ValueError:
+        return text.split()
+
+
+def _wrapped_command(args: list[str]):
+    """Argv that a supported command wrapper runs: None when args[0] is not a
+    wrapper, [] when the wrapper runs no command."""
+    name = os.path.basename(args[0])
+    if name not in _WRAPPER_VALUES:
+        return None
+    values, strings = _WRAPPER_VALUES[name], _WRAPPER_STRINGS.get(name, set())
+    stops, exec_mode, index = _WRAPPER_NO_COMMAND.get(name, set()), False, 1
+    while index < len(args):
+        token = args[index]
+        if token == "--":
+            index += 1
+            break
+        if name in {"env", "sudo"} and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", token, re.S):
+            index += 1
+            continue
+        if not token.startswith("-") or token == "-":
+            break
+        index += 1
+        if token.startswith("--") or name == "arch":  # arch options are whole words (-x86_64, -arch NAME)
+            option, equal, attached = token.partition("=")
+            if option in stops:
+                return []
+            if option in strings:
+                text = attached if equal else (args[index] if index < len(args) else "")
+                return _command_string(text) + (args[index + (0 if equal else 1):] if name == "env" else [])
+            exec_mode = exec_mode or option == "--exec"
+            if option in values and not equal:
+                index += 1
+            continue
+        for position in range(1, len(token)):  # a short-option cluster such as -nu root or -oL
+            option = "-" + token[position]
+            rest = token[position + 1:]
+            if option in stops:
+                return []
+            if option in strings:
+                text = rest or (args[index] if index < len(args) else "")
+                return _command_string(text) + (args[index + (0 if rest else 1):] if name == "env" else [])
+            exec_mode = exec_mode or (name == "watch" and option == "-x")
+            if option in values:
+                if not rest:
+                    index += 1
+                break
+    index += _WRAPPER_POSITIONALS.get(name, 0) + (1 if name == "script" else 0)
+    rest = args[index:]
+    if rest and rest[0].partition("=")[0] in strings:  # flock FILE -c CMD, script FILE -c CMD
+        option, equal, attached = rest[0].partition("=")
+        return _command_string(attached if equal else (rest[1] if len(rest) > 1 else ""))
+    if name == "watch" and not exec_mode:  # watch runs its words as one sh -c string
+        return _command_string(" ".join(rest))
+    return rest
+
+
+def ssh_invocation(args: list[str]):
+    """Host of a direct `ssh` command, None when argv does not run ssh.
+
+    ssh run through another path, an environment assignment or a command
+    wrapper cannot be host-checked here, so it is refused. The exception is
+    the bounded literal `timeout <N> ssh ...`, which goes through the same
+    argv model. A wrapper is unwrapped to the command it runs; an argument
+    that merely names ssh (a service, a path) does not make a command ssh.
+    """
+    assignment = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=.*", re.S)
+    head = 0
+    while head < len(args) and assignment.fullmatch(args[head]):
+        head += 1
+    if head >= len(args):
+        return None
+    word = args[head]
+    if head == 0 and word in SSH_EXECUTABLES:
+        return ssh_destination(args)
+    if head == 0 and word == "timeout" and len(args) > 2 and _SSH_TIMEOUT.fullmatch(args[1]) \
+            and args[2] in SSH_EXECUTABLES:
+        return ssh_destination(args[2:])
+    if word in SSH_EXECUTABLES or os.path.basename(word) == "ssh":
+        raise UnknownShape("run ssh directly as `ssh` or /usr/bin/ssh, without environment assignments, "
+                           "so its host can be checked against the ssh host allowlist (#1160)")
+    command = args[head:]
+    while True:
+        command = _wrapped_command(command)
+        while command and assignment.fullmatch(command[0]):
+            command = command[1:]
+        if not command:
+            return None
+        if os.path.basename(command[0]) == "ssh":
+            raise UnknownShape("ssh behind a command wrapper cannot be host-checked; run ssh directly, "
+                               "or as `timeout <N> ssh ...` (#1160)")
 
 
 def reader(args: list[str]) -> bool:
@@ -1186,7 +1470,7 @@ def action(command: str, cwd: str) -> dict:
         # thinks; the targets found below still pick the owning task's gate.
         result.update(read_only=False, investigation=False, self_management=False,
                       veto="read-only-command: option writes or runs a program")
-        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') or result.get('review_actions') or result.get('metadata_posts') else [canonical(cwd)])
+        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') or result.get('review_actions') or result.get('metadata_posts') or result.get('remote_contact_only') else [canonical(cwd)])
     return result
 
 
@@ -1554,6 +1838,7 @@ def _action(command: str, cwd: str) -> dict:
     remote_actions = []
     review_actions = []
     metadata_posts = []
+    remote_hosts = []  # allowlisted ssh destinations (#1160)
     mutation_commands = 0
     commit_commands = 0
     unproven_companions = []
@@ -1651,6 +1936,20 @@ def _action(command: str, cwd: str) -> dict:
                 if metadata_comment(shlex.join(args), effective, details=post) is not True:
                     raise UnknownShape('unproven GitHub metadata post shape or target; use literal repository/target and body')
                 metadata_posts.append({**post, 'cwd': effective})
+                self_managed = False
+                args, arg_globs = [], []
+                return
+            # ssh names no local target; its destination is checked instead
+            # (#1160). This precedes the operand pass below, which would read
+            # remote text such as 'cat /etc/x' as local paths.
+            host = ssh_invocation(args)
+            if host is not None:
+                allowed, source = ssh_allowlist()
+                if host not in allowed:
+                    raise UnknownShape(f"ssh host {host!r} is not on the ssh host allowlist {source} "
+                                       f"(allowed: {', '.join(sorted(allowed)) or 'none'}); "
+                                       "only the operator can add a host (#1160)")
+                remote_hosts.append(host)
                 self_managed = False
                 args, arg_globs = [], []
                 return
@@ -1855,13 +2154,20 @@ def _action(command: str, cwd: str) -> dict:
             raise UnknownShape('separate configuration/file mutations from commit calls; run git commit -F FILE first, then a separately scoped cleanup command')
     except UnknownShape as e:
         return {"read_only": False, "paths": list(dict.fromkeys(paths + [effective])), "error": str(e), "binding": binding}
-    if remote_repos or remote_actions or review_actions or metadata_posts:
+    if remote_repos or remote_actions or review_actions or metadata_posts or remote_hosts:
         paths.extend(unproven_companions)
+    # Remote-only: no local target and no diagnostic companion. ssh gets its
+    # own flag; metadata_only lets other guards skip their checks (#1160).
+    # A project or review action beside ssh keeps its task-owned authorization:
+    # remote_contact_only never short-circuits remote_actions or review_actions.
+    remote_only = not paths and not diagnostic
     return {"read_only": reads and not diagnostic and bool(tokens), "investigation": reads and diagnostic,
             "self_managed_shape": self_managed and not diagnostic, "directory_paths": [p for p in directory_paths if p not in file_paths], "directory_removals": directory_removals,
             # A path only removed, never also written in the same command (#1100).
             "file_removals": [p for p in file_removals if paths.count(p) == file_removals.count(p)],
-            "paths": list(dict.fromkeys(paths or ([] if remote_repos or remote_actions or review_actions or metadata_posts else [effective]))),
+            "paths": list(dict.fromkeys(paths or ([] if (remote_repos or remote_actions or review_actions or remote_hosts or metadata_posts) and not (remote_hosts and not remote_only) else [effective]))),
             "remote_repos": list(dict.fromkeys(remote_repos)),
             "remote_actions": remote_actions, "review_actions": review_actions, "metadata_posts": metadata_posts,
-            "metadata_only": bool(remote_repos) and not remote_actions and not review_actions and not metadata_posts and not paths and not diagnostic, "binding": binding}
+            "remote_hosts": list(dict.fromkeys(remote_hosts)),
+            "metadata_only": bool(remote_repos) and not remote_actions and not review_actions and not metadata_posts and not remote_hosts and remote_only,
+            "remote_contact_only": bool(remote_hosts) and not remote_actions and not review_actions and not metadata_posts and remote_only, "binding": binding}
