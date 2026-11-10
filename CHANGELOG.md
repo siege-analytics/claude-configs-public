@@ -4,6 +4,10 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: task-scoped fresh Git repositories
+
+- Allow bounded `git init` and explicitly targeted `git clone` within the owning active Task's directory scope without borrowing an enclosing repository. Existing metadata, path aliases and foreign ownership remain guarded. Use per-command `--template=` when a custom template is outside the modeled route; local repository inputs, including Git-directory pointer files, require `--no-local` for independent objects. Clone source checks use the actual nonrepository configuration context. These alternatives change no persistent Git configuration or owner grant (#1240, #1242).
+
 ### BREAKING: normal development branches require develop
 
 - Normal feature, fix, documentation and configuration branch creation now requires a verified develop source. Implicit HEAD, main aliases and repository defaults do not substitute for develop. Migrate by using `bin/prepare-task-branch.py --branch <task-branch> --worktree <new-path>` (with `--repo` when needed): it creates an isolated task worktree and can create missing remote develop from verified main/default with an atomic create-only lease. Known cached develop remains usable offline with freshness reported (#1229).
@@ -15,6 +19,15 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Bound refresh to remote-tracking refs without configured local-branch destinations, pruning or tag updates. Preserve other task branches, the caller's checkout and dirty tracked/untracked files (#1229, #1234).
 - Before missing-develop bootstrap, bind one effective read/write repository identity using command-local raw URL metadata. Preserve GitHub HTTPS/SSH transport pairs, normal URL rewrite semantics and explicit pushurl behavior; reject foreign or multiple write targets before writing. A racing develop creator remains protected by the empty compare-and-swap lease (#1234).
 - Preserve existing owner grants through status questions, agent relays and recoverable method failures. An agent's own approval question or hold summary does not create a new owner hold; actual owner conditions, reviews, role boundaries and publication checks still apply (#1231).
+
+### BREAKING: unsupported copy flags no longer imply a scoped copy
+
+- Unknown `cp` options now fail closed instead of silently inheriting destination scope (#1236). Migrate to modeled flags such as `-pR`, macOS `-ac`/`-RX`, or `-RL`, with an explicit final destination. `-L` dereferences symlinks and changes preservation semantics; use it only when that is the intended copy. Preserved alias endpoints and move sources still require their real scope. A genuine inspection-budget failure names the limitation instead of inventing a whole-source write requirement.
+
+### Fixed: preservation copies and Git bundle inspection
+
+- Large ordinary copy inputs remain reads, including 19,033-entry preservation trees. Preserved symlinks count their actual canonical endpoints, not every source operand; own-data sources cannot hide an outside alias (#1236, #1238). Suffix values remain data rather than link/dereference flags. Existing destination checks and hardlink protections remain.
+- Literal `git bundle list-heads`, `git bundle verify` and bounded `git fsck` integrity checks are reads. Bundle creation/unpacking, fsck `--lost-found`, unknown/output flags and composed writes retain their normal mutation checks (#1236).
 
 ### Fixed: task scopes and evidence execution
 
