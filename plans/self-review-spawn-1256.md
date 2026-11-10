@@ -78,6 +78,8 @@ oversized admin-backpointer denials in spawn_worktree_isolation.py.
 | FIFO risk during review | Unbounded file read overlooked | private malformed metadata fixture | bounded reader and fixture rerun | not timed |
 | Claude parent-cd finding | Setup example retained child-side command | exact example review | remove cd, bind fixture cwd | not timed |
 | Root actual-host normalization findings | Parent-relative inference instead of provider contract | actual app path tests | literal target + HOME/order controls | not timed |
+| Native push reported missing Tier C trailers | Commit-message contract not fully copied | one native dry run | message-only amend; no bypass | not timed |
+| Native test receipt had no host session binding | Did not initially use established unbound native terminal receipt route | inspect resolver and producer | real producer rerun plus strict content check; no invented identity | not timed |
 | Mac /var fixture assertion | Compared raw path spelling to canonical output | resolve fixture expected path | test-only assertion correction | not timed |
 
 ## Evidence-predates-work
@@ -102,3 +104,8 @@ Evidence: the plan and assumptions in these committed records provide the scoped
 source/behavior/risk contract; Root explicitly retained the existing task grant.
 Falsification: readiness is claimed without actual source, fixture and independent
 review evidence, or this change purports to resolve another #1256 item.
+
+First-added commit: ec4e04a58d9421bee33b588de83c1d626a3af834
+Work commit: 3d039216f05eba95dabc9cd88e794added2112fb
+Verification: `git merge-base --is-ancestor ec4e04a58d9421bee33b588de83c1d626a3af834 3d039216f05eba95dabc9cd88e794added2112fb` -> 0.
+This is Git commit ordering only; the earlier authoring chronology above remains explicit.
