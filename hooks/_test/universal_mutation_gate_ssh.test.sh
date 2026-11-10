@@ -66,6 +66,8 @@ allow "-- before the destination ends option parsing" "ssh -- cyberpower -o Prox
 allow "remote words after the command are not options" "ssh cyberpower ls -o ProxyCommand=x"
 allow "stderr duplication and /dev/null sink" "ssh cyberpower uptime 2>&1 >/dev/null"
 allow "reading local stdin is not a write" "ssh cyberpower 'cat > /tmp/remote' < README.md"
+allow "SU stdin script with a remote /tmp argument" "ssh cyberpower bash -s -- 5 /tmp/su-file < README.md"
+allow "SU stdin script with its target inside the script (D2a, host alone)" "ssh cyberpower bash -s < README.md"
 allow "chained with a proven reader" "ssh cyberpower uptime; ls"
 allow "explicit task binding prefix" "CCP_TASK_ID=$TASK ssh cyberpower uptime"
 allow "existing artifact text edit plus ssh" "gh issue edit 123 --title changed && ssh cyberpower uptime"
@@ -78,6 +80,7 @@ deny "host given as an -l value is not the destination" "ssh -l cyberpower evil 
 deny "host given as a -p value is not a port" "ssh -p cyberpower evil" "$OPTION"
 deny "ssh:// URI to another host" "ssh ssh://cyberpower@evil true" "$NOT_LISTED"
 deny "IP literal is not an allowlisted alias" "ssh 10.0.0.1 true" "$NOT_LISTED"
+deny "SU stdin script shape to another host" "ssh outsider bash -s -- 5 /tmp/su-file < README.md" "$NOT_LISTED"
 deny "malformed destination" "ssh 'cyber power' true" "not a plain \\[user@\\]host"
 deny "trailing-dot hostname" "ssh cyberpower. true" "not a plain"
 deny "no destination at all" "ssh -v" "requires a literal destination"
@@ -132,13 +135,38 @@ echo "--- ssh hidden behind another argv0 is denied ---"
 deny "relative ./ssh" "./ssh cyberpower true" "$HIDDEN"
 deny "other absolute ssh path" "/tmp/ssh cyberpower true" "$HIDDEN"
 deny "environment assignment prefix" "SSH_ASKPASS=./x ssh cyberpower true" "$HIDDEN"
-deny "timeout wrapper" "timeout 5 ssh cyberpower true" "$HIDDEN"
 deny "nohup wrapper" "nohup ssh cyberpower true" "$HIDDEN"
 deny "xargs wrapper" "xargs ssh cyberpower < hosts.txt" "$HIDDEN"
 deny "sudo wrapper" "sudo ssh evil true" "$HIDDEN"
+deny "sudo wrapper with a valued option" "sudo -u root ssh evil true" "$HIDDEN"
+deny "nested wrappers" "sudo nice -n 5 ssh evil true" "$HIDDEN"
 deny "env wrapper" "env ssh evil true" "$HIDDEN"
+deny "env -S command string" "env -S 'ssh evil true'" "$HIDDEN"
 deny "command wrapper" "command ssh evil true" "$HIDDEN"
 deny "wrapper with ssh in a command string" "watch 'ssh evil true'" "$HIDDEN"
+deny "flock -c command string after the lock file" "flock /tmp/l -c 'ssh evil true'" "$HIDDEN"
+
+echo "--- the bounded literal timeout wrapper uses the same host model ---"
+allow "timeout <N> ssh to an allowlisted host" "timeout 90 ssh cyberpower uptime"
+allow "timeout with a suffixed duration and /usr/bin/ssh" "timeout 90s /usr/bin/ssh -o BatchMode=yes cyberpower uptime"
+deny "timeout <N> ssh to another host" "timeout 90 ssh outsider uptime" "$NOT_LISTED"
+deny "timeout <N> ssh with a local-effect option" "timeout 90 ssh -o ProxyCommand=nc cyberpower true" "$OPTION"
+deny "timeout <N> ssh keeps a local redirect target" "timeout 90 ssh cyberpower uptime > /tmp/out" "$UNSCOPED"
+deny "timeout <N> ssh keeps an unproven companion target" "timeout 90 ssh cyberpower uptime; printenv" "$UNSCOPED"
+deny "timeout with options is not the bounded form" "timeout -k 5 90 ssh cyberpower true" "$HIDDEN"
+deny "timeout with a non-literal duration" "timeout abc ssh cyberpower true" "$HIDDEN"
+deny "timeout around another ssh path" "timeout 90 ./ssh cyberpower true" "$HIDDEN"
+deny "timeout nested in another wrapper" "nice timeout 90 ssh cyberpower true" "$HIDDEN"
+deny "assignment before timeout ssh" "X=1 timeout 90 ssh cyberpower true" "$HIDDEN"
+
+echo "--- an argument that names ssh does not make another command ssh ---"
+# Without a task gate these reach the normal task path ("Unscoped mutation"),
+# not the ssh wrapper refusal; under a covering gate they pass (below).
+deny "service named ssh reaches the task path" "sudo systemctl restart ssh" "$UNSCOPED"
+deny "data path named ssh reaches the task path" "nice tar cf $REPO/archive.tar $REPO/ssh" "$UNSCOPED"
+run bash/universal-mutation-gate.sh "sudo ls $REPO/ssh"
+! grep -qE "$HIDDEN|$NOT_LISTED" "$T/out" && record 1 "listing a path named ssh is not an ssh refusal" \
+    || record 0 "listing a path named ssh is not an ssh refusal"
 
 echo "--- AC3: scp/rsync/sftp keep their local operands ---"
 deny "AC3 scp cyberpower:/x ./out (ticket falsifier)" "scp cyberpower:/x ./out" "$UNSCOPED"
@@ -289,8 +317,13 @@ allow "AC3 positive: scp into the covered cwd passes" "scp cyberpower:/x ./out"
 allow "AC4 positive: covered redirect plus allowlisted ssh passes" "ssh cyberpower cat x > out.txt"
 deny "unknown host denied even under a covering gate" "ssh unknown-host true" "$NOT_LISTED"
 deny "local-effect option denied even under a covering gate" "ssh -o ProxyCommand=nc cyberpower true" "$OPTION"
-deny "wrapper denied even under a covering gate" "timeout 5 ssh unknown-host true" "$HIDDEN"
+deny "wrapper denied even under a covering gate" "nohup ssh unknown-host true" "$HIDDEN"
+deny "bounded timeout to another host denied even under a covering gate" "timeout 90 ssh unknown-host true" "$NOT_LISTED"
 allow "allowlisted ssh still passes alongside a covering gate" "ssh cyberpower uptime"
+allow "bounded timeout ssh passes under a covering gate" "timeout 90 ssh cyberpower uptime"
+allow "covered: service named ssh (Root payload)" "sudo systemctl restart ssh"
+allow "covered: listing a path named ssh (Root payload)" "sudo ls $REPO/ssh"
+allow "covered: archiving a path named ssh (Root payload)" "nice tar cf $REPO/archive.tar $REPO/ssh"
 
 # An allowlisted contact is outbound contact only. Even
 # with a covering task gate, the resolution must not select, bind or report
@@ -310,6 +343,15 @@ sys.exit(0 if d.get("remote_contact_only") is True and not d.get("gate") and not
 }
 contact_only "covering gate: allowlisted contact carries no task authority" "ssh cyberpower 'screen -ls'"
 contact_only "covering gate: remote-side write text is still only contact" "ssh cyberpower 'touch /srv/remote-file'"
+contact_only "covering gate: bounded timeout ssh is only contact" "timeout 90 ssh cyberpower uptime"
+# SU Hub live shape: remote path words are remote text, never local targets,
+# so they cannot select or escalate a task tier.
+contact_only "covering gate: SU stdin script with a remote /tmp argument is only contact" \
+    "ssh cyberpower bash -s -- 5 /tmp/su-file < README.md"
+# Accepted D2(a) tradeoff, recorded as observed: a stdin script whose target is
+# inside the script is admitted on the host alone (Q2 option b would change it).
+contact_only "covering gate: SU stdin script with its target inside the script is only contact (D2a)" \
+    "ssh cyberpower bash -s < README.md"
 resolution "ssh cyberpower cat x > out.txt"
 "$REAL_PY" -c 'import json,sys; d=json.load(open(sys.argv[1])); g=d.get("gate") or {}
 sys.exit(0 if not d.get("remote_contact_only") and str(g.get("path","")).endswith("tasks/ssh-fixture/think-gate.json") else 1)' "$T/out" \

@@ -443,17 +443,51 @@ def _git_toplevel(directory: str) -> str:
 # gated by destination, not by the cwd (#1160). Only hosts on the operator-owned
 # allowlist pass, and only with options whose effects stay remote. Anything
 # else is denied even under a covering task gate: options that run or write
-# locally (ProxyCommand, LocalCommand, -F, -E, -S/-M, forwards, -f) and forms
-# that hide ssh behind another argv0. scp, rsync and sftp keep their local
-# operands and are not handled here.
+# locally (ProxyCommand, LocalCommand, -F, -E, -S/-M, forwards, -f) and ssh run
+# through another path, an assignment or a command wrapper. The one wrapped
+# form modeled is the bounded literal `timeout <N> ssh ...`. scp, rsync and
+# sftp keep their local operands and are not handled here.
 # Fixed canonical policy path beside the installed hook library; the final
 # component is opened without following links (#1160).
 SSH_ALLOWLIST = os.path.join(os.path.realpath(os.path.dirname(os.path.abspath(__file__))), "ssh-host-allowlist.json")
 SSH_ALLOWLIST_MAX_BYTES = 4096
 SSH_EXECUTABLES = {"ssh", "/usr/bin/ssh"}
-SSH_WRAPPERS = {"timeout", "gtimeout", "nohup", "nice", "time", "xargs", "sudo", "doas", "stdbuf", "setsid",
-                "caffeinate", "watch", "unbuffer", "script", "flock", "ionice", "taskset", "chrt", "arch",
-                "env", "command", "exec", "builtin", "nocorrect", "noglob"}
+_SSH_TIMEOUT = re.compile(r"[0-9]+(?:\.[0-9]+)?[smhd]?")  # GNU timeout DURATION
+# Command wrappers and how to find the command each one runs: options that
+# take a separate value, and positional words before the command. Only the
+# wrapped executable is classified; other argument text is never searched.
+_WRAPPER_VALUES = {
+    "timeout": {"-k", "--kill-after", "-s", "--signal"},
+    "gtimeout": {"-k", "--kill-after", "-s", "--signal"},
+    "nohup": set(), "setsid": set(), "unbuffer": set(), "builtin": set(), "nocorrect": set(), "noglob": set(),
+    "nice": {"-n", "--adjustment"},
+    "time": {"-f", "--format", "-o", "--output"},
+    "xargs": {"-a", "--arg-file", "-d", "--delimiter", "-E", "--eof", "-I", "--replace", "-L", "--max-lines",
+              "-n", "--max-args", "-P", "--max-procs", "-s", "--max-chars"},
+    "sudo": {"-u", "--user", "-g", "--group", "-h", "--host", "-p", "--prompt", "-C", "--close-from",
+             "-R", "--chroot", "-D", "--chdir", "-T", "--command-timeout", "-r", "--role", "-t", "--type",
+             "-U", "--other-user"},
+    "doas": {"-u", "-C"},
+    "stdbuf": {"-i", "--input", "-o", "--output", "-e", "--error"},
+    "caffeinate": {"-t", "-w"},
+    "watch": {"-n", "--interval", "-q", "--equexit"},
+    "flock": {"-w", "--wait", "--timeout", "-E", "--conflict-exit-code"},
+    "script": {"-t", "-T", "--log-timing", "-I", "--log-in", "-O", "--log-out", "-B", "--log-io", "-E", "--echo",
+               "-m", "--logging-format", "-o", "--output-limit"},
+    "ionice": {"-c", "--class", "-n", "--classdata"},
+    "taskset": set(),
+    "chrt": {"-T", "--sched-runtime", "-P", "--sched-period", "-D", "--sched-deadline"},
+    "arch": {"-arch", "-e", "-d"},
+    "env": {"-u", "--unset", "-C", "--chdir"},
+    "command": set(),
+    "exec": {"-a"},
+}
+_WRAPPER_POSITIONALS = {"timeout": 1, "gtimeout": 1, "taskset": 1, "chrt": 1, "flock": 1}
+_WRAPPER_NO_COMMAND = {  # options after which the wrapper runs no command
+    "command": {"-v", "-V"}, "ionice": {"-p", "--pid", "-P", "--pgid", "-u", "--uid"},
+    "taskset": {"-p", "--pid"}, "chrt": {"-p", "--pid"}, "sudo": {"-e", "--edit", "-l", "--list", "-v", "--validate"},
+}
+_WRAPPER_STRINGS = {"env": {"-S", "--split-string"}, "flock": {"-c", "--command"}, "script": {"-c", "--command"}}
 _SSH_LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
 _SSH_HOST = re.compile(_SSH_LABEL + r"(?:\." + _SSH_LABEL + r")*")
 _SSH_LOGIN = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]*")
@@ -595,27 +629,100 @@ def ssh_destination(args: list[str]) -> str:
     return host
 
 
+def _command_string(text: str) -> list[str]:
+    try:
+        return shlex.split(text)
+    except ValueError:
+        return text.split()
+
+
+def _wrapped_command(args: list[str]):
+    """Argv that a supported command wrapper runs: None when args[0] is not a
+    wrapper, [] when the wrapper runs no command."""
+    name = os.path.basename(args[0])
+    if name not in _WRAPPER_VALUES:
+        return None
+    values, strings = _WRAPPER_VALUES[name], _WRAPPER_STRINGS.get(name, set())
+    stops, exec_mode, index = _WRAPPER_NO_COMMAND.get(name, set()), False, 1
+    while index < len(args):
+        token = args[index]
+        if token == "--":
+            index += 1
+            break
+        if name in {"env", "sudo"} and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", token, re.S):
+            index += 1
+            continue
+        if not token.startswith("-") or token == "-":
+            break
+        index += 1
+        if token.startswith("--") or name == "arch":  # arch options are whole words (-x86_64, -arch NAME)
+            option, equal, attached = token.partition("=")
+            if option in stops:
+                return []
+            if option in strings:
+                text = attached if equal else (args[index] if index < len(args) else "")
+                return _command_string(text) + (args[index + (0 if equal else 1):] if name == "env" else [])
+            exec_mode = exec_mode or option == "--exec"
+            if option in values and not equal:
+                index += 1
+            continue
+        for position in range(1, len(token)):  # a short-option cluster such as -nu root or -oL
+            option = "-" + token[position]
+            rest = token[position + 1:]
+            if option in stops:
+                return []
+            if option in strings:
+                text = rest or (args[index] if index < len(args) else "")
+                return _command_string(text) + (args[index + (0 if rest else 1):] if name == "env" else [])
+            exec_mode = exec_mode or (name == "watch" and option == "-x")
+            if option in values:
+                if not rest:
+                    index += 1
+                break
+    index += _WRAPPER_POSITIONALS.get(name, 0) + (1 if name == "script" else 0)
+    rest = args[index:]
+    if rest and rest[0].partition("=")[0] in strings:  # flock FILE -c CMD, script FILE -c CMD
+        option, equal, attached = rest[0].partition("=")
+        return _command_string(attached if equal else (rest[1] if len(rest) > 1 else ""))
+    if name == "watch" and not exec_mode:  # watch runs its words as one sh -c string
+        return _command_string(" ".join(rest))
+    return rest
+
+
 def ssh_invocation(args: list[str]):
     """Host of a direct `ssh` command, None when argv does not run ssh.
 
-    ssh hidden behind an environment assignment, another path or an exec
-    wrapper cannot be host-checked here, so it is refused.
+    ssh run through another path, an environment assignment or a command
+    wrapper cannot be host-checked here, so it is refused. The exception is
+    the bounded literal `timeout <N> ssh ...`, which goes through the same
+    argv model. A wrapper is unwrapped to the command it runs; an argument
+    that merely names ssh (a service, a path) does not make a command ssh.
     """
+    assignment = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=.*", re.S)
     head = 0
-    while head < len(args) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", args[head], re.S):
+    while head < len(args) and assignment.fullmatch(args[head]):
         head += 1
     if head >= len(args):
         return None
     word = args[head]
     if head == 0 and word in SSH_EXECUTABLES:
         return ssh_destination(args)
+    if head == 0 and word == "timeout" and len(args) > 2 and _SSH_TIMEOUT.fullmatch(args[1]) \
+            and args[2] in SSH_EXECUTABLES:
+        return ssh_destination(args[2:])
     if word in SSH_EXECUTABLES or os.path.basename(word) == "ssh":
         raise UnknownShape("run ssh directly as `ssh` or /usr/bin/ssh, without environment assignments, "
                            "so its host can be checked against the ssh host allowlist (#1160)")
-    if os.path.basename(word) in SSH_WRAPPERS and any(
-            w.split() and os.path.basename(w.split()[0]) == "ssh" for w in args[head + 1:]):
-        raise UnknownShape("ssh behind a command wrapper cannot be host-checked; run ssh directly (#1160)")
-    return None
+    command = args[head:]
+    while True:
+        command = _wrapped_command(command)
+        while command and assignment.fullmatch(command[0]):
+            command = command[1:]
+        if not command:
+            return None
+        if os.path.basename(command[0]) == "ssh":
+            raise UnknownShape("ssh behind a command wrapper cannot be host-checked; run ssh directly, "
+                               "or as `timeout <N> ssh ...` (#1160)")
 
 
 def reader(args: list[str]) -> bool:

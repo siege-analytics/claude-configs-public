@@ -5,11 +5,74 @@ ticket_refs:
 
 # Self-review: ssh gated by host allowlist, not as a local cwd mutation (#1160)
 
-Branch `bugfix/ssh_host_scope`, first based on `origin/develop` 94dd034f2c and now integrated with develop 6cae44a. Tier C: enforcement hooks and the review-risk policy.
+Branch `bugfix/ssh_host_scope`, first based on `origin/develop` 94dd034f2c and now integrated with develop ce21650. Tier C: enforcement hooks and the review-risk policy.
 
-This is the implementer's own self-review. A cross-family hostile review rejected head 03b5d24 with one merge blocker (R1, the policy loader). Fix round 1 below addresses it. Re-review is required at the new pinned head.
+This is the implementer's own self-review. A cross-family hostile review rejected head 03b5d24 with one merge blocker (R1, the policy loader); fix round 1 addresses it. Root's review of 1bf057a (review 5836572211) found two regressions in the wrapper rule; fix round 2 addresses them. Re-review is required at the new pinned head.
+
+## Fix round 2 (2026-11-09): wrapper unwrap and bounded timeout (Root review 5836572211)
+
+Authorized by the Siege Claude Hub (261109-tall-heath, 22:15 CST). Review: https://github.com/siege-analytics/claude-configs-public/pull/1170#pullrequestreview-5836572211. The host policy, the physical-policy loader and the local-target controls are unchanged.
+
+- **Defects at 1bf057a.**
+  1. `ssh_invocation` searched every argument after a wrapper word for a basename of `ssh`, so commands that only name ssh were refused as hidden ssh.
+  2. `timeout 90 ssh cyberpower uptime` was refused everywhere.
+- **Fix** (`hooks/lib/task_actions.py`):
+  - `_wrapped_command` unwraps each supported wrapper by its own grammar: options that take values, positional words before the command (timeout duration, taskset mask, chrt priority, flock lock file), command strings (`watch`, `env -S`, `flock`/`script -c`, including `-c` after the lock file), options that run no command (`command -v`, `sudo -e`), and nesting.
+  - Only the wrapped executable is classified. If it is ssh, the command is refused as before; otherwise the command takes its normal path.
+  - The bounded literal `timeout <N> ssh ...` (no timeout options, a literal duration, argv `ssh` or `/usr/bin/ssh`, no assignments) goes through `ssh_destination` and the allowlist, so options, redirects and companions are checked as for direct ssh.
+- **Root's payloads** (gate exit, from disposable copied trees; "covered" is an own-session covering task gate, tier C with companions; main is a0dc815):
+
+  | Payload | Context | main | 1bf057a | new |
+  |---|---|---|---|---|
+  | `sudo systemctl restart ssh` | no gate | 2 (Unscoped) | 2 (ssh wrapper refusal) | 2 (Unscoped) |
+  | `sudo ls <repo>/ssh` | no gate | 2 (Unscoped) | 2 (ssh wrapper refusal) | 2 (Unscoped) |
+  | `nice tar cf <repo>/archive.tar <repo>/ssh` | no gate | 2 (Unscoped) | 2 (ssh wrapper refusal) | 2 (Unscoped) |
+  | `timeout 90 ssh cyberpower uptime` | no gate | 2 (Unscoped) | 2 (ssh wrapper refusal) | 0 (contact only) |
+  | `timeout 90 ssh outsider uptime` | no gate | 2 (Unscoped) | 2 (ssh wrapper refusal) | 2 (host not allowlisted) |
+  | `command -v ssh >/dev/null && ssh cyberpower uptime` | no gate | 2 | 2 | 2 |
+  | `sudo systemctl restart ssh` | covered | 0 | 2 | 0 |
+  | `sudo ls <repo>/ssh` | covered | 0 | 2 | 0 |
+  | `nice tar cf <repo>/archive.tar <repo>/ssh` | covered | 0 | 2 | 0 |
+  | `timeout 90 ssh cyberpower uptime` | covered | 0 | 2 | 0 (contact only) |
+  | `timeout 90 ssh outsider uptime` | covered | 0 | 2 | 2 (host not allowlisted) |
+  | `command -v ssh >/dev/null && ssh cyberpower uptime` | covered | 2 | 2 | 2 |
+
+  The `command -v` case is refused on all three trees by develop's Git-command parsing ("unsupported Git mutation options"), not by the ssh rule.
+- **Harness: 179 cases.** The timeout-denial rows are corrected. Added: Root's three payloads as positives under a covering gate and as "Unscoped mutation" (the task path) without one; timeout positives and negatives (outsider, local-effect option, local redirect, companion, timeout options, non-literal duration, other ssh path, nesting, assignment); more wrapper negatives (valued `sudo -u`, nested wrappers, `env -S`, `flock -c` after the lock file); the SU Hub shapes below.
+- **Revert proofs** (179-case harness, failed cases): R1 30, R2 133, R3 3, R4 5, R5 2, R6 2, R7 10, R8 2, R9 6, R10 9.
+  - R9 restores the argv-wide wrapper search: it fails exactly Root's three payloads, with and without a gate.
+  - R10 removes the bounded timeout form: it fails the nine timeout cases.
+  - R5 now also fails the timeout companion case.
+- **SU Hub shapes (22:10 addendum), observed; Q2 policy unchanged:**
+
+  | Shape | Context | develop ce21650 | new |
+  |---|---|---|---|
+  | `ssh cyberpower bash -s -- 5 /tmp/su-file < script.sh` | no gate | 2 (`/tmp/su-file` read as a local target) | 0 (contact only, no local paths) |
+  | same, `outsider` | no gate | 2 (local target) | 2 (host not allowlisted) |
+  | `ssh cyberpower bash -s < su-derive.sh` (target inside the script) | no gate | 2 | 0 (host alone) |
+  | `ssh cyberpower bash -s -- 5 /tmp/su-file < script.sh` | covered | 2 (local target outside scope) | 0 (contact only, no tier) |
+  | same, `outsider` | covered | 2 | 2 (host not allowlisted) |
+  | `ssh cyberpower bash -s < su-derive.sh` | covered | 0 (binds the gate, tier C, cwd target) | 0 (contact only, no tier) |
+
+  A stdin script whose target is inside the script is admitted on the host alone at this head. That is the accepted D2(a) tradeoff; Q2 option (b), task-declared hosts, would change it and stays Dheeraj's decision.
+- **Workspace Config questions** (https://github.com/siege-analytics/claude-configs-public/issues/1160#issuecomment-6758720315), answered from behavior observed at this head:
+  1. *Are all operands after the host remote?* Yes. After the destination, and after any ssh options parsed before or after it, every word is the remote command and is never canonicalized: `ssh cyberpower bash -s -- 1415 /tmp/body.md ./x ../y < script.sh` exits 0 with no local paths. The exceptions are shell constructs, not ssh operands: local output redirects (`>`, `>>`, `2>`, `&>`, `>|`) and `tee` keep local targets; `<` is a read; chained segments are classified separately; an unproven reader companion keeps the cwd as its target; shell expansions (`$VAR`, `$( )`, backticks, unquoted globs, heredoc, `&`, subshell) are refused.
+  2. *Is the host allowlist the whole authorization?* At the mutation gate, for an allowlisted ssh with no local target, yes: it exits 0 with or without a task gate, and the resolution selects no gate, computes no tier and sets no `remote_only_authorized`. A task gate still applies to local targets in the same command and to GitHub project or review actions beside it. Other guards still read the command text. The remote effect class (for example a GitHub write made on the remote host) is not gated by this hook. That is D2(a); option (b) stays with Dheeraj.
+  3. *Sanctioned form for hub-posted worker comments?* This head adds no new class. `ssh cyberpower gh issue comment 1415 --repo <owner/repo> --body-file /tmp/body.md` passes the mutation gate as contact only, with or without a task gate, so no tier and no artifacts-posted requirement arise there. Two existing guards, unchanged and identical on develop, still refuse that exact command: destructive-guard ("github issue write", which takes its evidence-chain override) and coordinator-status-guard ("cannot inspect --body-file content", since the body file is remote). `timeout 90 ssh cyberpower gh ...` is refused by develop's existing wrapped-`gh` rule (#1156, "Wrapped GitHub mutations are not modeled"), also identical on develop.
+- **Enforcement claim, qualified.** Host enforcement holds for the modeled invocation forms (`ssh`, `/usr/bin/ssh`, `timeout <N> ssh`) under a trusted user ssh configuration. A wrapper outside the supported set, or an option of a supported wrapper that the table does not list, is not unwrapped, so ssh behind it falls to the generic cwd path, as before this change.
+
+## Integration with develop ce21650 (2026-11-09)
+
+- Merge commit ebea920 (`refs #1160`), additive.
+- Conflicts:
+  - `hooks/lib/task_actions.py`: develop's task-owned `review_actions` lane (#1210) beside this branch's `remote_hosts`/`remote_contact_only`. Both kept. `review_actions` blocks the ssh flag and `metadata_only`, keeps unproven companions as targets and suppresses the cwd fallback, exactly as `remote_actions` does, so a review action beside ssh still goes through `select_review_task`. Two cases pin it; revert proof R8 drops the exclusion and fails both.
+  - `CHANGELOG.md`: union.
+  - `catalog/review-risk-metrics.json`: regenerated with the tool.
+- `catalog/progressive-loading-metrics.json` reports stale locally after a fresh build, but a pristine develop ce21650 build on this host reports the same 2-character `legacy_rules_bundle` difference, so develop's committed file is kept.
 
 ## Fix round 1 (2026-11-06): physical policy-file boundary (review R1)
+
+Historical: the harness counts and revert-proof counts in this section were measured on e9fea03 with the 149-case harness. Current figures are in fix round 2.
 
 Authorized by the Siege Claude Hub (261106-neat-boulder, 21:45 CST). Review record: https://github.com/siege-analytics/claude-configs-public/pull/1170#issuecomment-6701689802. Root's concern 3 in https://github.com/siege-analytics/claude-configs-public/pull/1170#issuecomment-6692828625 raises the same issue. D2(a) is unchanged.
 
@@ -156,10 +219,10 @@ Assumptions checked against source:
   - `-o` with `BatchMode, Compression, ConnectTimeout, ConnectionAttempts, ServerAliveInterval, ServerAliveCountMax, LogLevel, RequestTTY, Port, User` and validated plain values.
   - Every other option is denied, including -F, -E, -S, -M, -L/-R/-D, -f, -W, -J, -A, -X/-Y, -i, -G, -N, -O, -w, -V, long options, and ProxyCommand, LocalCommand, PermitLocalCommand, HostName, ProxyJump, Control*, UserKnownHostsFile, KnownHostsCommand, StrictHostKeyChecking.
   - The remainder is the remote command and names no local path.
-- **Invocation (`ssh_invocation`):** only argv0 `ssh` or `/usr/bin/ssh` is modeled. These are denied:
+- **Invocation (`ssh_invocation`):** modeled forms are argv0 `ssh` or `/usr/bin/ssh`, and the bounded literal `timeout <N> ssh ...` (fix round 2), which goes through the same argv model. These are denied:
   - another ssh path (`./ssh`, `/tmp/ssh`);
   - a `NAME=value` prefix;
-  - exec wrappers that run ssh (timeout, nohup, xargs, sudo, env, command, watch and others).
+  - a command wrapper whose wrapped command is ssh (nohup, xargs, sudo, env, command, watch, flock, timeout with options and others). Each supported wrapper is unwrapped by its own option and positional grammar, including command strings (`watch`, `env -S`, `flock/script -c`) and nesting; only the wrapped executable is classified. An argument that only names ssh does not make a command ssh (fix round 2).
 - **Result:** `remote_contact_only` is true only when at least one destination passed the host check, there are no local paths and there is no diagnostic segment. Otherwise the command resolves local targets normally:
   - redirect, `tee` and chained mutations;
   - unproven reader companions keep the cwd as a target.
@@ -243,5 +306,6 @@ Current head (fix round 1): see the evidence table in "Fix round 1". The figures
   - programs or scripts that spawn ssh under a covering gate.
 - ssh may update `~/.ssh/known_hosts`. The operator's own `~/.ssh/config` (ControlMaster, ProxyCommand, Match exec) is trusted as operator-owned.
 - Host matching is lexical, on the destination name as typed; ssh config is never evaluated. The reviewer showed offline that an operator config can map `cyberpower` to another `HostName` and add `ProxyCommand` or `LocalCommand`. So this change does **not** prove that only allowlisted *effective* hosts are contacted, or that ssh has no local effects. It proves only that the hook adds no local target for the typed destination. Whether to treat ssh config as trusted is an open policy decision, not a test result.
+- Host enforcement is claimed only for the modeled invocation forms (`ssh`, `/usr/bin/ssh`, `timeout <N> ssh`) under a trusted user ssh configuration. A wrapper outside the supported set, or an option a supported wrapper has that the table does not list, is not unwrapped; ssh behind it falls to the generic cwd path, as before this change.
 - With unbound session identity, the Craft router still denies ssh (hub condition c).
 - Test-receipt lane: in this session two gate copies run (workspace-installed + the shared clone's project hooks). Each demands its own `hooks/lib/test-evidence.py`, so no `test-gate.json` receipt could be produced. Tests were run directly under the worktree gate.
