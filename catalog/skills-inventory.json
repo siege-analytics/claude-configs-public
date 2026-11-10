@@ -9142,10 +9142,10 @@
     },
     {
       "canonical_source": "skills/commit/SKILL.md",
-      "characters": 22623,
-      "content_sha256": "64778c1bd151dae3086d0a19a6c199c293ef90c362c27224490bc9a856ed8a49",
+      "characters": 23275,
+      "content_sha256": "50aafc5e0d45d2eef061613896d4c1ecc23c3568ed86447fb390ee4dca4c3f57",
       "description": "Create git commits with descriptive messages that link to tickets and explain the why. Enforces ticket references.",
-      "estimated_tokens": 5656,
+      "estimated_tokens": 5819,
       "frontmatter_name": "commit",
       "generated_outputs": [
         "dist/nested/skills/commit",
@@ -9182,7 +9182,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 421,
+      "lines": 422,
       "owner": [
         "unknown"
       ],
@@ -12263,6 +12263,7 @@
         "plans/self-review-658.md",
         "plans/self-review-659.md",
         "plans/self-review-660.md",
+        "plans/self-review-native-git-receipts-1256.md",
         "plans/strict-test-evidence-1063.md",
         "skills/RESOLVER.md",
         "skills/_testing-frameworks-rules.md",
@@ -12810,9 +12811,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2619523,
+    "characters": 2620175,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 654958,
+    "estimated_tokens": 655121,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12833,7 +12834,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1223129
+      "unclassified": 1223781
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12845,7 +12846,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 305824
+      "unclassified": 305987
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
