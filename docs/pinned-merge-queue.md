@@ -31,6 +31,8 @@ The hook performs one fixed read-only `node(id:)` lookup within the same three-s
 - Its head must equal the pinned head.
 - Its base must be an exempt base.
 
+For a pull request from a fork, the policy check and the audit use the base repository and base branch, where the merge lands. They never use the fork's head repository or head branch, so a fork named or branched `develop` that targets a release `main` is not exempt. The lookup reads `PullRequest.repository` and `baseRefName`. That this field names the base repository is taken from GitHub's published schema; it has not been observed in a live `node()` query against a fork.
+
 A failed lookup, a malformed answer or any mismatch denies the request. The lookup does not read branch rules. The hook relies on GitHub to reject an enqueue for a branch without a merge queue; that server behavior has not been observed in this repository. Do not substitute a generic merge endpoint when this operation is unavailable.
 
 The command must remain standalone. Admin, unpinned merge, auto-merge, REST merge, dequeue, extra mutation/response syntax, wrappers, shell expansions, redirections, backslash escapes and chained writes cannot use this exemption. Backslashes are rejected because the shell and the hook's lexer disagree about them inside double quotes, and GraphQL decodes `\uXXXX`; the validated text must be the delivered text. Normal local changes retain their own scope and evidence checks.

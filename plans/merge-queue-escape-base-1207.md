@@ -42,6 +42,9 @@ Verified against origin/develop 6cae44ad3c09c3cf6fb980428bbc5ca5ee330c31:
   - The gate's GraphQL parser still rejects the inline fragment in `node(id:){... on PullRequest{...}}`, so the exact lookup query was not probed.
   - The fragment-free equivalent `repository(owner:,name:){pullRequest(number:1226){id number baseRefName headRefOid repository{nameWithOwner}}}` returned exactly those fields live: string id, integer number, `develop`, a 40-hex head, `siege-analytics/claude-configs-public`.
   - The `node(id:)`/fragment wrapper is standard GraphQL but remains unprobed. A wrong wrapper fails closed.
+  - The hub separately observed `gh pr view --json id,number,baseRefName,headRefOid,headRepository` returning those fields, with a `PR_kwDO…` id and `headRepository.nameWithOwner`.
+  - Confirmed: `PullRequest.baseRefName`, `headRefOid`, `number`, `id`, and `Repository.nameWithOwner`. `PullRequest.repository` was also observed live, on a non-fork PR.
+  - Inferred from GitHub's published schema, not observed against a fork: that `PullRequest.repository` is the base repository.
 - Develop bf1a423 added a `github_graphql` pre-classification to `parse()`, so non-enqueue GraphQL returns `None`. Its ordinary path still raises "Unsupported GraphQL mutation" for any mutation except `resolveReviewThread`, so a non-exempt enqueue remains denied.
 
 ## Design
@@ -84,6 +87,7 @@ Implementation may proceed: yes.
 | 2 | `test_graphql_lookup_failure_or_mismatch_is_not_exempt` (fail, bad, huge, hang, stale and othernode deny, even with a task) |
 | 2 | `test_exact_graphql_variables_and_literal_use_one_node_lookup` (exactly one node read each; audit carries repository, number, base and form) |
 | 2 | `test_audit_records_server_base_repository_not_ambient_routing` (the GraphQL audit records the node's server-reported base repository, not ambient `GH_REPO`; a CLI `--repo` that disagrees with the server URL denies) |
+| 2 | `test_fork_pr_binds_policy_and_audit_to_base_repository` (fork head `contributor/develop:develop` into siege_utilities `main` is not exempt in either form; into `develop` both forms audit the base repository and never the fork) |
 | 3 | `test_cli_proof_read_failure_keeps_task_scope_without_exemption` (no task: deny; owned: allow, no audit; predicate exits 1; `GH_HOST` CLI keeps task, GraphQL denies; stale head still denies with `Pinned merge denied:`) |
 | 3 | `test_unreadable_proof_is_typed_and_only_cli_falls_back` (in-process: `ProofUnavailable` raised, CLI `verify` returns `None`, GraphQL raises `ValueError`; a stale head is not `ProofUnavailable`) |
 | 4 | `unavailable_helper_controls` asserts the form-specific labels |
@@ -97,6 +101,8 @@ Revert proofs were run on the working tree, restoring each line afterwards:
 - R2c: the GraphQL lookup replaced by the old no-read return. The lookup-failure, one-lookup/audit and main-base fixtures fail.
 - R3: the CLI `None` fallback removed. The read-failure fixture fails, because every owned mode is denied.
 - R4: the GraphQL audit repository taken from ambient `GH_REPO`. The base-repository fixture fails: it records `siege_utilities` instead of `claude-configs-public`.
+- R5: the GraphQL exempt-base check bound to `headRefName`. The fork fixture fails, because a fork into `main` with head branch `develop` is admitted.
+- R5b: the GraphQL repository bound to `headRepository`. The fork fixture fails, because the audit records `contributor/develop`.
 
 ## Peer review
 

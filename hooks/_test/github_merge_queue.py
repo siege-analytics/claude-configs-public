@@ -39,13 +39,15 @@ if mode=='bad': print('{'); sys.exit(0)
 if mode=='huge': print('x'*1100000); sys.exit(0)
 if mode=='envrepo' and (os.environ.get('GH_REPO')!='siege-analytics/siege_utilities' or '--repo' in args): sys.exit(98)
 head='0'*40 if mode=='stale' else '8801a13290e9a8cb72e7a2a92fc4c4e7522f954e'
-base='main' if mode=='mainbase' else 'develop'
+base='main' if mode in ('mainbase','forkmain') else 'develop'
 repo='siege-analytics/claude-configs-public' if mode=='otherrepo' else 'siege-analytics/siege_utilities'
+# A fork PR: the head lives in a contributor fork whose name and branch look exempt.
+fork=dict(headRepository=dict(nameWithOwner='contributor/develop'),headRefName='develop') if mode in ('fork','forkmain') else {}
 if args[:2]==['pr','view']:
- print(json.dumps(dict(id='PR_test',number=1794,url='https://github.com/'+repo+'/pull/1794',headRefOid=head,baseRefName=base)))
+ print(json.dumps(dict(id='PR_test',number=1794,url='https://github.com/'+repo+'/pull/1794',headRefOid=head,baseRefName=base,**fork)))
 elif args[:4]==['api','--hostname','github.com','graphql'] and len(args)==8 and args[4]==args[6]=='-f' and args[7].startswith('id='):
  node=args[7][3:] if mode!='othernode' else 'PR_other'
- print(json.dumps(dict(data=dict(node=dict(id=node,number=1794,baseRefName=base,headRefOid=head,repository=dict(nameWithOwner=repo))))))
+ print(json.dumps(dict(data=dict(node=dict(id=node,number=1794,baseRefName=base,headRefOid=head,repository=dict(nameWithOwner=repo),**fork)))))
 elif args[:3]==['api','--hostname','github.com'] and args[3] in ('repos/siege-analytics/siege_utilities/rules/branches/develop','repos/siege-analytics/siege_utilities/rules/branches/main'):
  print(json.dumps([] if mode=='noqueue' else [{'type':'merge_queue'}]))
 else: sys.exit(99)
@@ -132,6 +134,20 @@ else: sys.exit(99)
         result = self.hook(CLI+' --repo siege-analytics/siege_utilities', 2)  # Server identity outranks the request.
         self.assertIn('PR repository mismatch', result.stderr)
         self.assertEqual(len(self.audit.read_text().splitlines()), 1)
+
+    def test_fork_pr_binds_policy_and_audit_to_base_repository(self):
+        self.mode.write_text('forkmain')  # Fork head `contributor/develop:develop`, base siege_utilities main.
+        for command in (CLI, GQL):
+            with self.subTest(no_gate=command): self.hook(command, 2)
+        self.assertFalse(self.audit.exists())
+        self.mode.write_text('fork')  # Same fork, base siege_utilities develop.
+        self.hook(GQL)
+        self.hook(CLI)
+        rows = [json.loads(line) for line in self.audit.read_text().splitlines()]
+        self.assertEqual([(row['form'], row['repository'], row['base']) for row in rows],
+                         [('graphql', 'siege-analytics/siege_utilities', 'develop'),
+                          ('cli', 'siege-analytics/siege_utilities', 'develop')])
+        self.assertFalse(any('contributor' in json.dumps(row) for row in rows))
 
     def test_shell_escapes_cannot_change_validated_literal_bytes(self):
         node = 'PR_kwDO\\u004f94Kgc8AAAABJOmLuA'

@@ -206,7 +206,7 @@ def _verify(target, cwd):
         data = answer.get('data') if isinstance(answer, dict) else None
         pr = data.get('node') if isinstance(data, dict) else None
         require(isinstance(pr, dict) and pr.get('id') == target['node'], 'PR node lookup failed')
-        owner = pr.get('repository')
+        owner = pr.get('repository')  # The base repository, where the merge lands.
         repo = owner.get('nameWithOwner') if isinstance(owner, dict) else None
         require(isinstance(repo, str) and re.fullmatch(REPO, repo), 'invalid PR repository identity')
         number = pr.get('number')
