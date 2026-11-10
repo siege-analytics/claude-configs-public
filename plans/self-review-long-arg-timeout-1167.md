@@ -107,6 +107,7 @@ Hostile S2-2: when `rev-parse --show-toplevel` fails, `expected_repo` is empty a
 | hostile S2-1 (signal exit cached as definitive) | treated every CalledProcessError as definitive without checking negative return codes | 1 min | fix + 3 tests + suite restart | 1:20 |
 | full suite restarted on final code | started the suite before hostile review returned | 0 | ~15 min suite time | n/a |
 | issue refs removed from new comments (writing-code:2) | did not re-read the shelf before writing comments | 1 min | 4 comment edits | 1:4 |
+| hosted CI "Generated source authority and drift": stale `catalog/skills-inventory.json` after adding the test files | ran `bin/build.py --check` locally but not `bin/generated-source-authority.py --check`, which CI runs separately | 3 s | CI cycle + regeneration commit | 1:60 |
 | PR create blocked: work commit lacks `Inventoried-shape:` trailer | read the repo copy of the trailer contract but not the installed hook's v2.4 check before committing | 1 min | follow-up commit (pushed history not amended) | 1:10 |
 
 ## Evidence-predates-work
