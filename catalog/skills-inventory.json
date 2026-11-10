@@ -3,13 +3,13 @@
     "discovery_parity": {
       "extra": [],
       "missing": [],
-      "source_count": 198,
+      "source_count": 199,
       "status": "matched"
     },
     "duplicate_rule_ids": {},
     "generated_output_plan": {
       "destination_collisions": [],
-      "source_count": 198,
+      "source_count": 199,
       "status": "derived-from-build.py"
     },
     "ignored_sources": [],
@@ -53,6 +53,7 @@
       "writing-tests",
       "analysis",
       "api-integration",
+      "ask-questions",
       "branch",
       "cascading-documentation",
       "ci-billing-failure-merge",
@@ -449,6 +450,7 @@
       "shelves--team",
       "analysis",
       "api-integration",
+      "ask-questions",
       "branch",
       "cascading-documentation",
       "ci-billing-failure-merge",
@@ -4076,10 +4078,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 16552,
-      "content_sha256": "969e9c69a7511ef5a8114df86eeb7eb6ccf4dcf0b7585c4ebfdca9be674f5c68",
+      "characters": 17133,
+      "content_sha256": "b89c43260a31c7923479873c2f01d90c66ac735a5b56028212596a9c74f3d57d",
       "description": "unknown",
-      "estimated_tokens": 4138,
+      "estimated_tokens": 4284,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -4096,13 +4098,14 @@
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
         "skills/_session-coordination-rules.md",
+        "skills/ask-questions/SKILL.md",
         "skills/stalled-session-recovery/host-controls.md",
         "skills/think/SKILL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 201,
+      "lines": 203,
       "owner": [
         "unknown"
       ],
@@ -4928,6 +4931,7 @@
         "skills/_writing-releases-rules.md",
         "skills/_writing-tests-rules.md",
         "skills/api-integration/SKILL.md",
+        "skills/ask-questions/SKILL.md",
         "skills/commit/SKILL.md",
         "skills/databricks/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
@@ -5016,6 +5020,7 @@
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/gate_bypass_1164.py",
         "hooks/_test/git_bootstrap_targets.py",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/github_project_reads.py",
@@ -5023,6 +5028,8 @@
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
         "hooks/_test/metadata_comment_reporting.py",
+        "hooks/_test/metadata_ssh_interaction.py",
+        "hooks/_test/pr_create_body_status.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/quoted_mutation_operands.py",
         "hooks/_test/read_allowlist.test.sh",
@@ -5035,6 +5042,7 @@
         "hooks/_test/sed_stdin_reader.py",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
@@ -5044,7 +5052,9 @@
         "hooks/_test/tier_trailer_aggregation_1168.test.sh",
         "hooks/_test/universal_mutation_gate_fail_closed.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
+        "hooks/_test/universal_mutation_gate_ssh.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/worktree_materialization_risk.py",
         "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/test_skill_token_chat_safe.sh",
@@ -5551,6 +5561,8 @@
         "hooks/_test/craft_workspace_trust.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/gate_bypass_1164.py",
+        "hooks/_test/gate_bypass_1164.test.sh",
         "hooks/_test/git_add_risk.test.sh",
         "hooks/_test/git_bootstrap_targets.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
@@ -5567,9 +5579,11 @@
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
+        "hooks/_test/metadata_ssh_interaction.test.sh",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/own_session_operands.test.sh",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
+        "hooks/_test/pr_create_body_status.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/project_scoped_gate.test.sh",
         "hooks/_test/quoted_mutation_operands.py",
@@ -5590,6 +5604,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/task_keyed_gates.test.sh",
@@ -5606,7 +5621,9 @@
         "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh",
         "hooks/_test/universal_mutation_gate_fail_closed.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
+        "hooks/_test/universal_mutation_gate_ssh.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/worktree_materialization_risk.test.sh",
         "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/ci/test_promote_unreleased.sh",
@@ -5920,6 +5937,7 @@
         "hooks/_test/tier_trailer_aggregation_1168.test.sh",
         "hooks/_test/universal_mutation_gate_fail_closed.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
+        "hooks/_test/universal_mutation_gate_ssh.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
         "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
@@ -6119,10 +6137,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 31053,
-      "content_sha256": "e78ea70bb073b0a7974d2c770c770d0d3bb5e6b8046a30ce8ba787625dca1162",
+      "characters": 32243,
+      "content_sha256": "a71e81e517a477f36a994d139c88686920e0ea95b9bceff3c0e188ec88a56ed3",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7764,
+      "estimated_tokens": 8061,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6148,12 +6166,13 @@
         "skills/KERNEL.md",
         "skills/_tandem-agent-rules.md",
         "skills/_ticket-lifecycle-rules.md",
+        "skills/ask-questions/SKILL.md",
         "skills/drive-while-away/SKILL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 176,
+      "lines": 175,
       "owner": [
         "unknown"
       ],
@@ -6453,10 +6472,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 3874,
-      "content_sha256": "697ae62a652ae1e3bcf07c61e576f3879a960a3cab7cdb5863b85be0b098eaec",
+      "characters": 3858,
+      "content_sha256": "512b9bd8d4b7becc72de18297c0788e31117fd22828cca1cb5044bdaf9be7234",
       "description": "Always-on. Mission-first doctrine for hubs and workers. Skills exist to help agents accomplish strategic goals by deriving and advancing tactical goals with bounded initiative. Agents should keep moving when tactical ordering is safe and non-critical, and should ask for guidance when the choice affects strategy, authorization, risk, or operator control.",
-      "estimated_tokens": 969,
+      "estimated_tokens": 965,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -6470,6 +6489,7 @@
         "catalog/skill-lifecycle-legacy.json",
         "docs/instruction-architecture.md",
         "skills/KERNEL.md",
+        "skills/ask-questions/SKILL.md",
         "skills/think/SKILL.md"
       ],
       "kind": "rule",
@@ -8705,11 +8725,58 @@
       "verification": "unknown"
     },
     {
+      "canonical_source": "skills/ask-questions/SKILL.md",
+      "characters": 10249,
+      "content_sha256": "e6436aa125c98b7b953e2942db65f0499fcc0f125634cd214c901dddcea2fb51",
+      "description": "Operator question protocol. Use whenever you need answers or decisions from the operator, or when the operator asks you to ask questions. Treat it as a survey: show the complete question list once, together with the first question; ask exactly one question per turn with context, choices, pros and cons, a recommendation and a default; go straight to the next question after each answer without routing answers, updating tickets or starting work on them; after the last answer, summarize and then route and act on all answers in one batch. It never freezes or blocks running work. The single canonical procedure; session-coordination:5 defers to it for hubs.",
+      "estimated_tokens": 2563,
+      "frontmatter_name": "ask-questions",
+      "generated_outputs": [
+        "dist/nested/skills/ask-questions",
+        "dist/flat/skills/ask-questions"
+      ],
+      "generated_outputs_verified": true,
+      "inbound_source_references": [
+        "RESOLVER.md",
+        "bin/_test/resolve_load_set_test.py",
+        "catalog/generated-source-authority.json",
+        "plans/self-review-1056-ask-questions.md",
+        "skills/_autonomy-rules.md",
+        "skills/_session-coordination-rules.md",
+        "skills/_strategic-agency-rules.md"
+      ],
+      "kind": "skill",
+      "last_reviewed": "2026-11-06",
+      "lifecycle": "active",
+      "lines": 119,
+      "owner": [
+        "unknown"
+      ],
+      "project": null,
+      "quality": {
+        "completeness": 20,
+        "cross_references": 100.0,
+        "grade": "D",
+        "provenance": 20,
+        "structure": 100.0,
+        "total": 60.0
+      },
+      "rule_definitions": [],
+      "slug": "ask-questions",
+      "source_path": "skills/ask-questions/SKILL.md",
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
+      "tier": "unclassified",
+      "tier_basis": "no committed tier metadata",
+      "verification": "bin/_test/resolve_load_set_test.py"
+    },
+    {
       "canonical_source": "skills/branch/SKILL.md",
-      "characters": 6571,
-      "content_sha256": "3de279257e6a9ac704acd29d630ee0fb43efa79ac932f6ad3a3bf5df46e60009",
+      "characters": 7284,
+      "content_sha256": "2df49e62ae85f5a9312c9736bea269a1cfaf74f9ad3f59c23cced931a0578fad",
       "description": "Create and manage git branches using a consistent naming convention (type/descriptive_string) that mirrors ticket taxonomy.",
-      "estimated_tokens": 1643,
+      "estimated_tokens": 1821,
       "frontmatter_name": "branch",
       "generated_outputs": [
         "dist/nested/skills/branch",
@@ -8728,7 +8795,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 161,
+      "lines": 172,
       "owner": [
         "unknown"
       ],
@@ -8777,6 +8844,7 @@
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/gate_bypass_1164.py",
         "hooks/_test/gate_registry.test.sh",
         "hooks/_test/git_bootstrap_targets.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
@@ -8794,6 +8862,7 @@
         "hooks/_test/ticket_propagation_guard.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/worktree_materialization_risk.py",
         "scripts/discipline/tests/fixtures/fail-esm-branch-range-multi-commit.md",
         "scripts/discipline/tests/run-tests.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
@@ -9146,10 +9215,10 @@
     },
     {
       "canonical_source": "skills/commit/SKILL.md",
-      "characters": 22623,
-      "content_sha256": "64778c1bd151dae3086d0a19a6c199c293ef90c362c27224490bc9a856ed8a49",
+      "characters": 23275,
+      "content_sha256": "50aafc5e0d45d2eef061613896d4c1ecc23c3568ed86447fb390ee4dca4c3f57",
       "description": "Create git commits with descriptive messages that link to tickets and explain the why. Enforces ticket references.",
-      "estimated_tokens": 5656,
+      "estimated_tokens": 5819,
       "frontmatter_name": "commit",
       "generated_outputs": [
         "dist/nested/skills/commit",
@@ -9186,7 +9255,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 421,
+      "lines": 422,
       "owner": [
         "unknown"
       ],
@@ -9205,6 +9274,7 @@
       "test_evidence": [
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/consumer_runtime_test.py",
+        "bin/_test/craft_backend_canary_test.py",
         "bin/_test/craft_hook_router_test.py",
         "bin/_test/craft_workspace_trust_test.py",
         "bin/_test/deploy_source_policy_test.py",
@@ -9246,6 +9316,7 @@
         "hooks/_test/hook_path.test.sh",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/pr_base_guard.test.sh",
+        "hooks/_test/pr_create_body_status.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/quoted_mutation_operands.py",
         "hooks/_test/read_allowlist.test.sh",
@@ -9259,6 +9330,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
@@ -9270,6 +9342,8 @@
         "hooks/_test/universal_mutation_gate_831.test.sh",
         "hooks/_test/universal_mutation_gate_fail_closed.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
+        "hooks/_test/universal_mutation_gate_ssh.test.sh",
+        "hooks/_test/worktree_materialization_risk.py",
         "scripts/discipline/test_check_citations.sh",
         "scripts/discipline/test_check_derived_from.sh",
         "scripts/discipline/test_corpus_differential.sh",
@@ -9381,10 +9455,10 @@
     },
     {
       "canonical_source": "skills/create-pr/SKILL.md",
-      "characters": 14989,
-      "content_sha256": "423630e4b701317e7baf937b97c07487046f232541c965fe3be830abc3c71aed",
+      "characters": 15814,
+      "content_sha256": "c21993eea4952228dfcbf00c63c08959a773a9e53fd3cd5a72a9c72f0be44cb4",
       "description": "Create a pull request with structured description, linked tickets, and commit narrative. Enforces bidirectional linking.",
-      "estimated_tokens": 3748,
+      "estimated_tokens": 3954,
       "frontmatter_name": "create-pr",
       "generated_outputs": [
         "dist/nested/skills/create-pr",
@@ -9413,7 +9487,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 393,
+      "lines": 405,
       "owner": [
         "unknown"
       ],
@@ -9711,10 +9785,10 @@
     },
     {
       "canonical_source": "skills/develop-guard/SKILL.md",
-      "characters": 7740,
-      "content_sha256": "e23b7eb535fba698a48352bc2806d8c67555876a2611de4cebe9997f2801728c",
+      "characters": 8021,
+      "content_sha256": "bec7ccdba95a7f495d59fc6c5238b3e2ccaf62c5af4d970f701fbae9faac6884",
       "description": "Normal development starts at develop. Verify remote refs, bootstrap a missing develop safely, and preserve separately authorized release sources.",
-      "estimated_tokens": 1935,
+      "estimated_tokens": 2006,
       "frontmatter_name": "develop-guard",
       "generated_outputs": [
         "dist/nested/skills/develop-guard",
@@ -9727,6 +9801,9 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "hooks/resolver/branch-state-guard.sh",
+        "hooks/resolver/pre-action-guard.sh",
+        "hooks/write/branch-guard.sh",
         "plans/self-review-self-reviewed-linear-promotion.md",
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
@@ -9739,7 +9816,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 137,
+      "lines": 141,
       "owner": [
         "unknown"
       ],
@@ -10305,6 +10382,8 @@
         "bin/_test/review_risk_test.py",
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
+        "hooks/_test/gate_bypass_1164.py",
+        "hooks/_test/gate_bypass_1164_review_cases.json",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
         "hooks/_test/progressive_loading.test.sh",
@@ -10315,6 +10394,7 @@
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/universal_mutation_gate_831.test.sh",
         "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh",
+        "hooks/_test/universal_mutation_gate_ssh.test.sh",
         "hooks/_test/verify_enforcement.test.sh"
       ],
       "tier": "unclassified",
@@ -10539,11 +10619,14 @@
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/fixtures/metadata-issues-1251.json",
+        "hooks/_test/gate_bypass_1164.py",
+        "hooks/_test/gate_bypass_1164_review_cases.json",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/github_merge_queue.test.sh",
         "hooks/_test/metadata_comment_reporting.py",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/pr_base_guard.test.sh",
+        "hooks/_test/pr_create_body_status.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/read_allowlist.test.sh",
         "hooks/_test/reader_git_safety.py",
@@ -10551,6 +10634,7 @@
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_guard.test.sh",
         "hooks/_test/ticket_required.test.sh",
+        "hooks/_test/worktree_materialization_risk.py",
         "scripts/discipline/tests/fixtures/fail-esm-branch-range-multi-commit.md",
         "scripts/discipline/tests/test-hook-fail-closed.sh"
       ],
@@ -10952,6 +11036,8 @@
         "bin/_test/registered_receipt_provider_test.py",
         "bin/_test/settings_drift_test.py",
         "hooks/_test/coordinator_status_guard.test.sh",
+        "hooks/_test/gate_bypass_1164.py",
+        "hooks/_test/gate_bypass_1164_review_cases.json",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
@@ -10959,7 +11045,8 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/universal_mutation_gate_831.test.sh",
-        "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh"
+        "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh",
+        "hooks/_test/universal_mutation_gate_ssh.test.sh"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -11170,6 +11257,8 @@
         "hooks/_test/craft_workspace_trust.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/gate_bypass_1164.py",
+        "hooks/_test/gate_bypass_1164.test.sh",
         "hooks/_test/git_add_risk.test.sh",
         "hooks/_test/git_bootstrap_targets.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
@@ -11186,9 +11275,11 @@
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
+        "hooks/_test/metadata_ssh_interaction.test.sh",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/own_session_operands.test.sh",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
+        "hooks/_test/pr_create_body_status.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/project_scoped_gate.test.sh",
         "hooks/_test/quoted_mutation_operands.py",
@@ -11207,6 +11298,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/task_keyed_gates.test.sh",
         "hooks/_test/test_evidence.py",
@@ -11222,7 +11314,9 @@
         "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh",
         "hooks/_test/universal_mutation_gate_fail_closed.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
+        "hooks/_test/universal_mutation_gate_ssh.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/worktree_materialization_risk.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/ci/test_promote_unreleased.sh",
         "scripts/ci/test_release_notes.sh",
@@ -12275,6 +12369,7 @@
         "plans/self-review-658.md",
         "plans/self-review-659.md",
         "plans/self-review-660.md",
+        "plans/self-review-native-git-receipts-1256.md",
         "plans/strict-test-evidence-1063.md",
         "skills/RESOLVER.md",
         "skills/_testing-frameworks-rules.md",
@@ -12393,6 +12488,7 @@
         "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/execution_risk.py",
+        "hooks/_test/gate_bypass_1164.py",
         "hooks/_test/gate_registry.test.sh",
         "hooks/_test/git_add_risk.py",
         "hooks/_test/git_bootstrap_targets.py",
@@ -12402,6 +12498,7 @@
         "hooks/_test/kb_consultation_advisory.test.sh",
         "hooks/_test/metadata_comment_reporting.py",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
+        "hooks/_test/pr_create_body_status.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/project_scoped_gate.test.sh",
         "hooks/_test/quoted_mutation_operands.py",
@@ -12410,6 +12507,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/spawn_worktree_isolation.py",
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
         "hooks/_test/test_guard.test.sh",
@@ -12418,7 +12516,9 @@
         "hooks/_test/universal_mutation_gate_831.test.sh",
         "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
-        "hooks/_test/verify_enforcement.test.sh"
+        "hooks/_test/universal_mutation_gate_ssh.test.sh",
+        "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/worktree_materialization_risk.py"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -12824,45 +12924,45 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2621961,
+    "characters": 2636436,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 655567,
-    "item_count": 198,
+    "estimated_tokens": 659187,
+    "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
       "project-skill": 3,
       "reference-shelf": 69,
       "rule": 37,
       "shelf-router": 15,
-      "skill": 73
+      "skill": 74
     },
     "quality_grade_counts": {
       "C": 6,
-      "D": 18,
+      "D": 19,
       "F": 133,
       "unknown": 41
     },
-    "quality_low_grade_count": 151,
+    "quality_low_grade_count": 152,
     "tier_characters": {
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1225567
+      "unclassified": 1240042
     },
     "tier_counts": {
       "on-demand": 15,
       "project": 4,
       "reference": 69,
-      "unclassified": 110
+      "unclassified": 111
     },
     "tier_estimated_tokens": {
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 306433
+      "unclassified": 310053
     },
     "unknown_lifecycle_count": 198,
-    "unknown_owner_count": 194,
+    "unknown_owner_count": 195,
     "without_source_references_count": 0,
     "without_test_evidence_count": 99
   }

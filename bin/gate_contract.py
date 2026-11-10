@@ -39,7 +39,7 @@ PROTECTED_ADAPTER_WORKFLOW_SHA256 = "13b83c61b8326f9c2deaab9beb8611968a7c00562dc
 # profile. Generic callers supply their independently pinned input registration;
 # publishing a descriptor or selecting skill content cannot supply that pin.
 SIEGE_INPUTS = Path("bundles/siege/policy-inputs.json")
-SIEGE_INPUTS_SHA256 = "6d78791cb0f151f9d2f11cb00546640c56b439ed35fd3c32b3f0deb3848e1e46"
+SIEGE_INPUTS_SHA256 = "6707d898518ff0baf2ee15ef52663086c889b99d3a81cfd8302c53d286e2f4a4"
 INPUT_FIELDS = {
     "schema_version", "selection_source", "selection_sha256", "contract_source",
     "review_repository", "capability_targets", "fixture_sources",

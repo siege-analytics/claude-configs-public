@@ -26,6 +26,8 @@ class ArtifactResults(unittest.TestCase):
             return result
 
     def test_wrapped_hypothetical_field_is_not_project_completion(self):
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  The deployment could be complete without a verified owner.\n\nMitigation: retain the actual review.\n', 0)
+        # Preserve historical B1 texts as metadata-operation controls, not word gates.
         self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  The deployment is complete without a verified owner.\n\nMitigation: retain the actual review.\n', 0)
 
     def test_unindented_completion_prose_is_plain_comment_data(self):
@@ -67,6 +69,7 @@ class ArtifactResults(unittest.TestCase):
         self.hook('Review completed.\n', 0)
 
     def test_existing_hypothetical_fields_still_work(self):
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: deployment could be complete with stale data.\nMitigation: if checks complete, compare actual state.\n', 0)
         self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: deployment complete with stale data.\nMitigation: if checks complete, compare actual state.\n', 0)
 
 

@@ -80,15 +80,20 @@ class ReviewDisclosure(unittest.TestCase):
 
     def test_dispatch_example_creates_a_named_task_branch_from_remote_ref(self):
         rules = (ROOT / "skills/_session-coordination-rules.md").read_text()
-        command = 'git worktree add -b "$TASK_BRANCH" "$TASK_WORKTREE" "$APPROVED_INTEGRATION_REF" && cd "$TASK_WORKTREE"'
+        command = 'git worktree add -b "$TASK_BRANCH" "$TASK_WORKTREE" "$APPROVED_INTEGRATION_REF"'
         self.assertIn('`' + command + '`', rules)
         self.run_cmd(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
                       "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture"])
         self.run_cmd(["git", "update-ref", "refs/remotes/origin/develop", "HEAD"])
         self.env.update(TASK_BRANCH="task/fixture-review", TASK_WORKTREE=str(self.base / "isolated worker"),
                         APPROVED_INTEGRATION_REF="origin/develop")
+        parent_branch = self.run_cmd(["git", "symbolic-ref", "--short", "HEAD"]).stdout.strip()
         result = self.run_cmd(["bash", "-c", command + '; git symbolic-ref --short HEAD'])
-        self.assertEqual(result.stdout.splitlines()[-1], "task/fixture-review")
+        self.assertEqual(result.stdout.splitlines()[-1], parent_branch)
+        child = self.run_cmd(["git", "-C", self.env["TASK_WORKTREE"], "symbolic-ref", "--short", "HEAD"])
+        self.assertEqual(child.stdout.strip(), "task/fixture-review")
+        self.assertIn("Keep the parent in its own workspace", rules)
+        self.assertIn("set the child's `workingDirectory` to the absolute `TASK_WORKTREE` path", rules)
         # Discovery must include canonical and project-specific names, local
         # branches, remote-only refs and recorded heads with no ticket number.
         branches = ["bugfix/repair_692", "feature/completion_692", "task/cleanup_692",

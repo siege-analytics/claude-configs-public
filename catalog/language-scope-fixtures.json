@@ -645,18 +645,18 @@
       "slugs": [],
       "measurements": {
         "source": {
-          "characters": 150569,
-          "estimated_tokens": 37646,
+          "characters": 152759,
+          "estimated_tokens": 38193,
           "items": 13
         },
         "claude-code": {
-          "characters": 152979,
-          "estimated_tokens": 38249,
+          "characters": 155192,
+          "estimated_tokens": 38802,
           "items": 13
         },
         "craft-agent": {
-          "characters": 152979,
-          "estimated_tokens": 38249,
+          "characters": 155192,
+          "estimated_tokens": 38802,
           "items": 13
         }
       },

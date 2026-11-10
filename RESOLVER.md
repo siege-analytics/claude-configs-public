@@ -237,6 +237,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 |---|---|
 | End a session / hand off work | `skills/session/wrap-up/SKILL.md` |
 | Spawn sub-sessions / delegate work to parallel agents | [rule:session-coordination], Dispatch protocol, plus [rule:tandem-agent] for role boundaries. Universal check #12 is the compatibility entry. |
+| Ask the operator questions or collect decisions | [skill:ask-questions] -- a survey: show the full list with the first question, then one question per turn. Ordinary answer-based dispatch waits until the last answer; explicit stops or action revocations apply immediately. Independent authorized work continues. Hubs also apply session-coordination:5. |
 | Receive a standing "work until X" instruction from user | Universal check #13 (standing-order continuity). Maintain running agents plus a runtime-available re-entry mechanism when one exists. Never go idle with pending work; never claim operator-visible cadence from async tools unless this deployment proves visibility. |
 | Recover from a magnum / enterprise-runner outage | `electinfo_claude_skills/skills/monitor-magnum/SKILL.md` |
 | A session seems stuck, silent, or stuck on a repeating error (rate limit, timeout, generic failure) that isn't clearing | [skill:stalled-session-recovery] -- inspect actual state and supported host controls before a bounded repair or successor; an observation timeout does not prove termination |

@@ -13,6 +13,17 @@ import task_keyed_gates as fixture
 
 class GitBootstrap(unittest.TestCase):
     def setUp(self):
+        # Git hooks can export repository/index targeting. Isolate before Gates
+        # itself runs Git, and restore the caller's environment after tearDown.
+        inherited_git = {'GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR', 'GIT_INDEX_FILE',
+                         'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+                         'GIT_PREFIX', 'GIT_CONFIG', 'GIT_CONFIG_PARAMETERS',
+                         'GIT_CONFIG_COUNT', 'GIT_TEMPLATE_DIR', 'GIT_SSH',
+                         'GIT_SSH_COMMAND', 'GIT_EXEC_PATH'}
+        isolated = patch.dict(os.environ, {k: v for k, v in os.environ.items()
+                                          if k not in inherited_git}, clear=True)
+        isolated.start()
+        self.addCleanup(isolated.stop)
         self.f = fixture.Gates()
         original = tempfile.TemporaryDirectory
         with patch.object(fixture.tempfile, 'TemporaryDirectory', side_effect=lambda **kw: original(prefix=kw['prefix'], dir=os.path.realpath(tempfile.gettempdir()))):
@@ -640,7 +651,7 @@ class GitBootstrap(unittest.TestCase):
             self.assertNotEqual(actual.returncode,0);self.assertTrue(marker.exists())
 
     def test_inherited_git_targeting_environment_denies_bootstrap(self):
-        for key in ('GIT_DIR','GIT_WORK_TREE','GIT_TEMPLATE_DIR','GIT_CONFIG_COUNT','GIT_SSH_COMMAND'):
+        for key in ('GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE','GIT_TEMPLATE_DIR','GIT_CONFIG_COUNT','GIT_SSH_COMMAND'):
             with self.subTest(key=key),patch.dict(os.environ,{key:str(self.source)}):
                 self.assertTrue(self.shape(['git','init',str(self.ws/'new')]).get('error'))
 

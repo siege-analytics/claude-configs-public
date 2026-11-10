@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import importlib.util,json,subprocess,sys,tempfile
+import importlib.util,json,subprocess,sys,tempfile,time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]; SCRIPT=ROOT/"bin/resolve-load-set.py"
 SPEC=importlib.util.spec_from_file_location("resolver",SCRIPT); assert SPEC and SPEC.loader
 M=importlib.util.module_from_spec(SPEC);sys.modules[SPEC.name]=M;SPEC.loader.exec_module(M)
+CHILD_TIMEOUT=60
+# Every child process gets a finite timeout, so a resolver that never returns fails this test instead of stalling it.
+def run_bounded(argv,timeout=CHILD_TIMEOUT):return subprocess.run(argv,text=True,capture_output=True,timeout=timeout)
 def inv():
  def i(s,k="skill"):return {"slug":s,"kind":k,"characters":100,"estimated_tokens":25}
- slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","close-ticket","ci-billing-failure-merge","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","pipeline-jobs","analysis","scala-on-spark","postgis","geopandas","sedona","duckdb-spatial","django","django-rest-framework","react","typescript","vue","rust","stalled-session-recovery","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
+ slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","close-ticket","ci-billing-failure-merge","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","pipeline-jobs","analysis","scala-on-spark","postgis","geopandas","sedona","duckdb-spatial","django","django-rest-framework","react","typescript","vue","rust","stalled-session-recovery","ask-questions","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
  return {"items":[i(s,"project-skill" if s.startswith("siege-utilities--") else "skill") for s in slugs]+[i("siege-utilities--rules","project-rule"),i("shelves--security","shelf-item")]}
 def main():
  manifest=json.loads((ROOT/"catalog/resolver-manifest.json").read_text()); inventory=inv()
@@ -18,6 +21,61 @@ def main():
  assert a==M.select(manifest,inventory,"review this Python pull request", "github.com/siege-analytics/siege_utilities")
  generic=M.select(manifest,inventory,"write a friendly greeting","other/repo")
  assert generic["state"]=="unknown" and generic["selected"]==[] and generic["project"] is None
+ # The operator question protocol (#1056) loads on question-session requests. The main route's verbs split the
+ # prompt into ";" clauses, so a prohibition or a "not all at once" in one clause does not erase a request in
+ # another. A second, whole-prompt route catches explicit one-at-a-time requests that the verb guard skips
+ # ("read-only", "update docs") and is suppressed by any negation in the prompt. Cases cover scoped corrections,
+ # explicit prohibitions and stop requests, finish-without-asking requests, quoted data and token boundaries.
+ def asks(prompt):
+  result=M.select(manifest,inventory,prompt,"other/repo")
+  return result["state"]=="matched" and "ask-questions" in [x["slug"] for x in result["selected"]]
+ for prompt in (
+  "use the ask questions skill","Ask me questions before you dispatch","ask me decision questions one at a time","go one question at a time",
+  "Ask me questions one at a time and never go silent.","Go one question at a time and never go quiet.",
+  "Ask me your questions before you update docs.",
+  "In this read-only review, ask me questions one at a time.",
+  "ask all your questions first","You keep acting without asking. Ask me questions one at a time.",
+  "Don't ask them all at once; ask me questions one at a time.","ask your questions",
+  "Don't ask questions all at once; ask me questions one at a time.","Do not ask me questions all at once; go one question at a time.",
+  "I have no questions for you; please ask me questions one at a time.","No questions about naming. Ask me questions about authorization.",
+  "Do not ask questions about logging; ask me questions about deployment.",
+  "Ask me your questions.","Ask the operator questions before dispatching.","Please ask a question at a time.","Ask me any questions you need answered.",
+ ):
+  assert asks(prompt),prompt
+ for prompt in (
+  "write a friendly greeting","ask me before you push","review this diff","summarize the survey questions",
+  "don't ask questions, just do it","do not ask questions, just do it","don't ask me questions, just do it","do not ask me questions, just do it",
+  "I have no questions","ask questionstext","ask me questionset","decision questionset","one question at a timestamp",
+  "Never ask questions; just do it.","Never ask me questions; just finish the job.","Don\u2019t ask questions; just do it.",
+  "Do not ask your questions; just do it.","Never go one question at a time; answer my request without a survey.",
+  "Proofread this sentence: 'I ask questions for a living'.","Translate 'ask me questions' into French; do not ask me anything.",
+  "Review this SQL: SELECT 'ask me questions' AS prompt; do not question me.",
+  "I have decision questions for you","Please don't stop to ask questions, just finish.",
+  "Just finish it and don't ask me any questions.","No need to ask me any questions; just ship it.",
+  "Finish the migration and only ask questions if you hit an authorization boundary.",
+  "Stop asking me questions and finish the task.","Don't ask, just do it.","Stop asking questions; just do it.",
+  "Don't ask me your questions, just finish.","Do not ask me questions one at a time; just ship it.",
+ ):
+  assert not asks(prompt),prompt
+ # The skill's text carries the behaviors a load cannot show: list plus first question in one message,
+ # immediate stop and revocation, defaults bounded by existing authority, and one question per turn.
+ skill_text=(ROOT/"skills/ask-questions/SKILL.md").read_text()
+ for required in (
+  "Show the numbered list and the first fully formed question in the same message",
+  "never end a turn after only listing the questions",
+  "end the survey at once and do not continue the protocol",
+  "apply it to that action immediately, even before the remaining answers arrive",
+  "it never creates authority and never stands in for a confirmation that a protected-action policy requires",
+  "Ask exactly one question per turn",
+ ):
+  assert required in skill_text,required
+ # Known miss, tracked in #1225: clauses split only on ";", "?" and newlines, so a "Don't ..." sentence and a
+ # request joined by "." form one clause that the verb guard skips. Quoted-payload exclusion is likewise
+ # heuristic until #1225. This pins today's behaviour; when #1225 lands, move the prompt to the positive cases.
+ assert not asks("Don't ask questions as a group. Ask your questions one at a time."),"#1225 landed: move this prompt to the positive cases"
+ for token in ("[skill:ask-questions]","/ask-questions"):
+  explicit_ask=M.select(manifest,inventory,token,"other/repo")
+  assert [x["slug"] for x in explicit_ask["selected"]]==["ask-questions"],(token,explicit_ask)
  outside=M.select(manifest,inventory,"review this diff","other/repo")
  assert not any(x["slug"].startswith("siege-utilities--") for x in outside["selected"])
  explicit=M.select(manifest,inventory,"create ticket [skill:python]","other/repo")
@@ -94,7 +152,13 @@ def main():
  assert spoofed["project"] is None and not any(x["slug"].startswith("siege-utilities--") for x in spoofed["selected"])
  with tempfile.TemporaryDirectory() as raw:
   malformed=Path(raw)/"manifest.json";malformed.write_text('{"routes":null}')
-  proc=subprocess.run([sys.executable,str(SCRIPT),"--manifest",str(malformed)],text=True,capture_output=True)
+  proc=run_bounded([sys.executable,str(SCRIPT),"--manifest",str(malformed)])
   assert proc.returncode==1 and json.loads(proc.stdout)["state"]=="error" and not proc.stderr
+ # The bound is real: a child that never returns is killed at the timeout rather than stalling the suite.
+ started=time.monotonic();timed_out=False
+ try:run_bounded([sys.executable,"-c","import time;time.sleep(10)"],timeout=1)
+ except subprocess.TimeoutExpired as exc:timed_out=exc.timeout==1
+ assert timed_out,"non-returning child was not bounded"
+ assert time.monotonic()-started<5,"bounded child took too long to stop"
  print("resolve_load_set_test: PASS")
 if __name__=="__main__":main()
