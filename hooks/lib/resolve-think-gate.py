@@ -240,6 +240,25 @@ def _metadata_git_environment() -> dict[str, str]:
 
 def _git_origin(path: str, *, git_environment: Optional[dict] = None) -> str:
     try:
+        if git_environment is not None:
+            # Keep global trust/auth settings, but only repository-owned origin
+            # values supply authority. Explicit includes inherit local/worktree
+            # ownership. Local values precede worktree values in Git's order.
+            for scope in ("--local", "--worktree"):
+                result = subprocess.run(
+                    ["git", "-C", path, "config", scope, "--includes", "--null",
+                     "--get-all", "remote.origin.url"],
+                    text=True, capture_output=True, timeout=3, env=git_environment)
+                if result.returncode == 1:  # No key: try worktree-only config.
+                    continue
+                if result.returncode != 0:
+                    return ""
+                # Git fetch/gh use the first URL, not --get's last value.
+                first = result.stdout.split("\0", 1)[0]
+                if not first or first != first.strip() or any(ord(c) < 32 or ord(c) == 127 for c in first):
+                    return ""
+                return first
+            return ""
         return subprocess.check_output(
             ["git", "-C", path, "config", "--get", "remote.origin.url"],
             text=True,
@@ -884,9 +903,7 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
         return deny('ambient GitHub host override is unproven')
     if os.environ.get('GH_REPO') and any(not target['repository'] for target in shape['metadata_posts']):
         return deny('implicit repository under GH_REPO is unproven; use a literal --repo or canonical URL')
-    if any(_metadata_git_redirect(name) for name in os.environ) and any(
-            not target['repository'] for target in shape['metadata_posts']):
-        return deny('implicit repository under ambient Git redirection is unproven; use a literal --repo or canonical URL')
+    command_environment = dict(os.environ)
     inspection_environment = _metadata_git_environment()
     cache = {}
     def repository(root):
@@ -908,25 +925,27 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
             cache[root] = path.casefold() if re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', path) and not any(x in {'.', '..'} for x in path.split('/')) else ''
         return cache[root]
     def implicit_repository(cwd):
-        root = _target_repo(cwd, git_environment=inspection_environment)
-        if not root:
-            return ''
+        # Observe gh's actual command cwd/environment, not a sanitized
+        # authority root or a configured core.worktree's apparent toplevel.
+        root = canonical(cwd)
         try:
             remotes = subprocess.check_output(['git', '-C', root, 'remote'],
-                text=True, stderr=subprocess.DEVNULL, timeout=3, env=inspection_environment).splitlines()
+                text=True, stderr=subprocess.DEVNULL, timeout=3, env=command_environment).splitlines()
             resolved = subprocess.run(['git', '-C', root, 'config', '--get-regexp',
-                r'^remote\..*\.gh-resolved$'], capture_output=True, timeout=3, env=inspection_environment)
+                r'^remote\..*\.gh-resolved$'], capture_output=True, timeout=3, env=command_environment)
             # gh can prefer upstream/github or an explicitly resolved default.
             # Resolve such targets explicitly instead of borrowing origin.
             if remotes != ['origin'] or resolved.returncode != 1:
                 return ''
             effective = subprocess.check_output(['git', '-C', root, 'remote',
-                'get-url', '--all', 'origin'], text=True,
-                stderr=subprocess.DEVNULL, timeout=3, env=inspection_environment).splitlines()
+                'get-url', 'origin'], text=True,
+                stderr=subprocess.DEVNULL, timeout=3, env=command_environment).splitlines()
             if len(effective) != 1:
                 return ''
             from urllib.parse import urlsplit
             raw = effective[0]
+            if not raw or raw != raw.strip() or any(ord(c) < 32 or ord(c) == 127 for c in raw):
+                return ''
             scp = re.fullmatch(r'git@github\.com:([^?#]+)', raw, re.I)
             if scp:
                 path = scp[1]
@@ -937,7 +956,7 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
                 path = url.path.lstrip('/')
             path = re.sub(r'\.git$', '', path)
             slug = path.casefold() if re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', path) and not any(x in {'.', '..'} for x in path.split('/')) else ''
-            return slug if slug and slug == repository(root) else ''
+            return slug
         except (OSError, subprocess.SubprocessError, ValueError):
             return ''
 
@@ -947,15 +966,17 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
         if binding and identity != binding:
             continue
         allowed = set()
+        verified_scope = False
         for scope in _scopes(gate):
             root = _target_repo(scope, git_environment=inspection_environment)
             if not root:
                 continue
             proof = select_task(workspace, [scope], identity, git_environment=inspection_environment)
             if proof.get('gate') and canonical(proof['gate']['path']) == canonical(gate['path']):
+                verified_scope = True
                 slug = repository(root)
                 if slug: allowed.add(slug)
-        if not allowed:
+        if not verified_scope:
             continue
         ticket = re.fullmatch(r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*)', identity)
         matched = True
