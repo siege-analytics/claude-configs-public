@@ -12393,6 +12393,7 @@
         "hooks/_test/github_project_status.py",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
+        "hooks/_test/metadata_comment_reporting.py",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/project_scoped_gate.test.sh",

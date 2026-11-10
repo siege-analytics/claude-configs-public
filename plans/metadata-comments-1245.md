@@ -105,7 +105,7 @@ published release, installed-host or provider-delivery evidence.
 
 ## Quantified claims
 
-The final genuine ten-input producer passes the coordinator shell suite's80
+The initial 1034 source genuine ten-input producer passed the coordinator shell suite's80
 checks (including nine behavioral methods and configured sixteen-hook chains),
 32 destructive checks and seven existing metadata/scope compatibility methods.
 The actual SU1877/1878 bodies are test inputs; no GitHub write executes.
@@ -117,3 +117,18 @@ prefix. These dispositions do not claim exhaustive exception-origin coverage.
 The actor-scope sentence has two manual decision cases, not a live model test.
 
 Verified-by: genuine content-bound producer, source/object hashes, actual isolated hook/Git controls and Root's linked final source review
+
+## Preparation-stage reporting followup
+
+Root's actual preparation-stage probe found circular enforcement: a verified
+own Task could not post investigation/design/review evidence before entering
+implementation or satisfying code-change artifacts. The focused declared-C,
+missing-artifact control reproduced ten failures before the repair.
+After the existing own-Task and actual remote-target proof succeeds, pure typed
+reports now use the existing remote-authorized result. They do not require
+implementation stage or code-change artifacts. Mixed local writes and protected
+state operations do not receive that result and retain their ordinary gates.
+The focused actual method passes all three report kinds across designing,
+reviewing and implementing, plus all sixteen hooks in the declared-C designing
+case. Pure/mixed code writes and foreign targets remain denied. No new registry,
+role field or Task grant was introduced; 1034 and its earlier receipts remain.

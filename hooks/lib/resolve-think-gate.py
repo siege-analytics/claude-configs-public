@@ -777,6 +777,10 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         post_selected = select_metadata_post_task(workspace, shape)
         if not post_selected.get('gate'):
             return {**shape, **post_selected}
+        if not shape['paths']:
+            # Reporting evidence is not implementation. This existing remote
+            # authorization flag is set only after own-Task/target proof above.
+            return {**shape, **post_selected, 'remote_only_authorized': True}
         if shape['paths']:
             local = select_task(workspace, shape['paths'], shape.get('binding') or task_binding())
             if not local.get('gate') or canonical(local['gate']['path']) != canonical(post_selected['gate']['path']):
@@ -843,7 +847,7 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
     """Bind descriptive remote posts to existing own-Task repository authority.
 
     Repository paths below prove already declared scope; they are not invented
-    filesystem mutation targets. Normal Task lifecycle/artifact checks remain.
+    filesystem mutation targets. Pure reports do not acquire code-mutation rights.
     """
     def deny(message):
         return {'gate': None, 'error': 'GitHub metadata target scope: ' + message}

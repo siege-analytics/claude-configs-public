@@ -142,6 +142,40 @@ class Reporting(unittest.TestCase):
         self.assertEqual(outcomes['universal-mutation-gate.sh'][0], 2, outcomes)
         self.assertEqual(outcomes['destructive-guard.sh'][0], 0, outcomes)
 
+    def test_preparation_reports_do_not_require_implementation_artifacts(self):
+        import task_keyed_gates as fixture
+        f = fixture.Gates(); f.setUp(); self.addCleanup(f.tearDown)
+        subprocess.run(['git', '-C', str(f.repo), 'remote', 'add', 'origin',
+                        'https://github.com/example/target.git'], check=True, timeout=15)
+        gate = f.task('example/target#31', f.b, status='designing', artifacts=False)
+        data = json.loads((gate / 'think-gate.json').read_text()); data['tier'] = 'C'
+        commands = [
+            "CCP_TASK_ID='example/target#31' gh issue comment 31 --repo example/target --body 'Investigation evidence; missing implementation checks.'",
+            "gh issue create --repo example/target --title 'Followup' --body 'Missing evidence; pending review.'",
+            "gh pr review 50 --repo example/target --comment --body 'Review complete; code work pending.'",
+        ]
+        for status in ['designing', 'reviewing', 'implementing']:
+            fixture.write(gate / 'think-gate.json', {**data, 'status': status})
+            for command in commands:
+                with self.subTest(status=status, command=command):
+                    self.assertEqual(f.hook(command).returncode, 0)
+            mixed = commands[0] + ' && touch ' + str(f.b / 'code.txt')
+            self.assertEqual(f.hook(mixed).returncode, 2)
+            self.assertEqual(f.hook('touch ' + str(f.b / 'code.txt')).returncode, 2)
+            self.assertEqual(f.hook(commands[0].replace('--repo example/target', '--repo other/repo')).returncode, 2)
+        fixture.write(gate / 'think-gate.json', {**data, 'status': 'designing'})
+        settings = json.loads((ROOT / 'hooks/settings-snippet.json').read_text())
+        hooks = [ROOT / h['command'].split('/claude-configs-public/', 1)[1]
+                 for group in settings['hooks']['PreToolUse'] if group.get('matcher') == 'Bash'
+                 for h in group['hooks']]
+        self.assertEqual(len(hooks), 16)
+        for command in commands:
+            payload = fixture.craft_payload(tool_name='Bash', cwd=str(f.repo), tool_input={'command': command})
+            for hook in hooks:
+                result = subprocess.run(['bash', str(hook)], input=json.dumps(payload), env=f.env,
+                                        text=True, capture_output=True, cwd=f.repo, timeout=15)
+                self.assertEqual(result.returncode, 0, (hook.name, command, result.stderr))
+
     def test_issue_create_uses_actual_1251_bodies_without_word_gates(self):
         import shlex
         import task_keyed_gates as fixture
