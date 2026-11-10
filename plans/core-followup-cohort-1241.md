@@ -1,3 +1,9 @@
+---
+ticket_refs:
+  - siege-analytics/claude-configs-public#1241
+  - siege-analytics/claude-configs-public#1252
+---
+
 # Combined followup integration (#1241)
 
 Integrate the exact reviewed memory/resume (#1239), owned copy/bundle (#1236), and fresh repository (#1240) fixes once after #1235 reaches canonical develop. This is source integration and release coordination, not runtime installation.
@@ -52,7 +58,10 @@ The preliminary combined module matches the five accepted URL repair function AS
 
 The reviewed URL source passed all35 actual-Git methods, with both16-hook native-shaped creation chains. Original835 hosted build succeeded in34m40s. These are input-specific results; the final combined source/package producer and final hosted exact-head CI remain separate and must be recorded before publication.
 
-Pre-mortem-artifact: plans/core-followup-cohort-1241.md
+Pre-mortem-artifact: No separate cohort pre-mortem artifact was recorded here.
+The former self-reference was not evidence of a classified risk assessment.
+This correction records the gap retrospectively; it does not backdate an assessment.
+Source-specific risk evidence remains in the reviewed input artifacts and links above.
 Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1252#issuecomment-6758415790
 
 The hasconfig-selected vcs counterexample also reproduced under actual private Git; the final lookup receives the same assigned remote URL as the URL reader. Its additional regression passes, with no further condition ban or destination precondition. Superseded source-PR f92 CI was cancelled, not a pass. Role builder source is exact SHA2566a07e6f1516d7de4574a0c934a5c6ac6ba0a44144011e0a88f253af90306b178; inline fixture is exact1bbbf71c00fd6d60f0e1e216c7b41a087875c18a9f88383477d4c6f2fe40f227, with17 actual source tests reported by its author and genuine native producer/push.

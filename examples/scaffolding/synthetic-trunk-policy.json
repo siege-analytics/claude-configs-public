@@ -17,7 +17,7 @@
   },
   "values": {
     "branch-policy": {
-      "integration_branch": "main",
+      "integration_branch": "develop",
       "local_feedback": "native-git-pre-push",
       "protected_acceptance": "exact-range-and-head"
     },
@@ -32,11 +32,6 @@
     }
   },
   "declared_overrides": [
-    {
-      "field_id": "branch-policy",
-      "path": "integration_branch",
-      "layer": "organization-profile"
-    },
     {
       "field_id": "review-procedure-binding",
       "path": "procedure",

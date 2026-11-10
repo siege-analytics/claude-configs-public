@@ -12,6 +12,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 - Standalone literal GitHub issue creation, issue/PR comments, body-only edits and comment-mode reviews no longer require owner-signoff, future-plan or blocker wording. Task/target authority remains in UMG; shell composition, unsupported shapes and state-changing operations do not inherit the reporting lane (#1245).
 - After own-Task and actual remote-target proof, pure metadata reports can post investigation/design/review evidence before implementation without circular code-artifact requirements. Local writes and protected state actions retain their normal gates (#1245).
+- Apply the same Task/target proof to GitHub numeric selector aliases. Implicit posts cannot borrow origin authority when remote defaults or URL rewrites select another repository; use a literal `--repo` or canonical URL when selection is ambiguous (#1261).
 
 ### Fixed: coordinator roles and reproducible evidence
 
@@ -41,6 +42,8 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Resolve fresh clone transport settings in the destination Git context, including conditional remote names and URL rewrites. When those settings require it, create the empty destination within the existing Task scope before retrying; ordinary fresh cloning remains supported (#1252).
 
 - Reject clustered creation flags, symbolic/full main aliases and attached orphan options consistently with the develop-source policy (#1229).
+- Check actual path-derived worktree names before creating protected branches, preserve exact trailing command newlines for release grants, and direct branch/review guidance through the installed preparation helper and verified develop base (#1261).
+- Reconcile the shipped synthetic composition example with the normal develop target using its reviewed canonical policy selection; retain distinct review/provenance checks, explicit release mechanics and existing capability requirements (#1261).
 - Bound refresh to remote-tracking refs without configured local-branch destinations, pruning or tag updates. Preserve other task branches, the caller's checkout and dirty tracked/untracked files (#1229, #1234).
 - Before missing-develop bootstrap, bind one effective read/write repository identity using command-local raw URL metadata. Preserve GitHub HTTPS/SSH transport pairs, normal URL rewrite semantics and explicit pushurl behavior; reject foreign or multiple write targets before writing. A racing develop creator remains protected by the empty compare-and-swap lease (#1234).
 - Preserve existing owner grants through status questions, agent relays and recoverable method failures. An agent's own approval question or hold summary does not create a new owner hold; actual owner conditions, reviews, role boundaries and publication checks still apply (#1231).

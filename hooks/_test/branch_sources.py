@@ -442,6 +442,31 @@ class BranchSources(unittest.TestCase):
         with self.assertRaises(UnknownShape):
             check({'args': ['checkout', 'main'], 'cwd': str(self.repo)}, inspect_git)
 
+    def test_path_derived_worktrees_check_real_protected_name_and_preserve_reuse(self):
+        self.develop()
+        self.run_git(self.repo, 'checkout', 'develop')
+        self.run_git(self.repo, 'branch', '-D', 'main')
+        main_target = self.base / 'main'
+        with self.assertRaisesRegex(UnknownShape, 'protected branch creation'):
+            check({'args': ['worktree', 'add', str(main_target)], 'cwd': str(self.repo)}, inspect_git)
+        self.assertFalse(main_target.exists())
+        self.run_git(self.repo, 'checkout', '--detach', self.main)
+        self.run_git(self.repo, 'branch', '-D', 'develop')
+        with self.assertRaisesRegex(UnknownShape, 'protected branch creation'):
+            check({'args': ['worktree', 'add', str(self.base / 'develop')], 'cwd': str(self.repo)}, inspect_git)
+        # Existing protected branches are reused, not created or reset.
+        self.run_git(self.repo, 'branch', 'main', self.main)
+        check({'args': ['worktree', 'add', str(main_target)], 'cwd': str(self.repo)}, inspect_git)
+        self.run_git(self.repo, 'worktree', 'add', str(main_target))
+        self.assertEqual(self.run_git(main_target, 'branch', '--show-current'), 'main')
+        self.assertEqual(self.run_git(main_target, 'rev-parse', 'HEAD'), self.main)
+        # Ordinary derived feature names still create from the known develop tip.
+        feature = self.base / 'derived-feature'
+        check({'args': ['worktree', 'add', str(feature)], 'cwd': str(self.repo)}, inspect_git)
+        self.run_git(self.repo, 'worktree', 'add', str(feature))
+        self.assertEqual(self.run_git(feature, 'branch', '--show-current'), 'derived-feature')
+        self.assertEqual(self.run_git(feature, 'rev-parse', 'HEAD'), self.main)
+
     def test_existing_own_task_exact_release_grant_is_runtime_wired(self):
         import task_keyed_gates as fixture
         self.develop()
@@ -470,6 +495,11 @@ class BranchSources(unittest.TestCase):
             file.write_text(json.dumps(data))
             result = branch_check()
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            for suffix in ('\n', '\n\n'):
+                request = fixture.craft_payload(tool_name='Bash', cwd=str(self.repo),
+                                                tool_input={'command': command + suffix})
+                result = branch_check(request)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             # Match UMG's existing same-package workspace fallback outside Craft.
             shutil.copytree(ROOT / 'hooks', gates.ws / 'hooks')
             no_workspace = dict(env)

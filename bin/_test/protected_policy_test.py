@@ -190,7 +190,7 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         )
         self.assertEqual((code, denied["state"]), (1, "denied"))
 
-    def test_same_develop_operation_differs_by_approved_profile(self):
+    def test_both_profiles_follow_develop_with_distinct_policy_provenance(self):
         strict, strict_base = self.make_repo("strict-release")
         trunk, trunk_base = self.make_repo("synthetic-trunk")
         self.change(strict, "operation", self.message("same operation"))
@@ -198,9 +198,9 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         code, strict_receipt = self.evaluate(strict, strict_base, "develop")
         self.assertEqual((code, strict_receipt["state"], strict_receipt["project"]), (0, "eligible", "strict-release"))
         self.assertEqual(strict_receipt["authorization"], "protected-host-check-required")
-        code, denied = self.evaluate(trunk, trunk_base, "develop")
+        code, denied = self.evaluate(trunk, trunk_base, "main")
         self.assertEqual((code, denied["state"]), (1, "denied"))
-        code, trunk_receipt = self.evaluate(trunk, trunk_base, "main")
+        code, trunk_receipt = self.evaluate(trunk, trunk_base, "develop")
         self.assertEqual((code, trunk_receipt["state"], trunk_receipt["project"]), (0, "eligible", "synthetic-trunk"))
         self.assertEqual(
             strict_receipt["candidate"]["installed_pilot"]["parent_content_sha256"],

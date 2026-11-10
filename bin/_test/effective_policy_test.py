@@ -85,19 +85,19 @@ class EffectivePolicyTest(unittest.TestCase):
         result = self.explain(operation=self.operation(target_branch="main"), capabilities=self.all_verified())
         self.assertEqual("deny", result["decision"]["final"])
 
-    def test_trunk_feature_to_main_policy_allows_but_enforcement_is_unproved(self):
-        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="main"), capabilities=self.all_verified())
+    def test_synthetic_feature_to_develop_policy_allows_but_enforcement_is_unproved(self):
+        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="develop"), capabilities=self.all_verified())
         self.assertEqual("allow", result["decision"]["policy"])
         self.assertEqual("unknown", result["decision"]["final"])
-        self.assertEqual("main", result["values"]["branch-policy"]["integration_branch"])
+        self.assertEqual("develop", result["values"]["branch-policy"]["integration_branch"])
         self.assertEqual("hostile-review", result["values"]["review-procedure-binding"]["procedure"])
 
-    def test_trunk_feature_to_develop_denies(self):
-        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="develop"), capabilities=self.all_verified())
+    def test_synthetic_feature_to_main_denies(self):
+        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="main"), capabilities=self.all_verified())
         self.assertEqual("deny", result["decision"]["final"])
 
     def test_org_and_project_provenance_is_complete(self):
-        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="main"), capabilities=self.all_verified())
+        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="develop"), capabilities=self.all_verified())
         branch = result["provenance"]["branch-policy"]["integration_branch"]
         review = result["provenance"]["review-procedure-binding"]["procedure"]
         locked = result["provenance"]["ticket-requirement"]["required"]
@@ -197,9 +197,9 @@ class EffectivePolicyTest(unittest.TestCase):
             policy.validate_policy(candidate, self.contract, "candidate")
 
     def test_selected_snapshot_identifiers_and_review_are_explicit(self):
-        self.assertEqual("ecef9e8620f477cdea4962cd3d737e16873f06fa", self.selection["policy_revision"])
-        self.assertEqual("086e7bda8e9f588c57294ed0899f9ff2ffa982c5", self.selection["git_blob"])
-        self.assertEqual("cf45e80b063d58501ca6dd297c4fcec3c99273507cef8dce7e566d3377a253ea", self.selection["raw_sha256"])
+        self.assertEqual("963fef8fe2900c2965618c7e733b20759a0f29f0", self.selection["policy_revision"])
+        self.assertEqual("534d41cc1c962eb9a42d4f9017228619cea2672e", self.selection["git_blob"])
+        self.assertEqual("a1ff17e8b6712b03330b7f7ecd881430341b5382ab5502e0534f66b9352072e2", self.selection["raw_sha256"])
         result = self.explain(capabilities=self.all_verified())
         self.assertEqual(self.selection["policy_revision"], result["approved_policy"]["revision"])
         self.assertEqual(self.selection["review_evidence"], result["policy_selection"]["review_evidence"])

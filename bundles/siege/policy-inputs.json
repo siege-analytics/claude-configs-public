@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "selection_source": "catalog/effective-policy-selection.json",
-  "selection_sha256": "4239574892d29bf1fad44a316c8ece5e24ec14d34c4257d099b2f1cfc050db6f",
+  "selection_sha256": "bb31c56216a9b9aa2a51edc0785cbae4aa01816fafc86f68839ce55a3131296f",
   "contract_source": "catalog/gate-contracts.json",
   "review_repository": "github.com/siege-analytics/claude-configs-public",
   "capability_targets": {

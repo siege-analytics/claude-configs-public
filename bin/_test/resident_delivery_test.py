@@ -79,7 +79,7 @@ class ResidentDeliveryTest(unittest.TestCase):
     def test_both_projects_and_layouts_deliver_exact_resident_once(self):
         for project,marker,foreign,branch,slugs in (
             ("strict-release","STRICT_OVERLAY","TRUNK_OVERLAY","develop",["strict-release--review","strict-release--checks"]),
-            ("synthetic-trunk","TRUNK_OVERLAY","STRICT_OVERLAY","main",["hostile-review"]),
+            ("synthetic-trunk","TRUNK_OVERLAY","STRICT_OVERLAY","develop",["hostile-review"]),
         ):
             for layout in ("nested","flat"):
                 with self.subTest(project=project,layout=layout):
@@ -91,6 +91,7 @@ class ResidentDeliveryTest(unittest.TestCase):
                     self.assertNotIn("STRICT_PROJECT_RULE",out)
                     self.assertNotIn("TRUNK_PROJECT_RULE",out)
                     self.assertIn("Feature and fix work targets `"+branch+"`",out)
+                    self.assertNotIn("Feature and fix work targets `main`",out)
                     self.assertIn("For the Siege scaffold repository",out)
                     self.assertIn("(`github.com/siege-analytics/claude-configs-public`)",out)
                     self.assertIn("Normal development starts from verified `develop`",out)

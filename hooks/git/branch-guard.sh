@@ -44,7 +44,11 @@ _FAST_RE='(^|[^[:alnum:]])git([[:space:]]|$)|(^|[^[:alnum:]])(bash|sh|source|\.)
 if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE || "$_FAST_BUILT" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
-COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
+# A sentinel preserves trailing newlines through command substitution. Exact
+# release authorization compares these bytes with the actual hook payload.
+COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true; printf '.')
+COMMAND=${COMMAND%.}
+COMMAND=${COMMAND%$'\n'}  # Remove only extract-json.py's output delimiter.
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
 # Shared literal normalization protects the actual -C/-c/alias target before
