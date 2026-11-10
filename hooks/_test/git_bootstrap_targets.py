@@ -624,6 +624,21 @@ class GitBootstrap(unittest.TestCase):
             self.assertFalse(self.shape(['git','clone','https://example.invalid/source',str(target)]).get('error'))
         self.assertEqual(config.read_bytes(),before);self.assertEqual(list(target.iterdir()),[])
 
+    def test_hasconfig_vcs_sees_new_remote_URL_before_transport(self):
+        target=self.ws/'hasconfig-vcs';marker=self.ws/'hasconfig-marker';helpers=self.ws/'hasconfig-helpers';helpers.mkdir()
+        helper=helpers/'git-remote-fixture';helper.write_text('#!/bin/sh\n/usr/bin/touch '+shlex.quote(str(marker))+'\nexit 1\n');helper.chmod(0o755)
+        included=self.ws/'hasconfig-include.config';included.write_text('[remote "origin"]\n vcs = fixture\n')
+        config=self.ws/'hasconfig-global.config';config.write_text('[includeIf "hasconfig:remote.*.url:https://example.invalid/source"]\n path = '+str(included)+'\n')
+        environment={'GIT_CONFIG_GLOBAL':str(config),'GIT_ALLOW_PROTOCOL':'fixture','PATH':str(helpers)+':'+os.environ['PATH']};self.f.env.update(environment)
+        args=['git','clone','--template=','https://example.invalid/source',str(target)]
+        self.task(target)
+        with patch.dict(os.environ,environment):
+            self.assertIn('unsupported Git clone custom remote transport',self.shape(args).get('error',''))
+            self.f.assertGate(2,shlex.join(args),cwd=self.ws)
+            self.assertFalse(target.exists());self.assertFalse(marker.exists())
+            actual=subprocess.run(args,cwd=self.ws,env=self.f.env,capture_output=True,timeout=10)
+            self.assertNotEqual(actual.returncode,0);self.assertTrue(marker.exists())
+
     def test_inherited_git_targeting_environment_denies_bootstrap(self):
         for key in ('GIT_DIR','GIT_WORK_TREE','GIT_TEMPLATE_DIR','GIT_CONFIG_COUNT','GIT_SSH_COMMAND'):
             with self.subTest(key=key),patch.dict(os.environ,{key:str(self.source)}):
