@@ -36,6 +36,7 @@ Goal source: #1165 (AC1-AC3 and its QA step: replay the #1057 harness)
 Working as: software engineer, with a tech lead pass for the Lead review
 Pre-author-inventory: https://github.com/siege-analytics/claude-configs-public/issues/1165#issuecomment-6771029409 (investigation fact sheet, read from origin/develop b2c4fcf)
 Investigate-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1165#issuecomment-6771029409
+Project-contribution: Agents can run read-only gh search loops over a quoted variable without a task gate, while any expansion bash could execute or split stays behind the gate.
 
 - gh parses flags with pflag. A long option that takes a value consumes the next word as its value, whatever that word looks like, so a value word cannot become an option. The codebase already relies on this model in `gh_ok` (value-taking short options `H p q t R J L S B`).
 - A double-quoted word is one word after expansion: no word splitting, no globbing.
@@ -79,6 +80,7 @@ From a copied hook tree under `env -i`, no task gate (`cache/r1165/repro.py`, no
   - Private Bash 5.3.20 controlled-marker proof: gh was a shell function stub and the only possible side effect was a marker file in a private temp directory. With `q='$(touch "$dir/marker")'`, `--search "${q@P}"` and `--search="${q@P}"` created the marker. `--search "$q"`, `--search="$q"` and `--search "${q:---web}"` passed the text through literally and created nothing. No GitHub command ran.
   - Green: the harness gains a direct classifier section (6 at 0, 13 at 4) and 6 no-Task hook block cases (separate, attached and loop `${q@P}`, `${!q}`, `${a[i]}`, `"$@"`). With the fix it is 409 passed, 0 failed. Revert proof with the c71d746 classifier: 390 passed, 19 failed, exactly the 19 new negatives.
   - Per the review, only the affected read-allowlist harness was run for this rework, not the unrelated full suite.
+  - Commit 71ae4fa4 (shelf citation) has a body the fingerprint scanner rejected at push time: an em-dash in its Class-Audit trailer, and a rule citation with no Rule-executed trailer. It was not amended, because history rewrite is outside this task's authority. The next commit replaces those trailers with corrected ones and adds the Project-contribution line.
 
 ## Lead review
 
