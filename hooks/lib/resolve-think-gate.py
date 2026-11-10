@@ -880,6 +880,40 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
             path = re.sub(r'\.git$', '', path)
             cache[root] = path.casefold() if re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', path) and not any(x in {'.', '..'} for x in path.split('/')) else ''
         return cache[root]
+    def implicit_repository(cwd):
+        root = _target_repo(cwd)
+        if not root:
+            return ''
+        try:
+            remotes = subprocess.check_output(['git', '-C', root, 'remote'],
+                text=True, stderr=subprocess.DEVNULL, timeout=3).splitlines()
+            resolved = subprocess.run(['git', '-C', root, 'config', '--get-regexp',
+                r'^remote\..*\.gh-resolved$'], capture_output=True, timeout=3)
+            # gh can prefer upstream/github or an explicitly resolved default.
+            # Resolve such targets explicitly instead of borrowing origin.
+            if remotes != ['origin'] or resolved.returncode != 1:
+                return ''
+            effective = subprocess.check_output(['git', '-C', root, 'remote',
+                'get-url', '--all', 'origin'], text=True,
+                stderr=subprocess.DEVNULL, timeout=3).splitlines()
+            if len(effective) != 1:
+                return ''
+            from urllib.parse import urlsplit
+            raw = effective[0]
+            scp = re.fullmatch(r'git@github\.com:([^?#]+)', raw, re.I)
+            if scp:
+                path = scp[1]
+            else:
+                url = urlsplit(raw)
+                if url.scheme not in {'https', 'ssh'} or (url.hostname or '').casefold() != 'github.com' or url.query or url.fragment:
+                    return ''
+                path = url.path.lstrip('/')
+            path = re.sub(r'\.git$', '', path)
+            slug = path.casefold() if re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', path) and not any(x in {'.', '..'} for x in path.split('/')) else ''
+            return slug if slug and slug == repository(root) else ''
+        except (OSError, subprocess.SubprocessError, ValueError):
+            return ''
+
     owners = []
     for gate in _session_thinks(workspace):
         data = gate['data']; identity = task_identity(data)
@@ -899,7 +933,7 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
         ticket = re.fullmatch(r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*)', identity)
         matched = True
         for target in shape['metadata_posts']:
-            actual = target['repository'] or repository(_target_repo(target['cwd']))
+            actual = target['repository'] or implicit_repository(target['cwd'])
             own_ticket = bool(ticket and target['resource'] == 'issue' and target['operation'] == 'comment'
                               and actual == ticket[1].casefold() and target['selector'] == ticket[2])
             if not actual or actual not in allowed and not own_ticket:
@@ -907,7 +941,7 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
         if matched:
             owners.append(gate)
     if len(owners) != 1:
-        return deny('one unambiguous own Task with actual repository scope or its canonical ticket is required; do not borrow cwd for another remote repository')
+        return deny('one unambiguous own Task with actual repository scope or its canonical ticket is required; use a literal --repo/canonical URL when gh defaults or URL rewrites are ambiguous, and do not borrow cwd for another remote repository')
     return {'gate': owners[0], 'error': ''}
 
 

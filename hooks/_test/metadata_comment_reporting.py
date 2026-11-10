@@ -67,6 +67,62 @@ class Reporting(unittest.TestCase):
             with patch('github_metadata_comment.Path.open', side_effect=OSError('fixture denied')):
                 self.assertIs(metadata_comment('gh issue comment 31 --body-file ' + str(body), directory), False)
 
+    def test_numeric_aliases_keep_task_and_repository_proof_in_full_chain(self):
+        import task_keyed_gates as fixture
+        f = fixture.Gates(); f.setUp(); self.addCleanup(f.tearDown)
+        subprocess.run(['git', '-C', str(f.repo), 'remote', 'add', 'origin',
+                        'https://github.com/example/target.git'], check=True)
+        hooks = [ROOT / h['command'].split('/claude-configs-public/', 1)[1]
+                 for g in json.loads((ROOT / 'hooks/settings-snippet.json').read_text())['hooks']['PreToolUse']
+                 if g.get('matcher') == 'Bash' for h in g['hooks']]
+        self.assertEqual(len(hooks), 16)
+        def chain(command):
+            payload = fixture.craft_payload(tool_name='Bash', cwd=str(f.repo), tool_input={'command': command})
+            return {h.name: subprocess.run(['bash', str(h)], input=json.dumps(payload),
+                    env=f.env, cwd=f.repo, text=True, capture_output=True, timeout=15).returncode for h in hooks}
+        aliases = ['05', "'#5'", '+005', "'#+5'"]
+        for selector in aliases:
+            with self.subTest(no_task=selector):
+                self.assertEqual(chain('gh issue comment ' + selector + ' --repo other/repo --body x')['universal-mutation-gate.sh'], 2)
+        f.task('own-task', f.repo)
+        for selector in aliases:
+            with self.subTest(own_task=selector):
+                result = chain('gh issue comment ' + selector + ' --repo example/target --body x')
+                self.assertTrue(all(code == 0 for code in result.values()), result)
+                self.assertEqual(chain('gh issue comment ' + selector + ' --repo other/repo --body x')['universal-mutation-gate.sh'], 2)
+        for command in ['gh issue comment 05 --repo github.com/example/target --body x',
+                        'gh issue comment https://github.com/example/target/issues/005 --body x']:
+            result = chain(command); self.assertTrue(all(code == 0 for code in result.values()), result)
+
+    def test_implicit_repo_defaults_and_rewrites_cannot_borrow_origin(self):
+        import task_keyed_gates as fixture
+        f = fixture.Gates(); f.setUp(); self.addCleanup(f.tearDown)
+        def git(*args):
+            return subprocess.run(['git', '-C', str(f.repo), *args], check=True, capture_output=True, text=True)
+        git('remote', 'add', 'origin', 'https://github.com/example/target.git')
+        f.task('own-task', f.repo)
+        command = 'gh issue create --title report --body x'
+        self.assertEqual(f.hook(command, cwd=f.repo).returncode, 0)
+        # A transport-only rewrite with the same GitHub identity remains usable.
+        same = 'url.ssh://git@github.com/example/target.git.insteadOf'
+        git('config', same, 'https://github.com/example/target.git')
+        self.assertEqual(f.hook(command, cwd=f.repo).returncode, 0)
+        git('config', '--unset-all', same)
+        foreign = 'url.https://github.com/other/repo.git.insteadOf'
+        git('config', foreign, 'https://github.com/example/target.git')
+        denied = f.hook(command, cwd=f.repo)
+        self.assertEqual(denied.returncode, 2); self.assertIn('literal --repo', denied.stderr)
+        self.assertEqual(f.hook(command + ' --repo example/target', cwd=f.repo).returncode, 0)
+        self.assertEqual(f.hook(command + ' --repo other/repo', cwd=f.repo).returncode, 2)
+        git('config', '--unset-all', foreign)
+        git('remote', 'add', 'upstream', 'https://github.com/other/repo.git')
+        self.assertEqual(f.hook(command, cwd=f.repo).returncode, 2)
+        self.assertEqual(f.hook(command + ' --repo example/target', cwd=f.repo).returncode, 0)
+        git('remote', 'remove', 'upstream')
+        git('config', 'remote.origin.gh-resolved', 'base')
+        self.assertEqual(f.hook(command, cwd=f.repo).returncode, 2)
+        self.assertEqual(f.hook(command + ' --repo example/target', cwd=f.repo).returncode, 0)
+
     def test_configured_chain_keeps_task_authority(self):
         import shutil
         import task_keyed_gates as fixture
