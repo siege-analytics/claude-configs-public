@@ -73,7 +73,7 @@ When waiting for an answer to a determinative question (user decision, external 
 1. When you reach a decision point or waiting state, immediately scan the roadmap/backlog for independent work.
 2. Pick an item that (a) does not depend on the waiting answer, (b) is non-trivial but can finish before the answer arrives, (c) advances project goals within existing authorization and the assigned role.
 3. Execute it to completion or natural stopping point.
-4. When the determinative answer arrives, resume the waiting work. If it answers one question of an [skill:ask-questions] survey, send the next question first; act on the answers only after the last one.
+4. When the determinative answer arrives, resume the waiting work. In an [skill:ask-questions] survey, ordinary answer-based dispatch waits until the last answer; explicit stops or action revocations apply immediately. Send the next applicable question first, and continue independent authorized work.
 
 **Operator expectation:** If I ask a question and you're waiting, you should be using that time to close backlog gaps, not idling.
 
@@ -92,7 +92,7 @@ When waiting for an answer to a determinative question (user decision, external 
 
 Questions needed for forward progress (decision points, clarifications, external information) must be pasted into the appropriate ticket/issue/epic, not left in chat. The roadmap or ticket list should be the single source of truth for all blocking questions.
 
-This rule governs where open questions are tracked, not how the operator is asked. When asking the operator, [skill:ask-questions] owns the format and sequence. Record the operator's answers in tickets only after the survey's last answer.
+This rule governs where open questions are tracked, not how the operator is asked. When asking the operator, [skill:ask-questions] owns the format and sequence. Batch ordinary answer-based ticket updates after the survey's last answer; explicit stops or action revocations apply immediately, including any necessary notice to the affected work.
 
 **What counts as a "question for determination":**
 - Design decisions ("should we use approach A or B?")
