@@ -16,10 +16,11 @@ run_case(){
   local sid="s-$1" dir
   dir="$TMP/ws/sessions/$sid/tasks/t"; mkdir -p "$dir"
   printf '{"ticket": "o/r#1846", "sessionId": "%s", "repo_root": "%s", "scope_paths": ["%s"], "status": "implementing"}\n' "$sid" "$REPO" "$REPO" > "$dir/think-gate.json"
+  # Records as the writer's jq query projects them; a MEMBER author counts (B2).
   python3 - "$2" > "$TMP/comments.txt" <<'PYBODY'
 import json, sys
 for body in sys.argv[1].split('\x1e'):
-    print(json.dumps(body))
+    print(json.dumps({'author': 'task-owner', 'association': 'MEMBER', 'body': body}))
 PYBODY
   CRAFT_SESSION_DIR="$TMP/ws/sessions/$sid" CRAFT_SESSION_ID="$sid" PATH="$FAKE:$PATH" \
     python3 "$ROOT/hooks/lib/pipeline_state.py" "$dir/think-gate.json" "$TMP/ws" "$ROOT/hooks/lib" >/dev/null 2>&1

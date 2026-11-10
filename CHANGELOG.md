@@ -70,6 +70,24 @@ All notable changes to this project are documented here. Versioning follows [Sem
   - ssh to a non-allowlisted host, for example `ssh -T git@github.com`, used to pass under a covering task gate. It is now denied everywhere until the operator adds the host. A task gate cannot admit extra hosts.
   - An allowlisted contact is outbound contact only. It never selects a task gate, and it is not authorization for remote-side mutation, which stays operator policy.
   - Task-declared hosts would be a separate, reviewed follow-up.
+### Fixed: gate artifact laundering and spoofed artifact signals (#1164)
+
+- Historical B1 report-word payloads and their original expected results remain review data. Current standalone report posts follow the typed metadata operation contract instead of a second completion/modal/owner-evidence parser. A report does not change workflow state; real state operations retain canonical guards. Previously held B1 wording cases now test that same descriptive-operation contract without a fresh owner GO (#1260).
+
+- The pipeline-state writer counts a posted comment toward `junior-senior-gate.json` and `artifacts-posted-gate.json` only when:
+  - its author is the authenticated `gh` login, or has the GitHub-attested OWNER, MEMBER or COLLABORATOR role;
+  - no ticket declaration names only other tickets. A declaration is a Ticket/Task/Issue/Refs/`ticket_refs` key, or an artifact heading, with its entire value.
+    - The value includes indented and list-item continuation lines, across blank lines, so YAML `ticket_refs:` lists, folded values and wrapped `Ticket:` values count. A 4+-space line after a blank line outside a list is an indented code block and, like fenced code, names no ticket.
+    - YAML front matter is judged as one region of the raw comment, not parsed: every ticket reference in it must be the current ticket. Front matter naming the current ticket together with any other ticket is excluded, and blank lines, comments, flow collections, folded scalars or an unrecognized key cannot hide a foreign reference. Front matter naming only other tickets, even as a bibliography, is excluded too.
+    - A reference written as inline code (`` `other/repo#9` ``) still names its ticket.
+    - The identity rule is strict and applies to `Refs` too: a separate `Refs:` list naming only other tickets excludes an otherwise current-ticket artifact, so `Refs` is not a free-form bibliography.
+  - Comment line endings are normalized (CRLF and lone CR to LF) before identity and classification, so a CRLF body cannot skip the front-matter region.
+  - One CommonMark block classifier decides which text is eligible. Every artifact signal (headings and keyword stems) reads the same eligible text, and body ticket identity reads it too, plus 4+-space paragraph continuations, so a wrapped declaration value still counts:
+    - Blockquote lines (`> ...`) and their lazy paragraph continuations, and indented code outside a list, supply no heading, no keyword and no ticket declaration. A 4+-space line continuing a paragraph supplies no heading or keyword either.
+    - Lines inside a CommonMark HTML block (types 1-7, including processing instructions, declarations and `<div>` or `<span>` examples) are raw HTML. They supply no heading, no keyword and no ticket declaration, so a foreign `Ticket:` inside an HTML comment or `<pre>` example no longer excludes a real current-ticket artifact after it.
+    - A type-6 block such as `<blockquote>` or `<div>` runs to the next blank line, not to its closing tag. A type-7 tag cannot interrupt a paragraph, but can start after a blank line, heading or thematic break.
+    - HTML comments, CDATA, inline code, and HTML `pre`, `code`, `blockquote` and similar container content no longer supply headings or keywords. Container closure is name-aware: a mismatched closing tag cannot end an open container. Fenced code is unchanged.
+  - The unchanged Tier C mutation gate therefore refuses the tested wrong-ticket, outsider, HTML-quoted, Markdown-quoted, indented-example and CRLF front-matter shapes. The filters are bounded parsers, not a full Markdown/HTML renderer.
 
 ### Fixed: task scopes and evidence execution
 
