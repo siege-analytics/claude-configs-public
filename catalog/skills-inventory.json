@@ -4076,10 +4076,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 14678,
-      "content_sha256": "8c6fa5fe342dff5d18634ac765bf9673d2e9ae37d1db321e69f66f5095154158",
+      "characters": 15975,
+      "content_sha256": "e01f3e14467de4d97abdb8e9c1809f464025728ee9ad607bcb4afa7809075e8e",
       "description": "unknown",
-      "estimated_tokens": 3670,
+      "estimated_tokens": 3994,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -4095,13 +4095,14 @@
         "plans/coordination-dispatch-1187.md",
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
+        "skills/_session-coordination-rules.md",
         "skills/stalled-session-recovery/host-controls.md",
         "skills/think/SKILL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 190,
+      "lines": 201,
       "owner": [
         "unknown"
       ],
@@ -6111,10 +6112,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 28689,
-      "content_sha256": "a5ad6bbedefa2266de1dfe0d320f84d8779585c88cc523fb7d22333cb78840e4",
+      "characters": 29315,
+      "content_sha256": "d4101b3395c4af85f0c70841008ebcc6fc701d4fabd8414da5789d3843f18a61",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7173,
+      "estimated_tokens": 7329,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -12797,9 +12798,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2626139,
+    "characters": 2628062,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 656613,
+    "estimated_tokens": 657093,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12820,7 +12821,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1229745
+      "unclassified": 1231668
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12832,7 +12833,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 307479
+      "unclassified": 307959
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
