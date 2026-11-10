@@ -107,11 +107,22 @@ Use the canonical helper from the installed source package. It fetches, verifies
 remote develop, safely bootstraps it if absent, and creates an isolated task
 worktree without disturbing active work:
 
+Replace `/absolute/installed/claude-configs-public` with the actual installed
+source package backing the active hooks, not the consumer project directory.
+Use its canonical helper path; a copied or project-local helper is not equivalent.
+
 ```bash
-python3 bin/prepare-task-branch.py --repo /absolute/project \
+python3 /absolute/installed/claude-configs-public/bin/prepare-task-branch.py --repo /absolute/project \
   --branch feature/geographic_enrichment_phase1 \
   --worktree /absolute/unique-task-worktree
 ```
+
+The helper does not change the caller's working directory. Before editing,
+committing or pushing, set the execution working directory to the returned
+worktree (for a shell, `cd /absolute/unique-task-worktree`). Check
+`git rev-parse --show-toplevel` and `git branch --show-current` there before work.
+For delegated work, keep the parent in its own workspace and pass the new
+absolute worktree path as the child's working directory.
 
 Direct creation commands name a known develop ref explicitly; refresh it when
 available. Existing local or tracking develop remains valid offline. For example:

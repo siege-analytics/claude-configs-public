@@ -42,8 +42,12 @@ if [[ "$BRANCH" =~ $PROTECTED ]]; then
     cat <<EOF
 <branch-state-guard>
 Advisory: on protected branch '$BRANCH'. Do NOT commit directly here. Create a
-feature branch before making changes: git switch -c feat/<description> origin/develop.
-If origin/develop is missing, use bin/prepare-task-branch.py to verify and bootstrap it.
+normal task worktree before making changes:
+  python3 "$SCRIPT_DIR/../../bin/prepare-task-branch.py" --repo "$WORKSPACE_ROOT" --branch feature/ticket_description --worktree /absolute/unique-task-worktree
+The helper refreshes when available and reports cached develop honestly offline;
+only verified remote absence permits bootstrap. Continue in the returned worktree.
+For an explicitly authorized release/backport, retain its exact approved source
+using the existing own-Task branch_source_authorization route in [skill:develop-guard].
 The commit itself is still hard-blocked at push/commit time by branch-guard.
 Ref: #261, #450, #873
 </branch-state-guard>

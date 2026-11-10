@@ -8706,10 +8706,10 @@
     },
     {
       "canonical_source": "skills/branch/SKILL.md",
-      "characters": 6571,
-      "content_sha256": "3de279257e6a9ac704acd29d630ee0fb43efa79ac932f6ad3a3bf5df46e60009",
+      "characters": 7284,
+      "content_sha256": "2df49e62ae85f5a9312c9736bea269a1cfaf74f9ad3f59c23cced931a0578fad",
       "description": "Create and manage git branches using a consistent naming convention (type/descriptive_string) that mirrors ticket taxonomy.",
-      "estimated_tokens": 1643,
+      "estimated_tokens": 1821,
       "frontmatter_name": "branch",
       "generated_outputs": [
         "dist/nested/skills/branch",
@@ -8728,7 +8728,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 161,
+      "lines": 172,
       "owner": [
         "unknown"
       ],
@@ -9381,10 +9381,10 @@
     },
     {
       "canonical_source": "skills/create-pr/SKILL.md",
-      "characters": 14989,
-      "content_sha256": "423630e4b701317e7baf937b97c07487046f232541c965fe3be830abc3c71aed",
+      "characters": 15814,
+      "content_sha256": "c21993eea4952228dfcbf00c63c08959a773a9e53fd3cd5a72a9c72f0be44cb4",
       "description": "Create a pull request with structured description, linked tickets, and commit narrative. Enforces bidirectional linking.",
-      "estimated_tokens": 3748,
+      "estimated_tokens": 3954,
       "frontmatter_name": "create-pr",
       "generated_outputs": [
         "dist/nested/skills/create-pr",
@@ -9413,7 +9413,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 393,
+      "lines": 405,
       "owner": [
         "unknown"
       ],
@@ -9711,10 +9711,10 @@
     },
     {
       "canonical_source": "skills/develop-guard/SKILL.md",
-      "characters": 7740,
-      "content_sha256": "e23b7eb535fba698a48352bc2806d8c67555876a2611de4cebe9997f2801728c",
+      "characters": 8021,
+      "content_sha256": "bec7ccdba95a7f495d59fc6c5238b3e2ccaf62c5af4d970f701fbae9faac6884",
       "description": "Normal development starts at develop. Verify remote refs, bootstrap a missing develop safely, and preserve separately authorized release sources.",
-      "estimated_tokens": 1935,
+      "estimated_tokens": 2006,
       "frontmatter_name": "develop-guard",
       "generated_outputs": [
         "dist/nested/skills/develop-guard",
@@ -9727,6 +9727,9 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "hooks/resolver/branch-state-guard.sh",
+        "hooks/resolver/pre-action-guard.sh",
+        "hooks/write/branch-guard.sh",
         "plans/self-review-self-reviewed-linear-promotion.md",
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
@@ -9739,7 +9742,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 137,
+      "lines": 141,
       "owner": [
         "unknown"
       ],
@@ -12824,9 +12827,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2621961,
+    "characters": 2623780,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 655567,
+    "estimated_tokens": 656022,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12847,7 +12850,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1225567
+      "unclassified": 1227386
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12859,7 +12862,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 306433
+      "unclassified": 306888
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

@@ -6,10 +6,22 @@ allowed-tools: Read Grep Glob Bash
 
 # Instructions
 
+Before any commit-range or ticket scan, resolve the review base. Normal work
+targets `develop`: refresh when available, prefer verified
+`refs/remotes/origin/develop`, or use known `refs/heads/develop` offline with an
+honest cached-status report. Verify the selected ref with
+`git rev-parse --verify "${REVIEW_BASE}^{commit}"` and record that commit as
+`REVIEW_BASE_COMMIT`; use the same pinned commit for every scan below. If neither
+ref exists, follow [skill:develop-guard] to verify/bootstrap develop first,
+preserving existing work. A failed network read is not evidence of absence.
+For explicitly authorized release/backport work, resolve and verify its separately
+approved target instead; do not replace it with develop. This selects the review
+base, not authority to rewrite an existing branch.
+
 1. Understand the full scope of the PR
-   1. Run `git log develop..HEAD --oneline` (or the appropriate base branch) to see all commits
-   2. Run `git diff develop..HEAD --stat` to see all files changed
-   3. Run `git diff develop..HEAD` to review the actual changes if needed
+   1. Run `git log "$REVIEW_BASE_COMMIT"..HEAD --oneline` to see all commits
+   2. Run `git diff "$REVIEW_BASE_COMMIT"..HEAD --stat` to see all files changed
+   3. Run `git diff "$REVIEW_BASE_COMMIT"..HEAD` to review the actual changes if needed
    4. Read the related ticket(s) to understand the intended outcome
 2. **Verify ticket references exist** (see Ticket enforcement below)
    1. Check that all commits on the branch reference tickets
@@ -57,7 +69,7 @@ If **any** criterion fails: open the PR as a draft, list the failing criteria ex
 
 1. Scan all commits on the branch for ticket references:
    ```bash
-   git log develop..HEAD --format='%s %b' | grep -iE '(fixes|closes|refs|part-of|#[0-9])'
+   git log "$REVIEW_BASE_COMMIT"..HEAD --format='%s %b' | grep -iE '(fixes|closes|refs|part-of|#[0-9])'
    ```
 2. If any commits lack ticket references, flag them to the user
 3. If no tickets exist for this work, create them first (use the create-ticket skill)
