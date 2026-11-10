@@ -207,7 +207,6 @@ hooks/git/survey-context.sh|hooks/lib/github-merge-queue.py
 hooks/git/test-guard.sh|hooks/lib/github-merge-queue.py
 hooks/git/test-tracking-guard.sh|hooks/lib/github-merge-queue.py
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/session_anchor.py
-hooks/bash/universal-mutation-gate.sh|hooks/lib/github_metadata_comment.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/hook_payload.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/session_anchor.py
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/hook_payload.py
@@ -304,8 +303,8 @@ hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
 hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "18b08743fc36da9036bfd6375a6118ceaaafd384efef3f9a9c0bb0d2220040e1"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "94457079e711f0e4be9ef27704231842e6c678b1bb0180f79be49bb6708c95f0"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "4acf40047bbd9189743f53e9b0325a176d31d6bead2e7e35b6107c50ab995513"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "f77d145b554f600b409d683d2374cc183e14a344ad6f52fe54bb8782ab758fae"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """

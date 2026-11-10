@@ -1,3 +1,9 @@
+---
+ticket_refs:
+  - siege-analytics/claude-configs-public#1241
+  - siege-analytics/claude-configs-public#1261
+---
+
 # Metadata target review followup (#1261, #1245)
 
 Actual isolated full-hook probes confirmed that numeric GitHub selectors with leading zeros or `#` could reach a legacy Task-free reporting shortcut. Independent read-only GitHub CLI probes confirmed that upstream/default remotes and URL rewrites can make implicit posts target a different repository from raw origin. No candidate remote mutation was executed.

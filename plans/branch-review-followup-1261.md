@@ -1,3 +1,9 @@
+---
+ticket_refs:
+  - siege-analytics/claude-configs-public#1241
+  - siege-analytics/claude-configs-public#1261
+---
+
 # Branch review followup (#1261, #1229)
 
 Two automated review findings were confirmed against exact develop e077d16f in isolated actual Git fixtures. Path-only worktree requests could create protected main/develop names from a known develop tip because the guard checked a placeholder. An exact already-authorized v0.15.6 release command passed without a newline and failed with one because shell substitution stripped command bytes. No live repository was changed by the probes.
