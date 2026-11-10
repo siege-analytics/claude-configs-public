@@ -74,8 +74,20 @@ Contact points checked on origin/develop 1cd83f95 before authoring:
 ## Test plan
 
 - `bin/_test/resolve_load_set_test.py`:
-  - 17 positive prompts load `ask-questions`: the ticket's falsification prompt "use the ask questions skill", the original phrasings, and every positive prompt from the cross-family review of a8aaa07, including 5 scoped corrections and 4 unadvertised requests.
-  - 21 negative prompts stay out: the original controls and every reviewer negative, including 5 explicit prohibitions and 3 quoted-data prompts.
+  - 21 positive prompts load `ask-questions`. They include:
+    - the ticket's falsification prompt "use the ask questions skill";
+    - every positive prompt from the cross-family review of a8aaa07;
+    - Root's three explicit one-at-a-time requests from review 5836645541: "never go silent", "before you update docs" and "read-only review".
+  - 31 negative prompts stay out. They include:
+    - every earlier reviewer negative;
+    - Root's four finish-without-asking prompts;
+    - "I have decision questions for you";
+    - explicit stops ("Stop asking me questions ...", "Don't ask, just do it.").
+  - Skill-text assertions cover the behaviors a load cannot show:
+    - the list plus the first fully formed question in the same message;
+    - an immediate stop, and immediate revocation of an action;
+    - a default never creates authority;
+    - one question per turn.
   - The one known miss is pinned with a #1225 reference and a message to move it to the positive cases once #1225 lands. The script has no xfail mechanism, so this is the honest equivalent.
   - The explicit `[skill:ask-questions]` and `/ask-questions` tokens load exactly the skill.
 - Mutation checks:
@@ -83,6 +95,11 @@ Contact points checked on origin/develop 1cd83f95 before authoring:
   - Weakening "never ask" turns it red at "Never ask questions; just do it.".
   - Weakening the curly-apostrophe exclusion turns it red at the curly-apostrophe prompt.
   - Removing the subprocess timeout turns it red with "non-returning child was not bounded".
+  - Root's fix round adds nine mutations, each red:
+    - dropping "no need to ask" or "don't stop to ask";
+    - restoring bare "decision questions" or broad "never go";
+    - giving the explicit route verbs, which re-enables the read-only/update-docs guard;
+    - removing each of the four required skill sentences.
   - Every restore turns it green.
 - The real CLI (`bin/resolve-load-set.py`) with the real inventory selects `skills/ask-questions/SKILL.md` for "use the ask questions skill" and nothing for "write a friendly greeting".
 - `bin/validate-local.py --mode refresh` (generators plus every CI freshness check) and `--mode full` (the CI validation job's run steps), using a venv with the pinned PyYAML 6.0.3.
@@ -114,6 +131,10 @@ Contact points checked on origin/develop 1cd83f95 before authoring:
 | H2-6 | P3 | A curly-apostrophe "don't ask questions" is not excluded | fixed in review round 1 with the JSON escape "don\u2019t ask" |
 | R1 | P2 | Whole-prompt exclusions misrouted scoped corrections, prohibitions and quoted data (cross-family review of a8aaa07) | fixed with per-clause matching: 40 of the 41 reviewer prompts route as intended; the remaining miss and the heuristic quote handling are ticket #1225 |
 | L2 | P3 | Enforcement is judgment-only | noted; out of scope per the ticket; `_coverage.md` names the scanner |
+| ROOT-1 | P2 | Finish/no-question prompts loaded the skill; "I have decision questions for you" counted as a request; three explicit one-at-a-time requests missed (Root review 5836645541) | fixed with narrow per-clause exclusions, the "ask (me) decision questions" terms and a second whole-prompt explicit route; no global keyword exclusion |
+| ROOT-2 | P2 | Step 2 permitted a list-only turn | fixed: list and first fully formed question in the same message, with a template and an anti-pattern |
+| ROOT-3 | P2 | Default and stop semantics were not scoped to authority and immediate control | fixed: a default never creates authority; an explicit stop ends the survey and a revocation applies immediately; partial-survey handoff may keep answers without dispatch |
+| CI-1 | P3 | progressive-loading metrics depend on the local short-SHA length (8 locally vs 7 in CI) | regenerated with core.abbrev=7; the tooling fault is outside this PR and needs its own ticket |
 
 ## Quantified claims
 

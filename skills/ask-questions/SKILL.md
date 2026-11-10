@@ -1,6 +1,6 @@
 ---
 name: ask-questions
-description: "Operator question protocol. Use whenever you need answers or decisions from the operator, or when the operator asks you to ask questions. Treat it as a survey: show the complete question list once; ask exactly one question per turn with context, choices, pros and cons, a recommendation and a default; go straight to the next question after each answer without routing answers, updating tickets or starting work on them; after the last answer, summarize and then route and act on all answers in one batch. It never freezes or blocks running work. The single canonical procedure; session-coordination:5 defers to it for hubs."
+description: "Operator question protocol. Use whenever you need answers or decisions from the operator, or when the operator asks you to ask questions. Treat it as a survey: show the complete question list once, together with the first question; ask exactly one question per turn with context, choices, pros and cons, a recommendation and a default; go straight to the next question after each answer without routing answers, updating tickets or starting work on them; after the last answer, summarize and then route and act on all answers in one batch. It never freezes or blocks running work. The single canonical procedure; session-coordination:5 defers to it for hubs."
 allowed-tools: Read Grep Glob
 tier: on-demand
 owner: siege-analytics
@@ -33,13 +33,13 @@ Do not use it to ask about settled decisions or routine methods you can resolve 
 ## Procedure
 
 1. **Check before asking.** Drop any question already answered by an instruction, a prior decision, standing authority or available evidence.
-2. **Build the complete list, then show it once.** Number every question and give each a one-line title. Show the whole list up front, before the first question. Say that you will route and act on the answers after the last one, and that running work continues meanwhile.
+2. **Build the complete list, then show it once, together with the first question.** Number every question and give each a one-line title. Show the numbered list and the first fully formed question in the same message; never end a turn after only listing the questions. Say that you will route and act on the answers after the last one, and that running work continues meanwhile.
 3. **Ask exactly one question per turn.** Each question carries:
    - **Context:** what is being decided, why it matters, the evidence, and what the answer changes.
    - **Choices:** the real options, labelled. Do not pad the list with options nobody would pick.
    - **Pros and cons** for each choice.
    - **Recommendation:** the choice you recommend, and why.
-   - **Default:** what you will apply if the operator says they have no preference or says "you decide". The default is your recommendation.
+   - **Default:** what you will apply if the operator says they have no preference or says "you decide". The default is your recommendation. A default chooses only within existing authorization: it never creates authority and never stands in for a confirmation that a protected-action policy requires.
 
    Then wait for the answer. Other authorized work may continue while you wait ([rule:autonomy]).
 4. **On each answer, go straight to the next question.** The next question preempts whatever you were doing while you waited: record the answer and put the next question in the same reply, then resume the other work. Between answers, do not route answers to workers or hubs, update tickets, brief or re-task anyone, or start work based on an answer. That startup would leave the operator waiting between questions.
@@ -52,6 +52,8 @@ Do not use it to ask about settled decisions or routine methods you can resolve 
 - **An answer invalidates later questions.** Revise the list, say which questions were dropped or changed and why, and show the revised list before asking the next one.
 - **"You decide" or "no preference".** Apply the stated default, which is your recommendation, and record it in the summary as delegated.
 - **Silence is not an answer.** Never apply the default because the operator did not reply. A proposed default is not authorization (strategic-agency:4).
+- **An explicit stop or revocation.** If the operator says to stop asking ("don't ask", "stop asking"), end the survey at once and do not continue the protocol. If an answer stops or revokes an action ("stop the deploy", "don't merge that"), apply it to that action immediately, even before the remaining answers arrive; ordinary answer-based dispatch still waits until the survey is complete. This is not a new approval step and does not revoke standing grants.
+- **A handoff mid-survey.** A partial-survey handoff may record the answers collected so far, without dispatching on them, so the successor can continue the same survey.
 - **The operator interrupts or redirects.** The operator's control surface wins (session-coordination:6). Stop the sequence and follow the redirection. Resume the remaining questions only if they still apply, and show the remaining list when you do. If the operator tells you to act on the answers so far, do so.
 - **The operator answers several questions at once, or answers ahead.** Record those answers, skip the answered questions, and ask the next unanswered one.
 - **An unclear answer.** Ask a clarifying follow-up on the same question before moving on. It does not count as a new question.
@@ -61,19 +63,27 @@ Do not use it to ask about settled decisions or routine methods you can resolve 
 
 ## Message template
 
-The list, shown once:
+The first message: the list, shown once, followed by the first full question in the same message:
 
 ```
 Questions (3). I will route and act on the answers after the last one; running work continues meanwhile.
 1. <title>
 2. <title>
 3. <title>
-```
 
-Each question:
-
-```
 Question 1 of 3: <title>
+Context: <what is being decided, why it matters, evidence, what the answer changes>
+Choices:
+  A. <option>. Pros: <...>. Cons: <...>.
+  B. <option>. Pros: <...>. Cons: <...>.
+Recommendation: A, because <reason>.
+Default (no preference or "you decide"): A.
+```
+
+Each later question, one per message:
+
+```
+Question 2 of 3: <title>
 Context: <what is being decided, why it matters, evidence, what the answer changes>
 Choices:
   A. <option>. Pros: <...>. Cons: <...>.
@@ -95,6 +105,8 @@ Routing and acting on these now: <who gets what, what starts>.
 ## Anti-patterns
 
 - Several questions bundled into one turn, or a vague list of topics with no choices.
+- Ending a turn after only listing the questions, without the first question.
+- Treating a default or a "you decide" as a grant of authority the operator has not given.
 - A question with no recommendation or no default, or choices without pros and cons.
 - Routing an answer to a worker or hub, updating a ticket, or starting work on an answer before the last answer is in.
 - Status updates or other activity between an answer and the next question.

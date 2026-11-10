@@ -21,14 +21,19 @@ def main():
  assert a==M.select(manifest,inventory,"review this Python pull request", "github.com/siege-analytics/siege_utilities")
  generic=M.select(manifest,inventory,"write a friendly greeting","other/repo")
  assert generic["state"]=="unknown" and generic["selected"]==[] and generic["project"] is None
- # The operator question protocol (#1056) loads on question-session requests. The route's verbs split the
+ # The operator question protocol (#1056) loads on question-session requests. The main route's verbs split the
  # prompt into ";" clauses, so a prohibition or a "not all at once" in one clause does not erase a request in
- # another. Cases cover scoped corrections, explicit prohibitions, quoted data and token boundaries.
+ # another. A second, whole-prompt route catches explicit one-at-a-time requests that the verb guard skips
+ # ("read-only", "update docs") and is suppressed by any negation in the prompt. Cases cover scoped corrections,
+ # explicit prohibitions and stop requests, finish-without-asking requests, quoted data and token boundaries.
  def asks(prompt):
   result=M.select(manifest,inventory,prompt,"other/repo")
   return result["state"]=="matched" and "ask-questions" in [x["slug"] for x in result["selected"]]
  for prompt in (
-  "use the ask questions skill","Ask me questions before you dispatch","I have decision questions for you","go one question at a time",
+  "use the ask questions skill","Ask me questions before you dispatch","ask me decision questions one at a time","go one question at a time",
+  "Ask me questions one at a time and never go silent.","Go one question at a time and never go quiet.",
+  "Ask me your questions before you update docs.",
+  "In this read-only review, ask me questions one at a time.",
   "ask all your questions first","You keep acting without asking. Ask me questions one at a time.",
   "Don't ask them all at once; ask me questions one at a time.","ask your questions",
   "Don't ask questions all at once; ask me questions one at a time.","Do not ask me questions all at once; go one question at a time.",
@@ -45,8 +50,25 @@ def main():
   "Do not ask your questions; just do it.","Never go one question at a time; answer my request without a survey.",
   "Proofread this sentence: 'I ask questions for a living'.","Translate 'ask me questions' into French; do not ask me anything.",
   "Review this SQL: SELECT 'ask me questions' AS prompt; do not question me.",
+  "I have decision questions for you","Please don't stop to ask questions, just finish.",
+  "Just finish it and don't ask me any questions.","No need to ask me any questions; just ship it.",
+  "Finish the migration and only ask questions if you hit an authorization boundary.",
+  "Stop asking me questions and finish the task.","Don't ask, just do it.","Stop asking questions; just do it.",
+  "Don't ask me your questions, just finish.","Do not ask me questions one at a time; just ship it.",
  ):
   assert not asks(prompt),prompt
+ # The skill's text carries the behaviors a load cannot show: list plus first question in one message,
+ # immediate stop and revocation, defaults bounded by existing authority, and one question per turn.
+ skill_text=(ROOT/"skills/ask-questions/SKILL.md").read_text()
+ for required in (
+  "Show the numbered list and the first fully formed question in the same message",
+  "never end a turn after only listing the questions",
+  "end the survey at once and do not continue the protocol",
+  "apply it to that action immediately, even before the remaining answers arrive",
+  "it never creates authority and never stands in for a confirmation that a protected-action policy requires",
+  "Ask exactly one question per turn",
+ ):
+  assert required in skill_text,required
  # Known miss, tracked in #1225: clauses split only on ";", "?" and newlines, so a "Don't ..." sentence and a
  # request joined by "." form one clause that the verb guard skips. Quoted-payload exclusion is likewise
  # heuristic until #1225. This pins today's behaviour; when #1225 lands, move the prompt to the positive cases.

@@ -1259,29 +1259,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/ask-questions",
           "file_count": 1,
-          "tree_sha256": "3a0d9a75240ed56fa759b3c258a6aa7ad07d70f7e8370059c040b9d63d2d050d"
+          "tree_sha256": "50623efb8342b66ae123b669f12a5b466cb18d7b916dc6b564d565d9f95f8cd6"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/ask-questions",
           "file_count": 1,
-          "tree_sha256": "3a0d9a75240ed56fa759b3c258a6aa7ad07d70f7e8370059c040b9d63d2d050d"
+          "tree_sha256": "50623efb8342b66ae123b669f12a5b466cb18d7b916dc6b564d565d9f95f8cd6"
         },
         "flat": {
           "destination": "dist/flat/skills/ask-questions",
           "file_count": 1,
-          "tree_sha256": "3a0d9a75240ed56fa759b3c258a6aa7ad07d70f7e8370059c040b9d63d2d050d"
+          "tree_sha256": "50623efb8342b66ae123b669f12a5b466cb18d7b916dc6b564d565d9f95f8cd6"
         },
         "nested": {
           "destination": "dist/nested/skills/ask-questions",
           "file_count": 1,
-          "tree_sha256": "3a0d9a75240ed56fa759b3c258a6aa7ad07d70f7e8370059c040b9d63d2d050d"
+          "tree_sha256": "50623efb8342b66ae123b669f12a5b466cb18d7b916dc6b564d565d9f95f8cd6"
         }
       },
       "canonical_source": "skills/ask-questions/SKILL.md",
       "kind": "skill",
       "slug": "ask-questions",
       "source_file_count": 1,
-      "source_tree_sha256": "77200e287522e41934e227533a6e9e42cd066caf33cd8cdd7d82086209031ce3"
+      "source_tree_sha256": "635a828a6e92ef884e1e0a53903448c9599fb4e1f53e24963a3606417f5d9d6c"
     },
     {
       "artifacts": {

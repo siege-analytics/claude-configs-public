@@ -8709,10 +8709,10 @@
     },
     {
       "canonical_source": "skills/ask-questions/SKILL.md",
-      "characters": 8753,
-      "content_sha256": "e7b5eab54a54d4476f05b7bf841d6b33398b47dbef61ab07f6848c599d64599a",
-      "description": "Operator question protocol. Use whenever you need answers or decisions from the operator, or when the operator asks you to ask questions. Treat it as a survey: show the complete question list once; ask exactly one question per turn with context, choices, pros and cons, a recommendation and a default; go straight to the next question after each answer without routing answers, updating tickets or starting work on them; after the last answer, summarize and then route and act on all answers in one batch. It never freezes or blocks running work. The single canonical procedure; session-coordination:5 defers to it for hubs.",
-      "estimated_tokens": 2189,
+      "characters": 10239,
+      "content_sha256": "5add9c6562c15ebd0ef2fa636b7916005d78f90f9410ec940222cf4d761d68d1",
+      "description": "Operator question protocol. Use whenever you need answers or decisions from the operator, or when the operator asks you to ask questions. Treat it as a survey: show the complete question list once, together with the first question; ask exactly one question per turn with context, choices, pros and cons, a recommendation and a default; go straight to the next question after each answer without routing answers, updating tickets or starting work on them; after the last answer, summarize and then route and act on all answers in one batch. It never freezes or blocks running work. The single canonical procedure; session-coordination:5 defers to it for hubs.",
+      "estimated_tokens": 2560,
       "frontmatter_name": "ask-questions",
       "generated_outputs": [
         "dist/nested/skills/ask-questions",
@@ -8731,7 +8731,7 @@
       "kind": "skill",
       "last_reviewed": "2026-11-06",
       "lifecycle": "active",
-      "lines": 107,
+      "lines": 119,
       "owner": [
         "unknown"
       ],
@@ -12863,9 +12863,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2629234,
+    "characters": 2630720,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 657386,
+    "estimated_tokens": 657757,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -12886,7 +12886,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1232840
+      "unclassified": 1234326
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12898,7 +12898,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 308252
+      "unclassified": 308623
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
