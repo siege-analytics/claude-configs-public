@@ -69,7 +69,7 @@ From a copied hook tree under `env -i`, no task gate (`cache/r1165/repro.py`, no
 ## Peer review
 
 - Syntax check: `/usr/bin/python3` 3.9.6 `-m py_compile hooks/lib/read-only-command.py` passes; `bash -n hooks/_test/read_allowlist.test.sh` passes. The gate harness runs the hook under `PATH=/usr/bin:/bin`, so it exercises Python 3.9.
-- writing-tests (red before, green after): `hooks/_test/read_allowlist.test.sh` (the #1057 harness) gains 7 allow cases and 21 block cases.
+- writing-tests:1 (red before, green after; each new case goes red when the classifier is reverted): `hooks/_test/read_allowlist.test.sh` (the #1057 harness) gains 7 allow cases and 21 block cases.
   - With this change: 384 passed, 0 failed.
   - Revert proof: the same harness with the classifier restored from `origin/develop` fails exactly the 6 new gh allow cases (378 passed, 6 failed). The new `echo "EXIT=$?"` case passes on both, matching the reproduction.
 - Negative paths exercised: `gh search issues "$q"`, `gh issue view "$n"`, `--search $q`, `--search=$q`, `"--search=$q"`, `--search "$q"x`, `--search "$q" --web`, `--label --search "$q"` (the value is consumed by `--label`), `--search a -- "$q"`, `-S "$q"`, `-R "$r"`, `gh issue edit/create --title "$t"`, `gh api ".../$n"`, a redirect to a file, a chained `rm`, a `timeout` wrapper, `find . "$x"`, `rg "$p" --pre "$c"`, and AC2/AC3.
