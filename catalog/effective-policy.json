@@ -22,7 +22,7 @@
       "id": "synthetic-trunk",
       "values": {
         "branch-policy": {
-          "integration_branch": "main"
+          "integration_branch": "develop"
         }
       }
     }

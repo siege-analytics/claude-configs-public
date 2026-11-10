@@ -51,7 +51,7 @@ class ProviderEventTest(unittest.TestCase):
         self.case.change(repo, 'operation', self.case.message('consumer operation'), no_verify=True)
         event = repo.parent / (repo.name + '-event.json')
         value = dict(repo=repo, base=base, remote=remote, canonical=canonical, event=event,
-                     target='main' if project == 'synthetic-trunk' else 'develop')
+                     target='develop')
         self.publish_event(value)
         workflow_root = Path(tempfile.mkdtemp(prefix='canonical-workflow-', dir=self.fixture.temp))
         f.run('git', 'clone', '-q', '--no-hardlinks', str(remote), str(workflow_root), cwd=self.fixture.temp)
@@ -108,7 +108,7 @@ class ProviderEventTest(unittest.TestCase):
             self.assertEqual(result['host_event_binding']['mode'], 'shared-parent')
             self.assertEqual(result['host_event_binding']['consumer_base'], value['base'])
             self.assertEqual(result['authorization'], 'protected-host-check-required')
-            value['target'] = 'develop' if project == 'synthetic-trunk' else 'main'
+            value['target'] = 'main'
             self.publish_event(value)
             code, rejected = self.probe(value)
             self.assertEqual((code, rejected['state']), (1, 'denied'), rejected)

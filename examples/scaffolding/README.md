@@ -33,12 +33,12 @@ python3 bin/effective_policy.py explain \
   --capability protected-range-validation=verified
 ```
 
-Explain the same operation for the synthetic trunk profile (policy decision `allow`; final enforcement remains `unknown` until trusted adapter proof):
+Explain `feature -> develop` for the synthetic profile (policy decision `allow`; final enforcement remains `unknown` until trusted adapter proof). Both shipped examples follow the normal develop target; their review procedures and policy provenance remain distinct:
 
 ```bash
 python3 bin/effective_policy.py explain \
   --identity github.example.invalid/synthetic-org/synthetic-trunk \
-  --operation examples/scaffolding/feature-to-main-operation.json \
+  --operation examples/scaffolding/feature-to-develop-operation.json \
   --capability native-branch-pre-push=verified \
   --capability protected-range-validation=verified
 ```

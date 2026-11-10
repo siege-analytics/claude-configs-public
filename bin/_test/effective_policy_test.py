@@ -85,19 +85,19 @@ class EffectivePolicyTest(unittest.TestCase):
         result = self.explain(operation=self.operation(target_branch="main"), capabilities=self.all_verified())
         self.assertEqual("deny", result["decision"]["final"])
 
-    def test_trunk_feature_to_main_policy_allows_but_enforcement_is_unproved(self):
-        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="main"), capabilities=self.all_verified())
+    def test_synthetic_feature_to_develop_policy_allows_but_enforcement_is_unproved(self):
+        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="develop"), capabilities=self.all_verified())
         self.assertEqual("allow", result["decision"]["policy"])
         self.assertEqual("unknown", result["decision"]["final"])
-        self.assertEqual("main", result["values"]["branch-policy"]["integration_branch"])
+        self.assertEqual("develop", result["values"]["branch-policy"]["integration_branch"])
         self.assertEqual("hostile-review", result["values"]["review-procedure-binding"]["procedure"])
 
-    def test_trunk_feature_to_develop_denies(self):
-        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="develop"), capabilities=self.all_verified())
+    def test_synthetic_feature_to_main_denies(self):
+        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="main"), capabilities=self.all_verified())
         self.assertEqual("deny", result["decision"]["final"])
 
     def test_org_and_project_provenance_is_complete(self):
-        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="main"), capabilities=self.all_verified())
+        result = self.explain("synthetic-trunk", operation=self.operation(target_branch="develop"), capabilities=self.all_verified())
         branch = result["provenance"]["branch-policy"]["integration_branch"]
         review = result["provenance"]["review-procedure-binding"]["procedure"]
         locked = result["provenance"]["ticket-requirement"]["required"]
