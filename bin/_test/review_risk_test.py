@@ -23,7 +23,14 @@ AUTHORITY_DEPENDENCY_FLOOR = [
  "catalog/gate-contracts.json",
 ]
 AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
+ "hooks/lib/branch_source.py",
+ "hooks/git/native-branch-source.py",
+ "bin/prepare-task-branch.py",
+ "hooks/_test/branch_sources.py",
+ "hooks/_test/branch_sources.test.sh",
  "hooks/lib/github-mechanical-completion.py",
+ "hooks/lib/github_metadata_comment.py",
+ "hooks/_test/metadata_comment_reporting.py",
  "hooks/_test/coordinator_mechanical_completion.py",
  "hooks/_test/coordinator_mechanical_completion.test.sh",
  ".claude/scanner-test-map.json",
@@ -92,6 +99,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "bin/_test/craft_workspace_trust_test.py",
  "hooks/lib/pipeline_state.py",
  "hooks/lib/hub-concurrency-policy.json",
+ "hooks/lib/ssh-host-allowlist.json",
  "hooks/lib/scope-check.sh",
  "hooks/lib/split-frontmatter.py",
  "bin/build.py",
@@ -123,6 +131,7 @@ hooks/bash/coordinator-status-guard.sh
 hooks/bash/destructive-guard.sh
 hooks/bash/universal-mutation-gate.sh
 hooks/git/branch-guard.sh
+hooks/git/native-branch-source.py
 hooks/git/detect-ai-fingerprints.sh
 hooks/git/fix-shape-guard.sh
 hooks/git/no-attribution.sh
@@ -160,7 +169,7 @@ hooks/resolver/think-gate-guard.sh
 REQUIRED_MANIFEST_ENTRYPOINT_COUNTS = {path:1 for path in REQUIRED_MANIFEST_ENTRYPOINTS}
 REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS = {"hooks/resolver/ca-enforcement-gate.sh"}
 REQUIRED_GENERATED_SETTINGS_ENTRYPOINT_COUNTS = {path:1 for path in REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS}
-REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "7ea4f885d679e07e084d7dd757b557cce01da44f2969ada03d4c390b94ab56a2"
+REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "27e4c17f9a5b68f2ad4f25ae8c887b19f21b8697f5bafc080d8bd7c68455fdb6"
 REQUIRED_MANIFEST_REGISTRATIONS_SHA256 = "868ca27fe41ca9d2e6f9335e2ddaf05d7cb992617b42f24cbc3ff2794099414b"
 REQUIRED_GENERATED_SETTINGS_REGISTRATIONS_SHA256 = "19a972d9471da0d66c46568c0efb8a16c356ed66f620702b7f06b8251bc809f0"
 CI_INVOCATION_SITES = [
@@ -186,6 +195,9 @@ CI_INVOCATION_SITES = [
 REQUIRED_HELPER_EDGES = {
  tuple(row.split("|")) for row in """
 hooks/bash/destructive-guard.sh|hooks/lib/github-merge-queue.py
+hooks/bash/destructive-guard.sh|hooks/lib/github_metadata_comment.py
+hooks/bash/coordinator-status-guard.sh|hooks/lib/github_metadata_comment.py
+hooks/bash/coordinator-status-guard.sh|hooks/lib/git_command.py
 hooks/bash/destructive-guard.sh|hooks/lib/github-mechanical-completion.py
 hooks/bash/destructive-guard.sh|hooks/lib/hook_payload.py
 hooks/bash/coordinator-status-guard.sh|hooks/lib/github-mechanical-completion.py
@@ -218,6 +230,7 @@ hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/log-block.sh
 hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py
 hooks/git/branch-guard.sh|hooks/lib/extract-json.py
+hooks/git/branch-guard.sh|hooks/lib/hook_payload.py
 hooks/git/branch-guard.sh|hooks/lib/command-text.sh
 hooks/git/branch-guard.sh|hooks/lib/scope-check.sh
 hooks/git/detect-ai-fingerprints.sh|hooks/lib/extract-json.py
@@ -292,8 +305,8 @@ hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
 hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "25415f4214bdd75e7370eba5f75e3edf34a845db3a0c6f0fa93fd9f3c27230bb"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "94457079e711f0e4be9ef27704231842e6c678b1bb0180f79be49bb6708c95f0"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "5f3d25b2e3e5307fb3f753e67a1372dc9770dade80ce647a591f2eb564f64933"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "f77d145b554f600b409d683d2374cc183e14a344ad6f52fe54bb8782ab758fae"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """

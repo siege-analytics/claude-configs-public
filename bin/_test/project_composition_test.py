@@ -93,9 +93,10 @@ class ProjectCompositionTest(unittest.TestCase):
             a = json.loads((strict / 'composition.json').read_text())
             b = json.loads((trunk / 'composition.json').read_text())
             self.assertEqual(a['parent_content_sha256'], b['parent_content_sha256'])
-            for project, branch, marker in (('strict-release', 'develop', 'STRICT_OVERLAY'), ('synthetic-trunk', 'main', 'TRUNK_OVERLAY')):
+            for project, branch, marker in (('strict-release', 'develop', 'STRICT_OVERLAY'), ('synthetic-trunk', 'develop', 'TRUNK_OVERLAY')):
                 resident = (self.root / project / layout / 'skills/RESIDENT.md').read_text()
                 self.assertIn('`' + branch + '`', resident)
+                self.assertNotIn('Feature and fix work targets `main`', resident)
                 self.assertIn(marker, resident)
 
     def test_composition_preserves_locked_policy_and_cannot_authorize(self):

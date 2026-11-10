@@ -239,6 +239,54 @@ class CanaryPacketTest(unittest.TestCase):
         self.assertIn("post-compaction denial", compaction)
         self.assertNotIn("CC1003_B1_NO_OP.", compaction)
 
+    def test_materialization_rejects_existing_content_before_git_or_build(self):
+        with tempfile.TemporaryDirectory(prefix="canary-existing-source-") as temporary:
+            base = Path(temporary).resolve()
+            nonempty = base / "nonempty"
+            nonempty.mkdir(); (nonempty / "preserve.txt").write_text("preserve\n")
+            repository = base / "repository"
+            subprocess.run(["git", "init", "--quiet", str(repository)], check=True)
+            empty = base / "empty"
+            empty.mkdir()
+            link = base / "linked"
+            link.symlink_to(empty, target_is_directory=True)
+            for destination in (nonempty, repository, link):
+                before = {str(path.relative_to(base)): (os.readlink(path) if path.is_symlink() else path.read_bytes())
+                          for path in base.rglob("*") if path.is_file() or path.is_symlink()}
+                with self.subTest(destination=destination.name), mock.patch.object(canary.subprocess, "run") as execute, mock.patch.object(canary.subprocess, "check_output") as read:
+                    with self.assertRaisesRegex(canary.PacketError, "source destination"):
+                        canary.materialize_source(self.value, destination)
+                    execute.assert_not_called(); read.assert_not_called()
+                after = {str(path.relative_to(base)): (os.readlink(path) if path.is_symlink() else path.read_bytes())
+                         for path in base.rglob("*") if path.is_file() or path.is_symlink()}
+                self.assertEqual(before, after)
+
+    def test_materialization_preserves_caller_under_inherited_git_targeting(self):
+        caller = self.temp / "ambient-caller"
+        subprocess.run(["git", "clone", "--quiet", "--no-hardlinks", str(ROOT), str(caller)],
+                       check=True, capture_output=True, timeout=120)
+        watched = [caller / ".git" / name for name in ("HEAD", "index", "config")]
+        watched += [caller / "skills" / "KERNEL.md"]
+        before = {str(path): path.read_bytes() for path in watched}
+        inherited = {
+            "GIT_DIR": str(caller / ".git"), "GIT_WORK_TREE": str(caller),
+            "GIT_COMMON_DIR": str(caller / ".git"), "GIT_INDEX_FILE": str(caller / ".git/index"),
+            "GIT_OBJECT_DIRECTORY": str(caller / ".git/objects"),
+            "GIT_ALTERNATE_OBJECT_DIRECTORIES": str(caller / ".git/objects"),
+            "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "core.worktree",
+            "GIT_CONFIG_VALUE_0": str(caller), "CANARY_UNRELATED_CONTROL": "retained",
+        }
+        destination = self.temp / "isolated-source"
+        destination.mkdir()
+        with mock.patch.dict(os.environ, inherited):
+            environment_before = dict(os.environ)
+            canary.materialize_source(self.value, destination)
+            self.assertEqual(dict(os.environ), environment_before)
+            self.assertEqual(canary.git_environment()["CANARY_UNRELATED_CONTROL"], "retained")
+        self.assertEqual({str(path): path.read_bytes() for path in watched}, before)
+        self.assertEqual(canary.run_git(["rev-parse", "HEAD"], cwd=destination), self.value["pins"]["source_revision"])
+        self.assertTrue((destination / ".git").is_dir())
+
     def test_materialize_and_external_record_attest_exact_existing_bytes(self):
         # Probe execution must preserve the hashed payload even when the caller
         # has not globally disabled Python bytecode writes (the ordinary CI/CLI case).
@@ -246,6 +294,12 @@ class CanaryPacketTest(unittest.TestCase):
             os.environ.pop("PYTHONDONTWRITEBYTECODE", None)
             receipt = canary.materialize(self.value, _test_discovery_reader=self._test_discovery_reader, _test_expected_temp_base=self.temp_base)
         materialized = json.loads(Path(receipt["receipt"]).read_text())
+        source = Path(self.value["paths"]["source_root"])
+        self.assertEqual(canary.run_git(["rev-parse", "HEAD"], cwd=source), self.value["pins"]["source_revision"])
+        current = canary.run_git(["rev-parse", "HEAD"], cwd=ROOT)
+        future = subprocess.run(["git", "cat-file", "-e", current + "^{commit}"], cwd=source,
+                                capture_output=True, check=False, timeout=30)
+        self.assertNotEqual(future.returncode, 0, "future repository objects polluted the historical source build")
         self.assertTrue((self.temp / "fixture" / "remote.git").is_dir())
         fixture_repo = self.temp / "fixture" / "repo"
         self.assertTrue((fixture_repo / "PROMPT_MARKER.txt").is_file())

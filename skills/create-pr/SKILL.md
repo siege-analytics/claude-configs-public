@@ -6,10 +6,22 @@ allowed-tools: Read Grep Glob Bash
 
 # Instructions
 
+Before any commit-range or ticket scan, resolve the review base. Normal work
+targets `develop`: refresh when available, prefer verified
+`refs/remotes/origin/develop`, or use known `refs/heads/develop` offline with an
+honest cached-status report. Verify the selected ref with
+`git rev-parse --verify "${REVIEW_BASE}^{commit}"` and record that commit as
+`REVIEW_BASE_COMMIT`; use the same pinned commit for every scan below. If neither
+ref exists, follow [skill:develop-guard] to verify/bootstrap develop first,
+preserving existing work. A failed network read is not evidence of absence.
+For explicitly authorized release/backport work, resolve and verify its separately
+approved target instead; do not replace it with develop. This selects the review
+base, not authority to rewrite an existing branch.
+
 1. Understand the full scope of the PR
-   1. Run `git log develop..HEAD --oneline` (or the appropriate base branch) to see all commits
-   2. Run `git diff develop..HEAD --stat` to see all files changed
-   3. Run `git diff develop..HEAD` to review the actual changes if needed
+   1. Run `git log "$REVIEW_BASE_COMMIT"..HEAD --oneline` to see all commits
+   2. Run `git diff "$REVIEW_BASE_COMMIT"...HEAD --stat` to see all files changed
+   3. Run `git diff "$REVIEW_BASE_COMMIT"...HEAD` to review the actual changes if needed
    4. Read the related ticket(s) to understand the intended outcome
 2. **Verify ticket references exist** (see Ticket enforcement below)
    1. Check that all commits on the branch reference tickets
@@ -20,7 +32,7 @@ allowed-tools: Read Grep Glob Bash
    2. Tests should pass (run the test suite before opening the PR)
    3. No merge conflicts with the base branch
 4. Write the PR title and description (see PR structure below)
-5. Create the PR using the platform CLI
+5. Create a normal-development PR with an explicit develop base: `gh pr create --base develop` or `glab mr create --target-branch develop`. Do not let the CLI default branch select main. If develop is absent, use [skill:develop-guard] to bootstrap it safely first. An explicitly authorized release/backport uses its separately approved target.
 6. **Move each referenced ticket to In Review** per `[rule:ticket-lifecycle]` (or add `Status: In Review` comment when no mutable status field is available)
 7. **Update each referenced ticket with a comment linking back to the PR** (bidirectional linking)
 8. Add reviewers, labels, and project board assignment as appropriate
@@ -57,7 +69,7 @@ If **any** criterion fails: open the PR as a draft, list the failing criteria ex
 
 1. Scan all commits on the branch for ticket references:
    ```bash
-   git log develop..HEAD --format='%s %b' | grep -iE '(fixes|closes|refs|part-of|#[0-9])'
+   git log "$REVIEW_BASE_COMMIT"..HEAD --format='%s %b' | grep -iE '(fixes|closes|refs|part-of|#[0-9])'
    ```
 2. If any commits lack ticket references, flag them to the user
 3. If no tickets exist for this work, create them first (use the create-ticket skill)
@@ -369,6 +381,8 @@ This skill is written GitHub-shaped (`gh` CLI, "pull request"). On GitLab, the s
 | `gh pr create --draft` | `glab mr create --draft` (same flag name) |
 | "pull request" terminology | "merge request (MR)" terminology |
 | `defaultBranchRef.name` (gh repo view) | `default_branch` (glab repo view --output json) |
+
+Default-branch metadata is descriptive; it does not select the normal feature source or PR base. Normal development uses develop even when the repository default is main.
 
 The structural requirements (commit-table, ticket-references, Testing section, bidirectional ticket linking, no AI attribution) bind both platforms identically. The `pr-base-guard.sh` hook (CCP#198/#201) enforces target-branch shape on both `gh pr create` and `glab mr create`.
 

@@ -28,24 +28,286 @@ JUNIOR_HEADINGS = r'junior task description|junior review|pre-implementation com
 SENIOR_HEADINGS = r'senior adversarial checklist|senior review|junior[ /-]senior review'
 INVESTIGATION_HEADINGS = r'investigation fact sheet|fact sheet|investigation'
 PREMORTEM_HEADINGS = r'pre[- ]?mortem'
+# GitHub renders these as code or quotation, never as the artifact itself.
+HTML_CONTAINER = re.compile(
+    r'<(/?)(pre|code|blockquote|q|samp|kbd|tt|var|xmp|listing|plaintext|textarea|script|style|template|noscript)\b[^>]*>',
+    re.I)
+TICKET_REF = re.compile(
+    r'github\.com/(?P<url_repo>[\w.-]+/[\w.-]+)/(?:issues|pull)/(?P<url_num>[0-9]+)\b'
+    r'|(?:(?P<repo>[\w.-]+/[\w.-]+)|(?<![\w/&]))#(?P<num>[0-9]+)\b')
+TICKET_DECLARATION = re.compile(
+    r'^[ \t>*_-]*(?:tickets?|ticket[ _-]?refs?|task|task[ _-]?id|issues?|refs?)[*_]*[ \t]*:')
+ARTIFACT_HEADING_LINE = re.compile(
+    r'^#{1,6}[ \t]+[*_`]*(?:' + '|'.join((JUNIOR_HEADINGS, SENIOR_HEADINGS, INVESTIGATION_HEADINGS, PREMORTEM_HEADINGS)) + r')\b')
+# Only the task's own actor or an owner-granted GitHub role can post an
+# artifact that counts; author_association is attested by GitHub (#1164).
+APPROVED_ASSOCIATIONS = {'OWNER', 'MEMBER', 'COLLABORATOR'}
+COMMENT_QUERY = '.[] | {author: .user.login, association: .author_association, body: .body} | @json'
 
 
-def comment_text(body):
-    """Exclude fenced examples within one actual GitHub comment."""
-    output, fence = [], None
+# CommonMark 0.31 HTML blocks (spec 4.6). Their lines are raw HTML, never
+# Markdown, so a "heading" inside one is not a heading (#1164 F3).
+HTML_BLOCK_1 = re.compile(r' {0,3}<(?:pre|script|style|textarea)(?:[ \t>]|$)', re.I)
+HTML_BLOCK_1_END = re.compile(r'</(?:pre|script|style|textarea)>', re.I)
+HTML_BLOCK_6 = re.compile(
+    r' {0,3}</?(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|'
+    r'dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|'
+    r'iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|source|'
+    r'summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)(?:[ \t]|/?>|$)', re.I)
+HTML_BLOCK_7 = re.compile(
+    r' {0,3}(?:<(?!(?:pre|script|style|textarea)\b)[A-Za-z][A-Za-z0-9-]*'
+    r'(?:[ \t]+[A-Za-z_:][\w.:-]*(?:[ \t]*=[ \t]*(?:[^ \t"\'=<>`]+|\'[^\']*\'|"[^"]*"))?)*[ \t]*/?>'
+    r'|</(?!(?:pre|script|style|textarea)\b)[A-Za-z][A-Za-z0-9-]*[ \t]*>)[ \t]*$', re.I)
+HTML_BLOCK_OPENERS = (  # (start, end); end None means "a blank line ends it"
+    (HTML_BLOCK_1, HTML_BLOCK_1_END),
+    (re.compile(r' {0,3}<!--'), re.compile(r'-->')),
+    (re.compile(r' {0,3}<\?'), re.compile(r'\?>')),
+    (re.compile(r' {0,3}<![A-Za-z]'), re.compile(r'>')),
+    (re.compile(r' {0,3}<!\[CDATA\['), re.compile(r'\]\]>')),
+    (HTML_BLOCK_6, None),
+)
+
+
+THEMATIC_BREAK = re.compile(r' {0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$')
+ATX_HEADING = re.compile(r' {0,3}#{1,6}(?:[ \t]|$)')
+LIST_ITEM = re.compile(r' {0,3}(?:[-*+]|[0-9]{1,9}[.)])(?:[ \t]|$)')
+INDENTED = re.compile(r' {4}| {0,3}\t')
+FENCE_MARKER = re.compile(r' {0,3}(?:`{3,}|~{3,})')
+
+
+def container_tags(text):
+    """Only the code/quote container tags of raw HTML, so name-aware closure still sees them."""
+    tags = ' '.join(tag.group(0) for tag in HTML_CONTAINER.finditer(text))
+    return ' ' + tags if tags else ''
+
+
+def block_kinds(body):
+    """(kind, eligible text) for each body line (#1164 F3, N3, N4).
+
+    The one CommonMark 0.31 block classifier every consumer shares. Kinds:
+    'text', 'fence', 'html', 'quote' (a blockquote line or its lazy paragraph
+    continuation), 'code' (an indented code line outside a list) and 'indent'
+    (a 4+-space line continuing a paragraph). Types 1-5 end at the line
+    holding their end marker; types 6-7 end only at a blank line, not at a
+    closing tag. Type 7 cannot interrupt a paragraph; a blank line, ATX
+    heading, thematic break, setext underline or indented code line leaves no
+    paragraph open, so type 7 can start after one.
+
+    An HTML-block line contributes no text. An element block (types 1, 6, 7)
+    keeps its container tags, indented, so `<script></pre>` still hides what
+    follows until `</script>`; a comment, processing instruction, declaration
+    or CDATA block (types 2-5) keeps only tags after its end marker.
+    """
+    kinds, fence, block, paragraph = [], None, None, False
+    quote_paragraph, in_list, previous_blank = False, False, True
     for line in body.splitlines():
+        blank = not line.strip()
+        if blank:
+            quote_paragraph = False
+        elif LIST_ITEM.match(line):
+            in_list = True
+        elif previous_blank and not line[:1].isspace():
+            in_list = False
+        previous_blank = blank
         marker = re.match(r'^ {0,3}(`{3,}|~{3,})', line)
-        if marker:
+        if block is None and marker:
             token = marker.group(1)
             if fence is None:
                 fence = token
             elif (token[0] == fence[0] and len(token) >= len(fence)
                   and not line[marker.end():].strip()):
                 fence = None
+            paragraph = False
+            kinds.append(('fence', ''))
             continue
-        if fence is None:
-            output.append(line)
-    return '\n'.join(output)
+        if fence is not None:
+            kinds.append(('fence', ''))
+            continue
+        if block is not None:
+            number, end = block
+            if end is None and not line.strip():
+                block, paragraph = None, False
+                kinds.append(('text', line))
+                continue
+            closed = end.search(line) if end is not None else None
+            if closed:
+                block = None
+            if number in (1, 6, 7):
+                kinds.append(('html', container_tags(line)))
+            else:
+                kinds.append(('html', container_tags(line[closed.end():]) if closed else ''))
+            continue
+        # A blockquote is quoted material, not the comment's own text (#1164,
+        # Root review of 16e1a61). A paragraph inside it continues on later
+        # unmarked lines until a blank line or another block starts.
+        if re.match(r' {0,3}>', line):
+            rest = re.sub(r'^ {0,3}> ?', '', line)
+            quote_paragraph = bool(rest.strip()) and not (
+                ATX_HEADING.match(rest) or THEMATIC_BREAK.match(rest) or FENCE_MARKER.match(rest))
+            paragraph = False
+            kinds.append(('quote', ''))
+            continue
+        if quote_paragraph and not blank and not (
+                ATX_HEADING.match(line) or THEMATIC_BREAK.match(line) or LIST_ITEM.match(line)
+                or any(start.match(line) for start, _ in HTML_BLOCK_OPENERS)):
+            kinds.append(('quote', ''))
+            continue
+        quote_paragraph = False
+        # Indented code outside a list is example text. A 4+-space line that
+        # continues a paragraph stays visible text ('indent'): identity still
+        # reads it, so a wrapped foreign Ticket/Refs value keeps excluding.
+        if INDENTED.match(line) and not blank and not in_list:
+            kinds.append(('indent' if paragraph else 'code', line))
+            continue
+        openers = HTML_BLOCK_OPENERS + (((HTML_BLOCK_7, None),) if not paragraph else ())
+        for number, (start, end) in enumerate(openers, 1):
+            opened = start.match(line)
+            if opened:
+                closed = end.search(line, opened.end()) if end is not None else None
+                if not closed:
+                    block = (number, end)
+                if number in (1, 6, 7):
+                    kinds.append(('html', container_tags(line)))
+                else:
+                    kinds.append(('html', container_tags(line[closed.end():]) if closed else ''))
+                paragraph = False
+                break
+        else:
+            kinds.append(('text', line))
+            if (blank or ATX_HEADING.match(line) or THEMATIC_BREAK.match(line)
+                    or (paragraph and re.match(r' {0,3}=+[ \t]*$', line))):
+                paragraph = False
+            else:
+                paragraph = True
+    return kinds
+
+
+def markdown_lines(body, signal=False):
+    """Eligible body lines (#1164 F3, N3; Root review of 16e1a61).
+
+    Fenced code is dropped. HTML-block text, blockquotes and indented code are
+    blank lines: none of them reaches heading detection, keyword-stem matching
+    or ticket identity. With signal=True (the text every artifact signal
+    reads), a 4+-space paragraph continuation is blank too, so indented
+    example text never counts as a posted artifact, with or without a blank
+    line before it.
+    """
+    lines = []
+    for kind, text in block_kinds(body):
+        if kind == 'fence':
+            continue
+        if kind in ('quote', 'code') or (kind == 'indent' and signal):
+            lines.append('')
+        else:
+            lines.append(text)
+    return lines
+
+
+def comment_views(body):
+    """(identity text, signal text) of one comment.
+
+    Every artifact signal (headings and keyword stems) reads the signal text.
+    Identity keeps inline-code content, so `other/repo#9` still names its
+    ticket (#1164 F2), and keeps 4+-space paragraph continuations, so a wrapped
+    declaration value still counts. Neither view sees HTML-block, HTML-comment,
+    CDATA, code/quote-container, blockquote or indented-code content (#1164 N4).
+    """
+    return (comment_text('\n'.join(markdown_lines(body)), keep_code=True),
+            comment_text('\n'.join(markdown_lines(body, signal=True))))
+
+
+def comment_text(visible, keep_code=False):
+    """Erase inline code, HTML comments, CDATA and HTML code/quote containers (#1164).
+
+    keep_code restores each inline code span's content once the HTML filters
+    have run, so a code span can name a ticket but never open or close a tag.
+    """
+    # An inline code span shows `<pre>` as text, so it is set aside before HTML
+    # parsing. Every erased span becomes one space: a remainder can never
+    # start a line with `#` and become a heading.
+    spans = []
+
+    def stash(match):
+        spans.append(match.group(2))
+        return '\x00%d\x00' % (len(spans) - 1)
+
+    text = re.sub(r'(`+)(?!`)(.+?)(?<!`)\1(?!`)', stash, visible.replace('\x00', ''))
+    text = re.sub(r'<!--.*?(?:-->|\Z)', ' ', text, flags=re.S)
+    text = re.sub(r'<!\[CDATA\[.*?(?:\]\]>|\Z)', ' ', text, flags=re.S)
+    # Closure is name-aware (#1164 R3): `</blockquote>` cannot end an open
+    # `<pre>`. A closing tag ends its own element and anything opened inside it;
+    # one naming no open container closes nothing.
+    kept, stack, position = [], [], 0
+    for tag in HTML_CONTAINER.finditer(text):
+        closing, name = bool(tag.group(1)), tag.group(2).lower()
+        if not stack:
+            if closing:
+                continue  # a stray closing tag is plain text
+            kept.append(text[position:tag.start()])
+            stack.append(name)
+        elif not closing:
+            stack.append(name)
+        elif name in stack:
+            del stack[len(stack) - 1 - stack[::-1].index(name):]
+            if not stack:
+                kept.append(' ')
+                position = tag.end()
+    # An unclosed container hides the rest of the comment.
+    kept.append(text[position:] if not stack else ' ')
+    return re.sub(r'\x00([0-9]+)\x00', lambda m: ' %s ' % spans[int(m.group(1))] if keep_code else ' ', ''.join(kept))
+
+
+def ticket_refs(text):
+    """(owner/repo or '', number) for each #N, owner/repo#N or GitHub issue URL."""
+    return [(m.group('repo') or m.group('url_repo') or '', m.group('num') or m.group('url_num'))
+            for m in TICKET_REF.finditer(text)]
+
+
+def declarations(text):
+    """Each artifact heading line and each ticket declaration's entire value.
+
+    A declaration value is its inline text plus every following indented or
+    list-item line (#1164 R2): YAML `ticket_refs:` lists, wrapped `Ticket:` values.
+    Blank lines do not end it (#1164 F2); the first unindented text line does.
+    """
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if ARTIFACT_HEADING_LINE.match(line):
+            yield line
+        if not TICKET_DECLARATION.match(line):
+            continue
+        value = [line]
+        for follow in lines[index + 1:]:
+            if follow.strip() and not (follow[:1].isspace() or re.match(r'[-*+][ \t]', follow)):
+                break
+            value.append(follow)
+        yield '\n'.join(value)
+
+
+# A leading YAML front-matter block, delimited by `---` lines.
+FRONT_MATTER = re.compile(r'\s*---[ \t]*\n(.*?)\n[ \t]*---[ \t]*(?:\n|$)', re.S)
+
+
+def declares_other_ticket(identity, body, repo_slug, issue_num):
+    """True when front matter names any other ticket, or a body declaration names only other tickets.
+
+    Front matter is judged on the raw body as one whole region, not parsed
+    (#1164 F2, N1): no YAML parser is available in the hook runtime as
+    installed. Every ticket reference anywhere in the block must be the current
+    ticket, so a current reference cannot neutralize a foreign one, and blank
+    lines, comments, flow collections and folded scalars cannot hide one.
+    Body declarations and artifact headings come from the eligible identity
+    text and are excluded only when they name tickets, none of them current.
+    """
+    def current(ref):
+        repo, num = ref
+        return num == issue_num and repo in ('', repo_slug)
+
+    front = FRONT_MATTER.match(body)
+    if front and not all(current(ref) for ref in ticket_refs(front.group(1))):
+        return True
+    return any(refs and not any(current(ref) for ref in refs)
+               for refs in (ticket_refs(value) for value in declarations(identity)))
 
 
 def artifact_heading(lowered_comments, names):
@@ -259,14 +521,37 @@ if status == 'implementing' and current_ticket:
                 api_path = f'repos/siege-analytics/claude-configs-public/issues/{issue_num}/comments'
 
             result = subprocess.run(
-                ['gh', 'api', api_path, '--paginate', '-q', '.[].body | @json'],
+                ['gh', 'api', api_path, '--paginate', '-q', COMMENT_QUERY],
                 capture_output=True, text=True, timeout=15
             )
             if result.returncode == 0:
-                bodies = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
-                if not all(isinstance(body, str) for body in bodies):
+                records = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+                if not all(isinstance(r, str) or isinstance(r, dict) and isinstance(r.get('body'), str)
+                           for r in records):
                     raise ValueError('GitHub comment body is not text')
-                comments = '\n# comment boundary\n'.join(comment_text(body) for body in bodies).lower()
+                # The authenticated gh login is the task's own actor. Without
+                # it (e.g. an app token), only attested roles count.
+                actor = subprocess.run(['gh', 'api', 'user', '-q', '.login'],
+                                       capture_output=True, text=True, timeout=15)
+                actor_login = actor.stdout.strip() if actor.returncode == 0 else ''
+                if not re.fullmatch(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})', actor_login):
+                    actor_login = ''
+                ticket_repo = (repo_slug or 'siege-analytics/claude-configs-public').lower()
+                texts = []
+                for record in records:
+                    if isinstance(record, str):
+                        continue  # a bare body carries no author: it never counts
+                    author = record.get('author') if isinstance(record.get('author'), str) else ''
+                    if not ((actor_login and author.lower() == actor_login.lower())
+                            or record.get('association') in APPROVED_ASSOCIATIONS):
+                        continue
+                    # One line-ending form before identity and classification:
+                    # a CRLF or CR body must not skip the front-matter region.
+                    comment_body = record['body'].replace('\r\n', '\n').replace('\r', '\n')
+                    identity, text = (view.lower() for view in comment_views(comment_body))
+                    if not declares_other_ticket(identity, comment_body.lower(), ticket_repo, issue_num):
+                        texts.append(text)
+                comments = '\n# comment boundary\n'.join(texts)
                 junior_hits = sum(1 for s in junior_stems if s in comments)
                 if junior_hits >= 3:
                     junior_found = True

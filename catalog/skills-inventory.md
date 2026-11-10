@@ -6,16 +6,16 @@ This report describes committed source evidence. Missing references or tests do 
 
 ## Summary
 
-- Source items: **198**
-- Characters: **2,626,139**
-- Estimated tokens: **656,613** (character/4 estimate)
-- Unknown owners: **194**
+- Source items: **199**
+- Characters: **2,637,151**
+- Estimated tokens: **659,366** (character/4 estimate)
+- Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
 - Without heuristic test evidence: **99**
 - Duplicate rule IDs: **0**
-- Current build-rubric D/F grades: **151**
-- Quality grades: C: 6, D: 18, F: 133, unknown: 41
+- Current build-rubric D/F grades: **152**
+- Quality grades: C: 6, D: 19, F: 133, unknown: 41
 
 ### By kind
 
@@ -26,7 +26,7 @@ This report describes committed source evidence. Missing references or tests do 
 | reference-shelf | 69 |
 | rule | 37 |
 | shelf-router | 15 |
-| skill | 73 |
+| skill | 74 |
 
 ### By proposed tier
 
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 110 | 1,229,745 | 307,479 |
+| unclassified | 111 | 1,240,757 | 310,232 |
 
 ## Largest source items
 
@@ -45,13 +45,13 @@ This report describes committed source evidence. Missing references or tests do 
 | `writing-code` | rule | 51,999 | 13,000 | `skills/_writing-code-rules.md` |
 | `investigate` | skill | 39,733 | 9,934 | `skills/investigate/SKILL.md` |
 | `shelves--top-design` | reference-shelf | 38,675 | 9,669 | `skills/shelves/design/top-design/SKILL.md` |
+| `session-coordination` | rule | 32,814 | 8,204 | `skills/_session-coordination-rules.md` |
 | `writing-claims` | rule | 31,339 | 7,835 | `skills/_writing-claims-rules.md` |
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
 | `shelves--one-page-marketing` | reference-shelf | 30,696 | 7,674 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
 | `writing-rules` | rule | 30,148 | 7,537 | `skills/_writing-rules-rules.md` |
 | `self-review` | skill | 29,789 | 7,448 | `skills/self-review/SKILL.md` |
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
-| `session-coordination` | rule | 28,689 | 7,173 | `skills/_session-coordination-rules.md` |
 | `drive-while-away` | skill | 27,451 | 6,863 | `skills/drive-while-away/SKILL.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
 | `writing-tests` | rule | 27,373 | 6,844 | `skills/_writing-tests-rules.md` |
@@ -69,8 +69,8 @@ This report describes committed source evidence. Missing references or tests do 
 
 ## Evidence gaps
 
-- Unclassified tier: 110
-- Unknown owners: 194
+- Unclassified tier: 111
+- Unknown owners: 195
 - Unknown lifecycle: 198
 - No tracked source references: 0
 - No heuristic test evidence: 99

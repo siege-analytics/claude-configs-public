@@ -378,7 +378,7 @@ def _deployed_generation_files(builder) -> dict[str, tuple[bytes, bool | None]]:
     if resolver.is_file():
         expected["RESOLVER.md"] = (builder.strip_craft_incompatible_keys(resolver.read_text()).encode(), None)
     for relative in ("bin/resolve-load-set.py", "catalog/resolver-manifest.json",
-                     "bin/review-risk.py", "catalog/review-risk-policy.json"):
+                     "bin/review-risk.py", "bin/prepare-task-branch.py", "catalog/review-risk-policy.json"):
         source = builder.DIST / "craft-agent" / relative
         expected[relative] = (source.read_bytes(), bool(source.stat().st_mode & stat.S_IXUSR))
     for source in (builder.DIST / "craft-agent/.githooks").iterdir():
@@ -1333,7 +1333,7 @@ def build_rules_bundle(
     version = _get_version()
     try:
         commit = subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"],
+            ["git", "rev-parse", "HEAD"],
             cwd=REPO_ROOT,
             text=True,
             timeout=120,
@@ -1767,7 +1767,7 @@ def install_hook_runtime(pkg_dir: Path, layout: str, include_validator: bool = F
     """Install all scripts and catalogs required by shipped hooks."""
     bin_dir = pkg_dir / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
-    script_names = ["resolve-load-set.py", "review-risk.py"]
+    script_names = ["resolve-load-set.py", "review-risk.py", "prepare-task-branch.py"]
     if include_validator:
         script_names.insert(0, "validate-hooks.py")
     for script_name in script_names:
@@ -1788,7 +1788,7 @@ def write_package_documentation(pkg_dir: Path, form: str) -> None:
     metadata = 'build-info.json' if form in ('nested', 'flat') else 'package.json'
     paths = [metadata, 'skills/KERNEL.md', 'catalog/resolver-manifest.json',
              'catalog/review-risk-policy.json', 'bin/resolve-load-set.py',
-             'bin/review-risk.py', 'hooks/settings-snippet.json',
+             'bin/review-risk.py', 'bin/prepare-task-branch.py', 'hooks/settings-snippet.json',
              'hooks/resolver/inject-resolver.sh', 'CHANGELOG.md', 'LICENSE',
              'THIRD_PARTY_NOTICES.md']
     if form in ('claude-code', 'craft-agent'):
@@ -2226,6 +2226,7 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE, *, write_stamp:
             Path("bin/resolve-load-set.py"),
             Path("catalog/resolver-manifest.json"),
             Path("bin/review-risk.py"),
+            Path("bin/prepare-task-branch.py"),
             Path("catalog/review-risk-policy.json"),
         ):
             src = ca_dist / rel

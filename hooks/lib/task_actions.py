@@ -17,6 +17,7 @@ import shlex
 import stat
 import subprocess
 import sys
+import time
 
 
 class UnknownShape(ValueError):
@@ -336,44 +337,99 @@ def _long_option_matches(token: str, names) -> bool:
 
 def _cp_link_copy(tokens) -> bool:
     """cp -l/-s and their long forms make the destination another name (#1100)."""
+    skip = False
     for t in tokens:
+        if skip:
+            skip = False
+            continue
         if t == '--':
             break
+        if t == '--suffix' or t.startswith('-') and not t.startswith('--') and t.find('S') == len(t) - 1:
+            skip = True
         if t.startswith('--'):
             if _long_option_matches(t, ('--link', '--symbolic-link')):
                 return True
-        elif t.startswith('-') and t != '-' and ('l' in t[1:] or 's' in t[1:]):
+        elif t.startswith('-') and t != '-' and any(c in t[1:].split('S', 1)[0] for c in 'ls'):
             return True
     return False
 
 
-def _cp_keeps_symlinks(tokens) -> bool:
-    """Options under which cp copies a symlink as a symlink."""
-    for t in tokens:
-        if t == '--':
+def _cp_option(token):
+    """Modeled flags: c/reflink clone independent bytes; X omits metadata, not scope.
+
+    Destination-changing forms stay separately rejected.
+    """
+    if token.startswith('--'):
+        name, sep, value = token.partition('=')
+        plain = {'--archive', '--recursive', '--dereference', '--no-dereference',
+                 '--link', '--symbolic-link', '--force', '--interactive', '--no-clobber',
+                 '--verbose', '--one-file-system', '--no-target-directory', '--backup'}
+        valued = {'--suffix', '--preserve', '--no-preserve', '--reflink', '--sparse', '--backup'}
+        if name not in plain | valued or sep and name not in valued:
+            raise UnknownShape('unsupported copy option; use explicit source/destination and modeled flags')
+    elif any(c not in 'abcdfHilLnpPRruvxTX' for c in token[1:].split('S', 1)[0]):
+        raise UnknownShape('unsupported copy option; use explicit source/destination and modeled flags')
+
+
+def _cp_symlink_mode(tokens):
+    """Follow-all creates no symlink aliases; H follows only command-line links."""
+    mode, recursive, skip = None, False, False
+    for token in tokens:
+        if skip:
+            skip = False
+            continue
+        if token == '--':
             break
-        if t.startswith('--'):
-            if _long_option_matches(t, ('--no-dereference', '--recursive', '--archive')) or (
-                    _long_option_matches(t, ('--preserve',)) and ('links' in t or 'all' in t)):
-                return True
-        elif t.startswith('-') and t != '-' and any(c in t[1:] for c in 'PdrRa'):
-            return True
-    return False
+        if token == '--suffix' or token.startswith('-') and not token.startswith('--') and token.find('S') == len(token) - 1:
+            skip = True
+        if token.startswith('--'):
+            name = token.split('=', 1)[0]
+            if name in {'--archive', '--no-dereference'}:
+                mode = 'P'
+            elif name == '--dereference':
+                mode = 'L'
+            recursive |= name in {'--archive', '--recursive'}
+        elif token.startswith('-'):
+            for flag in token[1:].split('S', 1)[0]:
+                if flag in 'aRr':
+                    recursive = True
+                if flag in 'ad':
+                    mode = 'P'
+                elif flag in 'HLP':
+                    mode = flag
+    return mode if mode is not None else ('P' if recursive else 'L')
 
 
-def _has_symlink(path: str, limit: int = 2000) -> bool:
-    """A symlink at or under path; past `limit` entries, assume one."""
-    if os.path.islink(path):
-        return True
-    if not os.path.isdir(path):
-        return False
-    seen = 0
-    for root, dirs, files in os.walk(path):
-        for name in dirs + files:
-            seen += 1
-            if seen > limit or os.path.islink(os.path.join(root, name)):
-                return True
-    return False
+def _copy_alias_targets(sources, options, cwd):
+    """Preserved symlink endpoints are aliases; ordinary source entries are reads."""
+    mode = _cp_symlink_mode(options)
+    if mode == 'L':
+        return []
+    targets, seen, deadline = [], 0, time.monotonic() + 10
+    def inspect(path):
+        nonlocal seen
+        seen += 1
+        if seen > 100000 or time.monotonic() > deadline:
+            raise UnknownShape('copy source alias inspection budget exceeded; split the copy or use cp -RL '
+                               '(dereferences symlinks, changing preservation semantics); source reads need no write scope')
+        try:
+            link = stat.S_ISLNK(os.lstat(path).st_mode)
+        except OSError as error:
+            raise UnknownShape('cannot inspect preserved copy alias entry; source is not proven safe') from error
+        if link:
+            targets.append(canonical(path))
+        return link
+    def unreadable(error):
+        raise UnknownShape('cannot inspect preserved copy aliases; use a readable source or explicit cp -RL') from error
+    for source in sources:
+        path = os.path.join(cwd, source)
+        if mode != 'H' and inspect(path):
+            continue  # preserving the root symlink copies no target descendants
+        if os.path.isdir(path):
+            for root, dirs, files in os.walk(path, onerror=unreadable, followlinks=False):
+                for name in dirs + files:
+                    inspect(os.path.join(root, name))
+    return targets
 
 
 def _copy_destinations(sources, destination, options, cwd):
@@ -437,6 +493,601 @@ def _git_toplevel(directory: str) -> str:
         return canonical(subprocess.check_output(["git", "-C", directory, "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL, timeout=3).strip())
     except (subprocess.SubprocessError, OSError):
         raise UnknownShape("cannot resolve repository toplevel for Git mutation")
+
+
+
+
+def _git_bootstrap_read(arguments: list[str], config: tuple = (), *, git_dir: str | None = None):
+    """Fixed read-only Git lookup without enclosing-repository configuration."""
+    import tempfile
+    try:
+        with tempfile.TemporaryDirectory(prefix='git-bootstrap-read-') as scratch:
+            neutral = os.path.realpath(scratch)
+            environment = dict(os.environ)
+            environment['GIT_CEILING_DIRECTORIES'] = os.path.dirname(neutral)
+            if config:
+                environment['GIT_CONFIG_COUNT'] = str(len(config))
+                for index, (key, value) in enumerate(config):
+                    environment['GIT_CONFIG_KEY_' + str(index)] = key
+                    environment['GIT_CONFIG_VALUE_' + str(index)] = value
+            context = ['--git-dir=' + git_dir] if git_dir is not None else []
+            result = subprocess.run(['git', '-C', neutral, *context, *arguments], env=environment,
+                                    capture_output=True, timeout=3)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise UnknownShape('cannot inspect clone-equivalent Git configuration') from error
+    if len(result.stdout) > 8192:
+        raise UnknownShape('Git bootstrap lookup output exceeds bounded metadata')
+    return result
+
+
+def _git_clone_local_kind(source: str, cwd: str) -> str | None:
+    """Git clone's two local-path searches, including gitfiles and suffixes.
+
+    Repository candidates precede regular bundle candidates. Git's own bounded
+    resolve-git-dir reader recognizes bare metadata and gitfile indirection;
+    no candidate clone, transport or helper executes during this lookup.
+    """
+    base = os.path.abspath(os.path.join(cwd, source))
+    for suffix in ('/.git', '', '.git/.git', '.git'):
+        candidate = base + suffix
+        if not (os.path.isdir(candidate) or os.path.isfile(candidate)):
+            continue
+        resolved = _git_bootstrap_read(['rev-parse', '--resolve-git-dir', candidate])
+        if resolved.returncode == 0:
+            if base != canonical(base):
+                raise UnknownShape('Git clone local source has a symlink alias')
+            return 'repository'
+        if resolved.returncode not in {1, 128}:
+            raise UnknownShape('cannot establish Git clone local metadata')
+    for suffix in ('.bundle', ''):
+        candidate = base + suffix
+        if os.path.isfile(candidate):
+            if candidate != canonical(candidate):
+                raise UnknownShape('Git clone local bundle has a symlink alias')
+            return 'bundle'
+    return None
+
+
+def _git_clone_conditional_transport() -> bool:
+    """Discover potentially relevant transport includes; Git evaluates their conditions.
+
+    Read inactive include files as data only, using Git's own config/path parser.
+    No glob matching is implemented here: when a gitdir include can affect the
+    selected remote or its URL, the lookup uses the exact destination context.
+    """
+    pattern = r'^(include\.path|includeif\..*\.path|url\..*\.insteadof|remote\..*\.(url|vcs)|clone\.defaultremotename)$'
+    visited = set()
+
+    def inspect(path=None, conditional=False, depth=0):
+        if depth > 10 or len(visited) > 64:
+            raise UnknownShape('Git clone conditional configuration exceeds bounded inspection')
+        if path is not None:
+            identity = (path, conditional)
+            if identity in visited or not os.path.exists(path):
+                return False
+            visited.add(identity)
+        args = ['config', *(['--file', path] if path is not None else []),
+                '--null', '--path', '--no-includes', '--show-origin', '--get-regexp', pattern]
+        result = _git_bootstrap_read(args)
+        if result.returncode not in {0, 1}:
+            raise UnknownShape('cannot inspect Git clone conditional URL configuration')
+        fields = result.stdout.split(b'\0')
+        if fields[-1] != b'' or (len(fields) - 1) % 2:
+            raise UnknownShape('unsupported Git clone configuration records')
+        for index in range(0, len(fields) - 1, 2):
+            origin, record = fields[index:index + 2]
+            key, separator, value = record.partition(b'\n')
+            if not separator:
+                raise UnknownShape('unsupported Git clone configuration value')
+            if key.startswith((b'url.', b'remote.')) or key == b'clone.defaultremotename':
+                if conditional:
+                    return True
+                continue
+            if not origin.startswith(b'file:'):
+                raise UnknownShape('unsupported Git clone include origin')
+            include = os.fsdecode(value)
+            if not os.path.isabs(include):
+                include = os.path.join(os.path.dirname(os.fsdecode(origin[5:])), include)
+            gitdir = key.startswith((b'includeif.gitdir:', b'includeif.gitdir/i:'))
+            if inspect(os.path.abspath(include), conditional or gitdir, depth + 1):
+                return True
+        return False
+
+    return inspect()
+
+
+def _git_clone_config_value(key: str, git_dir: str | None, config: tuple = ()) -> bytes | None:
+    if git_dir is None:
+        result = _git_bootstrap_read(['config', '--get', key], config)
+        if result.returncode not in {0, 1}:
+            raise UnknownShape('cannot inspect Git clone transport configuration')
+        return (result.stdout[:-1] if result.stdout.endswith(b'\n') else result.stdout) if result.returncode == 0 else None
+    # Unlike the config builtin, var initializes the explicit destination Git
+    # context even before metadata exists. Capture only; never log user config
+    # or identity values. This retains the existing trusted-user-config boundary
+    # (including user hooks/SSH commands), rather than claiming a sandbox.
+    result = _git_bootstrap_read(['var', '-l'], config, git_dir=git_dir)
+    if result.returncode:
+        raise UnknownShape('cannot inspect destination Git clone transport configuration')
+    prefix = key.encode('utf-8') + b'='
+    values = [line[len(prefix):] for line in result.stdout.split(b'\n') if line.startswith(prefix)]
+    return values[-1] if values else None
+
+
+def _git_clone_effective_source(source: str, *, git_dir: str | None = None) -> str:
+    # Clone assigns its literal repository argument to the new remote; it does
+    # not interpret that argument as a remote name in the caller's repository.
+    # An invocation-only remote URL models this assignment while retaining the
+    # real system/global config ordering (including a configured default name).
+    raw_name = _git_clone_config_value('clone.defaultremotename', git_dir)
+    try:
+        remote_name = raw_name.decode('utf-8') if raw_name is not None else 'origin'
+    except UnicodeError as error:
+        raise UnknownShape('unsupported Git clone remote name') from error
+    valid = _git_bootstrap_read(['check-ref-format', 'refs/remotes/' + remote_name + '/probe'])
+    if not remote_name or valid.returncode:
+        raise UnknownShape('unsupported Git clone remote name')
+    if _git_clone_config_value('remote.' + remote_name + '.vcs', git_dir,
+                               (('remote.' + remote_name + '.url', source),)) is not None:
+        raise UnknownShape('unsupported Git clone custom remote transport')
+    resolved = _git_bootstrap_read(['ls-remote', '--get-url', '--', remote_name],
+                                   (('remote.' + remote_name + '.url', source),), git_dir=git_dir)
+    if resolved.returncode:
+        raise UnknownShape('cannot resolve effective Git clone source')
+    value = resolved.stdout[:-1] if resolved.stdout.endswith(b'\n') else resolved.stdout
+    try:
+        return value.decode('utf-8')
+    except UnicodeError as error:
+        raise UnknownShape('effective Git clone source is not supported UTF-8') from error
+
+
+def _git_bootstrap_destination(operation: dict) -> str | None:
+    """Bound fresh repository creation; all other Git mutations keep toplevel ownership.
+
+    No candidate command executes here. Creation cannot borrow a containing
+    repository, reinitialize existing metadata or redirect writes through options.
+    """
+    command, *args = operation['args']
+    if command not in {'init', 'clone'}:
+        return None
+    if operation.get('config'):
+        raise UnknownShape('Git bootstrap configuration overrides are unmodeled')
+    redirecting = {'GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR', 'GIT_INDEX_FILE',
+                   'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+                   'GIT_CONFIG', 'GIT_CONFIG_PARAMETERS',
+                   'GIT_CONFIG_COUNT', 'GIT_EXEC_PATH', 'GIT_SSH', 'GIT_SSH_COMMAND'}
+    if any(name in os.environ for name in redirecting):
+        raise UnknownShape('environment-dependent Git bootstrap targeting is unresolved')
+    cwd = operation['cwd']
+    if not os.path.isdir(cwd):
+        raise UnknownShape('Git bootstrap cwd must already exist')
+    flags = ({'-q', '--quiet', '--bare'} if command == 'init' else
+             {'-q', '--quiet', '-v', '--verbose', '--bare', '--mirror', '--no-checkout',
+              '--no-hardlinks', '--no-local', '--local', '--single-branch', '--no-single-branch', '--no-tags'})
+    values = {'-b', '--initial-branch', '--template'} if command == 'init' else {'-b', '--branch', '--depth', '--template'}
+    operands, seen_flags = [], set()
+    empty_template = False
+    i, terminated = 0, False
+    while i < len(args):
+        token = args[i]
+        if not terminated and token == '--':
+            terminated = True
+        elif not terminated and token.startswith('-'):
+            if token in flags:
+                seen_flags.add(token)
+            elif token in values or any(token.startswith(x + '=') for x in values if x.startswith('--')):
+                if '=' in token:
+                    option, value = token.split('=', 1)
+                else:
+                    option = token
+                    i += 1
+                    if i >= len(args):
+                        raise UnknownShape('Git bootstrap option needs a value')
+                    value = args[i]
+                if option == '--template':
+                    if value != '':
+                        raise UnknownShape('Git bootstrap supports only an empty per-command --template= override')
+                    empty_template = True
+                elif not value or value.startswith('-') or (option == '--depth' and not re.fullmatch(r'[1-9][0-9]*', value)):
+                    raise UnknownShape('invalid Git bootstrap option value')
+            else:
+                raise UnknownShape('unsupported Git bootstrap option: ' + token)
+        else:
+            operands.append(token)
+        i += 1
+    # A custom template may copy symlinked objects/refs and cause writes outside
+    # the destination. An exact empty command override copies none, without
+    # changing persistent configuration or requiring another authorization.
+    if not empty_template:
+        template = _git_bootstrap_read(['config', '--path', '--get', 'init.templateDir'])
+        template_value = template.stdout[:-1] if template.stdout.endswith(b'\n') else template.stdout
+        if template.returncode not in {0, 1} or template_value != b'' or 'GIT_TEMPLATE_DIR' in os.environ:
+            raise UnknownShape('configured Git bootstrap template has unmodeled write aliases; use --template= for this invocation')
+    if command == 'init':
+        if len(operands) > 1:
+            raise UnknownShape('Git init needs at most one explicit destination')
+        destination = operands[0] if operands else '.'
+    else:
+        if len(operands) != 2:
+            raise UnknownShape('Git clone needs an explicit source and destination')
+        source, destination = operands
+        if source.startswith('-') or not source:
+            raise UnknownShape('invalid Git clone source')
+        raw_kind = _git_clone_local_kind(source, cwd)
+        independent = '--no-local' in seen_flags and '--local' not in seen_flags
+        if raw_kind and '://' in source:
+            raise UnknownShape('local Git source shadows a transport URL; use an explicit filesystem path with --no-local')
+        if raw_kind == 'repository' and not independent:
+            raise UnknownShape('local repository or gitfile clone needs unambiguous --no-local for independent objects')
+        if raw_kind:
+            # Git absolute_pathdup preserves the literal suffix/slashes, unlike
+            # realpath/normpath. Resolve initial relative input in the real cwd,
+            # before entering the neutral configuration lookup.
+            clone_argument = source if os.path.isabs(source) else os.path.join(cwd, source)
+        else:
+            if ':' not in source:
+                raise UnknownShape('Git clone source is neither a local candidate nor a transport')
+            clone_argument = source
+        git_dir = None
+        if _git_clone_conditional_transport():
+            target = os.path.abspath(os.path.join(cwd, destination))
+            if target != canonical(target):
+                raise UnknownShape('Git bootstrap destination has a symlink alias')
+            if not os.path.isdir(target):
+                raise UnknownShape('conditional Git clone URL lookup needs an existing empty destination; create that directory within the same Task scope, then retry')
+            try:
+                if os.listdir(target):
+                    raise UnknownShape('Git clone requires an empty destination')
+            except OSError as error:
+                raise UnknownShape('cannot inspect Git clone destination') from error
+            git_dir = target if seen_flags & {'--bare', '--mirror'} else os.path.join(target, '.git')
+        source = _git_clone_effective_source(clone_argument, git_dir=git_dir)
+        if not source or '\n' in source or '\r' in source or source.startswith('-'):
+            raise UnknownShape('invalid effective Git clone source')
+        effective_kind = _git_clone_local_kind(source, cwd)
+        if effective_kind and '://' in source:
+            raise UnknownShape('effective local Git source has ambiguous transport syntax; use an explicit filesystem path')
+        if effective_kind == 'repository' and not independent:
+            raise UnknownShape('effective local repository or gitfile needs unambiguous --no-local for independent objects')
+        # Only built-in network transports or existing local inputs, never
+        # remote helpers, file URLs, option-like sources or inferred targets.
+        if effective_kind:
+            pass  # The real local-path lookup precedes transport interpretation.
+        elif '://' in source:
+            from urllib.parse import urlsplit
+            try:
+                url = urlsplit(source)
+                host, port = url.hostname, url.port
+            except ValueError as error:
+                raise UnknownShape('invalid Git clone URL') from error
+            if (url.scheme not in {'https', 'ssh'} or not host or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9.-]*', host)
+                    or not url.path or url.password or url.query or url.fragment
+                    or url.username and not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]*', url.username)):
+                raise UnknownShape('unsupported Git clone transport')
+        elif re.match(r'[^/]+:', source) and not os.path.isabs(source):
+            if not re.fullmatch(r'[A-Za-z0-9_.-]+@[A-Za-z0-9_.-]+:[A-Za-z0-9_./-]+', source):
+                raise UnknownShape('unsupported Git clone transport')
+        else:
+            raise UnknownShape('effective Git clone local source does not exist')
+    if not destination or destination.startswith('-'):
+        raise UnknownShape('invalid Git bootstrap destination')
+    target = os.path.abspath(os.path.join(cwd, destination))
+    if target != canonical(target):
+        raise UnknownShape('Git bootstrap destination has a symlink alias')
+    if not os.path.isdir(os.path.dirname(target)):
+        raise UnknownShape('Git bootstrap destination parent must already exist')
+    if os.path.lexists(target) and not os.path.isdir(target):
+        raise UnknownShape('Git bootstrap destination must be a directory')
+    if command == 'clone' or '--bare' in seen_flags:
+        try:
+            nonempty = os.path.isdir(target) and bool(os.listdir(target))
+        except OSError as error:
+            raise UnknownShape('cannot inspect Git bootstrap destination') from error
+        if nonempty:
+            raise UnknownShape('Git clone and bare init require an empty destination')
+    else:
+        # Ordinary nonempty project files are not overwritten by git init.
+        # Existing metadata at this target is a separate mutation, not
+        # bootstrap authority. An enclosing workspace does not own new .git.
+        probe = target if os.path.isdir(target) else os.path.dirname(target)
+        try:
+            existing = subprocess.run(['git', '-C', probe, 'rev-parse', '--absolute-git-dir'],
+                                      capture_output=True, timeout=3)
+        except (OSError, subprocess.SubprocessError) as error:
+            raise UnknownShape('cannot inspect Git bootstrap metadata') from error
+        existing_value = existing.stdout[:-1] if existing.stdout.endswith(b'\n') else existing.stdout
+        if existing.returncode == 0 and not existing_value:
+            raise UnknownShape('cannot establish Git bootstrap metadata identity')
+        existing_metadata = canonical(os.fsdecode(existing_value)) if existing.returncode == 0 else ''
+        if existing_metadata in {target, os.path.join(target, '.git')} or os.path.lexists(os.path.join(target, '.git')):
+            raise UnknownShape('Git init bootstrap cannot reinitialize existing repository metadata')
+        if existing.returncode not in {0, 128}:
+            raise UnknownShape('cannot establish absent Git bootstrap metadata')
+    return target
+# ssh contacts another machine and writes nothing local by itself, so it is
+# gated by destination, not by the cwd (#1160). Only hosts on the operator-owned
+# allowlist pass, and only with options whose effects stay remote. Anything
+# else is denied even under a covering task gate: options that run or write
+# locally (ProxyCommand, LocalCommand, -F, -E, -S/-M, forwards, -f) and ssh run
+# through another path, an assignment or a command wrapper. The one wrapped
+# form modeled is the bounded literal `timeout <N> ssh ...`. scp, rsync and
+# sftp keep their local operands and are not handled here.
+# Fixed canonical policy path beside the installed hook library; the final
+# component is opened without following links (#1160).
+SSH_ALLOWLIST = os.path.join(os.path.realpath(os.path.dirname(os.path.abspath(__file__))), "ssh-host-allowlist.json")
+SSH_ALLOWLIST_MAX_BYTES = 4096
+SSH_EXECUTABLES = {"ssh", "/usr/bin/ssh"}
+_SSH_TIMEOUT = re.compile(r"[0-9]+(?:\.[0-9]+)?[smhd]?")  # GNU timeout DURATION
+# Command wrappers and how to find the command each one runs: options that
+# take a separate value, and positional words before the command. Only the
+# wrapped executable is classified; other argument text is never searched.
+_WRAPPER_VALUES = {
+    "timeout": {"-k", "--kill-after", "-s", "--signal"},
+    "gtimeout": {"-k", "--kill-after", "-s", "--signal"},
+    "nohup": set(), "setsid": set(), "unbuffer": set(), "builtin": set(), "nocorrect": set(), "noglob": set(),
+    "nice": {"-n", "--adjustment"},
+    "time": {"-f", "--format", "-o", "--output"},
+    "xargs": {"-a", "--arg-file", "-d", "--delimiter", "-E", "--eof", "-I", "--replace", "-L", "--max-lines",
+              "-n", "--max-args", "-P", "--max-procs", "-s", "--max-chars"},
+    "sudo": {"-u", "--user", "-g", "--group", "-h", "--host", "-p", "--prompt", "-C", "--close-from",
+             "-R", "--chroot", "-D", "--chdir", "-T", "--command-timeout", "-r", "--role", "-t", "--type",
+             "-U", "--other-user"},
+    "doas": {"-u", "-C"},
+    "stdbuf": {"-i", "--input", "-o", "--output", "-e", "--error"},
+    "caffeinate": {"-t", "-w"},
+    "watch": {"-n", "--interval", "-q", "--equexit"},
+    "flock": {"-w", "--wait", "--timeout", "-E", "--conflict-exit-code"},
+    "script": {"-t", "-T", "--log-timing", "-I", "--log-in", "-O", "--log-out", "-B", "--log-io", "-E", "--echo",
+               "-m", "--logging-format", "-o", "--output-limit"},
+    "ionice": {"-c", "--class", "-n", "--classdata"},
+    "taskset": set(),
+    "chrt": {"-T", "--sched-runtime", "-P", "--sched-period", "-D", "--sched-deadline"},
+    "arch": {"-arch", "-e", "-d"},
+    "env": {"-u", "--unset", "-C", "--chdir"},
+    "command": set(),
+    "exec": {"-a"},
+}
+_WRAPPER_POSITIONALS = {"timeout": 1, "gtimeout": 1, "taskset": 1, "chrt": 1, "flock": 1}
+_WRAPPER_NO_COMMAND = {  # options after which the wrapper runs no command
+    "command": {"-v", "-V"}, "ionice": {"-p", "--pid", "-P", "--pgid", "-u", "--uid"},
+    "taskset": {"-p", "--pid"}, "chrt": {"-p", "--pid"}, "sudo": {"-e", "--edit", "-l", "--list", "-v", "--validate"},
+}
+_WRAPPER_STRINGS = {"env": {"-S", "--split-string"}, "flock": {"-c", "--command"}, "script": {"-c", "--command"}}
+_SSH_LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
+_SSH_HOST = re.compile(_SSH_LABEL + r"(?:\." + _SSH_LABEL + r")*")
+_SSH_LOGIN = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]*")
+_SSH_FLAGS = set("46aCnqTtvx")  # no-value flags with no local effect
+_SSH_VALUES = set("lop")         # -l login, -o option, -p port
+_SSH_CONFIG = {  # -o keys whose effects stay remote, and their accepted values
+    "batchmode": r"yes|no",
+    "compression": r"yes|no",
+    "connecttimeout": r"[0-9]{1,5}",
+    "connectionattempts": r"[0-9]{1,3}",
+    "serveraliveinterval": r"[0-9]{1,5}",
+    "serveralivecountmax": r"[0-9]{1,3}",
+    "loglevel": r"quiet|fatal|error|info|verbose|debug|debug1|debug2|debug3",
+    "requesttty": r"yes|no|force|auto",
+    "port": r"[0-9]{1,5}",
+    "user": _SSH_LOGIN.pattern,
+}
+
+
+def _unique_keys(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate key {key!r}")
+        result[key] = value
+    return result
+
+
+def ssh_allowlist():
+    """Allowed ssh hosts and the allowlist source. Any defect admits no host.
+
+    The grant comes only from the fixed policy file itself: a symlink, a hard
+    link, a FIFO or other non-regular file, an oversized file, duplicate or
+    unknown keys, or a malformed host list all deny every host. The open is
+    non-blocking, so a FIFO cannot stall the hook (#1160).
+    """
+    try:
+        flags = os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
+        if os.path.islink(SSH_ALLOWLIST):
+            raise ValueError("is a symbolic link; it must be the policy file itself")
+        fd = os.open(SSH_ALLOWLIST, flags)  # O_NOFOLLOW still refuses a link swapped in after the check
+        try:
+            info = os.fstat(fd)  # inspect the opened descriptor before any read
+            if not stat.S_ISREG(info.st_mode):
+                raise ValueError("not a regular file")
+            if info.st_nlink != 1:
+                raise ValueError(f"has {info.st_nlink} hard links; it must have exactly one")
+            if info.st_size > SSH_ALLOWLIST_MAX_BYTES:
+                raise ValueError(f"larger than {SSH_ALLOWLIST_MAX_BYTES} bytes")
+            raw = os.read(fd, SSH_ALLOWLIST_MAX_BYTES + 1)
+        finally:
+            os.close(fd)
+        if len(raw) > SSH_ALLOWLIST_MAX_BYTES:
+            raise ValueError(f"larger than {SSH_ALLOWLIST_MAX_BYTES} bytes")
+        data = json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_keys)
+        if not isinstance(data, dict) or set(data) != {"hosts"}:
+            raise ValueError('the policy must be exactly {"hosts": [...]}')
+        hosts = data["hosts"]
+        if not isinstance(hosts, list) or not all(isinstance(h, str) and _SSH_HOST.fullmatch(h) for h in hosts):
+            raise ValueError('"hosts" must be a list of hostnames')
+        return frozenset(h.lower() for h in hosts), SSH_ALLOWLIST
+    # Broad on purpose. A defect surfaces as OSError (missing file, symlink),
+    # ValueError (checks above, malformed JSON, bad UTF-8) or RecursionError
+    # (deeply nested JSON inside the size cap; /usr/bin/python3 3.9.6 raises it
+    # for a 4090-byte policy). Every one must deny all hosts, so the gate exits
+    # 2 and names the reason.
+    except Exception as exc:
+        return frozenset(), f"{SSH_ALLOWLIST} (unusable: {exc})"
+
+
+def _ssh_option(flag: str, value: str) -> None:
+    if flag == "p" and re.fullmatch(r"[0-9]{1,5}", value):
+        return
+    if flag == "l" and _SSH_LOGIN.fullmatch(value):
+        return
+    if flag == "o":
+        # ssh reads `-o` as one config line: `Key=Value` or `Key Value`.
+        match = re.fullmatch(r"\s*([A-Za-z]+)(?:\s*=\s*|\s+)(\S+)\s*", value)
+        if match and re.fullmatch(_SSH_CONFIG.get(match[1].lower(), r"(?!)"), match[2], re.IGNORECASE):
+            return
+        raise UnknownShape(f"ssh -o {value!r} is not allowed: only {', '.join(sorted(_SSH_CONFIG))} "
+                           "with plain values stay remote (#1160)")
+    raise UnknownShape(f"ssh -{flag} {value!r} is not a plain {'port' if flag == 'p' else 'login'} (#1160)")
+
+
+def _ssh_host(destination: str) -> str:
+    if destination.startswith("ssh://"):
+        match = re.fullmatch(r"ssh://(?:([^@/?#]+)@)?([^@:/?#]+)(?::[0-9]{1,5})?/?", destination)
+        user, host = (match[1], match[2]) if match else ("", "")
+    else:
+        user, _, host = destination.rpartition("@")  # ssh splits at the last @
+    if not _SSH_HOST.fullmatch(host) or user and not re.fullmatch(r"[A-Za-z0-9_.@-]+", user):
+        raise UnknownShape(f"ssh destination {destination!r} is not a plain [user@]host (#1160)")
+    return host.lower()
+
+
+def ssh_destination(args: list[str]) -> str:
+    """Destination host of a literal `ssh` argv, or UnknownShape.
+
+    Like ssh.c, options are parsed before the destination and again after it
+    until `--` or the first other word; the rest is the remote command, which
+    runs remotely and names no local target.
+    """
+    words, host, index, ended = args[1:], None, 0, False
+    while index < len(words):
+        word = words[index]
+        if not ended and word == "--":
+            ended = True
+            index += 1
+            if host is not None:
+                break
+            continue
+        if not ended and word.startswith("-") and word != "-":
+            position = 1
+            while position < len(word):
+                flag = word[position]
+                if flag in _SSH_FLAGS:
+                    position += 1
+                    continue
+                if flag not in _SSH_VALUES:
+                    raise UnknownShape(f"ssh option -{flag} is not allowed: it has local effects or is not "
+                                       "modeled by the mutation gate (#1160)")
+                value = word[position + 1:]
+                if not value:
+                    index += 1
+                    if index >= len(words):
+                        raise UnknownShape(f"ssh option -{flag} is missing its value")
+                    value = words[index]
+                _ssh_option(flag, value)
+                break
+            index += 1
+            continue
+        if host is not None:
+            break
+        host = _ssh_host(word)
+        index += 1
+    if host is None:
+        raise UnknownShape("ssh requires a literal destination host (#1160)")
+    return host
+
+
+def _command_string(text: str) -> list[str]:
+    try:
+        return shlex.split(text)
+    except ValueError:
+        return text.split()
+
+
+def _wrapped_command(args: list[str]):
+    """Argv that a supported command wrapper runs: None when args[0] is not a
+    wrapper, [] when the wrapper runs no command."""
+    name = os.path.basename(args[0])
+    if name not in _WRAPPER_VALUES:
+        return None
+    values, strings = _WRAPPER_VALUES[name], _WRAPPER_STRINGS.get(name, set())
+    stops, exec_mode, index = _WRAPPER_NO_COMMAND.get(name, set()), False, 1
+    while index < len(args):
+        token = args[index]
+        if token == "--":
+            index += 1
+            break
+        if name in {"env", "sudo"} and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", token, re.S):
+            index += 1
+            continue
+        if not token.startswith("-") or token == "-":
+            break
+        index += 1
+        if token.startswith("--") or name == "arch":  # arch options are whole words (-x86_64, -arch NAME)
+            option, equal, attached = token.partition("=")
+            if option in stops:
+                return []
+            if option in strings:
+                text = attached if equal else (args[index] if index < len(args) else "")
+                return _command_string(text) + (args[index + (0 if equal else 1):] if name == "env" else [])
+            exec_mode = exec_mode or option == "--exec"
+            if option in values and not equal:
+                index += 1
+            continue
+        for position in range(1, len(token)):  # a short-option cluster such as -nu root or -oL
+            option = "-" + token[position]
+            rest = token[position + 1:]
+            if option in stops:
+                return []
+            if option in strings:
+                text = rest or (args[index] if index < len(args) else "")
+                return _command_string(text) + (args[index + (0 if rest else 1):] if name == "env" else [])
+            exec_mode = exec_mode or (name == "watch" and option == "-x")
+            if option in values:
+                if not rest:
+                    index += 1
+                break
+    index += _WRAPPER_POSITIONALS.get(name, 0) + (1 if name == "script" else 0)
+    rest = args[index:]
+    if rest and rest[0].partition("=")[0] in strings:  # flock FILE -c CMD, script FILE -c CMD
+        option, equal, attached = rest[0].partition("=")
+        return _command_string(attached if equal else (rest[1] if len(rest) > 1 else ""))
+    if name == "watch" and not exec_mode:  # watch runs its words as one sh -c string
+        return _command_string(" ".join(rest))
+    return rest
+
+
+def ssh_invocation(args: list[str]):
+    """Host of a direct `ssh` command, None when argv does not run ssh.
+
+    ssh run through another path, an environment assignment or a command
+    wrapper cannot be host-checked here, so it is refused. The exception is
+    the bounded literal `timeout <N> ssh ...`, which goes through the same
+    argv model. A wrapper is unwrapped to the command it runs; an argument
+    that merely names ssh (a service, a path) does not make a command ssh.
+    """
+    assignment = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=.*", re.S)
+    head = 0
+    while head < len(args) and assignment.fullmatch(args[head]):
+        head += 1
+    if head >= len(args):
+        return None
+    word = args[head]
+    if head == 0 and word in SSH_EXECUTABLES:
+        return ssh_destination(args)
+    if head == 0 and word == "timeout" and len(args) > 2 and _SSH_TIMEOUT.fullmatch(args[1]) \
+            and args[2] in SSH_EXECUTABLES:
+        return ssh_destination(args[2:])
+    if word in SSH_EXECUTABLES or os.path.basename(word) == "ssh":
+        raise UnknownShape("run ssh directly as `ssh` or /usr/bin/ssh, without environment assignments, "
+                           "so its host can be checked against the ssh host allowlist (#1160)")
+    command = args[head:]
+    while True:
+        command = _wrapped_command(command)
+        while command and assignment.fullmatch(command[0]):
+            command = command[1:]
+        if not command:
+            return None
+        if os.path.basename(command[0]) == "ssh":
+            raise UnknownShape("ssh behind a command wrapper cannot be host-checked; run ssh directly, "
+                               "or as `timeout <N> ssh ...` (#1160)")
 
 
 def reader(args: list[str]) -> bool:
@@ -819,7 +1470,7 @@ def action(command: str, cwd: str) -> dict:
         # thinks; the targets found below still pick the owning task's gate.
         result.update(read_only=False, investigation=False, self_management=False,
                       veto="read-only-command: option writes or runs a program")
-        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') or result.get('review_actions') else [canonical(cwd)])
+        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') or result.get('review_actions') or result.get('metadata_posts') or result.get('remote_contact_only') else [canonical(cwd)])
     return result
 
 
@@ -1131,6 +1782,42 @@ def _literal_operand_family(args: list[str]) -> bool:
     return python and args[1:3] == ['-m', 'pytest']
 
 
+
+def task_branch_preparation(args, cwd):
+    """Bound only the shipped branch helper's declared repository/worktree.
+
+    This remains a mutation and needs its ordinary owning task. Arbitrary
+    Python scripts and copied helpers keep the existing opaque-script boundary.
+    """
+    script = 0
+    if os.path.basename(args[0]) in {'python', 'python3'}:
+        script = 1
+        while script < len(args) and args[script] == '-B':
+            script += 1
+    if script >= len(args):
+        return None
+    expected = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../bin/prepare-task-branch.py'))
+    if canonical(args[script], cwd) != expected:
+        return None
+    values = {}
+    rest = args[script + 1:]
+    while rest:
+        option = rest.pop(0)
+        if '=' in option:
+            option, value = option.split('=', 1)
+        else:
+            if not rest:
+                raise UnknownShape('branch preparation option is missing its value')
+            value = rest.pop(0)
+        if option not in {'--repo', '--branch', '--worktree', '--remote'} or option in values or not value:
+            raise UnknownShape('unsupported branch preparation options')
+        values[option] = value
+    if not {'--branch', '--worktree'} <= values.keys():
+        raise UnknownShape('branch preparation needs a unique branch and worktree')
+    if values['--branch'].startswith('-') or values.get('--remote', 'origin').startswith('-'):
+        raise UnknownShape('invalid branch preparation name')
+    return [canonical(values.get('--repo', cwd), cwd), canonical(values['--worktree'], cwd)]
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
@@ -1150,6 +1837,8 @@ def _action(command: str, cwd: str) -> dict:
     remote_repos = []
     remote_actions = []
     review_actions = []
+    metadata_posts = []
+    remote_hosts = []  # allowlisted ssh destinations (#1160)
     mutation_commands = 0
     commit_commands = 0
     unproven_companions = []
@@ -1222,6 +1911,12 @@ def _action(command: str, cwd: str) -> dict:
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             reads = False
             mutation_commands += 1
+            branch_paths = task_branch_preparation(args, effective)
+            if branch_paths is not None:
+                paths.extend(branch_paths)
+                self_managed = False
+                args, arg_globs = [], []
+                return
             project = github_project_action(args)
             if project is not None:
                 remote_actions.append(project)
@@ -1231,6 +1926,30 @@ def _action(command: str, cwd: str) -> dict:
             remote = github_metadata_target(args, effective)
             if remote is not None:
                 remote_repos.append(remote)
+                self_managed = False
+                args, arg_globs = [], []
+                return
+            if args[:2] in (['gh', 'issue'], ['gh', 'pr']) and (
+                    args[2:3] == ['comment'] or args[1:3] == ['issue', 'create'] or args[2:3] == ['review'] and '--comment' in args[3:]):
+                from github_metadata_comment import metadata_comment
+                post = {}
+                if metadata_comment(shlex.join(args), effective, details=post) is not True:
+                    raise UnknownShape('unproven GitHub metadata post shape or target; use literal repository/target and body')
+                metadata_posts.append({**post, 'cwd': effective})
+                self_managed = False
+                args, arg_globs = [], []
+                return
+            # ssh names no local target; its destination is checked instead
+            # (#1160). This precedes the operand pass below, which would read
+            # remote text such as 'cat /etc/x' as local paths.
+            host = ssh_invocation(args)
+            if host is not None:
+                allowed, source = ssh_allowlist()
+                if host not in allowed:
+                    raise UnknownShape(f"ssh host {host!r} is not on the ssh host allowlist {source} "
+                                       f"(allowed: {', '.join(sorted(allowed)) or 'none'}); "
+                                       "only the operator can add a host (#1160)")
+                remote_hosts.append(host)
                 self_managed = False
                 args, arg_globs = [], []
                 return
@@ -1258,13 +1977,18 @@ def _action(command: str, cwd: str) -> dict:
                                                    '--upload-pack', '--receive-pack')) for a in operation["args"][1:]):
                     raise UnknownShape("Git helper execution has unbounded effects; use --no-textconv/--no-ext-diff for inspection")
                 local = operation["cwd"]
-                paths.append(_git_toplevel(local))
-                rest = operation['args'][1:]
-                if operation['args'][0] == 'commit':
-                    commit_commands += 1
-                    rest = _commit_write_operands(rest)
-                git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in rest]
-                paths.extend(canonical(x, local) for x in git_operands if '/' in x and '://' not in x and not x.startswith('-'))
+                bootstrap = _git_bootstrap_destination(operation)
+                if bootstrap is not None:
+                    paths.append(bootstrap)
+                    directory_paths.append(bootstrap)
+                else:
+                    paths.append(_git_toplevel(local))
+                    rest = operation['args'][1:]
+                    if operation['args'][0] == 'commit':
+                        commit_commands += 1
+                        rest = _commit_write_operands(rest)
+                    git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in rest]
+                    paths.extend(canonical(x, local) for x in git_operands if '/' in x and '://' not in x and not x.startswith('-'))
             elif args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "patch"}:
                 # Options that take the next token as their value. Without this,
                 # `cp SRC DST -S .bak` made `.bak` the copy destination (#1051
@@ -1293,6 +2017,8 @@ def _action(command: str, cwd: str) -> dict:
                     if args[0] in {'cp', 'mv'} and (token == '-t' or _long_option_matches(token, ('--target-directory',))
                                                    or (not token.startswith('--') and 't' in token[1:])):
                         raise UnknownShape('use explicit final copy destination')
+                    if args[0] == 'cp':
+                        _cp_option(token)
                     if token == '--reference' or token.startswith('--reference='):
                         has_reference = True
                     elif '/' in token:
@@ -1301,15 +2027,16 @@ def _action(command: str, cwd: str) -> dict:
                         option_paths.append(token.split('=', 1)[1] if token.startswith('--') and '=' in token else token[token.index('/'):])
                     if token in value_options or args[0] in {'cp', 'mv'} and _long_option_matches(token, ('--suffix',)) and '=' not in token:
                         skip = True
-                    elif args[0] in {'cp', 'mv'} and not token.startswith('--') and token.endswith('S'):
-                        skip = True  # a short cluster such as -aS takes the next token
+                    elif not token.startswith('--') and (args[0] == 'cp' and token.find('S') == len(token) - 1
+                                                           or args[0] == 'mv' and token.endswith('S')):
+                        skip = True  # only a final option S consumes the next token for cp
                 copied_directories = []
                 if args[0] in {'cp', 'mv'} and len(operands) >= 2:
                     sources, destination = operands[:-1], operands[-1]
                     targets, copied_directories = _copy_destinations(sources, destination, args[1:], effective)
-                    source_writes = (args[0] == 'mv' or _cp_link_copy(args[1:]) or
-                                     _cp_keeps_symlinks(args[1:]) and any(_has_symlink(os.path.join(effective, x)) for x in sources))
-                    operands = (sources if source_writes else []) + targets
+                    source_writes = args[0] == 'mv' or _cp_link_copy(args[1:])
+                    aliases = [] if source_writes else _copy_alias_targets(sources, args[1:], effective)
+                    operands = (sources if source_writes else aliases) + targets
                     directory_paths.extend(copied_directories)
                 elif args[0] in {'chmod', 'chown'} and not has_reference:
                     operands = operands[1:]  # the first operand is the mode/owner
@@ -1427,13 +2154,20 @@ def _action(command: str, cwd: str) -> dict:
             raise UnknownShape('separate configuration/file mutations from commit calls; run git commit -F FILE first, then a separately scoped cleanup command')
     except UnknownShape as e:
         return {"read_only": False, "paths": list(dict.fromkeys(paths + [effective])), "error": str(e), "binding": binding}
-    if remote_repos or remote_actions or review_actions:
+    if remote_repos or remote_actions or review_actions or metadata_posts or remote_hosts:
         paths.extend(unproven_companions)
+    # Remote-only: no local target and no diagnostic companion. ssh gets its
+    # own flag; metadata_only lets other guards skip their checks (#1160).
+    # A project or review action beside ssh keeps its task-owned authorization:
+    # remote_contact_only never short-circuits remote_actions or review_actions.
+    remote_only = not paths and not diagnostic
     return {"read_only": reads and not diagnostic and bool(tokens), "investigation": reads and diagnostic,
             "self_managed_shape": self_managed and not diagnostic, "directory_paths": [p for p in directory_paths if p not in file_paths], "directory_removals": directory_removals,
             # A path only removed, never also written in the same command (#1100).
             "file_removals": [p for p in file_removals if paths.count(p) == file_removals.count(p)],
-            "paths": list(dict.fromkeys(paths or ([] if remote_repos or remote_actions or review_actions else [effective]))),
+            "paths": list(dict.fromkeys(paths or ([] if (remote_repos or remote_actions or review_actions or remote_hosts or metadata_posts) and not (remote_hosts and not remote_only) else [effective]))),
             "remote_repos": list(dict.fromkeys(remote_repos)),
-            "remote_actions": remote_actions, "review_actions": review_actions,
-            "metadata_only": bool(remote_repos) and not remote_actions and not review_actions and not paths and not diagnostic, "binding": binding}
+            "remote_actions": remote_actions, "review_actions": review_actions, "metadata_posts": metadata_posts,
+            "remote_hosts": list(dict.fromkeys(remote_hosts)),
+            "metadata_only": bool(remote_repos) and not remote_actions and not review_actions and not metadata_posts and not remote_hosts and remote_only,
+            "remote_contact_only": bool(remote_hosts) and not remote_actions and not review_actions and not metadata_posts and remote_only, "binding": binding}

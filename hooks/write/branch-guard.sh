@@ -78,8 +78,14 @@ if [[ "$BRANCH" == "HEAD" ]]; then
     cat >&2 <<HOOKEOF
 BLOCKED: Write to $FILE_PATH but the repo at $repo_root is in detached HEAD.
 
-Check out a feature branch before writing:
-  git -C $repo_root checkout -b fix/<ticket-or-description>
+For normal development, prepare a separate task worktree before writing:
+  python3 "$HOOK_DIR/../../bin/prepare-task-branch.py" --repo "$repo_root" --branch fix/ticket_description --worktree /absolute/unique-task-worktree
+
+Refresh when available; the helper reports cached develop honestly offline and
+bootstraps only after verified remote absence. Continue in the returned worktree.
+For an explicitly authorized release/backport, retain the exact approved source
+through the existing own-Task branch_source_authorization in [skill:develop-guard],
+not this normal development helper.
 
 See git-workflow/branch/SKILL.md for branch naming.
 HOOKEOF
@@ -93,14 +99,20 @@ case "$BRANCH" in
 BLOCKED: Write to $FILE_PATH on protected branch '$BRANCH'.
 
 Direct writes to $BRANCH bypass the git-workflow discipline (branch-guard,
-ticket-required, self-review, survey-context). Switch to a feature branch
-first:
+ticket-required, self-review, survey-context). Prepare a normal task worktree:
 
-  git -C $repo_root checkout -b fix/<ticket-or-description>
+  python3 "$HOOK_DIR/../../bin/prepare-task-branch.py" --repo "$repo_root" --branch fix/ticket_description --worktree /absolute/unique-task-worktree
+
+The helper refreshes when available and reports cached develop honestly offline.
+Continue in the returned worktree. Explicitly authorized release/backport work
+retains its exact approved source through the existing own-Task
+branch_source_authorization route in [skill:develop-guard].
 
 If this is a documentation-only fix that genuinely needs to land on $BRANCH,
 use a feature branch + PR anyway -- the PR-time hooks (self-review,
 survey-context) catch missing trailers and doc-drift.
+
+Missing develop is bootstrapped only after successful remote absence verification.
 
 See git-workflow/branch/SKILL.md and git-workflow/develop-guard/SKILL.md.
 HOOKEOF

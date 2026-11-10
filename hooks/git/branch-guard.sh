@@ -44,7 +44,11 @@ _FAST_RE='(^|[^[:alnum:]])git([[:space:]]|$)|(^|[^[:alnum:]])(bash|sh|source|\.)
 if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE || "$_FAST_BUILT" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
-COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
+# A sentinel preserves trailing newlines through command substitution. Exact
+# release authorization compares these bytes with the actual hook payload.
+COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true; printf '.')
+COMMAND=${COMMAND%.}
+COMMAND=${COMMAND%$'\n'}  # Remove only extract-json.py's output delimiter.
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
 # Shared literal normalization protects the actual -C/-c/alias target before
@@ -54,6 +58,10 @@ if [[ ! -f "$GIT_POLICY" ]]; then
     echo "BLOCKED: Git operation policy helper is unavailable." >&2
     exit 2
 fi
+# Transport only actual hook identity/action metadata; candidate command text
+# cannot supply a release exception. Existing session anchors select the own Task.
+CCP_HOOK_INPUT_JSON=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/../lib/hook_payload.py" 2>/dev/null || true)
+export CCP_HOOK_INPUT_JSON
 GIT_RESULT=$(printf '%s' "$COMMAND" | python3 "$GIT_POLICY" --cwd "${CWD:-$PWD}" --policy branch 2>&1)
 GIT_STATUS=$?
 if [[ "$GIT_STATUS" -ne 0 ]]; then
@@ -165,7 +173,9 @@ The script may contain git commit or other write operations that bypass
 hook inspection. Create a feature branch first, or run the script's
 commands directly so hooks can inspect them.
 
-  git checkout -b feature/your_description
+  git switch -c feature/your_description origin/develop
+
+If origin/develop is missing, use bin/prepare-task-branch.py to verify and bootstrap it.
 
 This is enforced by the branch-guard hook (see issue #98).
 EOF
@@ -174,7 +184,9 @@ EOF
 BLOCKED: Direct commit to '$BRANCH' is not allowed.
 
 Create a feature branch first:
-  git checkout -b feature/your_description
+  git switch -c feature/your_description origin/develop
+
+If origin/develop is missing, use bin/prepare-task-branch.py to verify and bootstrap it.
 
 This is enforced by the develop-guard and branch skills.
 EOF

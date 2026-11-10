@@ -34,6 +34,7 @@ _pag_audit() {
     fi
 }
 
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
 
 if [ -z "$BRANCH" ]; then
@@ -46,8 +47,14 @@ if [ "$BRANCH" = "HEAD" ]; then
     _pag_audit "detached HEAD (advisory)"
     cat <<EOF
 <pre-action-guard>
-Advisory: working directory is in DETACHED HEAD state. Create a feature branch
-before making changes: git checkout -b feat/<scope>-<description>.
+Advisory: working directory is in DETACHED HEAD state.
+For normal development, prepare a separate task worktree:
+  python3 "$SCRIPT_DIR/../../bin/prepare-task-branch.py" --repo "$REPO_ROOT" --branch feature/ticket_description --worktree /absolute/unique-task-worktree
+The helper refreshes when available, retaining honest cached-develop use offline.
+Continue in the returned worktree; the caller's directory is unchanged.
+For an explicitly authorized release/backport, preserve the exact approved source
+through the existing own-Task branch_source_authorization in [skill:develop-guard],
+not the normal develop preparation helper.
 Commits are still hard-blocked at commit/push time. Ref: #261, #450, #873
 </pre-action-guard>
 EOF
@@ -59,7 +66,12 @@ if echo "$BRANCH" | grep -qE "$PROTECTED"; then
     cat <<EOF
 <pre-action-guard>
 Advisory: working directory is on protected branch '$BRANCH'. Do NOT commit
-directly. Create a feature branch first: git checkout -b feat/<scope>-<description>.
+directly. For normal development, prepare a separate task worktree:
+  python3 "$SCRIPT_DIR/../../bin/prepare-task-branch.py" --repo "$REPO_ROOT" --branch feature/ticket_description --worktree /absolute/unique-task-worktree
+The helper refreshes when available, retaining honest cached-develop use offline.
+Continue in the returned worktree. Explicitly authorized release/backport work uses
+its exact approved source through the existing own-Task branch_source_authorization
+route in [skill:develop-guard], not this normal development helper.
 Commits are still hard-blocked at commit/push time. Ref: #261, #450, #873
 </pre-action-guard>
 EOF

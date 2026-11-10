@@ -4,23 +4,34 @@ These rules apply to agent autonomy, task execution strategy, and work prioritiz
 
 ## Authorization and routine decisions
 
-An instruction to complete a task authorizes the ordinary in-scope preparation, implementation and verification within the assigned role, whether it names one task or several. Apply existing authorization across turns until it is completed, changed or revoked; satisfy any conditions attached to it. Choose methods and sequence from the available evidence. A missing prerequisite calls for completing it within scope, not asking for the same authorization again. Existing review requirements, role boundaries and explicit owner holds remain binding.
+An instruction to complete a task authorizes the ordinary in-scope preparation, implementation and verification within the assigned role, whether it names one task or several. A direct owner's approval, including a conditional yes, persists across status, branch and maintenance messages under its original scope and conditions. Reconcile the actual question and answer before acting: an agent relay or stale hold summary cannot revoke or narrow that approval merely by arriving later or appearing as a host `user` message. Require an actual new instruction from the decision owner to change the grant; evidence that a condition is unmet stops only its dependent action. Do not ask the owner to repeat an available answer. An agent’s own question, plan or status/hold summary does not create a new approval requirement; apply actual owner instructions and established policy. Choose methods and sequence from the evidence and complete missing preparation within scope. Required review, role boundaries and actual destructive or production holds remain binding. Keep authority scoped to actor, task and action: a delegate's PR-only or read-only brief does not reduce a coordinator's independently granted authority, and a production hold does not stop unrelated source work. Inherited memory, local habits and handoff summaries are evidence to reconcile with current canonical instructions and actual owner grants, not independent authority to add approval requirements, word bans or broader holds.
 
 ## Own the requested outcome
 
 Carry the assigned outcome through implementation, verification, delivery and
 follow-through within the existing grant. Keep concrete completion criteria and
 a current inventory of remaining actions. A useful substep, prepared candidate,
-delegation or status report does not complete the assignment.
+delegation or status report does not complete the assignment. Recognizing a known bug explains a failed method; it does not complete the requested outcome or justify abandoning eligible remaining work.
 
-Before ending a working turn, inspect that inventory and do the next available
-authorized action. Do not wait for another nudge or approval to continue work
-already assigned. If the assigned scope is verified complete, with no pending,
+Answer a status question promptly without treating it as cancellation or completion
+of the mission. Before the final response, inspect the remaining work and execute
+the next available authorized action in the same turn; naming that action is not
+executing it. A substep's receipt does not establish the whole outcome. Do not wait
+for another nudge or approval to continue work already assigned. If the assigned
+scope is verified complete, with no pending,
 held or running work, report that completion; do not invent a dependency.
 Otherwise, if no action remains available, verify the actual dependency, running operation or authorized
 bounded watch, preserve its handle and supported re-entry, and name any missing
 decision or release condition. Report completed, pending and held work accurately;
 do not call an idle plan work in progress. Actual owner holds, role boundaries and granted horizons remain binding only in their scope.
+
+An unsupported method or provider limit is a method failure, not automatically a
+goal-wide blocker. Inspect available supported routes and use an already-configured
+alternative within the same grant and role. Before retrying a mutation, reconcile
+its actual outcome: an error or missing reply does not prove no side effect occurred.
+Do not replay completed work, run competing owners, change global credentials or
+accounts, or waive review to obtain a fallback. If no permitted route exists, name
+that concrete limitation and continue independent authorized work.
 
 ## The four autonomy principles
 
@@ -62,7 +73,7 @@ When waiting for an answer to a determinative question (user decision, external 
 1. When you reach a decision point or waiting state, immediately scan the roadmap/backlog for independent work.
 2. Pick an item that (a) does not depend on the waiting answer, (b) is non-trivial but can finish before the answer arrives, (c) advances project goals within existing authorization and the assigned role.
 3. Execute it to completion or natural stopping point.
-4. When the determinative answer arrives, resume the waiting work.
+4. When the determinative answer arrives, resume the waiting work. In an [skill:ask-questions] survey, ordinary answer-based dispatch waits until the last answer; explicit stops or action revocations apply immediately. Send the next applicable question first, and continue independent authorized work.
 
 **Operator expectation:** If I ask a question and you're waiting, you should be using that time to close backlog gaps, not idling.
 
@@ -80,6 +91,8 @@ When waiting for an answer to a determinative question (user decision, external 
 **autonomy:3. Centralized question management -- paste questions in tickets, reference in roadmap.**
 
 Questions needed for forward progress (decision points, clarifications, external information) must be pasted into the appropriate ticket/issue/epic, not left in chat. The roadmap or ticket list should be the single source of truth for all blocking questions.
+
+This rule governs where open questions are tracked, not how the operator is asked. When asking the operator, [skill:ask-questions] owns the format and sequence. Batch ordinary answer-based ticket updates after the survey's last answer; explicit stops or action revocations apply immediately, including any necessary notice to the affected work.
 
 **What counts as a "question for determination":**
 - Design decisions ("should we use approach A or B?")

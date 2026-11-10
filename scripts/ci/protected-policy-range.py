@@ -404,7 +404,7 @@ def siege_compatibility_inputs(ep: Any, trusted: Path) -> tuple[dict[str, Any], 
     """Retained old CLI wrapper for the repository's reviewed Siege registration."""
     gc = ep._gate_contract_module()
     descriptor = ep.read_json(gc.repository_path(trusted, "bundles/siege/protected-adapter.json", "compatibility adapter"))
-    if ep.digest(descriptor) != "62448e6f332bf30920560dda2a5e759544dc5790790f891e257c5ae49bebe151":
+    if ep.digest(descriptor) != "4aebb34b4253fdb15032fdffa40a7aefec448453d1eee1f60227d2707deb44f2":
         raise ValueError("Siege compatibility adapter differs from independent code pin")
     binding = descriptor["policy_inputs"]
     loaded = ep.load_registered_inputs(trusted, registration_source=Path(binding["source"]),

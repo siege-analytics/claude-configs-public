@@ -369,8 +369,19 @@ def validate_manifest(
     }
 
 
+def git_environment() -> dict[str, str]:
+    """Keep explicit private repository roots authoritative across subprocesses."""
+    environment = {key: value for key, value in os.environ.items() if key not in (
+        "GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE",
+        "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_NAMESPACE",
+        "GIT_CONFIG", "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT",
+    ) and not key.startswith(("GIT_CONFIG_KEY_", "GIT_CONFIG_VALUE_"))}
+    environment["GIT_NO_REPLACE_OBJECTS"] = "1"
+    return environment
+
+
 def run_git(args: list[str], *, cwd: Path) -> str:
-    proc = subprocess.run(["git", *args], cwd=cwd, text=True, capture_output=True, check=False, timeout=30)
+    proc = subprocess.run(["git", *args], cwd=cwd, text=True, capture_output=True, check=False, timeout=30, env=git_environment())
     if proc.returncode:
         raise PacketError(f"git {' '.join(args)} failed: {proc.stderr.strip()}")
     return proc.stdout.strip()
@@ -401,24 +412,37 @@ def tree_digest(root: Path, *, canonical_package: bool = False) -> str:
 
 
 def materialize_source(manifest: dict[str, Any], destination: Path) -> None:
+    require(not destination.is_symlink(), "source destination must not be symlinked")
+    require(not destination.exists() or destination.is_dir() and not any(destination.iterdir()),
+            "source destination must be absent or an empty directory")
     repo = Path(__file__).resolve().parents[2]
     revision = manifest["pins"]["source_revision"]
-    listing = subprocess.check_output(["git", "ls-tree", "-r", "--full-tree", revision], cwd=repo, timeout=120)
+    listing = subprocess.check_output(["git", "ls-tree", "-r", "--full-tree", revision], cwd=repo, timeout=120, env=git_environment())
     require(sha256_bytes(listing) == manifest["pins"]["source_tree_sha256"], "source tree digest mismatch")
-    clone = subprocess.run(
-        ["git", "clone", "--no-hardlinks", "--no-checkout", str(repo), str(destination)],
+    initialize = subprocess.run(
+        ["git", "init", "--quiet", str(destination)],
         text=True,
         capture_output=True,
         check=False,
         timeout=120,
+        env=git_environment(),
     )
-    require(clone.returncode == 0, f"source clone failed: {clone.stderr.strip()}")
+    require(initialize.returncode == 0, f"source initialization failed: {initialize.stderr.strip()}")
+    # Import only the pinned commit's historical closure. A clone of today's
+    # complete repository adds future objects that can change old builders'
+    # abbreviated source identifiers without changing their pinned source.
+    fetch = subprocess.run(
+        ["git", "-C", str(destination), "fetch", "--no-tags", "--no-recurse-submodules",
+         "--refmap=", str(repo), revision],
+        text=True, capture_output=True, check=False, timeout=120, env=git_environment(),
+    )
+    require(fetch.returncode == 0, f"source fetch failed: {fetch.stderr.strip()}")
     run_git(["checkout", "--detach", revision], cwd=destination)
     require(run_git(["rev-parse", "HEAD"], cwd=destination) == revision, "materialized source revision mismatch")
     build = subprocess.run(
         [sys.executable, "bin/build.py"],
         cwd=destination,
-        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        env={**git_environment(), "PYTHONDONTWRITEBYTECODE": "1"},
         text=True,
         capture_output=True,
         check=False,
@@ -457,7 +481,7 @@ def prepare_composition_and_payload(manifest: dict[str, Any], source: Path, root
     proc = subprocess.run(
         [sys.executable, "bin/compose-project.py", "--identity", fixture["canonical_identity"], "--output", str(composition)],
         cwd=source,
-        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        env={**git_environment(), "PYTHONDONTWRITEBYTECODE": "1"},
         text=True,
         capture_output=True,
         check=False,
@@ -526,7 +550,7 @@ def probe_workspace_payload(manifest: dict[str, Any], payload: Path, fixture_rep
     prompt = "review candidate strict release checks"
     selector = subprocess.run(
         [sys.executable, str(payload / "bin/resolve-load-set.py"), "--prompt", prompt, "--cwd", str(fixture_repo)],
-        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        env={**git_environment(), "PYTHONDONTWRITEBYTECODE": "1"},
         text=True, capture_output=True, check=False, timeout=60,
     )
     require(selector.returncode == 0, f"assembled payload resolver failed: {selector.stderr.strip()}")
@@ -539,7 +563,7 @@ def probe_workspace_payload(manifest: dict[str, Any], payload: Path, fixture_rep
     hook = subprocess.run(
         ["bash", str(payload / "hooks/resolver/inject-resolver.sh")],
         input=hook_input, text=False, capture_output=True, check=False, timeout=60,
-        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        env={**git_environment(), "PYTHONDONTWRITEBYTECODE": "1"},
     )
     require(hook.returncode == 0, f"assembled payload inject-resolver failed: {hook.stderr.decode(errors='replace').strip()}")
     output = hook.stdout.decode("utf-8")

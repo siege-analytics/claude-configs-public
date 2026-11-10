@@ -24,8 +24,10 @@ alone; `canary` lists candidates without emitting resident text or load
 instructions. No mode injects the full rules bundle. A missing or noncanonical
 kernel still produces the existing sole structured blocking response.
 
-K5 distinguishes Siege’s own `develop` → `main` and exact-current-main
-installation rules from other consumers’ independently approved topology.
+K5 requires normal development to start from and target verified `develop`,
+including both shipped composition examples. Siege’s own `develop` → `main`
+promotion and exact-current-main installation rules remain distinct from other
+consumers’ independently approved release and deployment mechanics.
 No project content, receipt, selector result or environment switch grants
 permission to perform an operation. The scaffold’s deployment source guard is
 unchanged.

@@ -214,7 +214,7 @@ class PackageGenerationTest(unittest.TestCase):
         git(self.parent, 'remote', 'set-url', 'origin', 'https://' + parent_identity + '.git')
         self.addCleanup(git, self.parent, 'remote', 'set-url', 'origin', original_origin)
         shared_pins = {}
-        for project, target in [('strict-release', 'develop'), ('synthetic-trunk', 'main')]:
+        for project, target in [('strict-release', 'develop'), ('synthetic-trunk', 'develop')]:
             with self.subTest(project=project):
                 if project != 'strict-release':
                     self.prepare_consumer(project)

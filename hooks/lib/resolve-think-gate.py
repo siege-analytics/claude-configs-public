@@ -216,19 +216,60 @@ def session_dirs(workspace: str, session_id: str = "") -> "list[str]":
     return out
 
 
-def _git_origin(path: str) -> str:
+_METADATA_GIT_REDIRECT_ENV = frozenset({
+    "GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE",
+    "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_NAMESPACE",
+    "GIT_CONFIG", "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT",
+})
+
+
+def _metadata_git_redirect(name: str) -> bool:
+    return name in _METADATA_GIT_REDIRECT_ENV or name.startswith(("GIT_CONFIG_KEY_", "GIT_CONFIG_VALUE_"))
+
+
+def _metadata_git_environment() -> dict[str, str]:
+    """Observe the granted physical repository, not a caller's Git target.
+
+    Same location/config isolation as the canary's private-repository reads;
+    ordinary Git action classification deliberately retains its ambient env.
+    """
+    environment = {key: value for key, value in os.environ.items() if not _metadata_git_redirect(key)}
+    environment["GIT_NO_REPLACE_OBJECTS"] = "1"
+    return environment
+
+
+def _git_origin(path: str, *, git_environment: Optional[dict] = None) -> str:
     try:
+        if git_environment is not None:
+            # Keep global trust/auth settings, but only repository-owned origin
+            # values supply authority. Explicit includes inherit local/worktree
+            # ownership. Local values precede worktree values in Git's order.
+            for scope in ("--local", "--worktree"):
+                result = subprocess.run(
+                    ["git", "-C", path, "config", scope, "--includes", "--null",
+                     "--get-all", "remote.origin.url"],
+                    text=True, capture_output=True, timeout=3, env=git_environment)
+                if result.returncode == 1:  # No key: try worktree-only config.
+                    continue
+                if result.returncode != 0:
+                    return ""
+                # Git fetch/gh use the first URL, not --get's last value.
+                first = result.stdout.split("\0", 1)[0]
+                if not first or first != first.strip() or any(ord(c) < 32 or ord(c) == 127 for c in first):
+                    return ""
+                return first
+            return ""
         return subprocess.check_output(
             ["git", "-C", path, "config", "--get", "remote.origin.url"],
             text=True,
             stderr=subprocess.DEVNULL,
-            timeout=3,
+            timeout=3, env=git_environment,
         ).strip()
     except Exception:
         return ""
 
 
-def _target_repo(path: str) -> str:
+def _target_repo(path: str, *, git_environment: Optional[dict] = None) -> str:
     directory = canonical(path)
     while not os.path.isdir(directory):
         parent = os.path.dirname(directory)
@@ -238,16 +279,16 @@ def _target_repo(path: str) -> str:
     try:
         return canonical(subprocess.check_output(
             ["git", "-C", directory, "rev-parse", "--show-toplevel"],
-            text=True, stderr=subprocess.DEVNULL, timeout=3).strip())
+            text=True, stderr=subprocess.DEVNULL, timeout=3, env=git_environment).strip())
     except Exception:
         return ""
 
 
-def _scope_diagnostic(gate: dict, expected_repo: str) -> str:
+def _scope_diagnostic(gate: dict, expected_repo: str, *, git_environment: Optional[dict] = None) -> str:
     declared = str(gate["data"].get("repo_root", ""))
     return (f"Task gate scope rejected: {gate['path']} declares repo_root={declared} "
-            f"(origin={_git_origin(declared) or '<none>'}); expected target repo={expected_repo} "
-            f"(origin={_git_origin(expected_repo) or '<none>'}). "
+            f"(origin={_git_origin(declared, git_environment=git_environment) or '<none>'}); expected target repo={expected_repo} "
+            f"(origin={_git_origin(expected_repo, git_environment=git_environment) or '<none>'}). "
             "Set repo_root to the task's TARGET repository, not the session CWD/workspace repository.")
 
 
@@ -324,7 +365,7 @@ def _project_repo_field(manifest_path: str) -> str:
     return ""
 
 
-def _same_repo(gate_repo: str, repo_root: str) -> bool:
+def _same_repo(gate_repo: str, repo_root: str, *, git_environment: Optional[dict] = None) -> bool:
     if not gate_repo:
         return True
     if not repo_root:
@@ -335,8 +376,8 @@ def _same_repo(gate_repo: str, repo_root: str) -> bool:
     except (OSError, TypeError, ValueError) as exc:
         print(f"[resolve-think-gate] Cannot compare repository identity: {exc}", file=sys.stderr)
         return False
-    gate_origin = _git_origin(gate_repo)
-    repo_origin = _git_origin(repo_root)
+    gate_origin = _git_origin(gate_repo, git_environment=git_environment)
+    repo_origin = _git_origin(repo_root, git_environment=git_environment)
     return bool(gate_origin and repo_origin and gate_origin == repo_origin)
 
 
@@ -529,7 +570,8 @@ def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
             "Then satisfy only this task's effective review tier; see [skill:think].")
 
 
-def select_task(workspace: str, paths: list[str], binding: str = "", session_id: str = "") -> dict:
+def select_task(workspace: str, paths: list[str], binding: str = "", session_id: str = "",
+                *, git_environment: Optional[dict] = None) -> dict:
     """Resolve all targets to one owner. Explicit binding disambiguates, not expands scope."""
     if not (session_id or session_id_from_env()):
         return {"gate": None, "error": session_unresolved_message()}
@@ -541,11 +583,11 @@ def select_task(workspace: str, paths: list[str], binding: str = "", session_id:
     for path in paths:
         scores = []
         rejected = []
-        expected_repo = _target_repo(path)
+        expected_repo = _target_repo(path, git_environment=git_environment)
         for gate in candidates:
             declared = str(gate["data"].get("repo_root", ""))
-            if declared and expected_repo and not _same_repo(declared, expected_repo):
-                rejected.append(_scope_diagnostic(gate, expected_repo))
+            if declared and expected_repo and not _same_repo(declared, expected_repo, git_environment=git_environment):
+                rejected.append(_scope_diagnostic(gate, expected_repo, git_environment=git_environment))
                 continue
             matching = [len(p.split(os.sep)) for p in _scopes(gate) if _within(path, p)]
             if matching:
@@ -764,12 +806,28 @@ def resolve_action(workspace: str, payload: dict) -> dict:
                     return {'read_only': False, 'paths': [], 'remote_only_authorized': True,
                             'queue_enqueue': verified, 'error': ''}
         except (OSError, ValueError, TypeError, KeyError, ImportError, SyntaxError) as exc:
-            return {'read_only': False, 'paths': [], 'gate': None, 'error': 'Queue enqueue denied: ' + str(exc)}
+            label = 'Queue enqueue denied: ' if re.match(r'^\s*gh\s+api\s', command) else 'Pinned merge denied: '
+            return {'read_only': False, 'paths': [], 'gate': None, 'error': label + str(exc)}
     shape = action(command, cwd) if command else {"read_only": False, "paths": [canonical(ti.get("file_path") or ti.get("notebook_path") or ti.get("path") or cwd, cwd)]}
-    if shape["read_only"] or shape.get('investigation') or shape.get("metadata_only"):
-        return shape  # No gate lookup for recognized reads/approved diagnostics.
+    if not shape.get("metadata_posts") and (shape["read_only"] or shape.get('investigation') or shape.get("metadata_only") or shape.get("remote_contact_only")):
+        return shape  # No gate lookup for recognized reads/approved diagnostics/allowlisted ssh (#1160).
     if shape.get("error"):
         return {**shape, "gate": None, "error": "Cannot resolve mutation targets: " + shape["error"]}
+    post_selected = None
+    if shape.get('metadata_posts'):
+        if shape.get('remote_actions') or shape.get('review_actions'):
+            return {**shape, 'gate': None, 'error': 'Split metadata posts from separately granted remote operations.'}
+        post_selected = select_metadata_post_task(workspace, shape)
+        if not post_selected.get('gate'):
+            return {**shape, **post_selected}
+        if not shape['paths']:
+            # Reporting evidence is not implementation. This existing remote
+            # authorization flag is set only after own-Task/target proof above.
+            return {**shape, **post_selected, 'remote_only_authorized': True}
+        if shape['paths']:
+            local = select_task(workspace, shape['paths'], shape.get('binding') or task_binding())
+            if not local.get('gate') or canonical(local['gate']['path']) != canonical(post_selected['gate']['path']):
+                return {**shape, 'gate': None, 'error': 'Metadata posts and local mutations require the same own Task.'}
     if shape.get('review_actions'):
         if shape.get('remote_actions'):
             return {**shape, 'gate': None, 'error': 'Split review and project remote operations; each has its own grant.'}
@@ -801,7 +859,7 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     binding = shape.get("binding") or task_binding()
     if shape.get("binding") and task_binding() and shape["binding"] != task_binding():
         return {**shape, "gate": None, "error": "Conflicting explicit task bindings."}
-    selected = select_task(workspace, shape["paths"], binding)
+    selected = post_selected or select_task(workspace, shape["paths"], binding)
     result = {**shape, **selected}
     if result["gate"]:
         tg = result["gate"]
@@ -826,6 +884,113 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         result["task"] = task_identity(tg["data"])
         result["tier"] = task_tier(tg["data"], shape["paths"], command, cwd)
     return result
+
+
+def select_metadata_post_task(workspace: str, shape: dict) -> dict:
+    """Bind descriptive remote posts to existing own-Task repository authority.
+
+    Repository paths below prove already declared scope; they are not invented
+    filesystem mutation targets. Pure reports do not acquire code-mutation rights.
+    """
+    def deny(message):
+        return {'gate': None, 'error': 'GitHub metadata target scope: ' + message}
+    if not session_id_from_env():
+        return deny('verified current-session identity required')
+    binding = shape.get('binding') or task_binding()
+    if shape.get('binding') and task_binding() and binding != task_binding():
+        return deny('conflicting explicit Task bindings')
+    if (os.environ.get('GH_HOST') or 'github.com').casefold() != 'github.com':
+        return deny('ambient GitHub host override is unproven')
+    if os.environ.get('GH_REPO') and any(not target['repository'] for target in shape['metadata_posts']):
+        return deny('implicit repository under GH_REPO is unproven; use a literal --repo or canonical URL')
+    command_environment = dict(os.environ)
+    inspection_environment = _metadata_git_environment()
+    cache = {}
+    def repository(root):
+        if root not in cache:
+            from urllib.parse import urlsplit
+            raw = _git_origin(root, git_environment=inspection_environment)
+            scp = re.fullmatch(r'git@github\.com:([^?#]+)', raw, re.I)
+            if scp:
+                path = scp[1]
+            else:
+                try:
+                    url = urlsplit(raw)
+                    if url.scheme not in {'https', 'ssh'} or (url.hostname or '').casefold() != 'github.com' or url.query or url.fragment:
+                        cache[root] = ''; return ''
+                    path = url.path.lstrip('/')
+                except ValueError:
+                    cache[root] = ''; return ''
+            path = re.sub(r'\.git$', '', path)
+            cache[root] = path.casefold() if re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', path) and not any(x in {'.', '..'} for x in path.split('/')) else ''
+        return cache[root]
+    def implicit_repository(cwd):
+        # Observe gh's actual command cwd/environment, not a sanitized
+        # authority root or a configured core.worktree's apparent toplevel.
+        root = canonical(cwd)
+        try:
+            remotes = subprocess.check_output(['git', '-C', root, 'remote'],
+                text=True, stderr=subprocess.DEVNULL, timeout=3, env=command_environment).splitlines()
+            resolved = subprocess.run(['git', '-C', root, 'config', '--get-regexp',
+                r'^remote\..*\.gh-resolved$'], capture_output=True, timeout=3, env=command_environment)
+            # gh can prefer upstream/github or an explicitly resolved default.
+            # Resolve such targets explicitly instead of borrowing origin.
+            if remotes != ['origin'] or resolved.returncode != 1:
+                return ''
+            effective = subprocess.check_output(['git', '-C', root, 'remote',
+                'get-url', 'origin'], text=True,
+                stderr=subprocess.DEVNULL, timeout=3, env=command_environment).splitlines()
+            if len(effective) != 1:
+                return ''
+            from urllib.parse import urlsplit
+            raw = effective[0]
+            if not raw or raw != raw.strip() or any(ord(c) < 32 or ord(c) == 127 for c in raw):
+                return ''
+            scp = re.fullmatch(r'git@github\.com:([^?#]+)', raw, re.I)
+            if scp:
+                path = scp[1]
+            else:
+                url = urlsplit(raw)
+                if url.scheme not in {'https', 'ssh'} or (url.hostname or '').casefold() != 'github.com' or url.query or url.fragment:
+                    return ''
+                path = url.path.lstrip('/')
+            path = re.sub(r'\.git$', '', path)
+            slug = path.casefold() if re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', path) and not any(x in {'.', '..'} for x in path.split('/')) else ''
+            return slug
+        except (OSError, subprocess.SubprocessError, ValueError):
+            return ''
+
+    owners = []
+    for gate in _session_thinks(workspace):
+        data = gate['data']; identity = task_identity(data)
+        if binding and identity != binding:
+            continue
+        allowed = set()
+        verified_scope = False
+        for scope in _scopes(gate):
+            root = _target_repo(scope, git_environment=inspection_environment)
+            if not root:
+                continue
+            proof = select_task(workspace, [scope], identity, git_environment=inspection_environment)
+            if proof.get('gate') and canonical(proof['gate']['path']) == canonical(gate['path']):
+                verified_scope = True
+                slug = repository(root)
+                if slug: allowed.add(slug)
+        if not verified_scope:
+            continue
+        ticket = re.fullmatch(r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*)', identity)
+        matched = True
+        for target in shape['metadata_posts']:
+            actual = target['repository'] or implicit_repository(target['cwd'])
+            own_ticket = bool(ticket and target['resource'] == 'issue' and target['operation'] == 'comment'
+                              and actual == ticket[1].casefold() and target['selector'] == ticket[2])
+            if not actual or actual not in allowed and not own_ticket:
+                matched = False; break
+        if matched:
+            owners.append(gate)
+    if len(owners) != 1:
+        return deny('one unambiguous own Task with actual repository scope or its canonical ticket is required; use a literal --repo/canonical URL when gh defaults or URL rewrites are ambiguous, and do not borrow cwd for another remote repository')
+    return {'gate': owners[0], 'error': ''}
 
 
 def select_review_task(workspace: str, shape: dict, cwd: str) -> dict:
@@ -1202,6 +1367,113 @@ def _pytest_execution_targets(command: str, cwd: str, repo_root: str) -> Optiona
     return sorted(set(changed + selectors))
 
 
+def _worktree_materialization_targets(command: str, cwd: str, repo_root: str) -> Optional[list]:
+    """Risk of a bounded new checkout, not authority to create it or its branch.
+
+    Task selection still owns every source/destination path, and the operation
+    guard still owns develop provenance. Unchanged source-tree files are not
+    authored changes merely because Git materializes them in an assigned path.
+    """
+    from task_actions import shell_tokens, UnknownShape
+    from git_command import prefix
+    try:
+        tokens = shell_tokens(command)
+        if tokens and tokens[0][0].startswith('CCP_TASK_ID=') and not tokens[0][1] and not tokens[0][2]:
+            tokens = tokens[1:]
+        if not tokens or any(operator or glob for _, operator, glob in tokens):
+            return None
+        words = [word for word, _, _ in tokens]
+        if words[0] != 'git':
+            return None
+        rest = words[1:]
+        while rest and rest[0].startswith('-'):
+            if rest[0] == '-C' and len(rest) > 1:
+                rest = rest[2:]
+            elif rest[0].startswith('-C') and len(rest[0]) > 2:
+                rest = rest[1:]
+            elif rest[0] in {'--no-pager', '--no-optional-locks'}:
+                rest = rest[1:]
+            else:
+                return None
+        if rest[:2] != ['worktree', 'add']:
+            return None
+        operation = prefix(words, cwd)
+        if not operation or operation['config'] or operation['args'][:2] != ['worktree', 'add']:
+            return None
+        operands, branch, detached, literal = [], None, False, False
+        options = iter(operation['args'][2:])
+        for word in options:
+            if not literal and word == '--':
+                literal = True
+            elif not literal and word == '-b':
+                if branch is not None:
+                    return None
+                branch = next(options, '')
+                if not branch or branch.startswith('-'):
+                    return None
+            elif not literal and word in {'--detach', '-d'}:
+                detached = True
+            elif not literal and word in {'-q', '--quiet', '--no-checkout'}:
+                continue
+            elif not literal and word.startswith('-'):
+                return None  # No force/reset, configuration or unknown options.
+            else:
+                operands.append(word)
+        if len(operands) != 2 or branch and detached:
+            return None
+        source_root = _git_lines(operation['cwd'], 'rev-parse', '--show-toplevel')
+        if source_root is None:
+            raise ValueError('cannot resolve worktree materialization repository')
+        if source_root != [repo_root]:
+            return None
+        destination = canonical(operands[0], operation['cwd'])
+        if os.path.lexists(destination):
+            return None  # Existing destinations retain conservative assessment.
+        source = operands[1]
+        if source.startswith('-'):
+            return None
+        head = _git_lines(repo_root, 'rev-parse', '--verify', source + '^{commit}')
+        if head is None or len(head) != 1:
+            raise ValueError('cannot resolve worktree materialization source')
+        # Offline known develop is sufficient; no network or new permission is
+        # introduced by this risk view. Missing Git evidence is never empty risk.
+        baseline_ref = None
+        for ref in ('refs/remotes/origin/develop', 'refs/heads/develop'):
+            if _git_lines(repo_root, 'rev-parse', '--verify', ref + '^{commit}'):
+                baseline_ref = ref
+                break
+        if baseline_ref is None:
+            raise ValueError('worktree materialization has no proven develop baseline')
+        changed = []
+        current = _git_lines(repo_root, 'rev-parse', '--verify', 'HEAD^{commit}')
+        if current is None or len(current) != 1:
+            raise ValueError('cannot resolve current worktree revision')
+        for revision in set(head + current):
+            baseline = _git_lines(repo_root, 'merge-base', baseline_ref, revision)
+            if baseline is None or len(baseline) != 1:
+                raise ValueError('worktree materialization has no comparable develop baseline')
+            listed = _git_lines(repo_root, 'diff', '--no-ext-diff', '--no-textconv',
+                                '--name-only', '-z', '--no-renames', baseline[0], revision)
+            if listed is None:
+                raise ValueError('cannot enumerate committed worktree materialization changes')
+            changed.extend(listed)
+        for arguments in (
+                ('diff', '--no-ext-diff', '--no-textconv', '--cached', '--name-only', '-z', '--no-renames'),
+                ('diff', '--no-ext-diff', '--no-textconv', '--name-only', '-z', '--no-renames'),
+                ('ls-files', '--others', '--exclude-standard', '-z')):
+            listed = _git_lines(repo_root, *arguments)
+            if listed is None:
+                raise ValueError('cannot enumerate worktree materialization changes')
+            changed.extend(listed)
+        if _within(destination, repo_root):
+            # A newly created checkout *inside* a critical directory is still a
+            # critical target, independent of the checked-out files' contents.
+            changed.append(os.path.relpath(destination, repo_root).replace(os.sep, '/') + '/__any__')
+        return sorted(set(changed))
+    except (UnknownShape, OSError, subprocess.SubprocessError):
+        return None
+
+
 def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict:
     """Effective review tier for this mutation (#1086): the higher of the gate's
     declared `tier` and the floor bin/review-risk.py computes for the targets.
@@ -1232,6 +1504,7 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict
         if not repo_root:
             raise ValueError("gate has no repo_root")
         rel = []
+        worktree_targets = _worktree_materialization_targets(command, cwd or repo_root, repo_root)
         pytest_targets = (_pytest_execution_targets(command, cwd or repo_root, repo_root)
                           if any(os.path.realpath(p) == repo_root for p in paths) else None)
         # A lone commit records only staged/modified files: its other operands
@@ -1240,6 +1513,8 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict
         lone_commit = _lone_git_commit(command) and any(os.path.realpath(p) == repo_root for p in paths)
         named_add = _named_git_add_targets(command, cwd or repo_root, repo_root)
         for p in paths:
+            if worktree_targets is not None:
+                continue  # All paths already passed own-Task scope selection.
             rp = os.path.realpath(p)
             if lone_commit and rp != repo_root:
                 continue
@@ -1263,10 +1538,14 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict
                 rel.extend(files + [(r + "/" if r else "") + "__any__"])
             else:
                 rel.append(r)
+        if worktree_targets is not None:
+            rel.extend(worktree_targets)
         verdict = module.classify(policy, sorted(set(rel)))
         floor, reasons = verdict["computed_tier"], [x for x in verdict["reasons"] if x.startswith(verdict["computed_tier"])]
         if pytest_targets is not None and TIER_ORDER[floor] < TIER_ORDER['B']:
             floor, reasons = 'B', ['B:task-owned test execution']
+        if worktree_targets is not None and TIER_ORDER[floor] < TIER_ORDER['B']:
+            floor, reasons = 'B', ['B:task-owned worktree materialization']
     except Exception as exc:
         floor, reasons = "C", [f"C:{exc}; failing closed" if isinstance(exc, ValueError)
                                else f"C:review-risk classifier unavailable ({type(exc).__name__}); failing closed"]

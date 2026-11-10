@@ -33,13 +33,16 @@
     }
   },
   "high_risk_path_patterns": [
+    "^bin/prepare-task-branch\\.py$",
+    "^hooks/_test/branch_sources\\.(py|test\\.sh)$",
     "^\\.githooks/",
     "^\\.github/workflows/",
     "^hooks/(git|bash|write)/",
     "^hooks/agent-comms/(hub-concurrency-gate|no-slug-form-outbound|spawn-guard)\\.sh$",
     "^hooks/infrastructure/catalog-guard\\.sh$",
-    "^hooks/lib/(after-image|artifact-casefold-candidate|canonical-path|classify-catalog-command|commit-message-source|extract-json|probe-runner|read-only-command|resolve-think-gate|split-frontmatter|pipeline_state|task_actions|command-text|session_anchor|test-evidence|git_command|craft-settings-router|hook_payload|github-project-status|github-merge-queue|github-mechanical-completion)\\.py$",
+    "^hooks/lib/(after-image|artifact-casefold-candidate|canonical-path|classify-catalog-command|commit-message-source|extract-json|probe-runner|read-only-command|resolve-think-gate|split-frontmatter|pipeline_state|task_actions|command-text|session_anchor|test-evidence|git_command|craft-settings-router|hook_payload|github-project-status|github-merge-queue|github-mechanical-completion|github_metadata_comment|branch_source)\\.py$",
     "^hooks/lib/hub-concurrency-policy\\.json$",
+    "^hooks/lib/ssh-host-allowlist\\.json$",
     "(^|/)github-project-policy\\.json$",
     "^hooks/lib/(detect-host|gate-registry|scope-check|command-text|hook-path)\\.sh$",
     "^hooks/resolver/.*(gate|guard|enforcement)",
@@ -85,6 +88,7 @@
     "^skills/detect-ai-fingerprints/(scan\\.sh|scan_ast\\.py|scan_snapshot\\.py)$",
     "^\\.claude/scanner-test-map\\.json$",
     "^hooks/_test/coordinator_mechanical_completion(?:\\.py|\\.test\\.sh)$",
+    "^hooks/_test/metadata_comment_reporting\\.py$",
     "^hooks/_test/hook_payload\\.test\\.sh$",
     "^\\.claude/scanner-config\\.toml$"
   ],

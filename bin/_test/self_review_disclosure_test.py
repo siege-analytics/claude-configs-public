@@ -5,6 +5,7 @@ import importlib.util
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -80,15 +81,31 @@ class ReviewDisclosure(unittest.TestCase):
 
     def test_dispatch_example_creates_a_named_task_branch_from_remote_ref(self):
         rules = (ROOT / "skills/_session-coordination-rules.md").read_text()
-        command = 'git worktree add -b "$TASK_BRANCH" "$TASK_WORKTREE" "$APPROVED_INTEGRATION_REF" && cd "$TASK_WORKTREE"'
-        self.assertIn('`' + command + '`', rules)
+        commands = re.findall(r'`(python3 /absolute/installed/claude-configs-public/bin/prepare-task-branch\.py [^`]+)`', rules)
+        self.assertEqual(len(commands), 1)
+        command = commands[0]
+        self.assertNotIn("\n", command)
+        self.assertNotIn("$", command)
         self.run_cmd(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
                       "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture"])
-        self.run_cmd(["git", "update-ref", "refs/remotes/origin/develop", "HEAD"])
-        self.env.update(TASK_BRANCH="task/fixture-review", TASK_WORKTREE=str(self.base / "isolated worker"),
-                        APPROVED_INTEGRATION_REF="origin/develop")
-        result = self.run_cmd(["bash", "-c", command + '; git symbolic-ref --short HEAD'])
-        self.assertEqual(result.stdout.splitlines()[-1], "task/fixture-review")
+        remote = self.base / "origin.git"
+        self.run_cmd(["git", "init", "-q", "--bare", str(remote)])
+        self.run_cmd(["git", "remote", "add", "origin", str(remote)])
+        self.run_cmd(["git", "push", "-q", "origin", "HEAD:refs/heads/develop"])
+        worktree = self.base / "isolated worker"
+        values = {"/absolute/installed/claude-configs-public/bin/prepare-task-branch.py": str(ROOT / "bin/prepare-task-branch.py"),
+                  "/absolute/project": str(self.repo), "feature/1234_task": "task/fixture-review",
+                  "/absolute/unique-task-worktree": str(worktree)}
+        argv = [values.get(word, word) for word in shlex.split(command)]
+        parent_branch = self.run_cmd(["git", "symbolic-ref", "--short", "HEAD"]).stdout.strip()
+        self.run_cmd(argv)
+        self.assertEqual(self.run_cmd(["git", "symbolic-ref", "--short", "HEAD"]).stdout.strip(), parent_branch)
+        child = self.run_cmd(["git", "-C", str(worktree), "symbolic-ref", "--short", "HEAD"])
+        self.assertEqual(child.stdout.strip(), "task/fixture-review")
+        self.assertEqual(self.run_cmd(["git", "-C", str(worktree), "rev-parse", "HEAD"]).stdout.strip(),
+                         self.run_cmd(["git", "rev-parse", "origin/develop"]).stdout.strip())
+        self.assertIn("Keep the parent in its own workspace", rules)
+        self.assertIn("set the child's `workingDirectory` to the actual absolute worktree path", rules)
         # Discovery must include canonical and project-specific names, local
         # branches, remote-only refs and recorded heads with no ticket number.
         branches = ["bugfix/repair_692", "feature/completion_692", "task/cleanup_692",
