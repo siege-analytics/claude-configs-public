@@ -22,6 +22,10 @@ All notable changes to this project are documented here. Versioning follows [Sem
 ### Fixed: task-scoped fresh Git repositories
 
 - Allow bounded `git init` and explicitly targeted `git clone` within the owning active Task's directory scope without borrowing an enclosing repository. Existing metadata, path aliases and foreign ownership remain guarded. Use per-command `--template=` when a custom template is outside the modeled route; local repository inputs, including Git-directory pointer files, require `--no-local` for independent objects. Clone source checks use the actual nonrepository configuration context. These alternatives change no persistent Git configuration or owner grant (#1240, #1242).
+### Fixed: registered child worktree targeting
+
+- Verify writer isolation from actual Git ownership and the registered worktree backpointer; accept sibling worktrees without prompt magic or a required directory name. Keep read-only reviews and existing directories outside Git supported (#1256).
+- Bound backpointer reads and match the host's path normalization. BREAKING for writer spawns using inherited, relative, tilde or unexpanded HOME directories: prepare the worktree first, keep the parent in its own workspace, and pass the child's existing literal absolute path as `workingDirectory`. This changes target verification, not authorization (#1256).
 
 ### BREAKING: normal development branches require develop
 
@@ -56,6 +60,56 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 - Large ordinary copy inputs remain reads, including 19,033-entry preservation trees. Preserved symlinks count their actual canonical endpoints, not every source operand; own-data sources cannot hide an outside alias (#1236, #1238). Suffix values remain data rather than link/dereference flags. Existing destination checks and hardlink protections remain.
 - Literal `git bundle list-heads`, `git bundle verify` and bounded `git fsck` integrity checks are reads. Bundle creation/unpacking, fsck `--lost-found`, unknown/output flags and composed writes retain their normal mutation checks (#1236).
+### Fixed: ssh is gated by host, not as a local cwd mutation
+
+- The mutation gate no longer treats `ssh` as a mutation of the working directory (#1160). `ssh` to a host on the operator-owned `hooks/lib/ssh-host-allowlist.json` (initially `cyberpower`) passes without a task gate, from any directory.
+- Any other host is denied with a message naming the allowlist, even under a covering task gate.
+- The following are denied:
+  - options with local effects or that are not modeled (`ProxyCommand`, `LocalCommand`, `HostName`, `-F`, `-E`, `-S`, `-M`, `-L`/`-R`/`-D`, `-f`, `-W`, `-J`, `-i` and others), including options placed after the destination;
+  - `ssh` run through another path, an environment assignment or a command wrapper. A wrapper is unwrapped to the command it runs, so an argument that only names ssh (a service, a path) leaves the command on its normal task path.
+- The bounded literal `timeout <N> ssh ...` is checked like direct ssh: same host allowlist, options, local redirects and companions.
+- Host enforcement covers these modeled invocation forms only (`ssh`, `/usr/bin/ssh`, `timeout <N> ssh`) and trusts the user's ssh configuration: an `Include`, `HostName`, `ProxyCommand` or `LocalCommand` there takes effect for an allowlisted alias.
+- Local redirects, `tee` and chained commands keep their local targets. `scp`, `rsync` and `sftp` are unchanged.
+- The allowlist grant comes only from the fixed policy file itself. The loader opens it without following links and without blocking, then requires a regular, singly linked file of at most 4096 bytes, unique keys and exactly `{"hosts": [...]}`. A symlink, hard link, FIFO, oversized or malformed policy admits no host; the gate exits 2 naming the reason, and never stalls.
+- The new `remote_contact_only` flag is read only by the mutation gate. Other guards, including destructive-guard, still inspect ssh commands.
+- A GitHub project or review action beside ssh keeps its own task authorization; the ssh flag is never set when either is present.
+- Behavior change, accepted tradeoff: the allowlist is strict and global.
+  - ssh to a non-allowlisted host, for example `ssh -T git@github.com`, used to pass under a covering task gate. It is now denied everywhere until the operator adds the host. A task gate cannot admit extra hosts.
+  - An allowlisted contact is outbound contact only. It never selects a task gate, and it is not authorization for remote-side mutation, which stays operator policy.
+  - Task-declared hosts would be a separate, reviewed follow-up.
+### Fixed: gate artifact laundering and spoofed artifact signals (#1164)
+
+- Historical B1 report-word payloads and their original expected results remain review data. Current standalone report posts follow the typed metadata operation contract instead of a second completion/modal/owner-evidence parser. A report does not change workflow state; real state operations retain canonical guards. Previously held B1 wording cases now test that same descriptive-operation contract without a fresh owner GO (#1260).
+
+- The pipeline-state writer counts a posted comment toward `junior-senior-gate.json` and `artifacts-posted-gate.json` only when:
+  - its author is the authenticated `gh` login, or has the GitHub-attested OWNER, MEMBER or COLLABORATOR role;
+  - no ticket declaration names only other tickets. A declaration is a Ticket/Task/Issue/Refs/`ticket_refs` key, or an artifact heading, with its entire value.
+    - The value includes indented and list-item continuation lines, across blank lines, so YAML `ticket_refs:` lists, folded values and wrapped `Ticket:` values count. A 4+-space line after a blank line outside a list is an indented code block and, like fenced code, names no ticket.
+    - YAML front matter is judged as one region of the raw comment, not parsed: every ticket reference in it must be the current ticket. Front matter naming the current ticket together with any other ticket is excluded, and blank lines, comments, flow collections, folded scalars or an unrecognized key cannot hide a foreign reference. Front matter naming only other tickets, even as a bibliography, is excluded too.
+    - A reference written as inline code (`` `other/repo#9` ``) still names its ticket.
+    - The identity rule is strict and applies to `Refs` too: a separate `Refs:` list naming only other tickets excludes an otherwise current-ticket artifact, so `Refs` is not a free-form bibliography.
+  - Comment line endings are normalized (CRLF and lone CR to LF) before identity and classification, so a CRLF body cannot skip the front-matter region.
+  - One CommonMark block classifier decides which text is eligible. Every artifact signal (headings and keyword stems) reads the same eligible text, and body ticket identity reads it too, plus 4+-space paragraph continuations, so a wrapped declaration value still counts:
+    - Blockquote lines (`> ...`) and their lazy paragraph continuations, and indented code outside a list, supply no heading, no keyword and no ticket declaration. A 4+-space line continuing a paragraph supplies no heading or keyword either.
+    - Lines inside a CommonMark HTML block (types 1-7, including processing instructions, declarations and `<div>` or `<span>` examples) are raw HTML. They supply no heading, no keyword and no ticket declaration, so a foreign `Ticket:` inside an HTML comment or `<pre>` example no longer excludes a real current-ticket artifact after it.
+    - A type-6 block such as `<blockquote>` or `<div>` runs to the next blank line, not to its closing tag. A type-7 tag cannot interrupt a paragraph, but can start after a blank line, heading or thematic break.
+    - HTML comments, CDATA, inline code, and HTML `pre`, `code`, `blockquote` and similar container content no longer supply headings or keywords. Container closure is name-aware: a mismatched closing tag cannot end an open container. Fenced code is unchanged.
+  - The unchanged Tier C mutation gate therefore refuses the tested wrong-ticket, outsider, HTML-quoted, Markdown-quoted, indented-example and CRLF front-matter shapes. The filters are bounded parsers, not a full Markdown/HTML renderer.
+### Added: ask-questions operator question protocol
+
+- New `ask-questions` skill: the single procedure for asking the operator questions, run as a survey.
+  - Show the full list once, together with the first question in the same message, then ask one question per turn with context, choices, pros and cons, a recommendation and a default.
+  - A default chooses only within existing authorization and never stands in for a protected-action confirmation.
+  - An explicit stop ("don't ask", "stop asking") ends the survey at once. A stop or revocation of an action applies immediately, before the remaining answers arrive.
+  - After each answer, go straight to the next question. Answers are not routed, tickets are not updated and no work starts on them in between.
+  - After the last answer, summarize, then route and act on everything in one batch. Running work never pauses or blocks.
+  - The resolver loads it for question-session requests such as "ask questions", "ask me questions", "ask your questions", "ask me decision questions" and "one question at a time" (#1056). "I have decision questions for you" does not load it: the operator having questions is not a request for a survey.
+  - Matching is scoped to ";" clauses. A clause that prohibits asking ("never ask", "don't ask questions") or quotes the phrase as data is excluded without erasing a request in another clause.
+  - Finish-without-asking requests ("No need to ask me any questions; just ship it.", "only ask questions if ...") do not load it.
+  - A second route catches explicit one-at-a-time requests in read-only or docs-update prompts, and any negation in the prompt suppresses it.
+  - Known limits, tracked in #1225: clauses do not split at ".", so "Don't ask questions as a group. Ask your questions one at a time." is still missed, and quoted-payload exclusion is heuristic.
+- `strategic-agency:4` and `autonomy:2`/`autonomy:3` now defer the operator question format and sequence to the skill. The next question preempts background work, and answers reach tickets only after the last one (#1056).
+- `session-coordination:5` now defers to the skill for the question procedure and keeps only the hub rule: no answer routing or answer-based spoke briefing until the survey is finished, with running work unaffected. The per-slice release and question-grouping text is removed. Its #1231 owner-grant additions are kept in the survey rule: settled decisions are summarized with their source and conditions, and further explicit owner instructions about collecting answers are honored (#1056).
 
 ### Fixed: task scopes and evidence execution
 
