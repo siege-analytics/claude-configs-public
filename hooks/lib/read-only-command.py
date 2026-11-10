@@ -15,6 +15,7 @@ a task gate (siege#1051, #1057; electinfo#348).
 import re
 import shlex
 import sys
+sys.dont_write_bytecode = True
 
 # Bare read verbs whose arguments cannot make them write.
 PLAIN = {
@@ -226,6 +227,12 @@ def gh_ok(args):
         return not any(long_opt(a, "--hostname") for a in args[2:])
     if len(args) >= 2 and args[0] in {"pr", "issue", "run", "repo", "release", "workflow", "label", "project", "search"}:
         return args[1] in GH_READ_VERBS or args[0] == "search"
+    if args[:2] == ["api", "graphql"]:
+        from task_actions import github_graphql
+        try:
+            return github_graphql(["gh"] + args).get("kind") == "query"
+        except (ValueError, TypeError, KeyError):
+            return False
     if args[:1] == ["api"]:
         for a in args[1:]:
             if long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF", "Hpqt"):

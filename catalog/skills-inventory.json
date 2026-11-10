@@ -5010,6 +5010,7 @@
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/coordination_alias.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5538,6 +5539,8 @@
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/commit_detector.test.sh",
         "hooks/_test/coordination_alias.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
+        "hooks/_test/coordinator_mechanical_completion.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/craft_hook_router.test.sh",
         "hooks/_test/craft_workspace_trust.test.sh",
@@ -6764,10 +6767,10 @@
     },
     {
       "canonical_source": "skills/_ticket-lifecycle-rules.md",
-      "characters": 3925,
-      "content_sha256": "2b90be484adfb55822b9faa180f73ab8ab09034bfb2bc866e57c9ad5f2616e76",
+      "characters": 5203,
+      "content_sha256": "21462f6dedacfafaf030612ea7eef791685be12e3ce087e06d3697de1ec85f50",
       "description": "Always-on ticket lifecycle status discipline. Ticket state must move at the point of action: work start, PR open, test/UAT handoff, blocker, unblock/resume, merge/verified close. Platform-agnostic; requires a comment when a platform lacks a mutable Status field.",
-      "estimated_tokens": 982,
+      "estimated_tokens": 1301,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_ticket-lifecycle-rules.md",
@@ -6790,7 +6793,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 78,
+      "lines": 97,
       "owner": [
         "unknown"
       ],
@@ -8764,6 +8767,7 @@
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/block_log_advisory_utc.test.sh",
         "hooks/_test/branch_state_advisory.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -9026,10 +9030,10 @@
     },
     {
       "canonical_source": "skills/coderabbit-response/SKILL.md",
-      "characters": 9030,
-      "content_sha256": "dc93217b093704a86deed1d21d38d00afcc2da49839a56a59181264a40482ff3",
+      "characters": 12007,
+      "content_sha256": "5caf0749a14ac60cda667fb36b583e9a05912af6115ea6b9d0493595a0d1f199",
       "description": "Triage and respond to CodeRabbit (or similar bot) review findings on a PR. Decides which comments to fix, which to resolve-with-reply, and which to dismiss; manages the stale-review-blocks-merge problem.",
-      "estimated_tokens": 2258,
+      "estimated_tokens": 3002,
       "frontmatter_name": "coderabbit-response",
       "generated_outputs": [
         "dist/nested/skills/coderabbit-response",
@@ -9046,7 +9050,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 208,
+      "lines": 244,
       "owner": [
         "unknown"
       ],
@@ -9222,6 +9226,7 @@
         "hooks/_test/broad_staging.test.sh",
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/commit_detector.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/detect_ai_fingerprints.test.sh",
         "hooks/_test/execution_risk.py",
@@ -9312,6 +9317,7 @@
       "source_path": "skills/compound/SKILL.md",
       "test_evidence": [
         "hooks/_test/catalog_guard.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
@@ -10515,6 +10521,7 @@
         "bin/_test/selected_generation_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/execution_risk.py",
@@ -11144,6 +11151,8 @@
         "hooks/_test/ca_enforcement_runtime.test.sh",
         "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/commit_detector.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
+        "hooks/_test/coordinator_mechanical_completion.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/craft_hook_router.test.sh",
         "hooks/_test/craft_workspace_trust.test.sh",
@@ -11956,8 +11965,10 @@
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/catalog_guard.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/read_allowlist.test.sh",
+        "hooks/_test/task_keyed_gates.py",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
       "tier": "unclassified",
@@ -12366,6 +12377,7 @@
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
+        "hooks/_test/coordinator_mechanical_completion.py",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/gate_bypass_1164.py",
@@ -12798,9 +12810,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2621884,
+    "characters": 2626139,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 655550,
+    "estimated_tokens": 656613,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12821,7 +12833,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1225490
+      "unclassified": 1229745
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12833,7 +12845,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 306416
+      "unclassified": 307479
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

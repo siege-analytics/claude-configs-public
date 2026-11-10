@@ -911,29 +911,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_ticket-lifecycle-rules.md",
           "file_count": 1,
-          "tree_sha256": "0ff38d4d547484064aebcd5f9cec01594c363a5bb0b57342703e0fae2aa2adb4"
+          "tree_sha256": "628a722fa5cf9779812b20a1087573cf2f4d148a13a34bcc4a14dd8397c55f29"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_ticket-lifecycle-rules.md",
           "file_count": 1,
-          "tree_sha256": "0ff38d4d547484064aebcd5f9cec01594c363a5bb0b57342703e0fae2aa2adb4"
+          "tree_sha256": "628a722fa5cf9779812b20a1087573cf2f4d148a13a34bcc4a14dd8397c55f29"
         },
         "flat": {
           "destination": "dist/flat/skills/_ticket-lifecycle-rules.md",
           "file_count": 1,
-          "tree_sha256": "0ff38d4d547484064aebcd5f9cec01594c363a5bb0b57342703e0fae2aa2adb4"
+          "tree_sha256": "628a722fa5cf9779812b20a1087573cf2f4d148a13a34bcc4a14dd8397c55f29"
         },
         "nested": {
           "destination": "dist/nested/skills/_ticket-lifecycle-rules.md",
           "file_count": 1,
-          "tree_sha256": "0ff38d4d547484064aebcd5f9cec01594c363a5bb0b57342703e0fae2aa2adb4"
+          "tree_sha256": "628a722fa5cf9779812b20a1087573cf2f4d148a13a34bcc4a14dd8397c55f29"
         }
       },
       "canonical_source": "skills/_ticket-lifecycle-rules.md",
       "kind": "rule",
       "slug": "ticket-lifecycle",
       "source_file_count": 1,
-      "source_tree_sha256": "108cdd5f0e28768e01d167e58aa082749ad659dba3c7e9d3b3a3e5a6a3720265"
+      "source_tree_sha256": "4517636230ef9dddd673a7c38ccf539a64555fd7ec4788cf6a2ab224b91ae34b"
     },
     {
       "artifacts": {
@@ -1404,29 +1404,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/coderabbit-response",
           "file_count": 1,
-          "tree_sha256": "29ee4f7a7ea33b0dcc24b9b4d2e01782e66be4df1f929f69c38359d63946930d"
+          "tree_sha256": "17d1b26d60a8dec9e35b420bf59e439cbf4bbd009b977dde9cf9f5d5b27337cf"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/coderabbit-response",
           "file_count": 1,
-          "tree_sha256": "29ee4f7a7ea33b0dcc24b9b4d2e01782e66be4df1f929f69c38359d63946930d"
+          "tree_sha256": "17d1b26d60a8dec9e35b420bf59e439cbf4bbd009b977dde9cf9f5d5b27337cf"
         },
         "flat": {
           "destination": "dist/flat/skills/coderabbit-response",
           "file_count": 1,
-          "tree_sha256": "29ee4f7a7ea33b0dcc24b9b4d2e01782e66be4df1f929f69c38359d63946930d"
+          "tree_sha256": "17d1b26d60a8dec9e35b420bf59e439cbf4bbd009b977dde9cf9f5d5b27337cf"
         },
         "nested": {
           "destination": "dist/nested/skills/coderabbit-response",
           "file_count": 1,
-          "tree_sha256": "29ee4f7a7ea33b0dcc24b9b4d2e01782e66be4df1f929f69c38359d63946930d"
+          "tree_sha256": "17d1b26d60a8dec9e35b420bf59e439cbf4bbd009b977dde9cf9f5d5b27337cf"
         }
       },
       "canonical_source": "skills/coderabbit-response/SKILL.md",
       "kind": "skill",
       "slug": "coderabbit-response",
       "source_file_count": 1,
-      "source_tree_sha256": "ebc063b5663d0de08a55f2b4be2291eddc028fb99f40489b493c72be92c1c3db"
+      "source_tree_sha256": "2d6e12b22bd0798158341383426c9a9f382b2bd82ceefdeb05f63463d18033fe"
     },
     {
       "artifacts": {

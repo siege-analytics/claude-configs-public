@@ -9,7 +9,7 @@ import shlex
 import stat
 import time
 from urllib.parse import quote
-from task_actions import shell_tokens
+from task_actions import shell_tokens, github_graphql
 
 SHA = r'[0-9a-fA-F]{40}'
 ID = r'[A-Za-z0-9_-]+'
@@ -67,6 +67,13 @@ def parse(command):
         return None
     tokens = shell_tokens(command)
     args = [word for word, _, _ in tokens]
+    if args[:3] == ['gh', 'api', 'graphql']:
+        try:
+            document = github_graphql(args)
+        except (ValueError, TypeError, KeyError):
+            return None  # Ordinary action parser owns unsupported non-queue transport.
+        if document.get('kind') != 'other-mutation' or 'enqueuePullRequest' not in document.get('fields', []):
+            return None
     if args[:3] == ['gh', 'pr', 'merge']:
         segments = list(command_segments(tokens))
         for segment in segments[1:]:
