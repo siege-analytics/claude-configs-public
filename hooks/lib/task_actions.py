@@ -500,10 +500,11 @@ def _git_bootstrap_destination(operation: dict) -> str | None:
     if not empty_template:
         try:
             template = subprocess.run(['git', '-C', cwd, 'config', '--path', '--get', 'init.templateDir'],
-                                      text=True, capture_output=True, timeout=3)
+                                      capture_output=True, timeout=3)
         except (OSError, subprocess.SubprocessError, UnicodeError) as error:
             raise UnknownShape('cannot inspect Git bootstrap template configuration') from error
-        if template.returncode not in {0, 1} or template.stdout.strip() or 'GIT_TEMPLATE_DIR' in os.environ:
+        template_value = template.stdout[:-1] if template.stdout.endswith(b'\n') else template.stdout
+        if template.returncode not in {0, 1} or template_value != b'' or 'GIT_TEMPLATE_DIR' in os.environ:
             raise UnknownShape('configured Git bootstrap template has unmodeled write aliases; use --template= for this invocation')
     if command == 'init':
         if len(operands) > 1:
@@ -521,12 +522,16 @@ def _git_bootstrap_destination(operation: dict) -> str | None:
         # but leave the actual candidate command unchanged (no second rewrite).
         try:
             resolved = subprocess.run(['git', '-C', cwd, 'ls-remote', '--get-url', '--', source],
-                                      text=True, capture_output=True, timeout=3)
+                                      capture_output=True, timeout=3)
         except (OSError, subprocess.SubprocessError, UnicodeError) as error:
             raise UnknownShape('cannot resolve effective Git clone source') from error
         if resolved.returncode or len(resolved.stdout) > 8192:
             raise UnknownShape('cannot resolve bounded effective Git clone source')
-        source = resolved.stdout[:-1] if resolved.stdout.endswith('\n') else resolved.stdout
+        source_bytes = resolved.stdout[:-1] if resolved.stdout.endswith(b'\n') else resolved.stdout
+        try:
+            source = source_bytes.decode('utf-8')
+        except UnicodeError as error:
+            raise UnknownShape('effective Git clone source is not supported UTF-8') from error
         if not source or '\n' in source or '\r' in source or source.startswith('-'):
             raise UnknownShape('invalid effective Git clone source')
         # A literal existing directory cannot borrow an apparently remote URL

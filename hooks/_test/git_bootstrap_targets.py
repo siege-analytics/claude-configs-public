@@ -309,6 +309,30 @@ class GitBootstrap(unittest.TestCase):
         self.assertEqual(list(outside.iterdir()),[])
         self.assertFalse(target.exists())
 
+    def test_whitespace_template_is_a_real_path_not_an_empty_override(self):
+        for index,value in enumerate((b' ',b'\t',b'\r',b'\n')):
+            with self.subTest(value=value):
+                target=self.ws/('space-template-target-'+str(index));target.mkdir()
+                outside=self.ws/('space-template-outside-'+str(index));outside.mkdir()
+                template=target/value.decode('ascii');template.mkdir()
+                (template/'objects').symlink_to(outside,target_is_directory=True)
+                config=self.ws/'space-template.config'
+                setting=value.replace(b'\t',b'\\t').replace(b'\n',b'\\n')
+                config.write_bytes(b'[init]\n templateDir = "'+setting+b'"\n')
+                self.task(target)
+                self.f.env['GIT_CONFIG_GLOBAL']=str(config)
+                with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(config)}):
+                    raw=subprocess.check_output(['git','config','--path','--get','init.templateDir'])
+                    self.assertEqual(raw,value+b'\n')
+                    args=['git','init',str(target)]
+                    self.assertTrue(self.shape(args).get('error'))
+                    self.f.assertGate(2,shlex.join(args),cwd=self.ws)
+                    self.assertEqual(list(outside.iterdir()),[])
+                    self.assertFalse((target/'.git').exists())
+                    self.run_allowed(['git','init','--template=',str(target)],target)
+                self.assertFalse((target/'.git/objects').is_symlink())
+                self.assertEqual(list(outside.iterdir()),[])
+
     def test_env_template_only_has_bounded_empty_override_route(self):
         template=self.ws/'env-template';template.mkdir()
         outside=self.ws/'env-outside';outside.mkdir()
@@ -326,6 +350,24 @@ class GitBootstrap(unittest.TestCase):
                 self.assertFalse((clean/('objects' if name=='clone' else '.git/objects')).is_symlink())
         self.assertEqual(list(outside.iterdir()),[])
         self.assertFalse(target.exists())
+
+    def test_effective_source_CR_cannot_erase_directory_into_bundle_file(self):
+        source=self.ws/'rewrite-source\r'
+        self.source.rename(source)
+        (self.ws/'rewrite-source').write_bytes(self.bundle.read_bytes())
+        config=self.ws/'control-source.config'
+        config.write_bytes(b'[url "'+str(source).encode()+b'"]\n insteadOf = alias:\n')
+        target=self.ws/'control-source-target';self.task(target)
+        self.f.env['GIT_CONFIG_GLOBAL']=str(config)
+        with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(config)}):
+            raw=subprocess.check_output(['git','ls-remote','--get-url','--','alias:'])
+            self.assertEqual(raw,str(source).encode()+b'\n')
+            args=['git','clone','--mirror','alias:',str(target)]
+            self.assertTrue(self.shape(args).get('error'))
+            self.f.assertGate(2,shlex.join(args),cwd=self.ws)
+        self.assertFalse(target.exists())
+        for obj in (source/'.git/objects').rglob('*'):
+            if obj.is_file():self.assertEqual(obj.stat().st_nlink,1)
 
     def test_inherited_git_targeting_environment_denies_bootstrap(self):
         for key in ('GIT_DIR','GIT_WORK_TREE','GIT_TEMPLATE_DIR','GIT_CONFIG_COUNT','GIT_SSH_COMMAND'):

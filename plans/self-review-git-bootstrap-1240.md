@@ -29,7 +29,7 @@ Plan reference: plans/think-git-bootstrap-1240.md.
 Pre-author-inventory: existing `_git_toplevel`/Git action route, task selector and effective-risk logic inspected; concurrent cp/bundle owner confirmed disjoint source regions before edits.
 Investigate-artifact: plans/think-git-bootstrap-1240.md and #1240 native failure evidence.
 Pre-mortem-artifact: plans/pre-mortem-git-bootstrap-1240.md.
-Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1240#issuecomment-6756342476 — Root independent exact-source review at runtime SHA256 ceadfe54a8c61a9b4c61478532d7987c2c3dbe74ca947fc1a95ec71d63f89018; actual source acceptance conditional on normal CI.
+Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1240#issuecomment-6756979232 — Root independent exact-source review at frozen runtime SHA256 3115e87373baaec628f0f7eaa9ba8365f5190b3087c928e3073d13fc0d68b1b7; source acceptance conditional on normal CI.
 Project-contribution: makes assigned fresh repository work executable without requiring the repository to exist first, while preserving task and real risk constraints.
 
 ## Test plan and peer mechanics
@@ -54,9 +54,17 @@ Counts in final delivery are taken from the named test summaries and the configu
 
 ## Final focused receipts
 
-- `python3 hooks/_test/git_bootstrap_targets.py -v`: final exact-runtime amendment, sixteen tests pass; native-shaped init and clone each pass the actual sixteen configured Bash PreToolUse guards, then Git creates the repository. Global-template and env-template-only fixtures prove default denial and explicit empty-template repair without outside writes.
+- `python3 hooks/_test/git_bootstrap_targets.py -v`: final exact-runtime amendment, eighteen tests pass; native-shaped init and clone each pass the actual sixteen configured Bash PreToolUse guards, then Git creates the repository. Global-template and env-template-only fixtures prove default denial and explicit empty-template repair without outside writes.
 - Existing `task_keyed_gates.py`: eighty-eight pass; `git_add_risk.py`: ten pass; `reader_git_safety.py`: eighteen pass. These broader regressions preceded the final template-only amendment; affected bootstrap tests were rerun after that amendment rather than claiming the old runs used the final bytes.
-- Root independently accepted final runtime SHA256 ceadfe54a8c61a9b4c61478532d7987c2c3dbe74ca947fc1a95ec71d63f89018 after inspecting the alias, URL-rewrite and template corrections. Direct durable review receipt and final-head PR review are separate from the author's summary.
+- Root independently accepted frozen binary-query runtime SHA256 3115e87373baaec628f0f7eaa9ba8365f5190b3087c928e3073d13fc0d68b1b7 in issue comment 6756979232. The immutable-snapshot Claude peer review is still active; no verdict from it is claimed. Final-head PR review and hosted CI remain separate receipts.
 - Normal canonical refresh/check passed, followed by a current final build/build-check/source-authority check after test-only additions. Protected exact-head full CI remains separate and is pending until the draft head is published. No full hosted-suite or installed canary success is claimed early.
 
 Counts above come from the named unittest summaries and direct enumeration of settings-snippet Bash hooks, not prose-string tests. Local temporary Git creation and independence checks are the bounded canary; rollback is a normal feature revert. No live installation or state migration occurs.
+
+## Template value amendment
+
+A post-review actual private probe found that `templateDir=" "` is a real relative directory, not an empty template value. Git resolves it inside a nonempty init target and followed its objects symlink. A second actual probe showed text-mode CRLF normalization could erase a literal CR path as well. The config reader now reads binary output and removes only Git's one output newline, preserving whitespace path bytes; default use is denied and the exact empty per-command override remains the supported repair. The new real-config/guard/Git regression proves no outside writes and successful empty-template creation. This source amendment requires its own exact-source review and CI; the earlier runtime's CI cannot attest it.
+
+The same text-mode CRLF normalization could misclassify an effective clone URL ending in CR: an actual rewritten local directory was mistaken for the regular bundle file whose name lacked CR, allowing default hardlinks. Both Git configuration-derived queries now read binary stdout, remove exactly one output LF and retain path bytes; URL validation then strictly decodes UTF-8 and rejects control line endings. Actual config fixtures cover raw space/tab/CR/LF templates and the directory-versus-file clone rewrite. All prior alias, transport and empty-template boundaries remain unchanged.
+
+Frozen binary amendment validation: `/tmp/git1240-tests-final18-binary.log` records eighteen passes in 21.443 seconds; `bin/validate-local.py --mode refresh` completed successfully for the frozen source. The previous 4d9d199 hosted CI passed only the earlier runtime and does not attest this amendment.
