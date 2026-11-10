@@ -4,6 +4,20 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: resolver reads the operator's actual request (#1225)
+
+- Curly and other apostrophe-like or quotation-like characters (including low-9 quotes, the modifier-letter apostrophe and guillemets) are normalized to ASCII once, centrally, before routing, so they behave identically in every route without per-route escapes. A curly-apostrophe (U+2019) "don't write ..." therefore now triggers the read-only signal exactly as "don't write ..." always did, which can drop a load develop made for the curly form.
+- In technology verb routes, the leading sentences of a ";" clause that open with "don't" or "do not" bind only themselves: they contribute nothing (no verbs, no terms), and the rest of the clause is judged exactly as before. Develop skipped such clauses entirely, so "Don't worry about tests. Fix the spark bug that writes to a delta table." now loads its skills, while "Don't edit the SQL. Leave it as is." still loads nothing. A prohibition later in the clause is unchanged, so a guard named there ("Fix the job. Don't forget to saveAsTable.") still loads. A read-only or docs-only signal still scopes the whole clause. Known abbreviations, initials, decimals, paths and URLs do not end a sentence; the sentence scan is linear in prompt length.
+- New route keys for the two ask-questions routes, which name a conversational protocol rather than a technology:
+  - `prose_request`: quoted prose is data, so "Proofread: 'We ask questions'" no longer loads ask-questions. Contractions, common elisions ('em, 'til, 'cos, ...), decades and possessives are not quote marks. Technology and project routes keep every quotation as context (`query = "INSERT ..."`, `"release"`).
+  - `prohibition_qualifiers` (verb route only; validated): a "don't" sentence is dropped only when the whole sentence forbids nothing but a manner of asking ("Don't ask [me] [all your] questions as a group / at once / ...") and the next sentence asks another way ("Ask ...", "Please ask ..."). So "Don't ask questions as a group. Ask your questions one at a time." loads ask-questions, while bare or total prohibitions ("Don't ask questions. ...", "Don't ask questions upfront or at all.", "Don't ask questions, at once start coding.") still exclude the route, as before.
+- Known residuals, open for review (#1225):
+  - An unlisted leading apostrophe ('Specially, 'Fraid, 'Nother, or an unclosed 'Users) can pair with a later plural possessive ("users'") on the ask-questions routes and hide the request, losing a load develop makes.
+  - Dropping a leading or manner-only prohibition exposes develop's own term matching on the next sentence, so some prohibited requests gain a load: "Don't edit the SQL. I'll fix the SQL myself later." (coding, sql) and "Don't ask questions upfront. Ask questions only if you are truly blocked." (ask-questions).
+  - Manner-only prohibitions load ask-questions only when the following sentence itself carries a question term; "Don't ask questions as a group. Ask them one at a time." still loads nothing, as on develop.
+- The ask-questions manifest drops its curly-apostrophe escapes and quote-prefixed exclusions, which the central handling replaces.
+- The language-scope (51) and data-scope (78) fixture corpora route unchanged.
+
 ### Fixed: repository-owned metadata authority (#1261)
 
 - Derive metadata grants from the first repository-owned origin, including local includes and worktree-only configuration. Global origins cannot donate repository authority; legitimate global trust and authentication remain available.
@@ -131,7 +145,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
   - Matching is scoped to ";" clauses. A clause that prohibits asking ("never ask", "don't ask questions") or quotes the phrase as data is excluded without erasing a request in another clause.
   - Finish-without-asking requests ("No need to ask me any questions; just ship it.", "only ask questions if ...") do not load it.
   - A second route catches explicit one-at-a-time requests in read-only or docs-update prompts, and any negation in the prompt suppresses it.
-  - Known limits, tracked in #1225: clauses do not split at ".", so "Don't ask questions as a group. Ask your questions one at a time." is still missed, and quoted-payload exclusion is heuristic.
+  - Sentence-scoped prohibitions and quoted-prose handling are provided centrally by the resolver through the `prose_request` and `prohibition_qualifiers` route keys (#1225).
 - `strategic-agency:4` and `autonomy:2`/`autonomy:3` now defer the operator question format and sequence to the skill. The next question preempts background work, and answers reach tickets only after the last one (#1056).
 - `session-coordination:5` now defers to the skill for the question procedure and keeps only the hub rule: no answer routing or answer-based spoke briefing until the survey is finished, with running work unaffected. The per-slice release and question-grouping text is removed. Its #1231 owner-grant additions are kept in the survey rule: settled decisions are summarized with their source and conditions, and further explicit owner instructions about collecting answers are honored (#1056).
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Deterministically select task/project skills from the compact resolver manifest."""
 from __future__ import annotations
-import argparse, importlib.util, json, os, re, subprocess, sys
+import argparse, functools, importlib.util, json, os, re, subprocess, sys
 from pathlib import Path, PurePosixPath
 from typing import Any
 ROOT=Path(__file__).resolve().parents[1]
@@ -51,7 +51,86 @@ def token_match(text:str,term:str)->bool:
     before = r"[a-z0-9.]" if term.lower() in {"jsx","tsx","vue"} else r"[a-z0-9]"
     return re.search(r"(?<!"+before+r")"+re.escape(term.lower())+r"(?![a-z0-9])",text) is not None
 
+# Apostrophe-like and quotation-like code points, mapped to their ASCII forms.
+QUOTE_VARIANTS=str.maketrans({
+    **{chr(c):"'" for c in (0x2018,0x2019,0x201A,0x201B,0x2032,0x02BC,0x00B4,0xFF07)},
+    **{chr(c):'"' for c in (0x201C,0x201D,0x201E,0x201F,0x2033,0xFF02,0x00AB,0x00BB)},
+})
+# A period after one of these tokens, or after dotted initials, does not end a sentence.
+ABBREVIATIONS={"e.g","i.e","etc","vs","cf","approx","al","mr","mrs","ms","dr","jr","sr","prof",
+               "no","nos","fig","figs","st","ver","vol","pp","ch","sec","eq","ref","inc","ltd","dept"}
+TOKEN_CHARS=frozenset("abcdefghijklmnopqrstuvwxyz0123456789.")
+NEGATION_LEAD=re.compile(r"(?:do not|don't)\b")
+READ_ONLY_REQUEST=re.compile(r"\bread.only\b|\b(?:do not|don't|never)\s+(?:write|save|load|insert|register)\b|\b(?:without modifying code|documentation about|readme mentions|docs discuss|docs say)\b|\b(?:write|edit|review|update)\s+(?:docs|documentation|readme|guide)\b")
+
+def normalize_quotes(text:str)->str:
+    # Curly apostrophes and quotes behave exactly like their ASCII forms in every route.
+    return text.translate(QUOTE_VARIANTS)
+
+def strip_quoted(text:str)->str:
+    # Used only by prose-request routes. A quotation opens at the start of the text,
+    # after whitespace or after an opening bracket. A single quote opens only before a
+    # letter that does not start a common elision and closes only at a word boundary,
+    # so contractions, elisions, decades and lone possessives ("don't", "'em", "'cos",
+    # "'90s", "users'") are not quote marks.
+    text=re.sub(r'(?:^|(?<=[\s(\[{]))"[^"]*"(?![a-z0-9])'," ",text)
+    return re.sub(r"(?:^|(?<=[\s(\[{]))'(?=[a-z])(?!(?:em|til|cause|cos|coz|cuz|tis|twas|n|bout|round|kay)\b)(?:[^']|(?<=[a-z0-9])'(?=[a-z0-9]))+'(?![a-z0-9])"," ",text)
+
+def split_sentences(clause:str)->list[str]:
+    return list(_sentences(clause))
+
+@functools.lru_cache(maxsize=4096)
+def _sentences(clause:str)->tuple[str,...]:
+    # One linear pass over whitespace-separated words: a word ending in "." or "!"
+    # ends a sentence unless it is a known abbreviation or dotted initials. Decimals,
+    # paths and URLs have no whitespace after the period. Each piece keeps its own
+    # text verbatim, so joining all pieces reproduces the clause. Cached because every
+    # verb route reads the same clauses.
+    sentences=[];start=0
+    for match in re.finditer(r"\S+",clause):
+        word=match.group(0)
+        if word[-1] not in ".!":continue
+        body=word[:-1];cut=len(body)
+        while cut and body[cut-1] in TOKEN_CHARS:cut-=1
+        token=body[cut:]
+        if token in ABBREVIATIONS or re.fullmatch(r"(?:[a-z]\.)*[a-z]",token):continue
+        sentences.append(clause[start:match.end()]);start=match.end()
+    sentences.append(clause[start:])
+    return tuple(sentences)
+
+IMPERATIVE_ASK=re.compile(r"(?:(?:instead|rather|please|so),? )*(?:ask|interview)\b")
+
+def manner_prohibition(sentence:str,qualifiers:list[str])->bool:
+    # The whole sentence forbids only a manner of asking: "don't ask [me] [all your]
+    # questions|them <qualifier>". Anything more ("or at all", ", at once start
+    # coding", "together with the code", a request after a comma) is not a match.
+    manner="|".join(re.escape(q.lower()) for q in qualifiers)
+    return re.fullmatch(r"(?:do not|don't) (?:ask|send)(?: (?:me|us))?(?: (?:all|your|the|these|those|my))*"
+                        r"(?: (?:questions?|them))?(?: all)? (?:"+manner+r")[.!]?",sentence.strip()) is not None
+
+def without_prohibitions(clause:str,qualifiers:list[str]|None=None)->str:
+    # Drop sentences that open with "don't" or "do not", keeping the rest verbatim.
+    # Without qualifiers only the leading run of such sentences is dropped. With a
+    # route's qualifiers a sentence is dropped only when it forbids nothing but a
+    # manner of asking and the next sentence asks for it another way ("Don't ask
+    # questions as a group. Ask them one at a time."); every other prohibition stays.
+    sentences=split_sentences(clause);kept=[];leading=True
+    for index,sentence in enumerate(sentences):
+        prohibition=NEGATION_LEAD.match(sentence.strip()) is not None
+        if qualifiers is None:
+            if leading and prohibition:continue
+            leading=leading and (prohibition or not sentence.strip())
+        elif prohibition and manner_prohibition(sentence,qualifiers):
+            following=next((s.strip() for s in sentences[index+1:] if s.strip()),"")
+            if IMPERATIVE_ASK.match(following):continue
+        kept.append(sentence)
+    return "".join(kept)
+
 def route_matches(route:dict[str,Any],text:str)->list[str]:
+    # A prose-request route names a conversational protocol rather than a technology:
+    # quoted prose is data for it. Technology routes keep every quotation as context.
+    prose=route.get("prose_request")
+    if prose:text=strip_quoted(text)
     # A map's input geometry is not proof of a geometry transformation.
     if route.get("exclude_pure_visualization") and re.search(r"\b(?:choropleth|visualization|arcgis map|map rendering)\b",text) and not re.search(r"\b(?:spatial join|sjoin|overlay|reproject|geoparquet|crs|geometry transform|geometry repair|st_[a-z]+)\b",text):
         return []
@@ -65,11 +144,16 @@ def route_matches(route:dict[str,Any],text:str)->list[str]:
         if continuation and token_match(lead, route["all_terms"][0]) and any(token_match(lead, verb) for verb in route.get("verbs",[])) and not re.match(r"^(?:what|why|which|explain|tell me|how does|how do i|how to|is it|do not|don't)\b",lead):
             reasons.append("compound:"+"+".join(route["all_terms"]))
     for clause in clauses:
-        clause=clause.strip()
+        clause=whole=clause.strip()
+        if route.get("verbs"):
+            # A prohibition binds only its own sentence, which then contributes nothing
+            # (neither verbs nor terms); the rest of the clause is judged as before. A
+            # read-only signal still scopes the whole clause.
+            clause=without_prohibitions(whole,route.get("prohibition_qualifiers")).strip()
         if any(token_match(clause,term) for term in route.get("exclude_terms",[])):
             continue
         if route.get("verbs"):
-            if re.match(r"^(?:what|why|which|explain|tell me|how does|how do i|how to|is it|do not|don't)\b",clause) or re.search(r"\bread.only\b|\b(?:do not|don't|never)\s+(?:write|save|load|insert|register)\b|\b(?:without modifying code|documentation about|readme mentions|docs discuss|docs say)\b|\b(?:write|edit|review|update)\s+(?:docs|documentation|readme|guide)\b",clause):
+            if re.match(r"^(?:what|why|which|explain|tell me|how does|how do i|how to|is it|do not|don't)\b",clause) or READ_ONLY_REQUEST.search(whole):
                 continue
             if not any(token_match(clause, verb) for verb in route["verbs"]):
                 continue
@@ -110,7 +194,11 @@ def validate_manifest(manifest:dict[str,Any],known:dict[str,Any])->None:
     for route in all_routes:
         ids.append(route["id"])
         if not route.get("terms") and not route.get("suffixes"):raise ValueError(f"route has no signals: {route['id']}")
-        for key in ("verbs","context_terms","all_terms","exclude_terms"):
+        if "prose_request" in route and not isinstance(route["prose_request"],bool):
+            raise ValueError(f"invalid prose_request flag: {route['id']}")
+        if "prohibition_qualifiers" in route and not route.get("verbs"):
+            raise ValueError(f"prohibition qualifiers need a verb route: {route['id']}")
+        for key in ("verbs","context_terms","all_terms","exclude_terms","prohibition_qualifiers"):
             if key in route and (not isinstance(route[key],list) or not route[key] or not all(isinstance(v,str) and v for v in route[key])):
                 raise ValueError(f"invalid {key} gate: {route['id']}")
         if "exclude_pure_visualization" in route and not isinstance(route["exclude_pure_visualization"],bool):
@@ -136,6 +224,7 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
         spec=importlib.util.spec_from_file_location("procedure_composition",Path(__file__).with_name("procedure_composition.py"))
         module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
         composition=module.graph_from_manifest(manifest,inventory,norm_repo(repo))
+    prompt=normalize_quotes(prompt)
     # An explicit task/code heading owns its next line; unrelated lines remain
     # separate clauses so README notes cannot borrow an earlier action verb.
     prompt=re.sub(r"(?im)^\s*(implement(?: the following)?|review this code|write the following|analyze the following)\s*:\s*\n",r"\1: ",prompt)

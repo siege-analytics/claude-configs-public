@@ -69,10 +69,99 @@ def main():
   "Ask exactly one question per turn",
  ):
   assert required in skill_text,required
- # Known miss, tracked in #1225: clauses split only on ";", "?" and newlines, so a "Don't ..." sentence and a
- # request joined by "." form one clause that the verb guard skips. Quoted-payload exclusion is likewise
- # heuristic until #1225. This pins today's behaviour; when #1225 lands, move the prompt to the positive cases.
- assert not asks("Don't ask questions as a group. Ask your questions one at a time."),"#1225 landed: move this prompt to the positive cases"
+ # Matcher-level request reading (#1225). On the ask-questions prose-request routes a sentence that opens
+ # with "don't"/"do not" binds only itself and quoted prose is data; curly quotes equal ASCII everywhere.
+ curly="Don"+chr(0x2019)+"t"
+ for prompt in (
+  "Don't ask questions as a group. Ask your questions one at a time.",
+  "It's late. Ask me questions one at a time.","Ask me questions one at a time, e.g. about naming.",
+  "Ask me questions one at a time. Don't ask them all at once.",
+  "Don't ask me all your questions at once. Please ask one question at a time.",
+  "Interview me about the design. Do not send questions together, ask one question at a time.",
+  "Give 'em a break and ask me questions one at a time about the analysts' budget.",
+  "'Cos you're new here, ask me questions one at a time about the users' table.",
+  curly+" ask them all at once; ask me questions one at a time.",
+ ):
+  assert asks(prompt),prompt
+ for prompt in (
+  "Proofread: 'We ask questions'","Proofread: \"ask me questions one at a time\"",
+  "Translate "+chr(0x201C)+"ask me questions"+chr(0x201D)+" into French.",
+  "Proofread: "+chr(0x201E)+"we ask questions"+chr(0x201C),
+  "Proofread the banner text (\"ask me questions one at a time\") for typos.",
+  curly+" ask questions; just do it.",curly+" ask, just do it.","Don"+chr(0x02BC)+"t ask questions; just do it.",
+  "Please don't ask questions as a group. Ask them one at a time.","Don't ask questions one at a time. Just do it.",
+  "Don't ask questions. The reviewer will ask questions one at a time.",
+  "Do not ask me anything. Just ship it. I will ask questions in review.",
+  # A qualifier word in a bare or total prohibition, or without a following request, keeps the prohibition.
+  "Don't ask questions, at once start coding. Ask questions never.",
+  "Don't ask questions upfront or at all. If I want you to ask questions, I'll say so.",
+  "Don't ask questions together with the code. Nobody will answer if you ask me questions.",
+  "Don't ask questions at once. Just start. I'll answer one question at a time if needed.",
+  "Ask me questions one at a time. Don't ask questions as a group.",
+ ):
+  assert not asks(prompt),prompt
+ for ascii_form in ("Don't ask questions; just do it.","Don't ask them all at once; ask me questions one at a time.","Don't ask, just do it."):
+  assert asks(ascii_form)==asks(ascii_form.replace("'",chr(0x2019))),ascii_form
+ # Technology and project routes keep every sentence and quotation as context, so their selections only
+ # gain: a guard named inside a "don't" sentence or a quotation still loads, and a leading "don't"
+ # sentence no longer hides the request after it. A clause of prohibitions alone loads nothing, and a
+ # read-only signal still scopes its whole clause, both as before.
+ def slugs(prompt,repo="other/repo"):
+  return sorted(x["slug"] for x in M.select(manifest,inventory,prompt,repo)["selected"])
+ for prompt,expected,repo in (
+  ("Fix this bug. The pyspark job writes to a delta table.",["databricks","spark","unity-catalog"],"other/repo"),
+  ("Here is my geopandas code. Please debug it.",["geopandas","spatial"],"other/repo"),
+  ("Please run the job. Don't forget to saveAsTable into the unity catalog.",["databricks","unity-catalog"],"other/repo"),
+  ("Fix the spark job. Don't touch the delta table.",["databricks","unity-catalog"],"other/repo"),
+  ('Fix this code: query = "INSERT OVERWRITE TABLE t SELECT 1"',["coding","sql","unity-catalog"],"other/repo"),
+  ("Write f('a', 'INSERT INTO t') for spark",["unity-catalog"],"other/repo"),
+  ('Implement the "release" step and "deploy" to prod.',["develop-guard"],"other/repo"),
+  ('Open a PR titled "Fix rust parser" and merge it.',["coding","rust"],"other/repo"),
+  ('Add tests for the "error path" in geocode and check its "return type".',["siege-utilities--error-path-tests","siege-utilities--notebook-impact","siege-utilities--rules"],"github.com/siege-analytics/siege_utilities"),
+  ("Fix item No. 5 in the sql query.",["coding","sql"],"other/repo"),
+  ("Don't worry about tests. Fix the spark bug that writes to a delta table.",["databricks","unity-catalog"],"other/repo"),
+  ("Don't forget saveAsTable.",[],"other/repo"),
+  ("Don't fix the pyspark job that writes to a delta table.",[],"other/repo"),
+  ("Don't edit the SQL. Leave it as is.",[],"other/repo"),
+  ("Don't run or modify the pyspark job. Just summarize what it does.",[],"other/repo"),
+  ("Don't write to the catalog. Fix the pyspark job that writes to a delta table.",[],"other/repo"),
+ ):
+  assert slugs(prompt,repo)==expected,(prompt,slugs(prompt,repo))
+ assert M.split_sentences("use e.g. spark and i.e. delta. then write v3.5 to foo.py at example.com/a.b now")==["use e.g. spark and i.e. delta."," then write v3.5 to foo.py at example.com/a.b now"]
+ assert M.split_sentences("the u.s. team. fig. 2 next")==["the u.s. team."," fig. 2 next"]
+ assert M.without_prohibitions("don't use spark. do not edit. fix it. don't touch x.")==" fix it. don't touch x."
+ assert M.without_prohibitions("don't ask questions as a group. ask one at a time. don't ask.",["as a group"])==" ask one at a time. don't ask."
+ assert M.without_prohibitions("don't ask questions as a group. just start.",["as a group"])=="don't ask questions as a group. just start."
+ assert M.manner_prohibition("don't ask me all your questions at once.",["at once"])
+ assert not M.manner_prohibition("don't ask questions, at once start coding.",["at once"])
+ assert not M.manner_prohibition("don't ask questions upfront or at all.",["upfront"])
+ # The new route keys are validated like the existing gates.
+ known_items={i["slug"]:i for i in inventory["items"]}
+ def rejects(route_id,key,bad):
+  broken=json.loads(json.dumps(manifest))
+  next(r for r in broken["routes"] if r["id"]==route_id)[key]=bad
+  try:M.validate_manifest(broken,known_items)
+  except ValueError as error:return str(error)
+  return ""
+ for route_id,key,bad in (("ask-questions","prose_request","yes"),("ask-questions","prohibition_qualifiers","at once"),
+                          ("ask-questions","prohibition_qualifiers",[]),("ask-questions-explicit","prohibition_qualifiers",["at once"])):
+  assert route_id in rejects(route_id,key,bad),(route_id,key,bad)
+ assert M.strip_quoted("don't ask 'it's data' now")=="don't ask   now"
+ assert M.strip_quoted("the users' data stays")=="the users' data stays"
+ assert M.strip_quoted("the '90s job for the analysts' team")=="the '90s job for the analysts' team"
+ assert M.strip_quoted("give 'em a break and ask for the users' budget")=="give 'em a break and ask for the users' budget"
+ assert M.strip_quoted('the banner ("ask me") now')=="the banner ( ) now"
+ assert M.normalize_quotes(chr(0x2018)+"a"+chr(0x2019)+" "+chr(0x201C)+"b"+chr(0x201D)+" "+chr(0x201E)+"c"+chr(0x02BC))=="'a' \"b\" \"c'"
+ code=M.select(manifest,inventory,'spark.sql("INSERT OVERWRITE TABLE analytics.daily_events SELECT * FROM src")',"other/repo")
+ assert code["state"]=="matched" and "unity-catalog" in [x["slug"] for x in code["selected"]],code
+ patch=M.select(manifest,inventory,"How to write Delta to S3? Please implement the patch.","other/repo")
+ assert "unity-catalog" in [x["slug"] for x in patch["selected"]],patch
+ # Reading a pasted document stays linear: the resolver hook has a 5 second timeout.
+ started=time.time()
+ M.select(manifest,inventory,"The pipeline loads the daily events table and writes results to the warehouse. "*1600,"other/repo")
+ M.select(manifest,inventory,"a. "*17000,"other/repo")
+ M.select(manifest,inventory," 'a'a"*30000+" \"a"*30000,"other/repo")
+ assert time.time()-started<5,time.time()-started
  for token in ("[skill:ask-questions]","/ask-questions"):
   explicit_ask=M.select(manifest,inventory,token,"other/repo")
   assert [x["slug"] for x in explicit_ask["selected"]]==["ask-questions"],(token,explicit_ask)
