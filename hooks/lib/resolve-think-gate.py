@@ -269,19 +269,34 @@ def _git_origin(path: str, *, git_environment: Optional[dict] = None) -> str:
         return ""
 
 
-def _target_repo(path: str, *, git_environment: Optional[dict] = None) -> str:
+def _nearest_directory(path: str) -> str:
+    """The canonical nearest existing directory at or above path, or ''."""
     directory = canonical(path)
     while not os.path.isdir(directory):
         parent = os.path.dirname(directory)
         if parent == directory:
             return ""
         directory = parent
+    return directory
+
+
+def _toplevel(directory: str, *, git_environment: Optional[dict] = None) -> tuple[str, bool]:
+    """(toplevel or '', definitive). Only git's own exit status is definitive.
+    A timeout, launch failure or signal-killed git (negative return code) is
+    not, so callers must not reuse it for other targets."""
     try:
         return canonical(subprocess.check_output(
             ["git", "-C", directory, "rev-parse", "--show-toplevel"],
-            text=True, stderr=subprocess.DEVNULL, timeout=3, env=git_environment).strip())
+            text=True, stderr=subprocess.DEVNULL, timeout=3, env=git_environment).strip()), True
+    except subprocess.CalledProcessError as error:
+        return "", error.returncode > 0
     except Exception:
-        return ""
+        return "", False
+
+
+def _target_repo(path: str, *, git_environment: Optional[dict] = None) -> str:
+    directory = _nearest_directory(path)
+    return _toplevel(directory, git_environment=git_environment)[0] if directory else ""
 
 
 def _scope_diagnostic(gate: dict, expected_repo: str, *, git_environment: Optional[dict] = None) -> str:
@@ -579,21 +594,46 @@ def select_task(workspace: str, paths: list[str], binding: str = "", session_id:
     binding = binding or task_binding()
     if binding:
         candidates = [g for g in candidates if task_identity(g["data"]) == binding]
+    # Long literal operand lists must not cost git subprocesses per target.
+    # Within this one resolution, a toplevel depends only on the canonical
+    # nearest existing directory and an identity verdict only on its exact
+    # repository pair, so each is asked once. Non-definitive git failures are
+    # retried per target.
+    toplevels: dict[str, str] = {}
+    identities: dict[tuple[str, str], bool] = {}
+
+    def expected_repo_of(path: str) -> str:
+        directory = _nearest_directory(path)
+        if not directory:
+            return ""
+        if directory not in toplevels:
+            toplevel, definitive = _toplevel(directory, git_environment=git_environment)
+            if not definitive:
+                return toplevel
+            toplevels[directory] = toplevel
+        return toplevels[directory]
+
+    def same_repo(declared: str, expected: str) -> bool:
+        if (declared, expected) not in identities:
+            identities[(declared, expected)] = _same_repo(declared, expected, git_environment=git_environment)
+        return identities[(declared, expected)]
+
     selected = []
     for path in paths:
         scores = []
         rejected = []
-        expected_repo = _target_repo(path, git_environment=git_environment)
+        expected_repo = expected_repo_of(path)
         for gate in candidates:
             declared = str(gate["data"].get("repo_root", ""))
-            if declared and expected_repo and not _same_repo(declared, expected_repo, git_environment=git_environment):
-                rejected.append(_scope_diagnostic(gate, expected_repo, git_environment=git_environment))
+            if declared and expected_repo and not same_repo(declared, expected_repo):
+                rejected.append(gate)  # Diagnosed only if this target ends unowned.
                 continue
             matching = [len(p.split(os.sep)) for p in _scopes(gate) if _within(path, p)]
             if matching:
                 scores.append((max(matching), gate))
         if not scores:
-            return {"gate": None, "error": "Unscoped mutation: open a task gate with scope_paths for this action.\n" + task_bootstrap_help(workspace, session_id) + ("\n" + "\n".join(rejected) if rejected else "")}
+            diagnostics = [_scope_diagnostic(gate, expected_repo, git_environment=git_environment) for gate in rejected]
+            return {"gate": None, "error": "Unscoped mutation: open a task gate with scope_paths for this action.\n" + task_bootstrap_help(workspace, session_id) + ("\n" + "\n".join(diagnostics) if diagnostics else "")}
         best = max(s for s, _ in scores)
         winners = [g for score, g in scores if score == best]
         if len(winners) != 1:
