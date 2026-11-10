@@ -4,6 +4,10 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: descriptive PR-creation bodies
+
+- A sole literal `gh pr create` description no longer triggers coordinator completion/blocker wording checks. PR creation remains an ordinary authorized Task/code/topology action; its review, scope and existing explicit-action controls are unchanged, and composed commands gain no reporting exemption (#1260).
+
 ### Fixed: task-owned worktree materialization
 
 - Bounded explicit-source `git worktree add` under its own Task uses actual branch and working changes for review risk, with at least Tier B. Unchanged checked-out workflow/release files no longer impose Tier C by themselves. Assigned sibling destinations retain ordinary ownership checks; actual risky changes, risky destination paths, declared Tier C and unavailable Git evidence retain their floor. Normal new branches still require develop; existing-branch and detached review keep their separate source rules. Unsupported forms and unproven clones gain no exemption (#1171).
