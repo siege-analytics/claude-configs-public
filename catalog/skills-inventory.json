@@ -6138,10 +6138,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 32814,
-      "content_sha256": "c77b57bf264a71b727f20971741a3decb9a8c9d036502b92ad88067029126203",
+      "characters": 33092,
+      "content_sha256": "ed199a4acfc41c1cd35d9a9c87a4ffefc781963f79a20076d05a7284be071dd0",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 8204,
+      "estimated_tokens": 8273,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6363,10 +6363,10 @@
     },
     {
       "canonical_source": "skills/_standing-approval-rules.md",
-      "characters": 13739,
-      "content_sha256": "7638dcdf0237866d3c819d5cd466696ab3d653e430f2f8d408cf03930ffc4672",
+      "characters": 15946,
+      "content_sha256": "607a2bb6dec2bc768458d42976c58316cd462bedd05514ca054e78127d96d182",
       "description": "Always-on. How to interpret instructions that say \"do X when ready,\" \"merge when reviewed,\" \"ship when done,\" or any other conditional gate. \"Ready\" is defined by the process, not by the receiver of the instruction. Standing approvals delegate the TIMING of action upon readiness; they never delegate the JUDGMENT of what readiness means.",
-      "estimated_tokens": 3435,
+      "estimated_tokens": 3987,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_standing-approval-rules.md",
@@ -6383,6 +6383,7 @@
         "docs/post-mortems/2026-06-09-pour-now-engagement.md",
         "skills/RESOLVER.md",
         "skills/_prospective-memory-rules.md",
+        "skills/_session-coordination-rules.md",
         "skills/_tandem-agent-rules.md",
         "skills/engagement-post-mortem/SKILL.md",
         "skills/merge/SKILL.md",
@@ -6392,7 +6393,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 94,
+      "lines": 106,
       "owner": [
         "unknown"
       ],
@@ -6575,10 +6576,10 @@
     },
     {
       "canonical_source": "skills/_tandem-agent-rules.md",
-      "characters": 6763,
-      "content_sha256": "9eb073c1f7c8079103491794cc9d74f63da9cc83b160d6ae90baca8f4687cbb8",
+      "characters": 7385,
+      "content_sha256": "0c306ee38e0df5e01d53f7b35de78587a77fe625d79c1771a31fff6c144d87e9",
       "description": "Always-on. Rules for coordinator, reviewer, and implementer agents working in tandem. Requires explicit role contracts, active collaborator supervision, review-only boundaries, authorization gates before role changes, durable handoffs, and re-review after implementation. No override flag except explicit operator authorization recorded in the work item or coordinator message.",
-      "estimated_tokens": 1691,
+      "estimated_tokens": 1847,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_tandem-agent-rules.md",
@@ -12927,9 +12928,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2637151,
+    "characters": 2640258,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 659366,
+    "estimated_tokens": 660143,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -12950,7 +12951,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1240757
+      "unclassified": 1243864
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12962,7 +12963,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 310232
+      "unclassified": 311009
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
