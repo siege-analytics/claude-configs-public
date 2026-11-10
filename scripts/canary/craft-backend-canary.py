@@ -401,18 +401,30 @@ def tree_digest(root: Path, *, canonical_package: bool = False) -> str:
 
 
 def materialize_source(manifest: dict[str, Any], destination: Path) -> None:
+    require(not destination.is_symlink(), "source destination must not be symlinked")
+    require(not destination.exists() or destination.is_dir() and not any(destination.iterdir()),
+            "source destination must be absent or an empty directory")
     repo = Path(__file__).resolve().parents[2]
     revision = manifest["pins"]["source_revision"]
     listing = subprocess.check_output(["git", "ls-tree", "-r", "--full-tree", revision], cwd=repo, timeout=120)
     require(sha256_bytes(listing) == manifest["pins"]["source_tree_sha256"], "source tree digest mismatch")
-    clone = subprocess.run(
-        ["git", "clone", "--no-hardlinks", "--no-checkout", str(repo), str(destination)],
+    initialize = subprocess.run(
+        ["git", "init", "--quiet", str(destination)],
         text=True,
         capture_output=True,
         check=False,
         timeout=120,
     )
-    require(clone.returncode == 0, f"source clone failed: {clone.stderr.strip()}")
+    require(initialize.returncode == 0, f"source initialization failed: {initialize.stderr.strip()}")
+    # Import only the pinned commit's historical closure. A clone of today's
+    # complete repository adds future objects that can change old builders'
+    # abbreviated source identifiers without changing their pinned source.
+    fetch = subprocess.run(
+        ["git", "-C", str(destination), "fetch", "--no-tags", "--no-recurse-submodules",
+         "--refmap=", str(repo), revision],
+        text=True, capture_output=True, check=False, timeout=120,
+    )
+    require(fetch.returncode == 0, f"source fetch failed: {fetch.stderr.strip()}")
     run_git(["checkout", "--detach", revision], cwd=destination)
     require(run_git(["rev-parse", "HEAD"], cwd=destination) == revision, "materialized source revision mismatch")
     build = subprocess.run(
