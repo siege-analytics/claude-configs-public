@@ -32,7 +32,11 @@ Wording adaptations for coordinator-status-guard on the posted comment (faithful
 
 ## Assumptions
 
-- Goal source: #1165 AC1-AC3 and its QA step (replay the #1057 harness).
+Goal source: #1165 (AC1-AC3 and its QA step: replay the #1057 harness)
+Working as: software engineer, with a tech lead pass for the Lead review
+Pre-author-inventory: https://github.com/siege-analytics/claude-configs-public/issues/1165#issuecomment-6771029409 (investigation fact sheet, read from origin/develop b2c4fcf)
+Investigate-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1165#issuecomment-6771029409
+
 - gh parses flags with pflag. A long option that takes a value consumes the next word as its value, whatever that word looks like, so a value word cannot become an option. The codebase already relies on this model in `gh_ok` (value-taking short options `H p q t R J L S B`).
 - A double-quoted word is one word after expansion: no word splitting, no globbing.
 - The fix is confined to the read classifier. `_action()` and the target parser are unchanged, so commands the classifier does not prove keep their current refusal.
