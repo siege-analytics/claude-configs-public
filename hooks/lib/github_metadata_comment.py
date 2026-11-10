@@ -76,7 +76,7 @@ def metadata_comment(command, cwd, *, details=None):
         else:
             return None  # Unmodeled single-command flags keep the existing route.
         i += 1
-    url = re.fullmatch(r'https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/(issues|pull)/([1-9][0-9]*)', target or '')
+    url = re.fullmatch(r'https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/(issues|pull)/([0-9]+)', target or '')
     repository = values.get('repo', '')
     repo_match = re.fullmatch(r'(?:github\.com/)?([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)', repository, re.I) if repository else None
     if repository and not repo_match:
@@ -89,8 +89,14 @@ def metadata_comment(command, cwd, *, details=None):
     if verb == 'create':
         if target is not None or not values.get('title', '').strip():
             return None
-    elif target is None or not re.fullmatch(r'[1-9][0-9]*', target):
+    elif target is None or not re.fullmatch(r'#?\+?[0-9]+', target):
         return None  # Other existing target forms retain their original checks.
+    if target is not None:
+        # gh parses numeric selectors with an optional #/+ and leading zeros.
+        # Canonicalize the identity, without changing the actual command bytes.
+        target = target.removeprefix('#').removeprefix('+').lstrip('0')
+        if not target:
+            return False
     if 'body' in values and 'file' in values:
         return False
     if not ({'body', 'file'} & values.keys()):
