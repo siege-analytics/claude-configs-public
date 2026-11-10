@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### BREAKING: unsupported copy flags no longer imply a scoped copy
+
+- Unknown `cp` options now fail closed instead of silently inheriting destination scope (#1236). Migrate to modeled flags such as `-pR`, macOS `-ac`/`-RX`, or `-RL`, with an explicit final destination. `-L` dereferences symlinks and changes preservation semantics; use it only when that is the intended copy. Preserved alias endpoints and move sources still require their real scope. A genuine inspection-budget failure names the limitation instead of inventing a whole-source write requirement.
+
+### Fixed: preservation copies and Git bundle inspection
+
+- Large ordinary copy inputs remain reads, including 19,033-entry preservation trees. Preserved symlinks count their actual canonical endpoints, not every source operand; own-data sources cannot hide an outside alias (#1236, #1238). Suffix values remain data rather than link/dereference flags. Existing destination checks and hardlink protections remain.
+- Literal `git bundle list-heads`, `git bundle verify` and bounded `git fsck` integrity checks are reads. Bundle creation/unpacking, fsck `--lost-found`, unknown/output flags and composed writes retain their normal mutation checks (#1236).
+
 ### Fixed: task scopes and evidence execution
 
 - Add a GitHub issue to an approved project through the exact current task and a source-owned standing policy, without inventing a filesystem target. Other issues, projects, destructive operations and arbitrary API writes remain guarded (#1161).

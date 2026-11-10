@@ -17,6 +17,7 @@ import shlex
 import stat
 import subprocess
 import sys
+import time
 
 
 class UnknownShape(ValueError):
@@ -336,44 +337,99 @@ def _long_option_matches(token: str, names) -> bool:
 
 def _cp_link_copy(tokens) -> bool:
     """cp -l/-s and their long forms make the destination another name (#1100)."""
+    skip = False
     for t in tokens:
+        if skip:
+            skip = False
+            continue
         if t == '--':
             break
+        if t == '--suffix' or t.startswith('-') and not t.startswith('--') and t.find('S') == len(t) - 1:
+            skip = True
         if t.startswith('--'):
             if _long_option_matches(t, ('--link', '--symbolic-link')):
                 return True
-        elif t.startswith('-') and t != '-' and ('l' in t[1:] or 's' in t[1:]):
+        elif t.startswith('-') and t != '-' and any(c in t[1:].split('S', 1)[0] for c in 'ls'):
             return True
     return False
 
 
-def _cp_keeps_symlinks(tokens) -> bool:
-    """Options under which cp copies a symlink as a symlink."""
-    for t in tokens:
-        if t == '--':
+def _cp_option(token):
+    """Modeled flags: c/reflink clone independent bytes; X omits metadata, not scope.
+
+    Destination-changing forms stay separately rejected.
+    """
+    if token.startswith('--'):
+        name, sep, value = token.partition('=')
+        plain = {'--archive', '--recursive', '--dereference', '--no-dereference',
+                 '--link', '--symbolic-link', '--force', '--interactive', '--no-clobber',
+                 '--verbose', '--one-file-system', '--no-target-directory', '--backup'}
+        valued = {'--suffix', '--preserve', '--no-preserve', '--reflink', '--sparse', '--backup'}
+        if name not in plain | valued or sep and name not in valued:
+            raise UnknownShape('unsupported copy option; use explicit source/destination and modeled flags')
+    elif any(c not in 'abcdfHilLnpPRruvxTX' for c in token[1:].split('S', 1)[0]):
+        raise UnknownShape('unsupported copy option; use explicit source/destination and modeled flags')
+
+
+def _cp_symlink_mode(tokens):
+    """Follow-all creates no symlink aliases; H follows only command-line links."""
+    mode, recursive, skip = None, False, False
+    for token in tokens:
+        if skip:
+            skip = False
+            continue
+        if token == '--':
             break
-        if t.startswith('--'):
-            if _long_option_matches(t, ('--no-dereference', '--recursive', '--archive')) or (
-                    _long_option_matches(t, ('--preserve',)) and ('links' in t or 'all' in t)):
-                return True
-        elif t.startswith('-') and t != '-' and any(c in t[1:] for c in 'PdrRa'):
-            return True
-    return False
+        if token == '--suffix' or token.startswith('-') and not token.startswith('--') and token.find('S') == len(token) - 1:
+            skip = True
+        if token.startswith('--'):
+            name = token.split('=', 1)[0]
+            if name in {'--archive', '--no-dereference'}:
+                mode = 'P'
+            elif name == '--dereference':
+                mode = 'L'
+            recursive |= name in {'--archive', '--recursive'}
+        elif token.startswith('-'):
+            for flag in token[1:].split('S', 1)[0]:
+                if flag in 'aRr':
+                    recursive = True
+                if flag in 'ad':
+                    mode = 'P'
+                elif flag in 'HLP':
+                    mode = flag
+    return mode if mode is not None else ('P' if recursive else 'L')
 
 
-def _has_symlink(path: str, limit: int = 2000) -> bool:
-    """A symlink at or under path; past `limit` entries, assume one."""
-    if os.path.islink(path):
-        return True
-    if not os.path.isdir(path):
-        return False
-    seen = 0
-    for root, dirs, files in os.walk(path):
-        for name in dirs + files:
-            seen += 1
-            if seen > limit or os.path.islink(os.path.join(root, name)):
-                return True
-    return False
+def _copy_alias_targets(sources, options, cwd):
+    """Preserved symlink endpoints are aliases; ordinary source entries are reads."""
+    mode = _cp_symlink_mode(options)
+    if mode == 'L':
+        return []
+    targets, seen, deadline = [], 0, time.monotonic() + 10
+    def inspect(path):
+        nonlocal seen
+        seen += 1
+        if seen > 100000 or time.monotonic() > deadline:
+            raise UnknownShape('copy source alias inspection budget exceeded; split the copy or use cp -RL '
+                               '(dereferences symlinks, changing preservation semantics); source reads need no write scope')
+        try:
+            link = stat.S_ISLNK(os.lstat(path).st_mode)
+        except OSError as error:
+            raise UnknownShape('cannot inspect preserved copy alias entry; source is not proven safe') from error
+        if link:
+            targets.append(canonical(path))
+        return link
+    def unreadable(error):
+        raise UnknownShape('cannot inspect preserved copy aliases; use a readable source or explicit cp -RL') from error
+    for source in sources:
+        path = os.path.join(cwd, source)
+        if mode != 'H' and inspect(path):
+            continue  # preserving the root symlink copies no target descendants
+        if os.path.isdir(path):
+            for root, dirs, files in os.walk(path, onerror=unreadable, followlinks=False):
+                for name in dirs + files:
+                    inspect(os.path.join(root, name))
+    return targets
 
 
 def _copy_destinations(sources, destination, options, cwd):
@@ -1293,6 +1349,8 @@ def _action(command: str, cwd: str) -> dict:
                     if args[0] in {'cp', 'mv'} and (token == '-t' or _long_option_matches(token, ('--target-directory',))
                                                    or (not token.startswith('--') and 't' in token[1:])):
                         raise UnknownShape('use explicit final copy destination')
+                    if args[0] == 'cp':
+                        _cp_option(token)
                     if token == '--reference' or token.startswith('--reference='):
                         has_reference = True
                     elif '/' in token:
@@ -1301,15 +1359,16 @@ def _action(command: str, cwd: str) -> dict:
                         option_paths.append(token.split('=', 1)[1] if token.startswith('--') and '=' in token else token[token.index('/'):])
                     if token in value_options or args[0] in {'cp', 'mv'} and _long_option_matches(token, ('--suffix',)) and '=' not in token:
                         skip = True
-                    elif args[0] in {'cp', 'mv'} and not token.startswith('--') and token.endswith('S'):
-                        skip = True  # a short cluster such as -aS takes the next token
+                    elif not token.startswith('--') and (args[0] == 'cp' and token.find('S') == len(token) - 1
+                                                           or args[0] == 'mv' and token.endswith('S')):
+                        skip = True  # only a final option S consumes the next token for cp
                 copied_directories = []
                 if args[0] in {'cp', 'mv'} and len(operands) >= 2:
                     sources, destination = operands[:-1], operands[-1]
                     targets, copied_directories = _copy_destinations(sources, destination, args[1:], effective)
-                    source_writes = (args[0] == 'mv' or _cp_link_copy(args[1:]) or
-                                     _cp_keeps_symlinks(args[1:]) and any(_has_symlink(os.path.join(effective, x)) for x in sources))
-                    operands = (sources if source_writes else []) + targets
+                    source_writes = args[0] == 'mv' or _cp_link_copy(args[1:])
+                    aliases = [] if source_writes else _copy_alias_targets(sources, args[1:], effective)
+                    operands = (sources if source_writes else aliases) + targets
                     directory_paths.extend(copied_directories)
                 elif args[0] in {'chmod', 'chown'} and not has_reference:
                     operands = operands[1:]  # the first operand is the mode/owner
