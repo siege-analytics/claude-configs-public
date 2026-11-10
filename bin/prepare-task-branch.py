@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""Create an isolated task worktree from develop, refreshing when available.
+
+A missing remote develop is bootstrapped with create-if-absent compare-and-swap.
+Existing branches, active worktrees, default branch and deployment targets are
+never changed. This is the normal development route, not a release-backport tool.
+"""
+from __future__ import annotations
+
+import argparse
+import pathlib
+import re
+from urllib.parse import unquote, urlsplit
+import subprocess
+import sys
+import uuid
+
+
+class PreparationError(RuntimeError):
+    pass
+
+
+def git(repo, *args, allowed=(0,), config=()):
+    result = subprocess.run(['git', '-C', str(repo), *config, *args], text=True, capture_output=True)
+    if result.returncode not in allowed:
+        raise PreparationError(f"git {args[0]} failed; inspect the selected remote locally")
+    return result.stdout.strip()
+
+
+def remote_heads(repo, remote, *names, config=()):
+    output = git(repo, 'ls-remote', '--heads', '--', remote, *('refs/heads/' + n for n in names), config=config)
+    heads = {}
+    for line in output.splitlines():
+        sha, ref = line.split('\t', 1)
+        heads[ref.removeprefix('refs/heads/')] = sha
+    return heads
+
+
+def endpoint_identity(repo, endpoint):
+    """Compare repository identity, allowing GitHub HTTPS/SSH transport pairs."""
+    scp = re.fullmatch(r'(?:[^/@:]+@)?github\.com:(.+)', endpoint, re.IGNORECASE)
+    if scp:
+        path = scp.group(1)
+    else:
+        parsed = urlsplit(endpoint)
+        if parsed.hostname and parsed.hostname.lower() == 'github.com':
+            if parsed.scheme not in {'https', 'ssh'} or parsed.query or parsed.fragment:
+                return ('literal', endpoint)
+            if parsed.port not in {None, 443 if parsed.scheme == 'https' else 22}:
+                return ('literal', endpoint)
+            path = parsed.path.lstrip('/')
+        elif parsed.scheme == 'file' and parsed.netloc in {'', 'localhost'}:
+            return ('local', str(pathlib.Path(unquote(parsed.path)).resolve()))
+        elif not parsed.scheme and ':' not in endpoint:
+            return ('local', str((repo / endpoint).resolve()))
+        else:
+            return ('literal', endpoint)
+    path = path.removesuffix('/').lower().removesuffix('.git')
+    if not re.fullmatch(r'[^/]+/[^/]+', path):
+        return ('literal', endpoint)
+    return ('github', path)
+
+
+def refresh(repo, endpoint, remote, branch='*', config=()):
+    # Ignore remote.fetch, fetch.prune and tag settings: only this remote's
+    # tracking namespace may be updated, never another task's local branch.
+    git(repo, 'fetch', '--no-tags', '--no-prune', '--refmap=', '--', endpoint,
+        '+refs/heads/' + branch + ':refs/remotes/' + remote + '/' + branch, config=config)
+
+
+def prepare(repo, branch, worktree, remote='origin'):
+    repo = pathlib.Path(repo).resolve()
+    worktree = pathlib.Path(worktree).resolve()
+    git(repo, 'check-ref-format', '--branch', branch)
+    if remote.startswith('-') or remote not in git(repo, 'remote').splitlines():
+        raise PreparationError('select a configured repository remote, not an arbitrary URL')
+    git(repo, 'check-ref-format', 'refs/remotes/' + remote + '/ccp-probe')
+    if branch in {'main', 'master', 'develop'}:
+        raise PreparationError('choose a unique task branch, not a protected branch')
+    # Preflight before remote mutation; never overwrite existing local work.
+    if worktree.exists():
+        raise PreparationError('worktree destination already exists; preserve it and choose another path')
+    if git(repo, 'rev-parse', '--verify', '--quiet', 'refs/heads/' + branch, allowed=(0, 1)):
+        raise PreparationError('task branch already exists; preserve it and choose another name')
+    # Failure is not evidence of absence. The successful fetch and successful
+    # exact remote query are both required before any bootstrap attempt.
+    try:
+        # Preserve raw URL rewrite semantics and snapshot the selected fetch
+        # endpoint in command-local metadata, never on disk.
+        raw_urls = git(repo, 'config', '--get-all', 'remote.' + remote + '.url').splitlines()
+        endpoint = 'ccp-endpoint-' + uuid.uuid4().hex
+        config = ('-c', 'remote.' + endpoint + '.url=' + raw_urls[0])
+        refresh(repo, endpoint, remote, config=config)
+        heads = remote_heads(repo, endpoint, 'develop', 'main', config=config)
+    except PreparationError:
+        cached = git(repo, 'rev-parse', '--verify', '--quiet',
+                     'refs/remotes/' + remote + '/develop^{commit}', allowed=(0, 1))
+        if not cached:
+            cached = git(repo, 'rev-parse', '--verify', '--quiet',
+                         'refs/heads/develop^{commit}', allowed=(0, 1))
+        if not cached:
+            raise  # Network failure does not prove remote develop is absent.
+        git(repo, 'worktree', 'add', '-b', branch, str(worktree), cached)
+        print('Using cached develop ' + cached + '; remote refresh failed, remote freshness is unverified. No bootstrap attempted.', file=sys.stderr)
+        return cached
+    if 'develop' not in heads:
+        # Only bootstrap needs write-endpoint proof. Copy raw push metadata so
+        # an explicit pushurl still suppresses pushInsteadOf, as ordinary Git
+        # intends; do not reinterpret an already-expanded URL a second time.
+        raw_push = git(repo, 'config', '--get-all', 'remote.' + remote + '.pushurl', allowed=(0, 1)).splitlines()
+        if len(raw_push or raw_urls) != 1:
+            raise PreparationError('bootstrap requires one push endpoint; select a matching configured remote')
+        if raw_push:
+            config += ('-c', 'remote.' + endpoint + '.pushurl=' + raw_push[0])
+        advertised = git(repo, 'remote', '-v', config=config).splitlines()
+        resolved = {'fetch': [], 'push': []}
+        for line in advertised:
+            if line.startswith(endpoint + '\t'):
+                value, kind = line[len(endpoint) + 1:].rsplit(' ', 1)
+                if kind in {'(fetch)', '(push)'}:
+                    resolved[kind[1:-1]].append(value)
+        if (len(resolved['fetch']) != 1 or len(resolved['push']) != 1 or
+                endpoint_identity(repo, resolved['fetch'][0]) != endpoint_identity(repo, resolved['push'][0])):
+            raise PreparationError('bootstrap read and write endpoints must identify the same repository; select a matching configured remote')
+        heads = remote_heads(repo, endpoint, 'develop', 'main', config=config)
+    if 'develop' not in heads:
+        source = heads.get('main')
+        if source is None:
+            advertised = git(repo, 'ls-remote', '--symref', '--', endpoint, 'HEAD', config=config)
+            defaults = [line.split('\t')[0].removeprefix('ref: refs/heads/')
+                        for line in advertised.splitlines() if line.startswith('ref: refs/heads/')]
+            if len(defaults) != 1 or defaults[0] == 'develop':
+                raise PreparationError('cannot verify remote bootstrap source')
+            source = remote_heads(repo, endpoint, defaults[0], config=config).get(defaults[0])
+        if not source:
+            raise PreparationError('remote has no verified bootstrap commit')
+        git(repo, 'cat-file', '-e', source + '^{commit}')
+        # An empty expected old value is an atomic create-only condition.
+        # A racing creator wins; their existing develop is never overwritten.
+        result = subprocess.run(['git', '-C', str(repo), *config, 'push',
+                                 '--force-with-lease=refs/heads/develop:', '--', endpoint,
+                                 source + ':refs/heads/develop'], text=True, capture_output=True)
+        if result.returncode:
+            raced = remote_heads(repo, endpoint, 'develop', config=config)
+            if 'develop' not in raced:
+                raise PreparationError('develop bootstrap failed; inspect the selected remote locally')
+        heads = remote_heads(repo, endpoint, 'develop', 'main', config=config)
+    if 'develop' not in heads:
+        raise PreparationError('remote develop could not be verified after bootstrap')
+    # Explicit refspec covers clones whose fetch refspec tracks main only.
+    refresh(repo, endpoint, remote, 'develop', config=config)
+    tip = git(repo, 'rev-parse', '--verify', 'refs/remotes/' + remote + '/develop^{commit}')
+    latest = remote_heads(repo, endpoint, 'develop', 'main', config=config)
+    if latest.get('develop') != tip:
+        raise PreparationError('develop moved during preparation; rerun to use its current tip')
+    if latest.get('main'):
+        result = subprocess.run(['git', '-C', str(repo), 'merge-base', '--is-ancestor', latest['main'], tip], capture_output=True)
+        if result.returncode:
+            raise PreparationError('develop does not contain current main; use the reviewed sync procedure before branching')
+    # Startpoint is pinned to the exact verified develop commit. This does not
+    # checkout, stash, reset or clean the caller's active worktree.
+    git(repo, 'worktree', 'add', '-b', branch, str(worktree), tip)
+    return tip
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--repo', default='.')
+    parser.add_argument('--branch', required=True)
+    parser.add_argument('--worktree', required=True)
+    parser.add_argument('--remote', default='origin')
+    args = parser.parse_args()
+    try:
+        tip = prepare(args.repo, args.branch, args.worktree, args.remote)
+    except (PreparationError, OSError) as error:
+        print('BLOCKED: ' + str(error), file=sys.stderr)
+        return 2
+    print(f'Created {args.branch} at selected develop {tip} in {args.worktree}')
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
