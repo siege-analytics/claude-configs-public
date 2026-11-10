@@ -27,7 +27,7 @@ echo "== proven reads pass with no gate =="
 for c in 'which lilypond' 'sed -n 1,20p /etc/hostname' 'git -C /tmp log --oneline -3' \
          'for f in a b; do echo $f; done' 'rg -n TODO src' 'git grep -n TODO' 'git log -u -1' 'timeout 30 git status' 'nice ls -la' 'sort -k2,2 f' "find . -name '*.md'" 'ls *.md' 'echo "$HOME"' 'date -u +%F' 'git fetch origin --quiet' \
          'ls -la /tmp | head -5' 'grep -rn foo . 2>/dev/null | wc -l' 'gh pr view 12 --json state' \
-         'gh api repos/o/r/pulls/1' 'find . -maxdepth 2 -name "*.md" | sort' \
+         'gh api graphql -f query="query { viewer { login } }"' 'gh api repos/o/r/pulls/1' 'find . -maxdepth 2 -name "*.md" | sort' \
          'cd /tmp && git status -sb' 'jq .a f.json'; do expect allow "$O" "$c"; done
 echo "== anything not proven a read still needs a task gate (#349 review) =="
 while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
@@ -81,7 +81,7 @@ gh label create x
 gh repo edit --visibility public
 gh api -X POST repos/o/r/issues
 gh api repos/o/r/issues -f title=x
-gh api graphql -f query="query { viewer { login } }"
+gh api graphql -f 'query=mutation { deleteIssue(input:{issueId:"X"}) { clientMutationId } }'
 git stash
 git update-index --assume-unchanged f
 git symbolic-ref HEAD refs/heads/x

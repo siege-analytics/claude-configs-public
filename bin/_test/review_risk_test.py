@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import hashlib,importlib.util,json,re,shlex,subprocess,sys,tempfile
+import ast,hashlib,importlib.util,json,re,shlex,subprocess,sys,tempfile
 from collections import Counter
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2];SCRIPT=ROOT/"bin/review-risk.py"
@@ -23,6 +23,14 @@ AUTHORITY_DEPENDENCY_FLOOR = [
  "catalog/gate-contracts.json",
 ]
 AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
+ "hooks/lib/branch_source.py",
+ "hooks/git/native-branch-source.py",
+ "bin/prepare-task-branch.py",
+ "hooks/_test/branch_sources.py",
+ "hooks/_test/branch_sources.test.sh",
+ "hooks/lib/github-mechanical-completion.py",
+ "hooks/_test/coordinator_mechanical_completion.py",
+ "hooks/_test/coordinator_mechanical_completion.test.sh",
  ".claude/scanner-test-map.json",
  "hooks/lib/hook_payload.py",
  "bin/_test/hook_payload_test.py",
@@ -120,6 +128,7 @@ hooks/bash/coordinator-status-guard.sh
 hooks/bash/destructive-guard.sh
 hooks/bash/universal-mutation-gate.sh
 hooks/git/branch-guard.sh
+hooks/git/native-branch-source.py
 hooks/git/detect-ai-fingerprints.sh
 hooks/git/fix-shape-guard.sh
 hooks/git/no-attribution.sh
@@ -157,7 +166,7 @@ hooks/resolver/think-gate-guard.sh
 REQUIRED_MANIFEST_ENTRYPOINT_COUNTS = {path:1 for path in REQUIRED_MANIFEST_ENTRYPOINTS}
 REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS = {"hooks/resolver/ca-enforcement-gate.sh"}
 REQUIRED_GENERATED_SETTINGS_ENTRYPOINT_COUNTS = {path:1 for path in REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS}
-REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "7ea4f885d679e07e084d7dd757b557cce01da44f2969ada03d4c390b94ab56a2"
+REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "27e4c17f9a5b68f2ad4f25ae8c887b19f21b8697f5bafc080d8bd7c68455fdb6"
 REQUIRED_MANIFEST_REGISTRATIONS_SHA256 = "868ca27fe41ca9d2e6f9335e2ddaf05d7cb992617b42f24cbc3ff2794099414b"
 REQUIRED_GENERATED_SETTINGS_REGISTRATIONS_SHA256 = "19a972d9471da0d66c46568c0efb8a16c356ed66f620702b7f06b8251bc809f0"
 CI_INVOCATION_SITES = [
@@ -183,6 +192,10 @@ CI_INVOCATION_SITES = [
 REQUIRED_HELPER_EDGES = {
  tuple(row.split("|")) for row in """
 hooks/bash/destructive-guard.sh|hooks/lib/github-merge-queue.py
+hooks/bash/destructive-guard.sh|hooks/lib/github-mechanical-completion.py
+hooks/bash/destructive-guard.sh|hooks/lib/hook_payload.py
+hooks/bash/coordinator-status-guard.sh|hooks/lib/github-mechanical-completion.py
+hooks/bash/coordinator-status-guard.sh|hooks/lib/hook_payload.py
 hooks/git/detect-ai-fingerprints.sh|hooks/lib/github-merge-queue.py
 hooks/git/fix-shape-guard.sh|hooks/lib/github-merge-queue.py
 hooks/git/self-review.sh|hooks/lib/github-merge-queue.py
@@ -211,6 +224,7 @@ hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/log-block.sh
 hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py
 hooks/git/branch-guard.sh|hooks/lib/extract-json.py
+hooks/git/branch-guard.sh|hooks/lib/hook_payload.py
 hooks/git/branch-guard.sh|hooks/lib/command-text.sh
 hooks/git/branch-guard.sh|hooks/lib/scope-check.sh
 hooks/git/detect-ai-fingerprints.sh|hooks/lib/extract-json.py
@@ -285,7 +299,7 @@ hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
 hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "1b8bcba5cd49fbb5b0a575387259f87635cf02d99b668d426098edfa2c3835f9"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "9f43a5b88ade4c822a9017eca5fd2143da02d0486478badc777f3df317475a64"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "94457079e711f0e4be9ef27704231842e6c678b1bb0180f79be49bb6708c95f0"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
@@ -451,11 +465,52 @@ def helper_assignment_use_sites(entrypoints:set[str],overrides:dict[str,str]|Non
       uses.append((entrypoint,f"hooks/lib/{helper}",assignment_index,assignment,variable,use_index,use))
  return uses
 
+# The inline Python guard loads this source-owned helper through all four
+# actual statements; a path string or an unexecuted textual decoy is not a chain.
+PYTHON_HELPER_LOAD_CHAINS = [
+ ("hooks/bash/coordinator-status-guard.sh", "hooks/lib/github-mechanical-completion.py", (
+  "spec = importlib.util.spec_from_file_location('mechanical_completion', Path(sys.argv[2]) / 'github-mechanical-completion.py')",
+  "proof = importlib.util.module_from_spec(spec)",
+  "spec.loader.exec_module(proof)",
+  "if proof.verify(command, sys.argv[3] or os.getcwd(), body):",
+ )),
+]
+
+def python_helper_chain_sites(entrypoints:set[str],overrides:dict[str,str]|None=None)->list[tuple[str,str,str]]:
+ sites=[];overrides=overrides or {}
+ for source,target,chain in PYTHON_HELPER_LOAD_CHAINS:
+  if source not in entrypoints:continue
+  text=overrides.get(source,(ROOT/source).read_text())
+  body=re.search(r"<<'PY'\n(.*?)\nPY(?:\n|$)",text,re.S)
+  if body is None:continue
+  try:parsed=ast.parse(body[1])
+  except SyntaxError:continue  # Malformed source cannot establish the required chain.
+  def try_bodies(statements):
+   # This source contract visits only executable module/conditional/try bodies;
+   # function/class definitions and literal-dead branches cannot supply a call.
+   for node in statements:
+    if isinstance(node,ast.If):
+     branches=[node.body,node.orelse]
+     if isinstance(node.test,ast.Constant):branches=[node.body if node.test.value else node.orelse]
+     for branch in branches:yield from try_bodies(branch)
+    elif isinstance(node,ast.Try):
+     yield node.body
+     yield from try_bodies(node.body)
+  lines=body[1].splitlines();matches=0
+  for statements in try_bodies(parsed.body):
+   for index in range(len(statements)-3):
+    nodes=statements[index:index+4]
+    if not all(isinstance(node,kind) for node,kind in zip(nodes,(ast.Assign,ast.Assign,ast.Expr,ast.If))):continue
+    if tuple(lines[node.lineno-1].strip() for node in nodes)==chain:matches+=1
+  if matches==1:sites.append((source,target,chain[0]))
+ return sites
+
 def helper_invocation_sites(entrypoints:set[str],overrides:dict[str,str]|None=None)->list[tuple[str,str,str]]:
  helper_names={path.name for path in (ROOT/"hooks/lib").iterdir() if path.is_file()};sites=[];overrides=overrides or {}
  assignment_uses=helper_assignment_use_sites(entrypoints,overrides)
  assignments={(source,target,assignment_index,assignment) for source,target,assignment_index,assignment,_,_,_ in assignment_uses}
  sites.extend((source,target,assignment) for source,target,_,assignment in sorted(assignments))
+ sites.extend(python_helper_chain_sites(entrypoints,overrides))
  for entrypoint in entrypoints:
   text=overrides.get(entrypoint,(ROOT/entrypoint).read_text())
   for line in text.splitlines():
@@ -471,7 +526,8 @@ def helper_invocation_sites(entrypoints:set[str],overrides:dict[str,str]|None=No
     # no .py filename appears in their module operand.
     module=re.escape(Path(helper).stem)
     imported=helper.endswith(".py") and bool(re.match(r"^(?:from "+module+r" import |import "+module+r"(?:\s|$))",stripped))
-    if sourced or executed or evidence_validation or imported:sites.append((entrypoint,f"hooks/lib/{helper}",stripped))
+    mechanical_cli=helper=="github-mechanical-completion.py" and bool(re.match(r'^if python3 -B '+literal_operand+r'(?=$|[\s;)|&])',stripped))
+    if sourced or executed or evidence_validation or imported or mechanical_cli:sites.append((entrypoint,f"hooks/lib/{helper}",stripped))
  return sites
 
 def helper_site_problems(entrypoints:set[str],overrides:dict[str,str]|None=None)->list[tuple]:
@@ -512,6 +568,9 @@ def ci_site_problems(overrides:dict[str,str]|None=None)->list[tuple]:
   if actual!=count:problems.append((source,target,site,count,actual))
  return problems
 
+# Two different actual imports serve the action and typed-reply consumers.
+REQUIRED_HELPER_INVOCATION_SITE_COUNTS = {("hooks/bash/coordinator-status-guard.sh","hooks/lib/task_actions.py"):2}
+
 def verify_dependency_graph()->None:
  source_settings,manifest,generated_settings=entrypoint_surfaces()
  assert not entrypoint_surface_problems(source_settings,manifest,generated_settings),entrypoint_surface_problems(source_settings,manifest,generated_settings)
@@ -540,12 +599,17 @@ def verify_dependency_graph()->None:
  assert not helper_use_problems(entrypoints),helper_use_problems(entrypoints)
  for edge in REQUIRED_HELPER_EDGES:
   sites=[site for source,target,site in helper_sites if (source,target)==edge]
-  assert len(sites)==1,("helper invocation site drift",edge,sites)
+  assert len(sites)==REQUIRED_HELPER_INVOCATION_SITE_COUNTS.get(edge,1),("helper invocation site drift",edge,sites)
   source,target=edge;expected="B" if target in ADVISORY_DEPENDENCY_EXCLUSIONS else "C"
   assert tier([target])==expected,(target,expected)
-  original=(ROOT/source).read_text();mutated=original.replace(sites[0],"removed-helper-site",1)
-  observed={(a,b) for a,b,_ in helper_invocation_sites({source},{source:mutated})}
-  assert edge not in observed,("helper assignment/source removal undetected",edge,sites[0])
+  original=(ROOT/source).read_text()
+  for site in sites:
+   mutated=original.replace(site,"removed-helper-site",1)
+   observed={(a,b) for a,b,_ in helper_invocation_sites({source},{source:mutated})}
+   if len(sites)==1:assert edge not in observed,("helper assignment/source removal undetected",edge,site)
+   assert helper_site_problems(entrypoints,{source:mutated}),("helper site removal undetected",edge,site)
+   duplicated=original.replace(site,site+"\n"+site,1)
+   assert helper_site_problems(entrypoints,{source:duplicated}),("helper site duplication undetected",edge,site)
  # Removing each actual variable execution/source must also fail the chain
  # audit; retaining only the helper-path assignment is not sufficient.
  helper_uses=helper_assignment_use_sites(entrypoints)
@@ -569,6 +633,25 @@ def verify_dependency_graph()->None:
   nonexecuting=python_operand.sub(lambda match:"echo "+match.group(0),use_site,1) if python_operand.search(use_site) else "echo "+use_site
   assert nonexecuting!=use_site;nonexecuting_text=replace_line_index(original,use_index,nonexecuting)
   assert helper_use_problems(entrypoints,{source:nonexecuting_text}),("non-executing helper text accepted",source,target,use_index,nonexecuting)
+ # Each dynamic loader and actual invocation is necessary, not only its path.
+ for source,target,chain in PYTHON_HELPER_LOAD_CHAINS:
+  original=(ROOT/source).read_text()
+  for site in chain:
+   for replacement in ("removed_helper_call", "# "+site, "print("+repr(site)+")"):
+    changed=replace_nth_line(original,site,replacement,0)
+    assert (source,target) not in {(a,b) for a,b,_ in python_helper_chain_sites({source},{source:changed})},("dynamic helper nonexecution accepted",source,site,replacement)
+   changed=replace_nth_line(original,site,site+"\n"+site,0)
+   assert (source,target) not in {(a,b) for a,b,_ in python_helper_chain_sites({source},{source:changed})},("duplicate dynamic helper statement accepted",source,site)
+  ordered="try:\n"+"\n".join("    "+line for line in chain)+"\n        pass\nexcept Exception:\n    pass"
+  decoys=["if False:\n"+"\n".join("    "+line for line in ordered.splitlines()),
+          "def never_called():\n"+"\n".join("    "+line for line in ordered.splitlines()),
+          "class NeverUsed:\n"+"\n".join("    "+line for line in ordered.splitlines()),
+          ordered.replace(chain[0],"TEMP",1).replace(chain[1],chain[0],1).replace("TEMP",chain[1],1),
+          ordered.replace("    "+chain[2],"    unrelated = None\n    "+chain[2],1),
+          ordered+"\n"+ordered]
+  for decoy in decoys:
+   text="python3 - <<'PY'\n"+decoy+"\nPY\n"
+   assert not python_helper_chain_sites({source},{source:text}),("dead/disconnected/duplicate dynamic helper chain accepted",source,decoy)
  assert not ci_site_problems(),ci_site_problems()
  for source,target,site,count in CI_INVOCATION_SITES:
   assert tier([source])=="C",source;assert tier([target])=="C",target

@@ -212,7 +212,7 @@ class InlineDelivery(unittest.TestCase):
                     os.chdir(previous)
             self.assertFalse(sentinel.exists())
         self.assertEqual(measured[0], measured[1])
-        self.assertEqual(measured[0]['characters']['injected']['multi_route'], 9577)
+        self.assertEqual(measured[0]['characters']['injected']['multi_route'], 9637)
 
 
 

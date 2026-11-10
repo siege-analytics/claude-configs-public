@@ -573,6 +573,240 @@ def released_read_verdict(command: str) -> int:
         return 1
 
 
+def github_ticket_reference(body, number, repo, kind='fix', item='issues', *, source_repo=None):
+    """Require an explicit relation in the independently read live PR body.
+
+    Relative #N belongs to source_repo (the actual PR repository), never to a
+    foreign target ticket repository. Explicit canonical cross-repository refs
+    are valid. This pure parser grants no authority and performs no I/O.
+    """
+    if not isinstance(body, str) or len(body) > 65536:
+        return False
+    repo_pattern = r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_][A-Za-z0-9_.-]*'
+    source_repo = repo if source_repo is None else source_repo
+    if (type(number) is not int or number < 1 or not isinstance(repo, str)
+            or not re.fullmatch(repo_pattern, repo) or not isinstance(source_repo, str)
+            or not re.fullmatch(repo_pattern, source_repo)
+            or kind not in {'fix', 'reference', 'supersede'} or item not in {'issues', 'pull'}):
+        return False
+    path = item
+    relative = rf'\#{number}|' if source_repo.lower() == repo.lower() else ''
+    target = rf'(?:{relative}{re.escape(repo)}\#{number}|https://github\.com/{re.escape(repo)}/{path}/{number})(?![0-9])'
+    if kind == 'reference':
+        verb = r'(?:refs?|references)[ \t]*:?'
+    elif kind == 'fix':
+        verb = r'(?:fix(?:es|ed)?|clos(?:es|ed)|resolv(?:es|ed))'
+    else:
+        verb = r'supersed(?:es|ed)(?:[ \t]+issue)?' if item == 'issues' else r'supersed(?:es|ed)(?:[ \t]+PR)?'
+    # Whole declaration clauses only, rather than a substring in a quotation,
+    # conditional, negation or example. Relative references retain their source repository.
+    fence = None; hypothetical = False; quote = False
+    for raw in body.splitlines():
+        line = raw.strip()
+        marker = re.match(r'(`{3,}|~{3,})', line)
+        if marker:
+            if not fence:
+                fence = (marker[1][0], len(marker[1]))
+            elif marker[1][0] == fence[0] and len(marker[1]) >= fence[1] and not line[marker.end():].strip():
+                fence = None
+            continue
+        if not line:
+            quote = False
+            continue
+        if line.startswith('>'):
+            quote = True
+            continue
+        if fence or quote or raw.startswith(('    ', '\t')):
+            continue
+        if re.match(r'#{1,6}\s', line):
+            hypothetical = bool(re.search(r'\b(example|hypothetical|scenario|conditional)\b', line, re.I))
+            continue
+        if re.match(r'(?:example|hypothetical|scenario|conditional)\s*:', line, re.I):
+            hypothetical = True
+            continue
+        if hypothetical:
+            continue
+        for clause in re.split(r'\.[ \t]+', line):
+            if kind != 'reference':
+                if re.fullmatch(rf'{verb}[ \t]+{target}[.!]?', clause.strip(), re.I):
+                    return True
+                continue
+            declaration = re.fullmatch(rf'{verb}[ \t]+(.+?)[.!]?', clause.strip(), re.I)
+            if not declaration:
+                continue
+            refs = [value.strip() for value in declaration[1].split(',')]
+            canonical = rf'(?:\#[1-9][0-9]*|{repo_pattern}\#[1-9][0-9]*|https://github\.com/{repo_pattern}/issues/[1-9][0-9]*)'
+            if all(re.fullmatch(canonical, value) for value in refs) and any(re.fullmatch(target, value, re.I) for value in refs):
+                return True
+    return False
+
+
+class GraphQLDocument:
+    """Bounded GraphQL executable subset; no schema or program execution."""
+    def __init__(self, text):
+        if not isinstance(text, str):
+            raise UnknownShape('One literal GraphQL query field is required')
+        try:
+            size = len(text.encode('utf-8'))
+        except UnicodeError as error:
+            raise UnknownShape('GraphQL document must be valid UTF-8') from error
+        if size > 65536:
+            raise UnknownShape('GraphQL document exceeds the supported bound')
+        pattern = re.compile(r'\s+|#[^\r\n]*|"(?:[^"\\\r\n]|\\["\\/bfnrt]|\\u[0-9a-fA-F]{4})*"|-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?|[_A-Za-z][_0-9A-Za-z]*|[$!():{},\[\]=]')
+        self.tokens, end = [], 0
+        for match in pattern.finditer(text):
+            if match.start() != end:
+                raise UnknownShape('Unsupported GraphQL syntax; use one literal query or bounded review mutation')
+            word = match.group(); end = match.end()
+            if not word.isspace() and not word.startswith('#') and word != ',':
+                self.tokens.append(word)
+        if end != len(text) or len(self.tokens) > 4096:
+            raise UnknownShape('Malformed or over-bound GraphQL document')
+        self.index, self.depth = 0, 0
+        self.variables = {}
+        self.used = set()
+
+    def peek(self):
+        return self.tokens[self.index] if self.index < len(self.tokens) else ''
+
+    def take(self, expected=None):
+        word = self.peek()
+        if not word or expected is not None and word != expected:
+            raise UnknownShape('Malformed GraphQL document')
+        self.index += 1
+        return word
+
+    def name(self):
+        word = self.take()
+        if not re.fullmatch(r'[_A-Za-z][_0-9A-Za-z]*', word):
+            raise UnknownShape('GraphQL name required')
+        return word
+
+    def value(self):
+        self.depth += 1
+        if self.depth > 32:
+            raise UnknownShape('GraphQL nesting exceeds bound')
+        try:
+            word = self.peek()
+            if word == '$':
+                self.take(); name = self.name(); self.used.add(name)
+                return ('variable', name)
+            if word == '{':
+                self.take(); result = {}
+                while self.peek() != '}':
+                    key = self.name(); self.take(':')
+                    if key in result:
+                        raise UnknownShape('Duplicate GraphQL input field')
+                    result[key] = self.value()
+                self.take('}'); return result
+            if word == '[':
+                self.take(); result = []
+                while self.peek() != ']': result.append(self.value())
+                self.take(']'); return result
+            self.take()
+            if word.startswith('"'):
+                return json.loads(word)
+            if re.fullmatch(r'-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?', word):
+                return json.loads(word)
+            if word in {'true', 'false', 'null'}: return json.loads(word)
+            if re.fullmatch(r'[_A-Za-z][_0-9A-Za-z]*', word): return ('enum', word)
+            raise UnknownShape('Unsupported GraphQL value')
+        finally:
+            self.depth -= 1
+
+    def arguments(self):
+        values = {}
+        if self.peek() != '(': return values
+        self.take('(')
+        while self.peek() != ')':
+            key = self.name(); self.take(':')
+            if key in values: raise UnknownShape('Duplicate GraphQL argument')
+            values[key] = self.value()
+        self.take(')'); return values
+
+    def selection(self):
+        self.depth += 1
+        if self.depth > 32: raise UnknownShape('GraphQL selection exceeds bound')
+        try:
+            self.take('{'); fields = []
+            while self.peek() != '}':
+                name = self.name()
+                if self.peek() == ':': self.take(':'); name = self.name()
+                arguments = self.arguments()
+                children = self.selection() if self.peek() == '{' else []
+                fields.append((name, arguments, children))
+            self.take('}')
+            if not fields: raise UnknownShape('Empty GraphQL selection')
+            return fields
+        finally:
+            self.depth -= 1
+
+    def parse(self):
+        kind = 'query'
+        if self.peek() != '{':
+            kind = self.name()
+            if kind not in {'query', 'mutation'}:
+                raise UnknownShape('Only one GraphQL query or modeled mutation is supported')
+            if self.peek() not in {'(', '{'}: self.name()
+            if self.peek() == '(':
+                self.take('(')
+                while self.peek() != ')':
+                    self.take('$'); name = self.name(); self.take(':'); typ = self.name()
+                    if self.peek() == '!': typ += self.take('!')
+                    if name in self.variables: raise UnknownShape('Duplicate GraphQL variable')
+                    self.variables[name] = typ
+                self.take(')')
+        fields = self.selection()
+        if self.peek(): raise UnknownShape('Exactly one GraphQL operation required; fragments/directives are unsupported')
+        if not self.used <= self.variables.keys(): raise UnknownShape('Undeclared GraphQL variable')
+        return kind, fields
+
+
+def github_graphql(args):
+    """Literal transport only. Mutable --input documents cannot prove read scope."""
+    if args[:3] != ['gh', 'api', 'graphql']: return None
+    fields, index, method, seen = {}, 3, 'POST', set()
+    while index < len(args):
+        flag = args[index]; index += 1
+        if flag not in {'-f', '--raw-field', '-F', '--field', '-q', '--jq', '-X', '--method', '--hostname'} or index >= len(args):
+            raise UnknownShape('Unsupported GraphQL transport; use literal -f query=... and -f/-F variables, not --input or executable wrappers')
+        value = args[index]; index += 1
+        if flag in {'-q', '--jq', '-X', '--method', '--hostname'}:
+            key = {'-q': 'jq', '--jq': 'jq', '-X': 'method', '--method': 'method', '--hostname': 'host'}[flag]
+            if key in seen: raise UnknownShape('Duplicate GraphQL transport option')
+            seen.add(key)
+            if key == 'method': method = value
+            if key == 'host' and value != 'github.com': raise UnknownShape('GraphQL host must be github.com')
+            continue
+        key, equal, value = value.partition('=')
+        if not equal or not re.fullmatch(r'[_A-Za-z][_0-9A-Za-z]*', key) or key in fields:
+            raise UnknownShape('One literal value per GraphQL field required')
+        if flag in {'-F', '--field'}:
+            if value.startswith('@'): raise UnknownShape('GraphQL file-valued fields are unsupported; use literal values')
+            if value in {'true', 'false', 'null'} or re.fullmatch(r'-?(?:0|[1-9][0-9]*)', value): value = json.loads(value)
+        fields[key] = value
+    if method not in {'GET', 'POST'}: raise UnknownShape('Unsupported GraphQL method')
+    document = GraphQLDocument(fields.pop('query', None)); kind, selections = document.parse()
+    if set(fields) != set(document.variables): raise UnknownShape('GraphQL variables must match the declared operation exactly')
+    if kind == 'query': return {'kind': 'query'}
+    if method != 'POST': raise UnknownShape('GraphQL review mutation requires POST')
+    if len(selections) != 1 or selections[0][0] != 'resolveReviewThread':
+        return {'kind': 'other-mutation', 'fields': [x[0] for x in selections]}
+    _, arguments, children = selections[0]
+    if set(arguments) != {'input'} or not isinstance(arguments['input'], dict) or set(arguments['input']) != {'threadId'}:
+        raise UnknownShape('Review resolution requires only input.threadId')
+    thread = arguments['input']['threadId']
+    if isinstance(thread, tuple) and thread[0] == 'variable':
+        if document.variables.get(thread[1]) != 'ID!': raise UnknownShape('Review thread variable must be ID!')
+        thread = fields[thread[1]]
+    if not isinstance(thread, str) or not re.fullmatch(r'PRRT_[A-Za-z0-9_-]+', thread):
+        raise UnknownShape('Literal review-thread ID required')
+    # Response selection is data-only, but keep the modeled shape explicit.
+    if not children or any(x[0] not in {'thread', 'clientMutationId'} for x in children):
+        raise UnknownShape('Unsupported review mutation result selection')
+    return {'kind': 'resolve-review-thread', 'thread_id': thread}
+
+
 def action(command: str, cwd: str) -> dict:
     """Classify before gate lookup, and conservatively collect mutation targets."""
     verdict = released_read_verdict(command)
@@ -585,7 +819,7 @@ def action(command: str, cwd: str) -> dict:
         # thinks; the targets found below still pick the owning task's gate.
         result.update(read_only=False, investigation=False, self_management=False,
                       veto="read-only-command: option writes or runs a program")
-        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') else [canonical(cwd)])
+        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') or result.get('review_actions') else [canonical(cwd)])
     return result
 
 
@@ -708,6 +942,36 @@ def _metadata_file(path: str, cwd: str):
             os.close(fd)
     except (OSError, ValueError) as exc:
         raise UnknownShape("cannot read metadata body file: " + path) from exc
+
+
+def github_review_reply(args, cwd: str):
+    """Only a reply to an existing PR review comment, not comment creation APIs."""
+    if args[:2] != ['gh', 'api'] or len(args) < 3: return None
+    endpoint = args[2]
+    match = re.fullmatch(r'repos/([A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+)/pulls/([1-9][0-9]*)/comments/([1-9][0-9]*)/replies', endpoint)
+    if not match: return None
+    method, body, index, seen = None, None, 3, set()
+    while index < len(args):
+        flag = args[index]; index += 1
+        if flag not in {'-X', '--method', '-f', '--raw-field', '-F', '--field', '-q', '--jq'} or index >= len(args):
+            raise UnknownShape('Review reply supports only POST, one body field and optional literal --jq; --input is unsupported')
+        value = args[index]; index += 1
+        if flag in {'-q', '--jq'}:
+            if 'jq' in seen: raise UnknownShape('Duplicate review reply output filter')
+            seen.add('jq')
+            continue
+        if flag in {'-X', '--method'}:
+            if method is not None: raise UnknownShape('Duplicate review reply method')
+            method = value
+        else:
+            key, equal, value = value.partition('=')
+            if not equal or key != 'body' or key in seen: raise UnknownShape('Review reply requires exactly one body field')
+            seen.add(key); body = value
+            if flag in {'-F', '--field'} and value.startswith('@'):
+                _metadata_file(value[1:], cwd)
+    if method not in {None, 'POST'} or body is None or not body:
+        raise UnknownShape('Review reply requires explicit or body-implied POST and a nonempty body')
+    return {'kind': 'reply-review-comment', 'repository': match[1], 'number': int(match[2]), 'comment_id': int(match[3])}
 
 
 def github_metadata_target(args, cwd: str):
@@ -867,6 +1131,42 @@ def _literal_operand_family(args: list[str]) -> bool:
     return python and args[1:3] == ['-m', 'pytest']
 
 
+
+def task_branch_preparation(args, cwd):
+    """Bound only the shipped branch helper's declared repository/worktree.
+
+    This remains a mutation and needs its ordinary owning task. Arbitrary
+    Python scripts and copied helpers keep the existing opaque-script boundary.
+    """
+    script = 0
+    if os.path.basename(args[0]) in {'python', 'python3'}:
+        script = 1
+        while script < len(args) and args[script] == '-B':
+            script += 1
+    if script >= len(args):
+        return None
+    expected = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../bin/prepare-task-branch.py'))
+    if canonical(args[script], cwd) != expected:
+        return None
+    values = {}
+    rest = args[script + 1:]
+    while rest:
+        option = rest.pop(0)
+        if '=' in option:
+            option, value = option.split('=', 1)
+        else:
+            if not rest:
+                raise UnknownShape('branch preparation option is missing its value')
+            value = rest.pop(0)
+        if option not in {'--repo', '--branch', '--worktree', '--remote'} or option in values or not value:
+            raise UnknownShape('unsupported branch preparation options')
+        values[option] = value
+    if not {'--branch', '--worktree'} <= values.keys():
+        raise UnknownShape('branch preparation needs a unique branch and worktree')
+    if values['--branch'].startswith('-') or values.get('--remote', 'origin').startswith('-'):
+        raise UnknownShape('invalid branch preparation name')
+    return [canonical(values.get('--repo', cwd), cwd), canonical(values['--worktree'], cwd)]
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
@@ -885,6 +1185,7 @@ def _action(command: str, cwd: str) -> dict:
     file_paths = []
     remote_repos = []
     remote_actions = []
+    review_actions = []
     mutation_commands = 0
     commit_commands = 0
     unproven_companions = []
@@ -912,14 +1213,30 @@ def _action(command: str, cwd: str) -> dict:
             if len(args) != 2 or args[1].startswith("-") or arg_globs[1]:
                 raise UnknownShape("unsupported cd; use an explicit concrete path")
             effective = canonical(args[1], effective)
+        elif args[:3] == ['gh', 'api', 'graphql']:
+            target = github_graphql(args)
+            if target['kind'] == 'query':
+                pass
+            elif target['kind'] == 'resolve-review-thread':
+                reads = False
+                review_actions.append(target)
+            else:
+                raise UnknownShape('Unsupported GraphQL mutation; only separately modeled queue, project or review actions may proceed')
+            self_managed = False
+            args, arg_globs = [], []
+            return
         elif args[:2] == ['gh', 'api'] and released_read_verdict(shlex.join(args)) != 0:
             # Existing text metadata is the only modeled API write. Unknown API
             # operations cannot borrow cwd/file authority, regardless of endpoint.
-            remote = github_metadata_target(args, effective)
-            if remote is None:
-                raise UnknownShape('Unsupported GitHub API mutation requires explicit remote authority; GraphQL is not modeled')
+            reply = github_review_reply(args, effective)
+            remote = github_metadata_target(args, effective) if reply is None else None
+            if reply is None and remote is None:
+                raise UnknownShape('Unsupported GitHub API mutation requires explicit remote authority; use a modeled review, project or metadata operation')
             reads = False
-            remote_repos.append(remote)
+            if reply is not None:
+                review_actions.append(reply)
+            else:
+                remote_repos.append(remote)
             self_managed = False
             args, arg_globs = [], []
             return
@@ -941,6 +1258,12 @@ def _action(command: str, cwd: str) -> dict:
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             reads = False
             mutation_commands += 1
+            branch_paths = task_branch_preparation(args, effective)
+            if branch_paths is not None:
+                paths.extend(branch_paths)
+                self_managed = False
+                args, arg_globs = [], []
+                return
             project = github_project_action(args)
             if project is not None:
                 remote_actions.append(project)
@@ -1146,13 +1469,13 @@ def _action(command: str, cwd: str) -> dict:
             raise UnknownShape('separate configuration/file mutations from commit calls; run git commit -F FILE first, then a separately scoped cleanup command')
     except UnknownShape as e:
         return {"read_only": False, "paths": list(dict.fromkeys(paths + [effective])), "error": str(e), "binding": binding}
-    if remote_repos or remote_actions:
+    if remote_repos or remote_actions or review_actions:
         paths.extend(unproven_companions)
     return {"read_only": reads and not diagnostic and bool(tokens), "investigation": reads and diagnostic,
             "self_managed_shape": self_managed and not diagnostic, "directory_paths": [p for p in directory_paths if p not in file_paths], "directory_removals": directory_removals,
             # A path only removed, never also written in the same command (#1100).
             "file_removals": [p for p in file_removals if paths.count(p) == file_removals.count(p)],
-            "paths": list(dict.fromkeys(paths or ([] if remote_repos or remote_actions else [effective]))),
+            "paths": list(dict.fromkeys(paths or ([] if remote_repos or remote_actions or review_actions else [effective]))),
             "remote_repos": list(dict.fromkeys(remote_repos)),
-            "remote_actions": remote_actions,
-            "metadata_only": bool(remote_repos) and not remote_actions and not paths and not diagnostic, "binding": binding}
+            "remote_actions": remote_actions, "review_actions": review_actions,
+            "metadata_only": bool(remote_repos) and not remote_actions and not review_actions and not paths and not diagnostic, "binding": binding}

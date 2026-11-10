@@ -11,11 +11,10 @@ allowed-tools: Bash
    2. Map the work to a branch type (see Branch types below)
    3. If no ticket exists, create one first -- if the work is branchable, it is ticketable
 2. Choose the base branch
-   1. Branch from `develop` (or its synonym -- see Develop detection below)
-   2. If no `develop` branch exists, **ASK the user** before creating one (see develop-guard skill -- no silent creation)
-   3. If `develop` exists but is **behind `main`**, **STOP** and surface a sync decision before branching. Branches built from a stale develop carry the divergence forward.
-   4. **Never** branch directly from `main` for feature or task work
-   5. **Invariant:** `main` is always a subset of `develop`. If you discover that's not currently true, that's a sync ticket, not a license to branch from main.
+   1. Normal development starts from verified `develop` or `origin/develop`; refresh when available and identify cached refs honestly when offline.
+   2. If remote `develop` is absent after successful fetch and remote verification, create it under the user's standing instruction using [skill:develop-guard]. No new confirmation is needed for routine bootstrap.
+   3. If develop does not contain current main, use the reviewed sync procedure within existing authority before branching. Do not fall back to main.
+   4. Explicitly authorized version release/backport work retains its exact approved source. A branch name or label alone grants no exception.
 3. Create the branch with the correct naming convention
 4. Push the branch to the remote
 
@@ -102,37 +101,27 @@ feature/add geographic enrichment
 feature/add@geographic#enrichment
 ```
 
-# Develop detection
+# Preparing and creating a branch
 
-Before creating a branch, check whether a `develop` branch (or synonym) exists:
-
-```bash
-# Check for develop or synonyms
-git branch -a | grep -iE '(develop|dev|development|staging|next|integration)$'
-```
-
-### Common synonyms for develop
-
-| Canonical | Synonyms |
-|-----------|----------|
-| `develop` | `dev`, `development`, `staging`, `next`, `integration`, `trunk` (when used as integration) |
-
-If found, use the existing branch as the integration branch. If none exists, STOP and consult the Develop guard skill. Ask for an explicit topology decision; do not create or push `develop` without approval, and never silently fall back to `main` for feature/fix work.
-
-# Creating a branch
+Use the canonical helper from the installed source package. It fetches, verifies
+remote develop, safely bootstraps it if absent, and creates an isolated task
+worktree without disturbing active work:
 
 ```bash
-# After verifying the remote integration branch, its main ancestry, and the user-owned topology decision:
-# Bring develop up to date without a silent sync from main.
-git checkout develop
-git pull --ff-only origin develop
-
-# Create the new branch
-git checkout -b feature/geographic_enrichment_phase1
-
-# Push to remote with tracking
-git push -u origin feature/geographic_enrichment_phase1
+python3 bin/prepare-task-branch.py --repo /absolute/project \
+  --branch feature/geographic_enrichment_phase1 \
+  --worktree /absolute/unique-task-worktree
 ```
+
+Direct creation commands name a known develop ref explicitly; refresh it when
+available. Existing local or tracking develop remains valid offline. For example:
+
+```bash
+git switch -c feature/geographic_enrichment_phase1 origin/develop
+```
+
+A default branch named main, recent main-directed PRs, or main/develop tree equality
+does not authorize main-based normal development. See [skill:develop-guard].
 
 # After creating the branch
 
@@ -164,9 +153,9 @@ Never delete branches that haven't been merged without confirming with the user.
 
 - [ ] Branch type matches the work being done (bugfix, feature, task, chore, hotfix)
 - [ ] Descriptive string is specific, snake_case, under 60 chars total
-- [ ] Branched from `develop` (not `main`) unless this is a hotfix
+- [ ] Normal development branched from verified `develop`; any distinct release source has explicit task authorization
 - [ ] Confirmed `develop` is a superset of `main` (`git log origin/develop..origin/main` is empty); otherwise surfaced sync decision
-- [ ] If no develop branch existed, **asked the user** before creating one (no silent creation)
+- [ ] If remote develop was absent, verified absence and bootstrapped it safely under the standing instruction
 - [ ] Ticket exists for this work (if branchable, it's ticketable)
 - [ ] Branch pushed to remote with tracking (`-u`)
 - [ ] Ticket updated with branch name and status set to In Progress

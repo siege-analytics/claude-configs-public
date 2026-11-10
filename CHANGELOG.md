@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### BREAKING: normal development branches require develop
+
+- Normal feature, fix, documentation and configuration branch creation now requires a verified develop source. Implicit HEAD, main aliases and repository defaults do not substitute for develop. Migrate by using `bin/prepare-task-branch.py --branch <task-branch> --worktree <new-path>` (with `--repo` when needed): it creates an isolated task worktree and can create missing remote develop from verified main/default with an atomic create-only lease. Known cached develop remains usable offline with freshness reported (#1229).
+- Existing branch switches and detached review remain available. An explicitly authorized release/backport retains its exact owning Task, repository, destination, source ref/commit and existing owner-grant requirements; it is not a general main-source exception (#1229).
+
+### Fixed: branch preparation and owner-grant continuity
+
+- Reject clustered creation flags, symbolic/full main aliases and attached orphan options consistently with the develop-source policy (#1229).
+- Bound refresh to remote-tracking refs without configured local-branch destinations, pruning or tag updates. Preserve other task branches, the caller's checkout and dirty tracked/untracked files (#1229, #1234).
+- Before missing-develop bootstrap, bind one effective read/write repository identity using command-local raw URL metadata. Preserve GitHub HTTPS/SSH transport pairs, normal URL rewrite semantics and explicit pushurl behavior; reject foreign or multiple write targets before writing. A racing develop creator remains protected by the empty compare-and-swap lease (#1234).
+- Preserve existing owner grants through status questions, agent relays and recoverable method failures. An agent's own approval question or hold summary does not create a new owner hold; actual owner conditions, reviews, role boundaries and publication checks still apply (#1231).
+
 ### Added: ask-questions operator question protocol
 
 - New `ask-questions` skill: the single procedure for asking the operator questions, run as a survey.
@@ -14,7 +26,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
   - Matching is scoped to ";" clauses. A clause that prohibits asking ("never ask", "don't ask questions") or quotes the phrase as data is excluded without erasing a request in another clause.
   - Known limits, tracked in #1225: clauses do not split at ".", so "Don't ask questions as a group. Ask your questions one at a time." is still missed, and quoted-payload exclusion is heuristic.
 - `strategic-agency:4` and `autonomy:2`/`autonomy:3` now defer the operator question format and sequence to the skill. The next question preempts background work, and answers reach tickets only after the last one (#1056).
-- `session-coordination:5` now defers to the skill for the question procedure and keeps only the hub rule: no answer routing or answer-based spoke briefing until the survey is finished, with running work unaffected. The per-slice release and question-grouping text is removed (#1056).
+- `session-coordination:5` now defers to the skill for the question procedure and keeps only the hub rule: no answer routing or answer-based spoke briefing until the survey is finished, with running work unaffected. The per-slice release and question-grouping text is removed. Its #1231 owner-grant additions are kept in the survey rule: settled decisions are summarized with their source and conditions, and further explicit owner instructions about collecting answers are honored (#1056).
 
 ### Fixed: task scopes and evidence execution
 

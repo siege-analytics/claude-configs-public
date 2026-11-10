@@ -10,7 +10,7 @@ Use this shared procedure with the target project's selected policy. A project e
 
 ## Establish the operation
 
-Identify the target repository, source and destination branches, current commits, pull request and your assigned role. Inspect the target's approved policy and existing instructions. Use [skill:develop-guard] to resolve integration topology and detect drift; do not impose develop-first on a project with an approved trunk workflow.
+Identify the target repository, source and destination branches, current commits, pull request and your assigned role. Inspect the target's approved policy and existing instructions. Use [skill:develop-guard] for the normal develop integration route and safe bootstrap when it is missing. Repository defaults or observed main-only history do not select a different normal-development base. Separately authorized release/backport operations retain their exact approved source and destination.
 
 An integration branch identifies a feature target, not a release or hotfix route. For those operations, require the matching project procedure and its authority. For the Siege scaffold, K5 and [skill:develop-guard] own feature/fix -> develop -> main and exact-main deployment; [rule:writing-releases] owns applicable release artifact/version mechanics. A generic example, available branch or selected procedure cannot override that boundary.
 
