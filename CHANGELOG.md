@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: private canary repositories and labeled reports
+
+- Canary source materialization and its child Git operations ignore inherited repository-location and command-config environment overrides, preserving the caller repository while retaining unrelated environment values. Historical source/package pins and external approval requirements remain unchanged (#1261).
+- Standalone issue creation accepts literal `--label`/`-l` values under the same current own-Task and actual repository proof. Foreign targets, missing Tasks, composed mutations and unsupported state-changing forms remain guarded (#1261).
+
 ### Fixed: descriptive PR-creation bodies
 
 - A sole literal `gh pr create` description no longer triggers coordinator completion/blocker wording checks. PR creation remains an ordinary authorized Task/code/topology action; its review, scope and existing explicit-action controls are unchanged, and composed commands gain no reporting exemption (#1260).

@@ -29,9 +29,15 @@ The resolver remains the single authority for new posts. The shared recognizer c
 
 ## Quantified claims
 
-The two focused methods passed in 15.702 seconds, including all16 configured hooks for numeric aliases, own-Task positives and foreign/no-Task negatives. All12 metadata methods then passed in 49.236 seconds with existing preparation, text-edit, state and compound controls intact. Full affected suites, canonical closure, genuine native source evidence and hosted checks remain separate predicates.
+The two focused methods passed in 15.702 seconds, including all 16 configured hooks for numeric aliases, own-Task positives and foreign/no-Task negatives. All 12 metadata methods then passed in 49.236 seconds with existing preparation, text-edit, state and compound controls intact. Full affected suites, canonical closure, genuine native source evidence and hosted checks remain separate predicates.
 
 Pre-mortem-artifact: plans/metadata-target-review-1261.md#pre-mortem
 Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/pull/1261
 
-The genuine four-input producer passed coordinator80 (including all12 metadata methods), destructive32, seven existing Task-scope compatibility methods, all six canonical closure checks and three changed runtime files in each of four package layouts. Independent full12 metadata methods also passed. No limits, credentials, Git configuration or production state changed.
+The genuine four-input producer passed coordinator 80 (including all 12 metadata methods), destructive 32, seven existing Task-scope compatibility methods, all six canonical closure checks and three changed runtime files in each of four package layouts. Independent full 12 metadata methods also passed. No limits, credentials, Git configuration or production state changed.
+
+### Final promotion review follow-up
+
+A new independent review found that inherited Git location variables could redirect the canary's historical materialization into its caller repository. An actual private reproduction changed the caller HEAD, index and tracked file before failing in the empty destination. The bounded repair sanitizes repository-location and Git command-config overrides for every Git and child-repository subprocess, retains unrelated environment values and disables replacement objects. A real historical-build regression preserves the caller HEAD/index/config/KERNEL and verifies the destination's exact pinned source.
+
+The advertised tooling issue workflow also requires literal issue-creation labels. Only `--label`/`-l` is added to standalone issue creation; project/assignee/milestone and selector-less PR forms gain no new lane. Full configured-chain controls cover own-Task positives, repeated/comma labels, foreign targets, missing Tasks, empty labels and composed writes. Counts in the prior evidence prose are separated from their words without changing the reported results.
