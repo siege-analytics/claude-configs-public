@@ -155,9 +155,25 @@ Revert proofs were run on the working tree, restoring each line afterwards:
   - After the merge, `validate-local.py --mode check` passes.
 - Hosted CI results are recorded in the PR body from the exact pushed head.
 
+### v2 branch (supersedes PR #1243)
+
+- PR #1243's head ecc225f failed "Require canonical branch topology". `protected-policy-range.py` requires ticket evidence on every commit in `develop..head`, and the merge commit b945a5b carried git's default message. History is not rewritten. On the hub's decision (option A, 2026-11-09 19:58 CST), the net diff moved to `bugfix/merge_queue_escape_base_1207_v2`, based on develop ce21650cdcacbbaaa25553c37f8a4bb3b74e73cd.
+- Hosted CI at ecc225f also showed "Validate references and build" passing, in 30m31s.
+- The #1243 commit SHAs cited above (b76fcbf, 6d201da, bfa0e78) belong to the superseded branch. The revert proofs R1 through R5b were run there, against the same code that v2 carries.
+- Equivalence: the local merge of ce21650 into the #1243 branch (09cedcd, conflict only in the CHANGELOG [Unreleased] block, union kept) has tree d33f7680ff12054cc0c4be5a6c5802fd69578ac5. The v2 fix commit 2011122 has the same tree, and `git diff 09cedcd 2011122` is empty.
+- On that tree, `python3 -m unittest github_merge_queue` reports 24 passed (OK).
+- The hook scenario suite plus the inventory and lifecycle steps pass 72 of 76 commands. The 4 failures reproduce identically on a pristine ce21650 export with `dist/` built:
+  - `ca_enforcement_runtime` (12/4);
+  - `session_signal_resolution` (16/2);
+  - `universal_mutation_gate_empty_reporoot`;
+  - `branch_sources`, new in ce21650: its fixture's task-gate scope is rejected against the enclosing host repository.
+  - `bin/_test/local_validation_test.py` also fails the same way on pristine ce21650.
+- `validate-local.py --mode check` passes on the merged tree.
+
 ## Rework ledger
 
 | Rework trigger | Root skip | Check cost | Rework cost | Ratio |
 |---|---|---|---|---|
 | Stack test expected 27 GraphQL-inclusive reads, observed 22 | Assumed every guard consults the helper for `gh api` | 1 grep | 1 test edit | 1:1 |
 | Pre-push blocked six times in sequence: Class-Audit, Tier C evidence trailers, em-dash copied from a hook template, `Working as:` role, peer-review shelf citation, rule citations in a commit body | Did not read `hooks/git/self-review.sh` and the push-time fingerprint scan in full before the first push | 1 full read of the hook | 4 additive evidence commits | 1:4 |
+| Hosted topology check denied PR #1243 for a ticketless default merge message | Accepted git's default merge message without checking the per-commit ticket policy | 1 message flag | New v2 branch and PR, plus a superseded PR | 1:many |
