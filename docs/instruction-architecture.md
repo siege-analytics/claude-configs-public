@@ -10,7 +10,7 @@ This map guides maintenance. It adds no operational authority or new gate. Exist
 | Conditional authorization and readiness | `skills/_standing-approval-rules.md` | Apply the existing grant and its actual conditions. |
 | Choosing and continuing authorized work | `skills/_autonomy-rules.md`, `skills/_strategic-agency-rules.md` | Use the rule for the decision it owns. |
 | Review artifacts and applicable review depth | `skills/self-review/SKILL.md` and selected project review policy | Use the selected procedure; generic Self-review has one flat entry and ordinary artifact-contract/review-checklists siblings. Produced artifact formats remain unchanged. |
-| Approved branch topology | K5 for the Siege scaffold; approved target-project policy elsewhere | Inspect the actual target and use its declared workflow. |
+| Development source and release route | K5 and develop-guard: normal work uses develop across projects; missing develop is safely bootstrapped under the standing instruction | Preserve known develop offline. Keep separately authorized exact release/backport sources task-bound; retain project release/deployment mechanics. |
 | Task-owned design evidence and lifecycle | `skills/think/SKILL.md` and its sibling design/task/claims references; runtime ownership helpers | Follow exact session/task scope and preserve other tasks. |
 | Collaborator role boundaries | `skills/_tandem-agent-rules.md` | State and respect the assigned role. |
 | Collaborator dispatch, coordination and dependency waits | `skills/_session-coordination-rules.md` | Use its Dispatch protocol, coordinate authorized slices and hold only dependent actions. Resolver check12 is navigation. |
