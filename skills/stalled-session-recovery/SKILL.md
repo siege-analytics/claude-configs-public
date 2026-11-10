@@ -70,7 +70,7 @@ before the successor writes, then resume and reconcile the actual candidate,
 pending review/checks and unresolved findings. Preserve evidence links and the
 objective; never transfer an accepted verdict to a changed SHA. The journal's
 generation prevents accidental stale checkpoint writes; it does not stop the
-old session's tools or grant the successor mutation authority.
+old session's tools or grant the successor mutation authority. Reconcile inherited memory and habits against current canonical instructions and actual owner grants. Once succession and sole ownership are verified, resume the eligible remaining inventory within that grant; notification receipt or another lifecycle ACK is not a new prerequisite. Preserve real holds and settle any still-running predecessor mutation before acting on its scope.
 
 A minimal respawn prompt is a liability. Include, at minimum:
 

@@ -12,18 +12,18 @@ print(json.dumps({"tool_input": {"command": sys.argv[1]}}))
 PY
 }
 
-expect_block \
-  "completion without evidence blocks" \
+expect_pass \
+  "#1245 descriptive metadata: completion without evidence passes" \
   "$HOOK" \
   "$(payload "gh issue comment 31 --body 'Status: complete. Lane done.'")"
 
-expect_block \
-  "completion with unresolved blocker blocks" \
+expect_pass \
+  "#1245 descriptive metadata: completion with unresolved blocker passes" \
   "$HOOK" \
   "$(payload "gh issue comment 165 --body 'Status: complete. Blocked with no owner response.'")"
 
-expect_block \
-  "blocked state without reason blocks" \
+expect_pass \
+  "#1245 descriptive metadata: blocked state without reason passes" \
   "$HOOK" \
   "$(payload "gh issue comment 165 --body 'Status: blocked.'")"
 
@@ -47,13 +47,13 @@ expect_pass \
   "$HOOK" \
   "$(payload "gh issue comment 165 --body 'I am investigating the review thread now.'")"
 
-expect_block \
-  "absolute gh path completion without evidence blocks" \
+expect_pass \
+  "#1245 descriptive metadata: absolute gh path completion without evidence passes" \
   "$HOOK" \
   "$(payload "/opt/homebrew/bin/gh issue comment 31 --body 'Status: complete. Lane done.'")"
 
-expect_block \
-  "command wrapper gh completion without evidence blocks" \
+expect_pass \
+  "#1245 descriptive metadata: command wrapper gh completion without evidence passes" \
   "$HOOK" \
   "$(payload "command gh issue comment 31 --body 'Status: complete. Lane done.'")"
 
@@ -92,13 +92,13 @@ expect_block \
   "$HOOK" \
   "$(payload "generate_status | gh issue comment 165 --body-file /proc/self/fd/0")"
 
-expect_block \
-  "negative owner evidence blocks completion" \
+expect_pass \
+  "#1245 descriptive metadata: negative owner evidence passes completion" \
   "$HOOK" \
   "$(payload "gh issue comment 165 --body 'Status: complete. Owner approval missing. Target branch: develop. UAT: n/a.'")"
 
-expect_block \
-  "pending owner evidence blocks completion" \
+expect_pass \
+  "#1245 descriptive metadata: pending owner evidence passes completion" \
   "$HOOK" \
   "$(payload "gh issue comment 165 --body 'Status: complete. Owner approval pending. Merge evidence: PR #165. UAT: n/a.'")"
 
@@ -193,13 +193,13 @@ expect_block \
   "$(payload "gh pr review 165 --comment --editor=true")"
 
 CURLED_APOSTROPHE=$(printf '\342\200\231')
-expect_block \
-  "future gate plan comment blocks as non-evidence status update" \
+expect_pass \
+  "#1245 descriptive metadata: future gate plan comment passes as non-evidence status update" \
   "$HOOK" \
   "$(payload "gh issue comment 31 --body \"Understood. I${CURLED_APOSTROPHE}ll stop treating ticket comments as the work. I${CURLED_APOSTROPHE}m going to re-run the gates in the correct order: verify automated tests, prove the develop deployment/UAT state for #31, then only decide whether hotfix/staging movement is allowed.\"")"
 
-expect_block \
-  "ascii future gate plan comment blocks as non-evidence status update" \
+expect_pass \
+  "#1245 descriptive metadata: ascii future gate plan comment passes as non-evidence status update" \
   "$HOOK" \
   "$(payload "gh issue comment 31 --body \"Understood. I will stop treating ticket comments as the work. I am going to rerun the gates in the correct order: verify automated tests, prove the develop deployment/UAT state for #31, then only decide whether hotfix/staging movement is allowed.\"")"
 
@@ -267,11 +267,10 @@ expect_pass \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '$PREMORTEM_BODY'")"
 
-expect_block_because \
-  "AC1 control: same text without the artifact heading still blocks" \
+expect_pass \
+  "#1245 descriptive metadata: AC1 control: same text without the artifact heading still passes" \
   "$HOOK" \
-  "$(payload "gh issue comment 1164 --body '$UNMARKED_BODY'")" \
-  "future-plan comment"
+  "$(payload "gh issue comment 1164 --body '$UNMARKED_BODY'")"
 
 expect_pass \
   "marked investigation fact sheet with blocked status line passes" \
@@ -323,35 +322,31 @@ Ticket: #1164
 - Scenario: the PR is merged before CI finishes and the hook is deployed broken.
 - Mitigation: if CI is red the gate will hold.'")"
 
-expect_block_because \
-  "AC2: unmarked finish claim without evidence still blocks" \
+expect_pass \
+  "#1245 descriptive metadata: AC2: unmarked finish claim without evidence still passes" \
   "$HOOK" \
-  "$(payload "gh issue comment 1164 --body 'The work is done and merged.'")" \
-  "lacks required evidence"
+  "$(payload "gh issue comment 1164 --body 'The work is done and merged.'")"
 
-expect_block_because \
-  "AC2: marked artifact asserting a deploy without evidence blocks" \
+expect_pass \
+  "#1245 descriptive metadata: AC2: marked artifact asserting a deploy without evidence passes" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Pre-Mortem
 Ticket: #1164
-The fix is merged and released.'")" \
-  "asserts completion status"
+The fix is merged and released.'")"
 
-expect_block_because \
-  "AC2: marked artifact with a completion status line blocks" \
+expect_pass \
+  "#1245 descriptive metadata: AC2: marked artifact with a completion status line passes" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Design note
 Ticket: #1164
-**Status:** done'")" \
-  "asserts completion status"
+**Status:** done'")"
 
-expect_block_because \
-  "AC2: marked artifact with a line-leading merge claim blocks" \
+expect_pass \
+  "#1245 descriptive metadata: AC2: marked artifact with a line-leading merge claim passes" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Junior task description
 Ticket: #1164
-Merged and shipped.'")" \
-  "asserts completion status"
+Merged and shipped.'")"
 
 expect_pass \
   "marked artifact claim with full evidence passes" \
@@ -360,29 +355,26 @@ expect_pass \
 Ticket: #1164
 The fix is merged and released. Owner approval thread: https://github.com/x/y/pull/1#issuecomment-1. Target branch: develop. Rollout: UAT not applicable.'")"
 
-expect_block_because \
-  "heading after a status update does not relabel it" \
+expect_pass \
+  "#1245 descriptive metadata: heading after a status update does not relabel it" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body 'Status: complete. Lane done.
 
 ## Pre-Mortem
-Ticket: #1164'")" \
-  "lacks required evidence"
+Ticket: #1164'")"
 
-expect_block_because \
-  "artifact heading without a task reference gets normal rules" \
+expect_pass \
+  "#1245 descriptive metadata: artifact heading without a task reference needs no status-wording proof" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Pre-Mortem
-- Blocker risk: we will re-run the gate later.'")" \
-  "future-plan comment"
+- Blocker risk: we will re-run the gate later.'")"
 
-expect_block_because \
-  "artifact heading with Ticket: N/A gets normal rules" \
+expect_pass \
+  "#1245 descriptive metadata: artifact heading with Ticket: N/A needs no status-wording proof" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Pre-Mortem
 Ticket: N/A
-- Blocker risk: we will re-run the gate later.'")" \
-  "future-plan comment"
+- Blocker risk: we will re-run the gate later.'")"
 
 expect_block_because \
   "artifact marker on issue close still needs transition evidence" \
@@ -393,61 +385,56 @@ risk list'")" \
   "lacks required evidence"
 
 expect_block_because \
-  "artifact marker on PR review still needs completion evidence" \
+  "approval review remains outside metadata-comment lane" \
   "$HOOK" \
   "$(payload "gh pr review 1170 --approve --body '## Senior review
 Ticket: #1164
 Looks done.'")" \
   "lacks required evidence"
 
-expect_block_because \
-  "comment rejection names the artifact form" \
+expect_pass \
+  "#1245 descriptive metadata: comment requires no artifact-format hint" \
   "$HOOK" \
-  "$(payload "gh issue comment 1164 --body '$UNMARKED_BODY'")" \
-  "Ticket: <task reference>.*Ref: #1164"
+  "$(payload "gh issue comment 1164 --body '$UNMARKED_BODY'")"
 
-# Hostile-pass inputs (#1164): parity with the unmarked completion rules.
-expect_block_because \
-  "laundering: unauxiliaried completion words and checkboxes block" \
+# Historical prose corpus (#1164): #1245 permits descriptive posts without changing state.
+# Artifact completeness/identity belongs to its actual artifact consumer, not this word gate.
+expect_pass \
+  "#1245 descriptive metadata: laundering: unauxiliaried completion words and checkboxes is descriptive" \
   "$HOOK" \
   "$(payload "gh issue comment 1201 --body '## Investigation fact sheet
 Ticket: #1201
 
 Done — fix deployed to production. Lane complete.
 - [x] Merged
-- [x] Deployed'")" \
-  "asserts completion status"
+- [x] Deployed'")"
 
-expect_block_because \
-  "laundering: checkbox-only merge claim blocks" \
+expect_pass \
+  "#1245 descriptive metadata: laundering: checkbox-only merge claim passes" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Pre-Mortem
 Ticket: #1164
-- [x] Merged'")" \
-  "asserts completion status"
+- [x] Merged'")"
 
-expect_block_because \
-  "laundering: a mid-line conditional word does not hide a claim" \
+expect_pass \
+  "#1245 descriptive metadata: laundering: a mid-line conditional word does not hide a claim" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Pre-Mortem
 Ticket: #1164
-Status: shipped to prod before the release cut; no residual risk.'")" \
-  "asserts completion status"
+Status: shipped to prod before the release cut; no residual risk.'")"
 
-expect_block_because \
-  "laundering: the heading line itself is scanned" \
+expect_pass \
+  "#1245 descriptive metadata: laundering: the heading line itself is scanned" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Senior review lane status: done #1164
-Shipped.'")" \
-  "asserts completion status"
+Shipped.'")"
 
-expect_block_because \
-  "laundering: a numbered list prefix does not hide a claim" \
+expect_pass \
+  "#1245 descriptive metadata: laundering: a numbered list prefix does not hide a claim" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Junior task description
 Ticket: #1164
-1. Merged to develop.'")" \
-  "asserts completion status"
+1. Merged to develop.'")"
 
 expect_pass \
   "a line opening with a conditional is not a claim" \
@@ -464,13 +451,12 @@ expect_pass \
 Ticket: #1164
 The blocker is the guard; we will re-run the gate after the fix.'")"
 
-expect_block_because \
-  "Ticket: - is not a task reference" \
+expect_pass \
+  "#1245 descriptive metadata: Ticket: - is not a task reference" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '## Pre-Mortem
 Ticket: -
-- Blocker risk: we will re-run the gate later.'")" \
-  "future-plan comment"
+- Blocker risk: we will re-run the gate later.'")"
 
 expect_pass \
   "plans artifact with YAML front matter before the heading passes" \
@@ -483,15 +469,14 @@ ticket_refs:
 Ticket: siege-analytics/claude-configs-public#1164
 - Blocker risk: the gate will reject the post; we will re-run the gate.'")"
 
-expect_block_because \
-  "front matter does not hide a claim" \
+expect_pass \
+  "#1245 descriptive metadata: front matter does not hide a claim" \
   "$HOOK" \
   "$(payload "gh issue comment 1164 --body '---
 status: done
 ---
 ## Pre-Mortem
-Ticket: #1164'")" \
-  "asserts completion status"
+Ticket: #1164'")"
 
 out=$(printf '%s' "$(payload "gh issue comment 31 --body 'Status: complete. Lane done.'")" | bash "$HOOK" 2>&1)
 if [[ "$out" == *"Ref: #1164"* ]]; then
@@ -501,4 +486,10 @@ else
   _HARNESS_PASS=$((_HARNESS_PASS + 1)); printf '  [PASS] plain status update gets no artifact hint\n'
 fi
 
+# Keep the shell-suite entrypoint responsible for the actual JSON corpus.
+if python3 "$ROOT/hooks/_test/metadata_comment_reporting.py"; then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1))
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1)); _HARNESS_FAILED_NAMES+=("metadata comment corpus")
+fi
 report

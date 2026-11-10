@@ -1,4 +1,4 @@
-"""Actual body-file artifact results and empty trailer diagnostics."""
+"""Literal body-file report prose and actual empty trailer diagnostics."""
 import json
 from pathlib import Path
 import shutil
@@ -12,6 +12,9 @@ HOOK = ROOT / 'hooks/bash/coordinator-status-guard.sh'
 
 
 class ArtifactResults(unittest.TestCase):
+    # This component recognizes report shape, not authority from prose.
+    # metadata_comment_reporting.py exercises own-Task/repository proof through
+    # all sixteen hooks, including missing-Task, foreign and mixed-write denial.
     def hook(self, body, expected, action='comment'):
         with tempfile.TemporaryDirectory(prefix="artifact review ") as folder:
             path = Path(folder) / 'body.md'
@@ -25,15 +28,15 @@ class ArtifactResults(unittest.TestCase):
     def test_wrapped_hypothetical_field_is_not_project_completion(self):
         self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  The deployment is complete without a verified owner.\n\nMitigation: retain the actual review.\n', 0)
 
-    def test_unindented_sentence_does_not_borrow_hypothetical_field(self):
-        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: tests may fail.\nDeployment complete.\n', 2)
+    def test_unindented_completion_prose_is_plain_comment_data(self):
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: tests may fail.\nDeployment complete.\n', 0)
 
-    def test_conditional_prefix_does_not_hide_later_factual_claim(self):
-        self.hook('## Pre-Mortem\nTicket: o/r#1164\nIf tests fail, stop rollout; the deployment is complete.\n', 2)
+    def test_conditional_and_factual_prose_needs_no_word_signoff(self):
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nIf tests fail, stop rollout; the deployment is complete.\n', 0)
 
-    def test_hypothetical_text_cannot_supply_actual_completion_evidence(self):
-        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: owner approved main deployment.\nStatus: complete.\n', 2)
-        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  owner approved main deployment.\n\nStatus: complete.\n', 2)
+    def test_hypothetical_and_actual_status_prose_needs_no_word_evidence(self):
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: owner approved main deployment.\nStatus: complete.\n', 0)
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  owner approved main deployment.\n\nStatus: complete.\n', 0)
 
     def test_actual_junior_senior_review_result_needs_no_deployment(self):
         self.hook('# Junior/Senior Review\nTicket: siege-analytics/claude-configs-public#1164\nReview completed: no blocking findings.\n', 0)
@@ -49,7 +52,7 @@ class ArtifactResults(unittest.TestCase):
             with self.subTest(result=result):
                 self.hook('## Investigation Fact Sheet\nTicket: o/r#1164\n' + result, 0)
 
-    def test_remaining_project_and_deployment_clauses_still_deny(self):
+    def test_project_and_deployment_words_do_not_change_comment_authority(self):
         for result in ['Review complete; deployment complete.', 'Named checks done; project ready.',
                        'Review has been completed; deployment complete.',
                        'Checks completed; project ready.',
@@ -58,10 +61,10 @@ class ArtifactResults(unittest.TestCase):
                        'Review complete, but the project is complete.',
                        'Review of the project is complete.']:
             with self.subTest(result=result):
-                self.hook('## Junior/Senior Review\nTicket: o/r#1164\n' + result, 2)
+                self.hook('## Junior/Senior Review\nTicket: o/r#1164\n' + result, 0)
 
-    def test_unmarked_completion_is_not_an_artifact_result(self):
-        self.hook('Review completed.\n', 2)
+    def test_unmarked_completion_is_plain_comment_data(self):
+        self.hook('Review completed.\n', 0)
 
     def test_existing_hypothetical_fields_still_work(self):
         self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: deployment complete with stale data.\nMitigation: if checks complete, compare actual state.\n', 0)

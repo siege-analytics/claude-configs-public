@@ -95,8 +95,12 @@ if [[ -z "$COMMAND" && ! "$TOOL_NAME" =~ ^(Write|Edit|MultiEdit|NotebookEdit)$ ]
 # commands with non-empty title/body evidence. Issue edit/close/delete/etc.
 # remain guarded shared-resource mutations.
 is_governance_issue_reporting_command() {
-    python3 - "$COMMAND" "$CWD" <<'PYCODE'
+    python3 - "$COMMAND" "$CWD" "$HOOK_DIR/../lib" <<'PYCODE'
 import os, shlex, sys
+sys.path.insert(0, sys.argv[3])
+from github_metadata_comment import metadata_comment
+if metadata_comment(sys.argv[1], sys.argv[2]) is True:
+    sys.exit(1)  # Resolve the new post's actual own-Task/remote scope below.
 
 command = sys.argv[1]
 cwd = sys.argv[2] or os.getcwd()
