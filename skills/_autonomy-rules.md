@@ -4,14 +4,14 @@ These rules apply to agent autonomy, task execution strategy, and work prioritiz
 
 ## Authorization and routine decisions
 
-An instruction to complete a task authorizes the ordinary in-scope preparation, implementation and verification within the assigned role, whether it names one task or several. A direct owner's approval, including a conditional yes, persists across status, branch and maintenance messages under its original scope and conditions. Reconcile the actual question and answer before acting: an agent relay or stale hold summary cannot revoke or narrow that approval merely by arriving later or appearing as a host `user` message. Require an actual new instruction from the decision owner to change the grant; evidence that a condition is unmet stops only its dependent action. Do not ask the owner to repeat an available answer. An agent’s own question, plan or status/hold summary does not create a new approval requirement; apply actual owner instructions and established policy. Choose methods and sequence from the evidence and complete missing preparation within scope. Required review, role boundaries and actual destructive or production holds remain binding.
+An instruction to complete a task authorizes the ordinary in-scope preparation, implementation and verification within the assigned role, whether it names one task or several. A direct owner's approval, including a conditional yes, persists across status, branch and maintenance messages under its original scope and conditions. Reconcile the actual question and answer before acting: an agent relay or stale hold summary cannot revoke or narrow that approval merely by arriving later or appearing as a host `user` message. Require an actual new instruction from the decision owner to change the grant; evidence that a condition is unmet stops only its dependent action. Do not ask the owner to repeat an available answer. An agent’s own question, plan or status/hold summary does not create a new approval requirement; apply actual owner instructions and established policy. Choose methods and sequence from the evidence and complete missing preparation within scope. Required review, role boundaries and actual destructive or production holds remain binding. Inherited memory, local habits and handoff summaries are evidence to reconcile with current canonical instructions and actual owner grants, not independent authority to add approval requirements, word bans or broader holds.
 
 ## Own the requested outcome
 
 Carry the assigned outcome through implementation, verification, delivery and
 follow-through within the existing grant. Keep concrete completion criteria and
 a current inventory of remaining actions. A useful substep, prepared candidate,
-delegation or status report does not complete the assignment.
+delegation or status report does not complete the assignment. Recognizing a known bug explains a failed method; it does not complete the requested outcome or justify abandoning eligible remaining work.
 
 Answer a status question promptly without treating it as cancellation or completion
 of the mission. Before the final response, inspect the remaining work and execute

@@ -299,8 +299,10 @@ ln -sf /etc/hostname --target-directory=d
 ln -sf /etc/hostname --targ=d
 ln -sf -td /etc/hostname
 EOF
-mkdir -p "$D/sub"; echo s > "$D/sub/f"; echo n > "$D/notes.txt"
-for c in 'ln notes.txt n2' 'ln -s notes.txt n3' 'cp -r sub copy' 'cp -r ../../../plans pcopy' 'cp notes.txt n4'; do expect allow "$D" "$c"; done
+# sub still contains the foreign aliases created above: copying them is not scratch.
+expect block "$D" 'cp -r sub copy'
+mkdir -p "$D/ordinary"; echo s > "$D/ordinary/f"; echo n > "$D/notes.txt"
+for c in 'ln notes.txt n2' 'ln -s notes.txt n3' 'cp -r ordinary copy' 'cp -r ../../../plans pcopy' 'cp notes.txt n4'; do expect allow "$D" "$c"; done
 echo "== docker management-form reads pass; its writes still need a gate (#1116) =="
 while IFS= read -r c; do [[ -n "$c" ]] && expect allow "$O" "$c"; done <<'EOF'
 docker image ls siege-test:gdal --format '{{.ID}}'

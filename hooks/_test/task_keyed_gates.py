@@ -493,6 +493,88 @@ class Gates(unittest.TestCase):
         self.assertGate(0, 'chmod 644 dst', cwd=self.a)
         self.assertGate(0, 'cp ' + str(self.b / 'src') + ' dst', cwd=self.a)  # sources are reads
 
+    def test_large_recursive_copy_sources_are_reads(self):
+        destination = self.ws / 'sessions/one/data/preservation'
+        destination.parent.mkdir(parents=True)
+        source = self.b / 'preserved'
+        source.mkdir()
+        for index in range(19033):
+            (source / str(index)).touch()
+            if index == 2000:
+                with self.subTest(entries=2001):
+                    self.assertGate(0, 'cp -pR ' + str(source) + ' ' + str(destination))
+        with self.subTest(entries=19033):
+            self.assertGate(0, 'cp -pR ' + str(source) + ' ' + str(destination))
+        for flags in ['-ac', '-RX', '-RL']:
+            self.assertGate(0, 'cp ' + flags + ' ' + str(source) + ' ' + str(destination))
+        self.assertFalse(destination.exists())  # hook inspection never executes cp
+
+    def test_copy_aliases_destinations_and_options_keep_real_write_scope(self):
+        own = self.ws / 'sessions/one/data'
+        own.mkdir(parents=True)
+        source = self.b / 'preserved'; source.mkdir()
+        external = self.b / 'protected'; external.write_text('unchanged')
+        (source / 'alias').symlink_to(external)
+        for flags in ['-S -l', '-S -s', '-pS -l', '--suffix --link', '-Sl', '-SS', '-Slp', '-aSl']:
+            self.assertGate(0, 'cp ' + flags + ' ' + str(external) + ' ' + str(own/'copy'))
+        for flags in ['-R', '-pR', '-a', '-RLP', '-La', '-RP -S -L']:
+            with self.subTest(flags=flags):
+                self.assertGate(2, 'cp ' + flags + ' ' + str(source) + ' ' + str(own/'copy'))
+        for flags in ['-RL', '-RPL', '-aL']:
+            self.assertGate(0, 'cp ' + flags + ' ' + str(source) + ' ' + str(own/'copy'))
+        for flags in ['-l', '-s', '-al', '--link', '--symbolic-link', '--unexpected', '-Z', '-SS -l', '-S -l -l', '-S -s -s']:
+            self.assertGate(2, 'cp ' + flags + ' ' + str(external) + ' ' + str(own/'copy'))
+        self.assertGate(2, 'mv ' + str(external) + ' ' + str(own/'copy'))
+        escaped = own/'escape'; escaped.symlink_to(external)
+        self.assertGate(2, 'cp -L ' + str(external) + ' ' + str(escaped))
+        self.assertGate(2, 'cp -L ' + str(external) + ' ' + str(own/'copy') + ' && touch ' + str(self.b/'write'))
+        (source/'alias').unlink(); (source/'alias').symlink_to(own/'internal')
+        self.assertGate(0, 'cp -R ' + str(source) + ' ' + str(own/'copy'))
+        self.assertEqual(external.read_text(), 'unchanged')
+        self.assertFalse((own/'copy').exists())
+
+    def test_copy_suffix_values_match_native_gnu_copy_alias_effects(self):
+        binary = shutil.which('gcp') or shutil.which('cp')
+        source = self.b/'source'; source.write_text('preserved')
+        own = self.ws/'sessions/one/data'; own.mkdir(parents=True)
+        destination = own/'copy'
+        for options, alias in [(['-Sl'], False), (['-SS'], False), (['-S', '-l'], False),
+                               (['-pS', '-s'], False), (['-Sl', '-l'], True), (['-SS', '-l'], True)]:
+            self.assertGate(2 if alias else 0, 'cp '+ ' '.join(options)+' '+str(source)+' '+str(destination))
+            subprocess.run([binary, *options, str(source), str(destination)], check=True, capture_output=True, timeout=15)
+            self.assertEqual(os.path.samefile(source, destination), alias)
+            self.assertEqual(source.read_text(), 'preserved')
+            destination.unlink()
+        link = self.b/'source-link'; link.symlink_to(source)
+        other = self.b/'other'; other.write_text('other')
+        destination.mkdir()
+        self.assertGate(2, 'cp -RP -SS '+str(link)+' '+str(other)+' '+str(destination))
+        subprocess.run([binary, '-RP', '-SS', str(link), str(other), str(destination)],
+                       check=True, capture_output=True, timeout=15)
+        self.assertTrue((destination/link.name).is_symlink())
+        self.assertEqual((destination/other.name).read_text(), 'other')
+
+    def test_copy_inspection_failures_never_invent_source_writes(self):
+        import task_actions
+        source = self.b/'preserved'; source.mkdir()
+        destination = self.ws/'sessions/one/data/copy'
+        destination.parent.mkdir(parents=True)
+        command = 'cp -R '+str(source)+' '+str(destination)
+        original = os.lstat
+        def failed_entry(path, *args, **kwargs):
+            if str(path) == str(source):
+                raise OSError('unreadable source entry')
+            return original(path, *args, **kwargs)
+        with patch.object(task_actions.os, 'lstat', side_effect=failed_entry):
+            outcome = task_actions.action(command, str(self.repo))
+        self.assertIn('cannot inspect preserved copy alias entry', outcome['error'])
+        self.assertFalse(outcome['read_only'])
+        with patch.object(task_actions.time, 'monotonic', side_effect=[0, 11]):
+            outcome = task_actions.action(command, str(self.repo))
+        self.assertIn('inspection budget exceeded', outcome['error'])
+        self.assertIn('cp -RL', outcome['error'])
+        self.assertNotIn(str(source), outcome['paths'])
+
     def test_symlink_and_prefix_do_not_match(self):
         self.task('o/r#2', self.b)
         outside = self.ws / 'outside'; outside.mkdir()

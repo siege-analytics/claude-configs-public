@@ -4076,10 +4076,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 15975,
-      "content_sha256": "e01f3e14467de4d97abdb8e9c1809f464025728ee9ad607bcb4afa7809075e8e",
+      "characters": 16339,
+      "content_sha256": "76b093d7f510439b3e9fcdee877b7628a71900982f357de57a459d3f19e23373",
       "description": "unknown",
-      "estimated_tokens": 3994,
+      "estimated_tokens": 4085,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -5016,6 +5016,7 @@
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/git_bootstrap_targets.py",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/github_project_reads.py",
         "hooks/_test/github_project_scope.py",
@@ -5550,6 +5551,7 @@
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_add_risk.test.sh",
+        "hooks/_test/git_bootstrap_targets.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/github_merge_queue.test.sh",
@@ -6116,10 +6118,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 29573,
-      "content_sha256": "b2cdff67ffc12002d35dc695a70d5b9c14449530ef0f5c2982ebaf353bebba3e",
+      "characters": 29922,
+      "content_sha256": "a86aaed5b1ff56011d0614bc2d2b59c89050e5bcccfc6795c940718d9f88fe3e",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7394,
+      "estimated_tokens": 7481,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -9234,6 +9236,7 @@
         "hooks/_test/detect_ai_fingerprints.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/git_bootstrap_targets.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/hook_path.test.sh",
@@ -11161,6 +11164,7 @@
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_add_risk.test.sh",
+        "hooks/_test/git_bootstrap_targets.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/github_merge_queue.test.sh",
@@ -12092,10 +12096,10 @@
     },
     {
       "canonical_source": "skills/stalled-session-recovery/SKILL.md",
-      "characters": 12429,
-      "content_sha256": "72b09221d299409bffb0740b9a83f2e9458aa26556c96bfbb756630fbb8c4c4f",
+      "characters": 12810,
+      "content_sha256": "26613e080c12b471459d8b263b3ea114e90b21b87e60f381ec1ce13549b87e9d",
       "description": "How to diagnose and recover a session that has stopped producing useful turns -- stuck on a repeating error, silent for an abnormal stretch, or looping on the same tool call. Invoke when checking on a session that \"seems stuck,\" when a session's own error looks like it should have cleared but hasn't, when a hub is deciding whether to nudge or respawn a worker, or when auditing a fleet of sessions for health. Covers three failure shapes (transient error, persistent misconfiguration, wedged tool call) with distinct diagnostics and distinct fixes, the discipline of reading the last coherent content instead of trusting the error label, and how to respawn without duplicating work or losing in-flight state.",
-      "estimated_tokens": 3108,
+      "estimated_tokens": 3203,
       "frontmatter_name": "stalled-session-recovery",
       "generated_outputs": [
         "dist/nested/skills/stalled-session-recovery",
@@ -12383,6 +12387,7 @@
         "hooks/_test/execution_risk.py",
         "hooks/_test/gate_registry.test.sh",
         "hooks/_test/git_add_risk.py",
+        "hooks/_test/git_bootstrap_targets.py",
         "hooks/_test/github_project_scope.py",
         "hooks/_test/github_project_status.py",
         "hooks/_test/investigate_gate_schema.test.sh",
@@ -12810,9 +12815,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2619523,
+    "characters": 2620617,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 654958,
+    "estimated_tokens": 655231,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12833,7 +12838,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1223129
+      "unclassified": 1224223
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12845,7 +12850,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 305824
+      "unclassified": 306097
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

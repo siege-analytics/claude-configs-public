@@ -17,6 +17,7 @@ import shlex
 import stat
 import subprocess
 import sys
+import time
 
 
 class UnknownShape(ValueError):
@@ -336,44 +337,99 @@ def _long_option_matches(token: str, names) -> bool:
 
 def _cp_link_copy(tokens) -> bool:
     """cp -l/-s and their long forms make the destination another name (#1100)."""
+    skip = False
     for t in tokens:
+        if skip:
+            skip = False
+            continue
         if t == '--':
             break
+        if t == '--suffix' or t.startswith('-') and not t.startswith('--') and t.find('S') == len(t) - 1:
+            skip = True
         if t.startswith('--'):
             if _long_option_matches(t, ('--link', '--symbolic-link')):
                 return True
-        elif t.startswith('-') and t != '-' and ('l' in t[1:] or 's' in t[1:]):
+        elif t.startswith('-') and t != '-' and any(c in t[1:].split('S', 1)[0] for c in 'ls'):
             return True
     return False
 
 
-def _cp_keeps_symlinks(tokens) -> bool:
-    """Options under which cp copies a symlink as a symlink."""
-    for t in tokens:
-        if t == '--':
+def _cp_option(token):
+    """Modeled flags: c/reflink clone independent bytes; X omits metadata, not scope.
+
+    Destination-changing forms stay separately rejected.
+    """
+    if token.startswith('--'):
+        name, sep, value = token.partition('=')
+        plain = {'--archive', '--recursive', '--dereference', '--no-dereference',
+                 '--link', '--symbolic-link', '--force', '--interactive', '--no-clobber',
+                 '--verbose', '--one-file-system', '--no-target-directory', '--backup'}
+        valued = {'--suffix', '--preserve', '--no-preserve', '--reflink', '--sparse', '--backup'}
+        if name not in plain | valued or sep and name not in valued:
+            raise UnknownShape('unsupported copy option; use explicit source/destination and modeled flags')
+    elif any(c not in 'abcdfHilLnpPRruvxTX' for c in token[1:].split('S', 1)[0]):
+        raise UnknownShape('unsupported copy option; use explicit source/destination and modeled flags')
+
+
+def _cp_symlink_mode(tokens):
+    """Follow-all creates no symlink aliases; H follows only command-line links."""
+    mode, recursive, skip = None, False, False
+    for token in tokens:
+        if skip:
+            skip = False
+            continue
+        if token == '--':
             break
-        if t.startswith('--'):
-            if _long_option_matches(t, ('--no-dereference', '--recursive', '--archive')) or (
-                    _long_option_matches(t, ('--preserve',)) and ('links' in t or 'all' in t)):
-                return True
-        elif t.startswith('-') and t != '-' and any(c in t[1:] for c in 'PdrRa'):
-            return True
-    return False
+        if token == '--suffix' or token.startswith('-') and not token.startswith('--') and token.find('S') == len(token) - 1:
+            skip = True
+        if token.startswith('--'):
+            name = token.split('=', 1)[0]
+            if name in {'--archive', '--no-dereference'}:
+                mode = 'P'
+            elif name == '--dereference':
+                mode = 'L'
+            recursive |= name in {'--archive', '--recursive'}
+        elif token.startswith('-'):
+            for flag in token[1:].split('S', 1)[0]:
+                if flag in 'aRr':
+                    recursive = True
+                if flag in 'ad':
+                    mode = 'P'
+                elif flag in 'HLP':
+                    mode = flag
+    return mode if mode is not None else ('P' if recursive else 'L')
 
 
-def _has_symlink(path: str, limit: int = 2000) -> bool:
-    """A symlink at or under path; past `limit` entries, assume one."""
-    if os.path.islink(path):
-        return True
-    if not os.path.isdir(path):
-        return False
-    seen = 0
-    for root, dirs, files in os.walk(path):
-        for name in dirs + files:
-            seen += 1
-            if seen > limit or os.path.islink(os.path.join(root, name)):
-                return True
-    return False
+def _copy_alias_targets(sources, options, cwd):
+    """Preserved symlink endpoints are aliases; ordinary source entries are reads."""
+    mode = _cp_symlink_mode(options)
+    if mode == 'L':
+        return []
+    targets, seen, deadline = [], 0, time.monotonic() + 10
+    def inspect(path):
+        nonlocal seen
+        seen += 1
+        if seen > 100000 or time.monotonic() > deadline:
+            raise UnknownShape('copy source alias inspection budget exceeded; split the copy or use cp -RL '
+                               '(dereferences symlinks, changing preservation semantics); source reads need no write scope')
+        try:
+            link = stat.S_ISLNK(os.lstat(path).st_mode)
+        except OSError as error:
+            raise UnknownShape('cannot inspect preserved copy alias entry; source is not proven safe') from error
+        if link:
+            targets.append(canonical(path))
+        return link
+    def unreadable(error):
+        raise UnknownShape('cannot inspect preserved copy aliases; use a readable source or explicit cp -RL') from error
+    for source in sources:
+        path = os.path.join(cwd, source)
+        if mode != 'H' and inspect(path):
+            continue  # preserving the root symlink copies no target descendants
+        if os.path.isdir(path):
+            for root, dirs, files in os.walk(path, onerror=unreadable, followlinks=False):
+                for name in dirs + files:
+                    inspect(os.path.join(root, name))
+    return targets
 
 
 def _copy_destinations(sources, destination, options, cwd):
@@ -437,6 +493,237 @@ def _git_toplevel(directory: str) -> str:
         return canonical(subprocess.check_output(["git", "-C", directory, "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL, timeout=3).strip())
     except (subprocess.SubprocessError, OSError):
         raise UnknownShape("cannot resolve repository toplevel for Git mutation")
+
+
+
+
+def _git_bootstrap_read(arguments: list[str], config: tuple = ()):
+    """Fixed read-only Git lookup without enclosing-repository configuration."""
+    import tempfile
+    try:
+        with tempfile.TemporaryDirectory(prefix='git-bootstrap-read-') as scratch:
+            neutral = os.path.realpath(scratch)
+            environment = dict(os.environ)
+            environment['GIT_CEILING_DIRECTORIES'] = os.path.dirname(neutral)
+            if config:
+                environment['GIT_CONFIG_COUNT'] = str(len(config))
+                for index, (key, value) in enumerate(config):
+                    environment['GIT_CONFIG_KEY_' + str(index)] = key
+                    environment['GIT_CONFIG_VALUE_' + str(index)] = value
+            result = subprocess.run(['git', '-C', neutral, *arguments], env=environment,
+                                    capture_output=True, timeout=3)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise UnknownShape('cannot inspect clone-equivalent Git configuration') from error
+    if len(result.stdout) > 8192:
+        raise UnknownShape('Git bootstrap lookup output exceeds bounded metadata')
+    return result
+
+
+def _git_clone_local_kind(source: str, cwd: str) -> str | None:
+    """Git clone's two local-path searches, including gitfiles and suffixes.
+
+    Repository candidates precede regular bundle candidates. Git's own bounded
+    resolve-git-dir reader recognizes bare metadata and gitfile indirection;
+    no candidate clone, transport or helper executes during this lookup.
+    """
+    base = os.path.abspath(os.path.join(cwd, source))
+    for suffix in ('/.git', '', '.git/.git', '.git'):
+        candidate = base + suffix
+        if not (os.path.isdir(candidate) or os.path.isfile(candidate)):
+            continue
+        resolved = _git_bootstrap_read(['rev-parse', '--resolve-git-dir', candidate])
+        if resolved.returncode == 0:
+            if base != canonical(base):
+                raise UnknownShape('Git clone local source has a symlink alias')
+            return 'repository'
+        if resolved.returncode not in {1, 128}:
+            raise UnknownShape('cannot establish Git clone local metadata')
+    for suffix in ('.bundle', ''):
+        candidate = base + suffix
+        if os.path.isfile(candidate):
+            if candidate != canonical(candidate):
+                raise UnknownShape('Git clone local bundle has a symlink alias')
+            return 'bundle'
+    return None
+
+
+def _git_clone_effective_source(source: str) -> str:
+    # Clone assigns its literal repository argument to the new remote; it does
+    # not interpret that argument as a remote name in the caller's repository.
+    # An invocation-only remote URL models this assignment while retaining the
+    # real system/global config ordering (including a configured default name).
+    name = _git_bootstrap_read(['config', '--get', 'clone.defaultRemoteName'])
+    if name.returncode not in {0, 1}:
+        raise UnknownShape('cannot resolve Git clone default remote name')
+    raw_name = name.stdout[:-1] if name.stdout.endswith(b'\n') else name.stdout
+    try:
+        remote_name = raw_name.decode('utf-8') if name.returncode == 0 else 'origin'
+    except UnicodeError as error:
+        raise UnknownShape('unsupported Git clone remote name') from error
+    valid = _git_bootstrap_read(['check-ref-format', 'refs/remotes/' + remote_name + '/probe'])
+    if not remote_name or valid.returncode:
+        raise UnknownShape('unsupported Git clone remote name')
+    resolved = _git_bootstrap_read(['ls-remote', '--get-url', '--', remote_name],
+                                   (('remote.' + remote_name + '.url', source),))
+    if resolved.returncode:
+        raise UnknownShape('cannot resolve effective Git clone source')
+    value = resolved.stdout[:-1] if resolved.stdout.endswith(b'\n') else resolved.stdout
+    try:
+        return value.decode('utf-8')
+    except UnicodeError as error:
+        raise UnknownShape('effective Git clone source is not supported UTF-8') from error
+
+
+def _git_bootstrap_destination(operation: dict) -> str | None:
+    """Bound fresh repository creation; all other Git mutations keep toplevel ownership.
+
+    No candidate command executes here. Creation cannot borrow a containing
+    repository, reinitialize existing metadata or redirect writes through options.
+    """
+    command, *args = operation['args']
+    if command not in {'init', 'clone'}:
+        return None
+    if operation.get('config'):
+        raise UnknownShape('Git bootstrap configuration overrides are unmodeled')
+    redirecting = {'GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR', 'GIT_INDEX_FILE',
+                   'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+                   'GIT_CONFIG', 'GIT_CONFIG_PARAMETERS',
+                   'GIT_CONFIG_COUNT', 'GIT_EXEC_PATH', 'GIT_SSH', 'GIT_SSH_COMMAND'}
+    if any(name in os.environ for name in redirecting):
+        raise UnknownShape('environment-dependent Git bootstrap targeting is unresolved')
+    cwd = operation['cwd']
+    if not os.path.isdir(cwd):
+        raise UnknownShape('Git bootstrap cwd must already exist')
+    flags = ({'-q', '--quiet', '--bare'} if command == 'init' else
+             {'-q', '--quiet', '-v', '--verbose', '--bare', '--mirror', '--no-checkout',
+              '--no-hardlinks', '--no-local', '--local', '--single-branch', '--no-single-branch', '--no-tags'})
+    values = {'-b', '--initial-branch', '--template'} if command == 'init' else {'-b', '--branch', '--depth', '--template'}
+    operands, seen_flags = [], set()
+    empty_template = False
+    i, terminated = 0, False
+    while i < len(args):
+        token = args[i]
+        if not terminated and token == '--':
+            terminated = True
+        elif not terminated and token.startswith('-'):
+            if token in flags:
+                seen_flags.add(token)
+            elif token in values or any(token.startswith(x + '=') for x in values if x.startswith('--')):
+                if '=' in token:
+                    option, value = token.split('=', 1)
+                else:
+                    option = token
+                    i += 1
+                    if i >= len(args):
+                        raise UnknownShape('Git bootstrap option needs a value')
+                    value = args[i]
+                if option == '--template':
+                    if value != '':
+                        raise UnknownShape('Git bootstrap supports only an empty per-command --template= override')
+                    empty_template = True
+                elif not value or value.startswith('-') or (option == '--depth' and not re.fullmatch(r'[1-9][0-9]*', value)):
+                    raise UnknownShape('invalid Git bootstrap option value')
+            else:
+                raise UnknownShape('unsupported Git bootstrap option: ' + token)
+        else:
+            operands.append(token)
+        i += 1
+    # A custom template may copy symlinked objects/refs and cause writes outside
+    # the destination. An exact empty command override copies none, without
+    # changing persistent configuration or requiring another authorization.
+    if not empty_template:
+        template = _git_bootstrap_read(['config', '--path', '--get', 'init.templateDir'])
+        template_value = template.stdout[:-1] if template.stdout.endswith(b'\n') else template.stdout
+        if template.returncode not in {0, 1} or template_value != b'' or 'GIT_TEMPLATE_DIR' in os.environ:
+            raise UnknownShape('configured Git bootstrap template has unmodeled write aliases; use --template= for this invocation')
+    if command == 'init':
+        if len(operands) > 1:
+            raise UnknownShape('Git init needs at most one explicit destination')
+        destination = operands[0] if operands else '.'
+    else:
+        if len(operands) != 2:
+            raise UnknownShape('Git clone needs an explicit source and destination')
+        source, destination = operands
+        if source.startswith('-') or not source:
+            raise UnknownShape('invalid Git clone source')
+        raw_kind = _git_clone_local_kind(source, cwd)
+        independent = '--no-local' in seen_flags and '--local' not in seen_flags
+        if raw_kind and '://' in source:
+            raise UnknownShape('local Git source shadows a transport URL; use an explicit filesystem path with --no-local')
+        if raw_kind == 'repository' and not independent:
+            raise UnknownShape('local repository or gitfile clone needs unambiguous --no-local for independent objects')
+        if raw_kind:
+            # Git absolute_pathdup preserves the literal suffix/slashes, unlike
+            # realpath/normpath. Resolve initial relative input in the real cwd,
+            # before entering the neutral configuration lookup.
+            clone_argument = source if os.path.isabs(source) else os.path.join(cwd, source)
+        else:
+            if ':' not in source:
+                raise UnknownShape('Git clone source is neither a local candidate nor a transport')
+            clone_argument = source
+        source = _git_clone_effective_source(clone_argument)
+        if not source or '\n' in source or '\r' in source or source.startswith('-'):
+            raise UnknownShape('invalid effective Git clone source')
+        effective_kind = _git_clone_local_kind(source, cwd)
+        if effective_kind and '://' in source:
+            raise UnknownShape('effective local Git source has ambiguous transport syntax; use an explicit filesystem path')
+        if effective_kind == 'repository' and not independent:
+            raise UnknownShape('effective local repository or gitfile needs unambiguous --no-local for independent objects')
+        # Only built-in network transports or existing local inputs, never
+        # remote helpers, file URLs, option-like sources or inferred targets.
+        if effective_kind:
+            pass  # The real local-path lookup precedes transport interpretation.
+        elif '://' in source:
+            from urllib.parse import urlsplit
+            try:
+                url = urlsplit(source)
+                host, port = url.hostname, url.port
+            except ValueError as error:
+                raise UnknownShape('invalid Git clone URL') from error
+            if (url.scheme not in {'https', 'ssh'} or not host or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9.-]*', host)
+                    or not url.path or url.password or url.query or url.fragment
+                    or url.username and not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]*', url.username)):
+                raise UnknownShape('unsupported Git clone transport')
+        elif re.match(r'[^/]+:', source) and not os.path.isabs(source):
+            if not re.fullmatch(r'[A-Za-z0-9_.-]+@[A-Za-z0-9_.-]+:[A-Za-z0-9_./-]+', source):
+                raise UnknownShape('unsupported Git clone transport')
+        else:
+            raise UnknownShape('effective Git clone local source does not exist')
+    if not destination or destination.startswith('-'):
+        raise UnknownShape('invalid Git bootstrap destination')
+    target = os.path.abspath(os.path.join(cwd, destination))
+    if target != canonical(target):
+        raise UnknownShape('Git bootstrap destination has a symlink alias')
+    if not os.path.isdir(os.path.dirname(target)):
+        raise UnknownShape('Git bootstrap destination parent must already exist')
+    if os.path.lexists(target) and not os.path.isdir(target):
+        raise UnknownShape('Git bootstrap destination must be a directory')
+    if command == 'clone' or '--bare' in seen_flags:
+        try:
+            nonempty = os.path.isdir(target) and bool(os.listdir(target))
+        except OSError as error:
+            raise UnknownShape('cannot inspect Git bootstrap destination') from error
+        if nonempty:
+            raise UnknownShape('Git clone and bare init require an empty destination')
+    else:
+        # Ordinary nonempty project files are not overwritten by git init.
+        # Existing metadata at this target is a separate mutation, not
+        # bootstrap authority. An enclosing workspace does not own new .git.
+        probe = target if os.path.isdir(target) else os.path.dirname(target)
+        try:
+            existing = subprocess.run(['git', '-C', probe, 'rev-parse', '--absolute-git-dir'],
+                                      capture_output=True, timeout=3)
+        except (OSError, subprocess.SubprocessError) as error:
+            raise UnknownShape('cannot inspect Git bootstrap metadata') from error
+        existing_value = existing.stdout[:-1] if existing.stdout.endswith(b'\n') else existing.stdout
+        if existing.returncode == 0 and not existing_value:
+            raise UnknownShape('cannot establish Git bootstrap metadata identity')
+        existing_metadata = canonical(os.fsdecode(existing_value)) if existing.returncode == 0 else ''
+        if existing_metadata in {target, os.path.join(target, '.git')} or os.path.lexists(os.path.join(target, '.git')):
+            raise UnknownShape('Git init bootstrap cannot reinitialize existing repository metadata')
+        if existing.returncode not in {0, 128}:
+            raise UnknownShape('cannot establish absent Git bootstrap metadata')
+    return target
 
 
 def reader(args: list[str]) -> bool:
@@ -1300,13 +1587,18 @@ def _action(command: str, cwd: str) -> dict:
                                                    '--upload-pack', '--receive-pack')) for a in operation["args"][1:]):
                     raise UnknownShape("Git helper execution has unbounded effects; use --no-textconv/--no-ext-diff for inspection")
                 local = operation["cwd"]
-                paths.append(_git_toplevel(local))
-                rest = operation['args'][1:]
-                if operation['args'][0] == 'commit':
-                    commit_commands += 1
-                    rest = _commit_write_operands(rest)
-                git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in rest]
-                paths.extend(canonical(x, local) for x in git_operands if '/' in x and '://' not in x and not x.startswith('-'))
+                bootstrap = _git_bootstrap_destination(operation)
+                if bootstrap is not None:
+                    paths.append(bootstrap)
+                    directory_paths.append(bootstrap)
+                else:
+                    paths.append(_git_toplevel(local))
+                    rest = operation['args'][1:]
+                    if operation['args'][0] == 'commit':
+                        commit_commands += 1
+                        rest = _commit_write_operands(rest)
+                    git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in rest]
+                    paths.extend(canonical(x, local) for x in git_operands if '/' in x and '://' not in x and not x.startswith('-'))
             elif args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "patch"}:
                 # Options that take the next token as their value. Without this,
                 # `cp SRC DST -S .bak` made `.bak` the copy destination (#1051
@@ -1335,6 +1627,8 @@ def _action(command: str, cwd: str) -> dict:
                     if args[0] in {'cp', 'mv'} and (token == '-t' or _long_option_matches(token, ('--target-directory',))
                                                    or (not token.startswith('--') and 't' in token[1:])):
                         raise UnknownShape('use explicit final copy destination')
+                    if args[0] == 'cp':
+                        _cp_option(token)
                     if token == '--reference' or token.startswith('--reference='):
                         has_reference = True
                     elif '/' in token:
@@ -1343,15 +1637,16 @@ def _action(command: str, cwd: str) -> dict:
                         option_paths.append(token.split('=', 1)[1] if token.startswith('--') and '=' in token else token[token.index('/'):])
                     if token in value_options or args[0] in {'cp', 'mv'} and _long_option_matches(token, ('--suffix',)) and '=' not in token:
                         skip = True
-                    elif args[0] in {'cp', 'mv'} and not token.startswith('--') and token.endswith('S'):
-                        skip = True  # a short cluster such as -aS takes the next token
+                    elif not token.startswith('--') and (args[0] == 'cp' and token.find('S') == len(token) - 1
+                                                           or args[0] == 'mv' and token.endswith('S')):
+                        skip = True  # only a final option S consumes the next token for cp
                 copied_directories = []
                 if args[0] in {'cp', 'mv'} and len(operands) >= 2:
                     sources, destination = operands[:-1], operands[-1]
                     targets, copied_directories = _copy_destinations(sources, destination, args[1:], effective)
-                    source_writes = (args[0] == 'mv' or _cp_link_copy(args[1:]) or
-                                     _cp_keeps_symlinks(args[1:]) and any(_has_symlink(os.path.join(effective, x)) for x in sources))
-                    operands = (sources if source_writes else []) + targets
+                    source_writes = args[0] == 'mv' or _cp_link_copy(args[1:])
+                    aliases = [] if source_writes else _copy_alias_targets(sources, args[1:], effective)
+                    operands = (sources if source_writes else aliases) + targets
                     directory_paths.extend(copied_directories)
                 elif args[0] in {'chmod', 'chown'} and not has_reference:
                     operands = operands[1:]  # the first operand is the mode/owner
