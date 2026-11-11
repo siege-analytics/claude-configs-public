@@ -284,6 +284,35 @@ def _target_repo(path: str, *, git_environment: Optional[dict] = None) -> str:
         return ""
 
 
+def _entry_present(directory: str, name: str) -> bool:
+    try:
+        os.lstat(os.path.join(directory, name))
+        return True
+    except (FileNotFoundError, NotADirectoryError):
+        return False
+    except OSError:
+        return True
+
+
+def _git_entry_above(path: str) -> bool:
+    """Whether a Git layout exists at or above path (filesystem only, #1281).
+
+    A `.git` entry, or a Git directory itself (bare repository or `.git`
+    internals: HEAD, objects and refs), makes an empty toplevel a failed
+    lookup, not a non-Git target. A stat error other than absence counts as
+    present so it cannot reopen the skip.
+    """
+    directory = canonical(path)
+    while True:
+        if _entry_present(directory, ".git") or all(
+                _entry_present(directory, name) for name in ("HEAD", "objects", "refs")):
+            return True
+        parent = os.path.dirname(directory)
+        if parent == directory:
+            return False
+        directory = parent
+
+
 def _scope_diagnostic(gate: dict, expected_repo: str, *, git_environment: Optional[dict] = None) -> str:
     declared = str(gate["data"].get("repo_root", ""))
     return (f"Task gate scope rejected: {gate['path']} declares repo_root={declared} "
@@ -584,10 +613,14 @@ def select_task(workspace: str, paths: list[str], binding: str = "", session_id:
         scores = []
         rejected = []
         expected_repo = _target_repo(path, git_environment=git_environment)
+        # A failed lookup inside a Git checkout is unresolved: deny, never skip (#1281).
+        unresolved = not expected_repo and _git_entry_above(path)
         for gate in candidates:
             declared = str(gate["data"].get("repo_root", ""))
-            if declared and expected_repo and not _same_repo(declared, expected_repo, git_environment=git_environment):
-                rejected.append(_scope_diagnostic(gate, expected_repo, git_environment=git_environment))
+            if declared and (expected_repo or unresolved) and not _same_repo(declared, expected_repo, git_environment=git_environment):
+                rejected.append(_scope_diagnostic(gate, expected_repo, git_environment=git_environment) if expected_repo else
+                                f"Task gate scope rejected: {gate['path']} declares repo_root={declared}; "
+                                f"target repository is unresolved for {path} (git rev-parse failed while a .git entry or Git directory exists at or above it).")
                 continue
             matching = [len(p.split(os.sep)) for p in _scopes(gate) if _within(path, p)]
             if matching:
