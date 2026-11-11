@@ -63,6 +63,16 @@ PULLS = {
     'o/r#1762': pr('o/r', 1762, '```\n- Refs #1526\n```'),
     'o/r#1763': pr('o/r', 1763, '> - Refs #1526'),
     'o/r#1764': pr('o/r', 1764, '- Related to #1526, refs #1600'),
+    # List padding (Root P1 on 05ecbbfb): 1-4 spaces after a marker are
+    # paragraph padding; a tab or 5+ spaces make the content indented code.
+    'o/r#1765': pr('o/r', 1765, '-     Refs #1526'),
+    'o/r#1766': pr('o/r', 1766, '1.     Refs #1526'),
+    'o/r#1767': pr('o/r', 1767, '1. Refs #1526'),
+    'o/r#1768': pr('o/r', 1768, '-    Refs #1526'),
+    'o/r#1769': pr('o/r', 1769, '-\tRefs #1526'),
+    'o/r#1770': pr('o/r', 1770, '  \t- Refs #1526'),
+    'o/r#1771': pr('o/r', 1771, '1.\tRefs #1526'),
+    'o/r#1772': pr('o/r', 1772, '-  \tRefs #1526'),
     'o/r#1900': pr('o/r', 1900, 'Unrelated cleanup.\n\nRefs #1600', closing=[('o/r', 1600)]),
     'o/r#1901': pr('o/r', 1901, 'This is related to #1526 in spirit, see the discussion there.'),
     'o/r#1902': pr('o/r', 1902, 'Example: Refs #1526'),
@@ -223,6 +233,22 @@ class OwnPullRequestHeading(unittest.TestCase):
         for number in (1761, 1762, 1763):
             with self.subTest(number):
                 self.assertChain('bulleted-hidden-%d' % number, headed('PR #%d' % number), False)
+
+    def test_list_item_indented_code_excluded(self):
+        # `-     Refs` and `1.     Refs` are CommonMark indented code (Root P1).
+        for number in (1765, 1766):
+            with self.subTest(number):
+                self.assertChain('list-code-%d' % number, headed('PR #%d' % number), False)
+
+    def test_tab_list_padding_excluded(self):
+        for number in (1769, 1770, 1771, 1772):
+            with self.subTest(number):
+                self.assertChain('list-tab-%d' % number, headed('PR #%d' % number), False)
+
+    def test_ordinary_numbered_and_max_padding_bullets_count(self):
+        for number in (1767, 1768):
+            with self.subTest(number):
+                self.assertChain('list-padding-%d' % number, headed('PR #%d' % number), True)
 
     # Mixed outcomes across headings in one comment (review S2-3).
     def test_own_pr_heading_cannot_carry_a_foreign_heading(self):

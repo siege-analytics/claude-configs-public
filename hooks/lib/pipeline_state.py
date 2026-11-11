@@ -62,7 +62,11 @@ REPO_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+')
 # S2-2): an optional list marker, a verb, a run of refs, then an optional note.
 _REF_TOKEN = (r'(?:#[0-9]+|[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_][A-Za-z0-9_.-]*#[0-9]+'
               r'|https://github\.com/[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_][A-Za-z0-9_.-]*/(?:issues|pull)/[0-9]+)')
-_LIST_MARKER = re.compile(r'(?:[-*+]|[0-9]{1,9}[.)])[ \t]+')
+# Only 1-4 ASCII spaces after the marker are paragraph padding (CommonMark
+# list items); a tab or 5+ spaces make the content indented code, which is
+# left untouched and so never counts (Root review of 05ecbbfb).
+_LIST_MARKER = re.compile(r'(?:[-*+]|[0-9]{1,9}[.)]) {1,4}(?=[^ \t])')
+_CODE_LIST_ITEM = re.compile(r'(?:[-*+]|[0-9]{1,9}[.)])(?:\t| {5,})')
 _RELATION_CLAUSE = re.compile(
     r'(?P<head>(?:refs?|references|fix(?:es|ed)?|clos(?:es|ed)|resolv(?:es|ed))[ \t]*:?[ \t]+'
     + _REF_TOKEN + r'(?:[ \t]*,[ \t]*' + _REF_TOKEN + r')*)(?:[ \t]*[,;(:.]|[ \t]+).*', re.I)
@@ -71,7 +75,12 @@ _RELATION_CLAUSE = re.compile(
 def relationship_body(body):
     """The PR body with one list marker removed per line and relation notes dropped.
 
-    `- Refs #N` becomes `Refs #N`, and `Refs #N (note)`, `Refs #N; note` or
+    `- Refs #N` becomes `Refs #N` when the marker sits after at most three
+    leading spaces and is followed by 1-4 spaces of padding; any other
+    indentation is code and is left as is. A list item whose content is code
+    (a tab or 5+ spaces after the marker) is rewritten as indented code, so the
+    shared parser's clause split cannot read `Refs #N` out of `1.     Refs #N`.
+    `Refs #N (note)`, `Refs #N; note` or
     `Refs #N, item3 only` keep only the verb and the leading run of refs. The
     note is discarded, never parsed, so a ref that appears only in a note or in
     prose still never counts. Line structure is kept, so the shared parser's
@@ -80,7 +89,10 @@ def relationship_body(body):
     """
     lines = []
     for line in body.splitlines():
-        indent, text = re.match(r'([ \t]{0,3})(.*)\Z', line, re.S).groups()
+        indent, text = re.match(r'( {0,3})(.*)\Z', line, re.S).groups()
+        if _CODE_LIST_ITEM.match(text):
+            lines.append('    ' + line)
+            continue
         marker = _LIST_MARKER.match(text)
         if marker:
             text = text[marker.end():]

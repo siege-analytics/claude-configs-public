@@ -9,6 +9,18 @@ Reviewer: a fresh read-only reviewer with no implementation context, prompted to
 Target: worktree diff against develop 8043c583 (hooks/lib/pipeline_state.py, hooks/_test/pipeline_state_own_pr_1274.{py,test.sh}).
 Role limits given: review only; no edits, mutating git commands or GitHub posts.
 
+## Root review @ 05ecbbfb (P1)
+
+Source: pullrequestreview-5853528515 (03:40:54Z), relayed by hub 261110-fit-boulder from Root outbox entry 249. Root had accepted 35ea7797 with no source finding (pullrequestreview-5853167730). On the round-2 delta it found a P1: `relationship_body` erased all list padding, so `-     Refs #1526` and `1.     Refs #1526`, which are CommonMark indented code, made all four signals true and the gate 0/0. Root's private proof: E/core1279-indented-list-delta-proof-20261111.json.
+
+Author response in round 3:
+- The marker now strips only 1-4 ASCII spaces followed by text.
+- A list item whose content is code is rewritten as indented code, because the shared parser's `. ` clause split would otherwise read `1.     Refs #N`.
+- Leading indent is spaces only.
+- Tests: Root's 2 negatives, 4 tab/mixed-padding negatives, and 1 ordinary numbered / 4-space positive. The 10 round-2 delta controls are retained.
+
+The re-review's N-S3-1 (per-clause reduction) is left as a follow-up.
+
 ## Recovery review @ 35ea7797 (separate reviewer session, same model family)
 
 Source: https://github.com/siege-analytics/claude-configs-public/pull/1279#issuecomment-6785649710 (posted 2026-11-11T02:58:27Z). It replaced the assigned cross-family review, whose reviewer failed at startup with an expired provider token, so cross-family review is still owed. Verdict ACCEPT; S1 0, S2 3, S3 4; no merge blockers. Author response in round 2, on hub instruction:
