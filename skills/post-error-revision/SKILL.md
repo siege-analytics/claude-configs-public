@@ -120,9 +120,11 @@ fix(<scope>): <terse description of corrected behavior>
 
 <body explaining the fix>
 
-Refs: <repo>#<originating-ticket> Post-error revision dated YYYY-MM-DD
+Refs: #<originating-ticket> Post-error revision dated YYYY-MM-DD
 Post-error-revision: <link to the ticket's Post-error revision block>
 ```
+
+Write the originating ticket as a bare same-repository `#N`. In repositories that enforce the protected ticket-commit policy, every commit in the range is checked and only a bare `#N` is accepted, so `owner/repo#N` alone is permanently denied. When the originating ticket lives in another repository, cite its `owner/repo#N` in addition to, never instead of, a bare `#N` for this repository's ticket.
 
 The `Refs:` + `Post-error-revision:` pair is what the hook `post-error-revision-required.sh` enforces. Without both trailers, the push is blocked on any commit whose message contains `revert` or `fix(...): regression`.
 
@@ -191,7 +193,7 @@ The rename in PR 321 missed the config-driven dispatch at
 services/dispatcher.py:142. Updating both the callsite and the
 config-string key.
 
-Refs: socialwarehouse#NNN Post-error revision dated 2026-05-22
+Refs: #NNN Post-error revision dated 2026-05-22
 Post-error-revision: https://github.com/.../issues/NNN#post-error-revision
 ```
 

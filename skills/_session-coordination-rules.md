@@ -54,6 +54,12 @@ Do not retire a spoke that still owns an unmerged PR, an unresolved blocker, pen
 
 **session-coordination:9. Check collaborators after handoffs; do not set-and-forget.** When you delegate review, implementation, verification, or investigation to another session, the delegation is not complete until you actively check the collaborator's status/result and either resume, redirect, retire, or report a bounded waiting state. Re-check after every material handoff, after any expected wait, and before making a decision that depends on collaborator output. Before saying a collaborator is done, stuck, paused, or safe to ignore, inspect both its current status and latest reply rather than relying on a prior message. If the operator asks about collaborator progress, inspect the collaborator immediately. Apply `[rule:tandem-agent]` for role boundaries and authorization before sending new work.
 
+For duration or context checkpoints, use [skill:stalled-session-recovery]'s
+session-renewal procedure. D triggers a health check, not an age-based respawn;
+WC coordinates renewal and TC preserves delivery ownership. Confirm useful
+successor acceptance and settled concurrent ownership before retirement,
+without creating a fresh operator-approval step.
+
 ## Dispatch protocol
 
 Canonical procedure for resolver check12 and the legacy Spawn-session discipline entry. Apply it to review, implementation, investigation and other delegated work; the code-writing WIP/isolation safeguards apply when the target can be mutated. This selects dispatch mechanics, not collaborator authority. Existing role boundaries and owner holds remain binding.

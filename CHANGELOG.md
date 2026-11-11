@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### BREAKING: unresolved Git target repositories (#1281)
+
+- A failed repository observation inside a detected Git layout now rejects Task ownership rather than treating the target as non-Git. Repair the actual Git/layout/trust or transient lookup failure and retry; this does not grant foreign repositories or require broader Task scope.
+
+### Fixed: Task evidence, literal operands and session identity
+
+- Resolve turn-start evidence from the unique own Task or explicit Task binding independently of host cwd; multiple active Tasks require a binding instead of a cwd guess, while mutations retain physical scope checks. Preserve own-PR evidence relationships, successful-only lookup reuse for long operand lists, explicit archive/venv targets and bounded own-header ENOENT recovery (#1274, #1167, #1152, #1284, #1292).
+
+### Added: duration checkpoints and stalled-session recovery (#1302)
+
+- Use role-appropriate duration or context checkpoints, visible progress and real return triggers to continue unfinished objectives. Elapsed time alone does not replace a healthy owner. Preserve actual successor acceptance and scoped holds. These instructions add no fresh owner acknowledgment and do not install automatic renewal; configured health sweeps remain separately verified runtime behavior.
+
 ### Fixed: Git archive outputs and apply inspection (#1166)
 
 - Model bounded tar archive output as the destination file rather than a source-repository mutation; stdout archives and inspection-only apply modes retain read semantics. Actual apply, foreign or aliased outputs, custom formats, remote execution and unknown options retain conservative controls. Git configuration remains trusted under the existing command boundary.

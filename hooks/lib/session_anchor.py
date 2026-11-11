@@ -23,16 +23,25 @@ in order:
    closed. Right after Craft rotates a session's SDK id this costs at most the
    turn before the new id is recorded.
 """
+import errno
 import json
 import os
 import re
 import stat
+import time
 
 UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 ENV_NAMES = ("CRAFT_SESSION_DIR", "CRAFT_AGENT_SESSION_DIR")
 MAX_ANCHOR_BYTES = 4 * 1024 * 1024
 MAX_HEADER_BYTES = 1024 * 1024
 MAX_REGISTERED_SESSIONS = 2048
+# Craft replaces session.jsonl with a new inode non-atomically (#1284): for a
+# few milliseconds the path does not exist. Only the env-named directory (the
+# caller's own unless mis-tagged, #1099) and only ENOENT from opening its
+# header is read again, which can only reproduce the race-free read; the
+# backoff is fixed, so the delay is at most 30 ms and the happy path is free.
+OWN_HEADER_ENOENT_BACKOFF = (0.005, 0.005, 0.01, 0.01)
+_sleep = time.sleep
 
 
 def _read_regular(path: str) -> str:
@@ -128,39 +137,57 @@ def verified_session_dir(env_dir: str, payload) -> str:
     return os.path.join(parent, uuid)
 
 
-def _registered_header(directory: str, sessions: str):
-    """Strict first-line identity inside an already verified workspace only."""
+def _classified_header(directory: str, sessions: str):
+    """(header, check) for a strict first-line identity in a verified workspace.
+
+    check is 'ok' with a header, else the first failed check: 'path',
+    'enoent', 'oserror', 'not-regular', 'nlink', 'oversize', 'parse',
+    'id-mismatch' or 'sdk-id-invalid'. Only 'enoent' may be transient.
+    """
     if (os.path.dirname(directory) != sessions or os.path.realpath(directory) != directory
             or not os.path.isdir(directory)):
-        return None
+        return None, 'path'
     path = os.path.join(directory, "session.jsonl")
     if os.path.realpath(path) != path:
-        return None
+        return None, 'path'
     try:
         fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
+    except OSError as error:
+        return None, 'enoent' if error.errno == errno.ENOENT else 'oserror'
+    try:
         with os.fdopen(fd, 'rb') as stream:
             info = os.fstat(stream.fileno())
-            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
-                return None
+            if not stat.S_ISREG(info.st_mode):
+                return None, 'not-regular'
+            if info.st_nlink != 1:
+                return None, 'nlink'
             raw = stream.readline(MAX_HEADER_BYTES + 1)
-        if len(raw) > MAX_HEADER_BYTES:
-            return None
-        def unique(items):
-            value = {}
-            for key, field in items:
-                if key in value:
-                    raise ValueError('duplicate session header field')
-                value[key] = field
-            return value
+    except OSError:
+        return None, 'oserror'
+    if len(raw) > MAX_HEADER_BYTES:
+        return None, 'oversize'
+    def unique(items):
+        value = {}
+        for key, field in items:
+            if key in value:
+                raise ValueError('duplicate session header field')
+            value[key] = field
+        return value
+    try:
         header = json.loads(raw, object_pairs_hook=unique)
-        if not isinstance(header, dict) or header.get('id') != os.path.basename(directory):
-            return None
-        sdk_id = header.get('sdkSessionId')
-        if sdk_id is not None and (not isinstance(sdk_id, str) or not UUID_RE.fullmatch(sdk_id)):
-            return None
-        return header
-    except (OSError, ValueError):
-        return None
+    except ValueError:
+        return None, 'parse'
+    if not isinstance(header, dict) or header.get('id') != os.path.basename(directory):
+        return None, 'id-mismatch'
+    sdk_id = header.get('sdkSessionId')
+    if sdk_id is not None and (not isinstance(sdk_id, str) or not UUID_RE.fullmatch(sdk_id)):
+        return None, 'sdk-id-invalid'
+    return header, 'ok'
+
+
+def _registered_header(directory: str, sessions: str):
+    """Strict first-line identity inside an already verified workspace only."""
+    return _classified_header(directory, sessions)[0]
 
 
 def _registered_anchor_ids(directory):
@@ -188,34 +215,67 @@ def _registered_anchor_ids(directory):
         return set()
 
 
-def registered_session_dir(workspace: str, env_dir: str, payload) -> str:
-    """Exact identity binding for an already registered, verified Craft host.
+def registered_session_binding(workspace: str, env_dir: str, payload):
+    """(session dir or '', diagnostic): exact identity binding for a registered host.
 
     Structured anchors and exact headers must uniquely identify one session.
     A fresh SDK can persist its ID in
     the header before any final-turn anchor exists, so a bounded UNIQUE exact
     header SDK ID is a second witness. Never guess a path or borrow another
     task when metadata has not arrived; callers receive an unresolved binding.
+
+    Only the env-named directory's header is read again after ENOENT (#1284);
+    every other failure, foreign directory and multi-match is decided by its
+    first read exactly as before. The diagnostic is non-authorizing: result,
+    the failed check, the env dir's own header check and ENOENT retries, the
+    match count and whether the env dir matched. It never carries paths.
     """
+    diagnostic = {'result': 'unbound', 'check': 'workspace', 'own_check': 'absent',
+                  'own_enoent_retries': 0, 'matches': 0, 'env_matched': False}
     if not os.path.isabs(workspace) or os.path.realpath(workspace) != workspace:
-        return ''
+        return '', diagnostic
     sessions = os.path.join(workspace, 'sessions')
     sdk_id = payload_uuid(payload)
     if not sdk_id or os.path.dirname(env_dir) != sessions:
-        return ''
+        diagnostic['check'] = 'env-dir' if sdk_id else 'payload'
+        return '', diagnostic
     try:
         names = os.listdir(sessions)
     except OSError:
-        return ''
+        diagnostic['check'] = 'listdir'
+        return '', diagnostic
     if len(names) > MAX_REGISTERED_SESSIONS:
-        return ''
+        diagnostic['check'] = 'session-limit'
+        return '', diagnostic
     matches = []
     for name in names:
         directory = os.path.join(sessions, name)
-        header = _registered_header(directory, sessions)
+        header, check = _classified_header(directory, sessions)
+        if directory == env_dir:
+            retries = 0
+            while check == 'enoent' and retries < len(OWN_HEADER_ENOENT_BACKOFF):
+                _sleep(OWN_HEADER_ENOENT_BACKOFF[retries])
+                retries += 1
+                header, check = _classified_header(directory, sessions)
+            diagnostic.update(own_check=check, own_enoent_retries=retries)
         if header and (header.get('sdkSessionId') == sdk_id or sdk_id in _registered_anchor_ids(directory)):
             matches.append(directory)
-    return matches[0] if len(matches) == 1 else ''
+    diagnostic.update(matches=len(matches), env_matched=env_dir in matches)
+    if len(matches) == 1:
+        diagnostic.update(result='bound', check='ok')
+        return matches[0], diagnostic
+    if matches:
+        diagnostic['check'] = 'multi-match'
+    elif diagnostic['own_check'] not in ('ok', 'absent'):
+        diagnostic['check'] = diagnostic['own_check']
+    else:
+        diagnostic['check'] = 'no-match'
+    return '', diagnostic
+
+
+def registered_session_dir(workspace: str, env_dir: str, payload) -> str:
+    """The bound directory of registered_session_binding, or '' when unbound."""
+    return registered_session_binding(workspace, env_dir, payload)[0]
 
 
 def payload_from_env() -> dict:

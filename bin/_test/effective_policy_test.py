@@ -309,6 +309,32 @@ class EffectivePolicyTest(unittest.TestCase):
         self.assertEqual("deny", deny["decision"]["final"])
         self.assertEqual("deny", decoy["decision"]["final"])
 
+    def test_post_error_revision_trailer_satisfies_ticket_policy(self):
+        # Authors copy the skill's prescribed trailer into commits that every
+        # protected range check evaluates, so it must pass ticket-commit and
+        # still be the Refs: trailer the post-error-revision hook detects.
+        skill = (ROOT / "skills/post-error-revision/SKILL.md").read_text(encoding="utf-8")
+        prescribed = [line.strip() for line in skill.splitlines() if line.lstrip().startswith("Refs:")]
+        self.assertGreaterEqual(len(prescribed), 2, prescribed)
+        capabilities = self.all_verified()
+        placeholders = {"<repo>": "siege-analytics/claude-configs-public", "<originating-ticket>": "1291", "NNN": "1291"}
+        for line in prescribed:
+            concrete = line
+            for placeholder, value in placeholders.items():
+                concrete = concrete.replace(placeholder, value)
+            with self.subTest(line=line):
+                # An unknown placeholder left in place (`<x>#N`) would match the bare-#N rule by accident.
+                self.assertNotIn("<", concrete)
+                self.assertNotIn("NNN", concrete)
+                self.assertRegex(concrete, r"Refs:\s+")  # hooks/git/post-error-revision-required.sh
+                message = "fix(scope): corrected behavior\n\nBody.\n\n" + concrete
+                result = self.explain(operation=self.operation("ticket-commit", message=message), capabilities=capabilities)
+                self.assertEqual("allow", result["decision"]["policy"], concrete)
+        foreign = self.explain(operation=self.operation(
+            "ticket-commit", message="fix(scope): x\n\nRefs: siege-analytics/claude-configs-public#1291 Post-error revision"),
+            capabilities=capabilities)
+        self.assertEqual("deny", foreign["decision"]["final"])
+
     def test_review_binding_has_no_authorization_effect(self):
         capabilities = self.all_verified()
         result = self.explain("synthetic-trunk", operation=self.operation("review-procedure"), capabilities=capabilities)

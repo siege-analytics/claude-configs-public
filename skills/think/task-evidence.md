@@ -80,6 +80,23 @@ and its pre-mortem in this session's `plans/`, naming the task identity. Older m
 recommending UUID-keyed workspace-root files describe retired behavior and
 must not be followed.
 
+**Gate metadata for scratch execution (#1152).** `repo_root` names the Git
+repository that physically contains the mutated or executed paths, not the
+repository the files came from. Scratch extracted or created under this
+session's `data/` belongs to the repository that contains that directory,
+which is usually the workspace repository. The exception is a repository
+nested inside `data/`, which needs its own clone-rooted gate. Declare that repository as
+`repo_root` and keep `scope_paths` exact to the scratch directory. "Not the
+Craft workspace" means not merely because it is the session cwd. It does not
+apply when the workspace really is the physical target. Do not keep the source
+checkout as `repo_root` for scratch edits or tests, and do not switch one
+gate's `repo_root` mid-task. A read-only source operand (for example
+`git -C <source> archive`) is not a reason to set `repo_root` to the source
+repository or to widen write scope over it. Its target semantics are governed
+by #1166. Until that lands, a refusal there is a known gap, not something to
+work around with broader scope. Work outside any Git repository keeps its normal
+operational route; a non-Git directory is not given a made-up Git identity.
+
 A positive reader classifier runs before gate lookup. Bounded diagnostics
 (syntax checks, standard test/bytecode/lint commands, document/package readers,
 and Git fetch) are also allowed without artifacts during designing/reviewing.

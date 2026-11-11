@@ -306,7 +306,7 @@ hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
 REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "5f3d25b2e3e5307fb3f753e67a1372dc9770dade80ce647a591f2eb564f64933"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "f77d145b554f600b409d683d2374cc183e14a344ad6f52fe54bb8782ab758fae"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "353464de155f466922c0d3c5eb0868a00b9a5b4241f3f2f66126d0638cf9e89d"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
