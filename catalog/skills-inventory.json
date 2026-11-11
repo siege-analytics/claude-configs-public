@@ -5033,6 +5033,7 @@
         "hooks/_test/metadata_comment_reporting.py",
         "hooks/_test/metadata_ssh_interaction.py",
         "hooks/_test/nongit_own_data_floor.py",
+        "hooks/_test/pipeline_author_permissions.py",
         "hooks/_test/pipeline_state_own_pr_1274.py",
         "hooks/_test/pr_create_body_status.py",
         "hooks/_test/progressive_loading.test.sh",
@@ -5597,6 +5598,7 @@
         "hooks/_test/nongit_own_data_floor.test.sh",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/own_session_operands.test.sh",
+        "hooks/_test/pipeline_author_permissions.test.sh",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
         "hooks/_test/pipeline_state_own_pr_1274.py",
         "hooks/_test/pipeline_state_own_pr_1274.test.sh",
@@ -5946,6 +5948,7 @@
         "hooks/_test/github_project_scope.py",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/metadata_comment_reporting.py",
+        "hooks/_test/pipeline_author_permissions.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/read_allowlist.test.sh",
         "hooks/_test/resolve_project.test.sh",
@@ -6158,10 +6161,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 33446,
-      "content_sha256": "90dcdb2652266863aea2780e21a401ebe06001aa674b874c0e7aa36f9e8131ca",
+      "characters": 33969,
+      "content_sha256": "2a492eb4e40bef010eb65a9c2300876a6e6d234ba12681b19da54bbe8033e0bd",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 8362,
+      "estimated_tokens": 8493,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6193,7 +6196,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 181,
+      "lines": 183,
       "owner": [
         "unknown"
       ],
@@ -11328,6 +11331,7 @@
         "hooks/_test/nongit_own_data_floor.test.sh",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/own_session_operands.test.sh",
+        "hooks/_test/pipeline_author_permissions.test.sh",
         "hooks/_test/pipeline_review_headings_1164.test.sh",
         "hooks/_test/pipeline_state_own_pr_1274.py",
         "hooks/_test/pipeline_state_own_pr_1274.test.sh",
@@ -12253,10 +12257,10 @@
     },
     {
       "canonical_source": "skills/stalled-session-recovery/SKILL.md",
-      "characters": 16073,
-      "content_sha256": "3ae2de97a1b1a6665cd3dad3e15d84002801a730fea310a9862549c7280e13ff",
+      "characters": 16946,
+      "content_sha256": "0aad5bed3baaafadd3e876e651e15b4cfb15fab003a6b20935b4a3e644ea1ce6",
       "description": "How to diagnose and recover a session that has stopped producing useful turns -- stuck on a repeating error, silent for an abnormal stretch, or looping on the same tool call. Invoke when checking on a session that \"seems stuck,\" when a session's own error looks like it should have cleared but hasn't, when a hub is deciding whether to nudge or respawn a worker, or when auditing a fleet of sessions for health. Covers three failure shapes (transient error, persistent misconfiguration, wedged tool call) with distinct diagnostics and distinct fixes, the discipline of reading the last coherent content instead of trusting the error label, and how to respawn without duplicating work or losing in-flight state.",
-      "estimated_tokens": 4019,
+      "estimated_tokens": 4237,
       "frontmatter_name": "stalled-session-recovery",
       "generated_outputs": [
         "dist/nested/skills/stalled-session-recovery",
@@ -12275,7 +12279,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 152,
+      "lines": 155,
       "owner": [
         "unknown"
       ],
@@ -12983,9 +12987,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2644430,
+    "characters": 2645826,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 661187,
+    "estimated_tokens": 661536,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13006,7 +13010,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1248036
+      "unclassified": 1249432
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13018,7 +13022,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 312053
+      "unclassified": 312402
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

@@ -50,6 +50,15 @@ unrelated legacy tasks remain independent.
 
 **Tier (optional, #1086).** The task lifecycle uses the [canonical pre-edit tier contract](SKILL.md#before-an-edit-versus-before-a-commit). Declare a higher tier when needed; this field cannot lower the target-path floor. That entrypoint owns the evidence table, classification failure behavior and separation from commit review.
 
+For turn-start companion derivation with multiple active tasks, use the host's
+`task_id` metadata or one unfenced standalone prompt line
+`CCP_TASK_ID=owner/repo#NNN` within the hook's 1 MiB input bound. Long prompt text is not exported to the hook environment. Use the full ticket when the Task has a `ticket`;
+its separate `task_id` does not replace that identity. This selects only an
+existing current-session Task for that turn's evidence derivation. It does not
+bind later Write/Edit calls, expand scope or make a companion count as earned.
+Conflicting or unknown bindings derive no companions; retain other unfinished
+tasks rather than closing them to manufacture uniqueness.
+
 Keep investigate, junior-senior, artifacts-posted, review and test gate files
 beside this task's think gate, with the same exact identity. Never overwrite
 another task's signals. Legacy session-level `think-gate.json` and repo-suffixed

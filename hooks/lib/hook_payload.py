@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 
 INPUT_LIMIT = 1024 * 1024
@@ -56,6 +57,51 @@ def metadata_environment(payload: dict) -> str:
     return encoded
 
 
+def turn_task_binding(payload: dict) -> str:
+    """Explicit turn selection only; the resolver still requires an own-session Task."""
+    metadata = json.loads(metadata_environment(payload))
+    if metadata.get('hook_event_name') not in (None, 'UserPromptSubmit'):
+        return ''
+    candidates = []
+
+    def collect(value):
+        if not isinstance(value, dict):
+            return
+        if 'task_id' in value:
+            candidates.append(value['task_id'])
+        for key in IDENTITY_CONTAINERS:
+            if key in value:
+                collect(value[key])
+
+    collect(metadata)
+    # Read the already input-bounded event, not its environment projection:
+    # long legitimate prompts are deliberately omitted from that projection.
+    prompt = payload.get('prompt')
+    prompt = prompt if isinstance(prompt, str) else ''
+    if len(prompt.encode('utf-8', 'surrogatepass')) > INPUT_LIMIT:
+        raise ValueError('turn prompt exceeds the hook input bound')
+    fence = ''
+    for line in prompt.splitlines():
+        marker = re.match(r'^ {0,3}(`{3,}|~{3,})(.*)$', line)
+        if marker:
+            mark, tail = marker.groups()
+            if not fence:
+                fence = mark
+            elif mark[0] == fence[0] and len(mark) >= len(fence) and not tail.strip():
+                fence = ''
+            continue
+        if not fence and line.startswith('CCP_TASK_ID='):
+            candidates.append(line[len('CCP_TASK_ID='):])
+    if not candidates:
+        return ''
+    if any(not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_./:#-]{0,511}', value)
+           for value in candidates):
+        raise ValueError('invalid explicit turn task binding')
+    if len(set(candidates)) != 1:
+        raise ValueError('conflicting explicit turn task bindings')
+    return candidates[0]
+
+
 def _unique(pairs):
     value = {}
     for key, field in pairs:
@@ -72,7 +118,7 @@ def main() -> int:
             raise ValueError('hook input exceeds its 1 MiB bound')
         payload = json.loads(raw, object_pairs_hook=_unique,
                              parse_constant=lambda _: (_ for _ in ()).throw(ValueError('non-finite hook value')))
-        print(metadata_environment(payload))
+        print(turn_task_binding(payload) if sys.argv[1:] == ['--turn-task-binding'] else metadata_environment(payload))
         return 0
     except ValueError as error:
         print('Hook metadata unavailable: ' + str(error), file=sys.stderr)
