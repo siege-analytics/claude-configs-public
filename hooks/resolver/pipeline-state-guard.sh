@@ -34,7 +34,7 @@ export CCP_HOOK_INPUT_JSON="$_HOOK_METADATA"
 # task identity or a strict standalone prompt directive for this diagnostic
 # process only. Explicit environment bindings retain their existing priority.
 if [[ -z "${CCP_TASK_ID:-}" ]]; then
-    if ! _TURN_TASK=$(printf '%s' "$_HOOK_METADATA" | python3 "$SCRIPT_DIR/../lib/hook_payload.py" --turn-task-binding); then
+    if ! _TURN_TASK=$(printf '%s' "$_METADATA_INPUT" | python3 "$SCRIPT_DIR/../lib/hook_payload.py" --turn-task-binding); then
         echo "Turn task binding unavailable; no task companions were derived." >&2
         exit 0
     fi

@@ -28,9 +28,13 @@ Root independently reviewed permission source ba9662f0 on PR1312. An independent
 
 ## Syntax check, rework ledger and findings
 
-The first peer-steward CI found stale inventory/authority catalogs; a later run found the derived rules-bundle character count. Both were regenerated, not waived. The final cohort must regenerate and check all catalogs once after staging new tracked test files. Full nested/flat build and generated checks passed before final release notes. Composed binding controls:14 methods passed in15.758seconds. Composed permission controls:17 methods passed in37.835seconds. Final full build, generated source authority and progressive-loading metric checks passed; max injection remains9637characters. Source reviews and the historical1164/own-PR regression results remain separately recorded in the delivery evidence.
+The first peer-steward CI found stale inventory/authority catalogs; a later run found the derived rules-bundle character count. Both were regenerated, not waived. The final cohort must regenerate and check all catalogs once after staging new tracked test files. Full nested/flat build and generated checks passed before final release notes. Composed binding controls: 14 methods passed in 15.758 seconds. Composed permission controls: 17 methods passed in 37.835 seconds. Final full build, generated source authority and progressive-loading metric checks passed; max injection remains 9,637 characters. Source reviews and the historical #1164/own-PR regression results remain separately recorded in the delivery evidence.
 
 The canonical app and exact D4-compatible reparent source were separately reviewed and normally published. The existing Pi hook patch and protected runtime settings remain unchanged. Actual remote image publication, rollout and supported parent readback are separate unfinished delivery evidence. Local v3.5.91 native verification independently passed genuine companion derivation, exact-marker Write allow and foreign Write denial/absence with HEAD/index preserved; this does not claim the new multi-task selector or permission fallback has been installed.
+
+## Long coordinator-message correction
+
+A composed red-first case exposed loss of an explicit Task directive in an 8 KB coordinator message because the environment projection omits prompt text above 4,096 characters. The turn selector now reads the original event through the existing 1 MiB bounded stdin parser, while environment metadata bounds remain unchanged. It still exports only the validated small canonical Task identity. Controls include long-message selection, a conflicting directive beyond the projection cutoff, quoted/fenced examples and over-limit rejection. This correction is part of the same task-selection fix, not a broader mutation grant.
 
 ## Canary and rollback
 

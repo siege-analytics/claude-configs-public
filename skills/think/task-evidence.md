@@ -52,7 +52,7 @@ unrelated legacy tasks remain independent.
 
 For turn-start companion derivation with multiple active tasks, use the host's
 `task_id` metadata or one unfenced standalone prompt line
-`CCP_TASK_ID=owner/repo#NNN`. Use the full ticket when the Task has a `ticket`;
+`CCP_TASK_ID=owner/repo#NNN` within the hook's 1 MiB input bound. Long prompt text is not exported to the hook environment. Use the full ticket when the Task has a `ticket`;
 its separate `task_id` does not replace that identity. This selects only an
 existing current-session Task for that turn's evidence derivation. It does not
 bind later Write/Edit calls, expand scope or make a companion count as earned.

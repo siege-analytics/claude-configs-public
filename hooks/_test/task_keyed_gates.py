@@ -765,6 +765,8 @@ class Gates(unittest.TestCase):
         check('typed-turn', self.repo, extra=True, request={'task_id': 'o/r#1292'})
         check('environment-priority', self.repo, extra=True, binding='o/r#1292', request={'task_id': 'o/r#1293'})
         check('prompt-turn', self.repo, extra=True, request={'prompt': 'Continue the assigned task.\nCCP_TASK_ID=o/r#1292\nPreserve the other task.'})
+        check('long-prompt-turn', self.repo, extra=True, request={'prompt': 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1292'})
+        check('long-conflict-turn', self.repo, extra=True, expect=False, request={'prompt': 'CCP_TASK_ID=o/r#1292\n' + 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1293'})
         check('nested-turn', self.repo, extra=True, request={'metadata': {'task_id': 'o/r#1292'}})
         check('conflicting-turn', self.repo, extra=True, expect=False, request={'task_id': 'o/r#1292', 'prompt': 'CCP_TASK_ID=o/r#1293'})
         check('unknown-turn', self.repo, extra=True, expect=False, request={'task_id': 'o/r#9999'})

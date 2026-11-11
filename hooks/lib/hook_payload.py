@@ -74,8 +74,14 @@ def turn_task_binding(payload: dict) -> str:
                 collect(value[key])
 
     collect(metadata)
+    # Read the already input-bounded event, not its environment projection:
+    # long legitimate prompts are deliberately omitted from that projection.
+    prompt = payload.get('prompt')
+    prompt = prompt if isinstance(prompt, str) else ''
+    if len(prompt.encode('utf-8', 'surrogatepass')) > INPUT_LIMIT:
+        raise ValueError('turn prompt exceeds the hook input bound')
     fence = ''
-    for line in metadata.get('prompt', '').splitlines():
+    for line in prompt.splitlines():
         marker = re.match(r'^ {0,3}(`{3,}|~{3,})(.*)$', line)
         if marker:
             mark, tail = marker.groups()

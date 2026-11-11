@@ -43,8 +43,15 @@ class Payload(unittest.TestCase):
                      '```text\nCCP_TASK_ID=o/r#1292\n```', '~~~\nCCP_TASK_ID=o/r#1292\n~~~',
                      '````text\n```\nCCP_TASK_ID=o/r#1292\n````',
                      '```text\n```not-a-close\nCCP_TASK_ID=o/r#1292\n```',
-                     '    CCP_TASK_ID=o/r#1292', 'x' * 4097 + '\nCCP_TASK_ID=o/r#1292'):
+                     '    CCP_TASK_ID=o/r#1292'):
             self.assertEqual(binding({'prompt': text}), '')
+        long_prompt = 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1292'
+        self.assertEqual(json.loads(payload.metadata_environment({'prompt': long_prompt}))['prompt'], '')
+        self.assertEqual(binding({'prompt': long_prompt}), 'o/r#1292')
+        with self.assertRaises(ValueError):
+            binding({'prompt': long_prompt + '\nCCP_TASK_ID=o/r#other'})
+        with self.assertRaises(ValueError):
+            binding({'prompt': 'x' * (payload.INPUT_LIMIT + 1)})
         self.assertEqual(binding({'tool_input': {'content': 'CCP_TASK_ID=o/r#1292'}}), '')
         self.assertEqual(binding({'hook_event_name': 'PreToolUse', 'task_id': 'o/r#1292'}), '')
         for value in ({'task_id': None}, {'task_id': '../invalid task'}, {'task_id': 'x' * 513},
