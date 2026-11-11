@@ -1475,6 +1475,8 @@ def action(command: str, cwd: str) -> dict:
         result.update(read_only=False, investigation=False, self_management=False,
                       veto="read-only-command: option writes or runs a program")
         result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') or result.get('review_actions') or result.get('metadata_posts') or result.get('remote_contact_only') else [canonical(cwd)])
+        # A vetoed command writes or runs a program: its cwd is unknown writes (#1152).
+        result["fallback_paths"] = list(dict.fromkeys(list(result.get("fallback_paths") or []) + [canonical(cwd)]))
     return result
 
 
@@ -1786,6 +1788,139 @@ def _literal_operand_family(args: list[str]) -> bool:
     return python and args[1:3] == ['-m', 'pytest']
 
 
+# Bounded write destinations (#1152). A shape modelled here writes only under
+# its explicit destination operand, so that operand replaces the cwd as the
+# mutation target. Any option or form not listed returns None, and the caller
+# keeps the generic model (cwd plus slash operands). Options are limited to
+# those with the same meaning in bsdtar and GNU tar.
+_TAR_FLAGS = set('zjJvkmp')
+_TAR_VALUES = set('fC')
+_TAR_LONG_FLAGS = {'--extract', '--create', '--gzip', '--bzip2', '--xz', '--verbose',
+                   '--keep-old-files', '--no-same-owner', '--no-same-permissions'}
+_TAR_LONG_VALUES = {'--file': 'f', '--directory': 'C', '--strip-components': '', '--exclude': ''}
+
+
+def _tar_targets(args: list[str], cwd: str):
+    """(directories, files) written by a modelled tar extract/create, else None.
+
+    Extract writes under its single -C directory (default: cwd) and reads the
+    archive. Create writes only its -f archive and reads its sources. Both
+    tars refuse absolute and `..` members without -P, which is not modelled;
+    `tar -C DIR` therefore has the authority of the existing `cd DIR && tar`.
+    """
+    if os.path.basename(args[0]) not in {'tar', 'bsdtar', 'gtar'} or len(args) < 2:
+        return None
+    modes, values, operands = [], {'f': [], 'C': []}, []
+    pending = []  # value letters waiting for their following argument
+    operand_before_directory = False
+
+    def letters(cluster: str, traditional: bool) -> bool:
+        for index, letter in enumerate(cluster):
+            if letter in 'xc':
+                modes.append(letter)
+            elif letter in _TAR_VALUES:
+                rest = cluster[index + 1:]
+                if rest and not traditional:
+                    values[letter].append(rest)  # -fARCHIVE / -Cdir
+                    return True
+                pending.append(letter)
+            elif letter not in _TAR_FLAGS:
+                return False
+        return True
+
+    rest = args[1:]
+    if not rest[0].startswith('-'):
+        # Traditional bundle (`tar xzf A`): each value letter takes the next arguments in order.
+        if not re.fullmatch(r'[A-Za-z]+', rest[0]) or not letters(rest[0], True):
+            return None
+        rest = rest[1:]
+    for token in rest:
+        if pending:
+            values[pending.pop(0)].append(token)
+        elif token.startswith('--'):
+            name, has_value, value = token.partition('=')
+            if name in _TAR_LONG_FLAGS and not has_value:
+                if name in {'--extract', '--create'}:
+                    modes.append('x' if name == '--extract' else 'c')
+            elif name in _TAR_LONG_VALUES:
+                letter = _TAR_LONG_VALUES[name]
+                if not has_value:
+                    if not letter:
+                        return None  # keep value forms of the other options unambiguous
+                    pending.append(letter)
+                elif letter:
+                    values[letter].append(value)
+            else:
+                return None
+        elif token.startswith('-') and token != '-':
+            if not letters(token[1:], False):
+                return None
+        else:
+            operands.append(token)
+            if not values['C']:
+                operand_before_directory = True
+    if pending or len(modes) != 1 or len(values['f']) > 1:
+        return None
+    archive = values['f'][0] if values['f'] else None
+    if archive is not None and (':' in archive or not archive):
+        return None  # host:file is a remote (rsh) archive
+    if modes[0] == 'x':
+        if len(values['C']) > 1 or values['C'] and operand_before_directory:
+            return None  # member operands before -C are order-sensitive in GNU tar
+        if any(not v for v in values['C']):
+            return None
+        return [canonical(values['C'][0] if values['C'] else '.', cwd)], []
+    if archive is None or archive == '-':
+        return None  # default device or stdout: no modelled file target
+    if values['C']:
+        return None  # create-mode -C only changes the read side; archive resolution order is not pinned for GNU tar
+    return [], [canonical(archive, cwd)]
+
+
+_VENV_FLAGS = {'--system-site-packages', '--symlinks', '--copies', '--clear', '--upgrade',
+               '--without-pip', '--without-scm-ignore-files'}
+
+
+def _venv_targets(args: list[str], cwd: str):
+    """(directories, files) for `python -I -m venv [listed options] DIR...`, else None.
+
+    Only the isolated form is modelled. Without -I, `-m` puts the cwd first on
+    sys.path for every import venv makes (types, shutil, argparse, logging, ...),
+    so cwd code can run and write anywhere; plain `python -m venv` therefore
+    keeps the generic cwd target. -I also ignores PYTHON* variables and the
+    user site directory (Python 3.4+).
+    """
+    executable = args[0]
+    name = os.path.basename(executable)
+    python = executable in {'python', 'python3'} or (os.path.isabs(executable)
+             and re.fullmatch(r'python(?:3(?:\.[0-9]+)?)?', name) is not None)
+    if not python or args[1:4] != ['-I', '-m', 'venv']:
+        return None
+    directories = []
+    expect_prompt = False
+    for token in args[4:]:
+        if expect_prompt:
+            expect_prompt = False
+        elif token == '--prompt':
+            expect_prompt = True
+        elif token.startswith('--prompt='):
+            pass
+        elif token in _VENV_FLAGS:
+            pass
+        elif token.startswith('-'):
+            return None  # --upgrade-deps (network, pip cache), abbreviations, --, -h
+        else:
+            directories.append(canonical(token, cwd))
+    if expect_prompt or not directories:
+        return None
+    return directories, []
+
+
+def bounded_write_targets(args: list[str], cwd: str):
+    """Explicit destinations for a fully modelled bounded command, else None."""
+    return _tar_targets(args, cwd) if os.path.basename(args[0]) in {'tar', 'bsdtar', 'gtar'} else _venv_targets(args, cwd)
+
+
 
 def task_branch_preparation(args, cwd):
     """Bound only the shipped branch helper's declared repository/worktree.
@@ -1838,6 +1973,10 @@ def _action(command: str, cwd: str) -> dict:
     directory_removals = []
     file_removals = []  # rm operands: unlinking a name never writes the file (#1100)
     file_paths = []
+    # #1152: cwd proxies for writes the parser cannot model ("unknown writes"),
+    # as opposed to explicit targets. Tier floors for own-session scratch must
+    # never apply to these.
+    fallback_paths = []
     remote_repos = []
     remote_actions = []
     review_actions = []
@@ -2076,7 +2215,7 @@ def _action(command: str, cwd: str) -> dict:
                     if args[0] == 'rm':
                         file_removals.extend(canonical(x, effective) for x in operands)
                 if not operands:
-                    paths.append(local)
+                    paths.append(local); fallback_paths.append(local)
             elif args[0] == 'ln':
                 # Both ends of a link are targets (#1100): writing through the
                 # link writes the source.
@@ -2110,7 +2249,7 @@ def _action(command: str, cwd: str) -> dict:
                         else:
                             expect_dir = True
                 if not link_operands:
-                    paths.append(local)
+                    paths.append(local); fallback_paths.append(local)
                 # A relative symlink target resolves from the link's directory,
                 # not the cwd (#1109): `ln -s x sub/link` points at sub/x. Count
                 # both readings of every relative operand.
@@ -2129,8 +2268,16 @@ def _action(command: str, cwd: str) -> dict:
                                 link_operands.append(os.path.join(base, t))
                 paths.extend(canonical(x, effective) for x in link_operands)
                 file_paths.extend(canonical(x, effective) for x in link_operands)
+            elif (bounded := bounded_write_targets(args, effective)) is not None:
+                # #1152: a fully modelled tar/venv shape writes only under its
+                # explicit destination, so the cwd is not a target. Slash
+                # operands (archives, sources) were already counted above.
+                directories, files = bounded
+                paths.extend(directories + files)
+                directory_paths.extend(directories)
+                file_paths.extend(files)
             else:
-                paths.append(local)
+                paths.append(local); fallback_paths.append(local)
                 # Explicit paths cannot escape a task by borrowing CWD scope.
                 paths.extend(canonical(x, effective) for x in args[1:] if x.startswith(("/", "./", "../")))
                 # Paths attached to options (`-o/abs`, `--out=/abs`) cannot
@@ -2191,6 +2338,8 @@ def _action(command: str, cwd: str) -> dict:
             # A path only removed, never also written in the same command (#1100).
             "file_removals": [p for p in file_removals if paths.count(p) == file_removals.count(p)],
             "paths": list(dict.fromkeys(paths or ([] if (remote_repos or remote_actions or review_actions or remote_hosts or metadata_posts) and not (remote_hosts and not remote_only) else [effective]))),
+            # The cwd default used when nothing explicit was found is also a fallback.
+            "fallback_paths": list(dict.fromkeys(fallback_paths + ([] if paths else [effective]))),
             "remote_repos": list(dict.fromkeys(remote_repos)),
             "remote_actions": remote_actions, "review_actions": review_actions, "metadata_posts": metadata_posts,
             "remote_hosts": list(dict.fromkeys(remote_hosts)),
