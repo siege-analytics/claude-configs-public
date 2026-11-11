@@ -280,23 +280,21 @@ def _nearest_directory(path: str) -> str:
     return directory
 
 
-def _toplevel(directory: str, *, git_environment: Optional[dict] = None) -> tuple[str, bool]:
-    """(toplevel or '', definitive). Only git's own exit status is definitive.
-    A timeout, launch failure or signal-killed git (negative return code) is
-    not, so callers must not reuse it for other targets."""
+def _toplevel(directory: str, *, git_environment: Optional[dict] = None) -> str:
+    """The git toplevel for directory, or '' when the lookup fails. No failed
+    lookup (any exit status, timeout, launch failure or signal) proves that a
+    repository is absent, so only a non-empty result may be reused."""
     try:
         return canonical(subprocess.check_output(
             ["git", "-C", directory, "rev-parse", "--show-toplevel"],
-            text=True, stderr=subprocess.DEVNULL, timeout=3, env=git_environment).strip()), True
-    except subprocess.CalledProcessError as error:
-        return "", error.returncode > 0
+            text=True, stderr=subprocess.DEVNULL, timeout=3, env=git_environment).strip())
     except Exception:
-        return "", False
+        return ""
 
 
 def _target_repo(path: str, *, git_environment: Optional[dict] = None) -> str:
     directory = _nearest_directory(path)
-    return _toplevel(directory, git_environment=git_environment)[0] if directory else ""
+    return _toplevel(directory, git_environment=git_environment) if directory else ""
 
 
 def _scope_diagnostic(gate: dict, expected_repo: str, *, git_environment: Optional[dict] = None) -> str:
@@ -597,8 +595,8 @@ def select_task(workspace: str, paths: list[str], binding: str = "", session_id:
     # Long literal operand lists must not cost git subprocesses per target.
     # Within this one resolution, a toplevel depends only on the canonical
     # nearest existing directory and an identity verdict only on its exact
-    # repository pair, so each is asked once. Non-definitive git failures are
-    # retried per target.
+    # repository pair, so each is asked once. Only a successful toplevel is
+    # reused; a failed lookup is never cached as an identity.
     toplevels: dict[str, str] = {}
     identities: dict[tuple[str, str], bool] = {}
 
@@ -607,8 +605,8 @@ def select_task(workspace: str, paths: list[str], binding: str = "", session_id:
         if not directory:
             return ""
         if directory not in toplevels:
-            toplevel, definitive = _toplevel(directory, git_environment=git_environment)
-            if not definitive:
+            toplevel = _toplevel(directory, git_environment=git_environment)
+            if not toplevel:
                 return toplevel
             toplevels[directory] = toplevel
         return toplevels[directory]

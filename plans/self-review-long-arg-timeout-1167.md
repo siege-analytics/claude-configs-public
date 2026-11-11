@@ -24,7 +24,9 @@ Project-contribution: agents can run one long literal copy/touch/chmod command u
 Assumptions that must hold:
 - A git toplevel for one canonical, symlink-resolved existing directory is constant within one hook invocation (same process, same git environment).
 - `_same_repo(a, b)` is a pure function of (a, b) within one invocation, except that transient origin-read failures only produce False (stricter).
-- Only git's own positive exit status is a definitive "no toplevel"; timeouts, launch failures and negative (signal) exits are transient.
+- ~~Only git's own positive exit status is a definitive "no toplevel"; timeouts, launch failures and negative (signal) exits are transient.~~ (superseded by Post-error revision 2026-11-11, https://github.com/siege-analytics/claude-configs-public/issues/1167#issuecomment-6784747224, after the cross-family P1 https://github.com/siege-analytics/claude-configs-public/pull/1278#pullrequestreview-5852585031)
+- No failed `rev-parse --show-toplevel` lookup proves that a repository is absent, whatever the exit status. A positive fatal status can be transient. Within one resolution only a successful, non-empty toplevel is reused; a failed lookup is never cached as an identity. (revised 2026-11-11)
+- Out of scope and unchanged from develop: a target whose own lookup fails still skips the repository comparison for that one target (#1281). This change only prevents a failure from spreading to sibling targets.
 
 ## Pre-implementation comprehension
 Posted before any source edit: https://github.com/siege-analytics/claude-configs-public/issues/1167#issuecomment-6780266231 (Junior task description, Senior adversarial checklist, Investigation fact sheet, Pre-mortem). The pipeline writer computed junior_found, senior_found, investigate_posted and premortem_posted as true at 2026-11-10 15:54:52 CST before implementation began.
@@ -33,15 +35,16 @@ Posted before any source edit: https://github.com/siege-analytics/claude-configs
 
 - writing-code:2 (no issue refs in code comments): added comments and docstrings describe behavior. `git diff -U0 hooks/lib/resolve-think-gate.py | grep -c "^+.*#[0-9]"` → 0; the new test files → 0 matches for `#[0-9]`.
 - writing-code:3 (no speculative abstraction): `_nearest_directory` and `_toplevel` each have two callers (`_target_repo` and the per-call cache in `select_task`).
-- writing-code:7 / writing-code:13 (no silent swallowing; consistent failure contract): `_toplevel` keeps develop's catch-all-to-empty result and adds an explicit definitive flag; `_target_repo` returns exactly what develop returned.
+- writing-code:7 / writing-code:13 (no silent swallowing; consistent failure contract): `_toplevel` keeps develop's catch-all-to-empty result (after the P1 repair it returns only the toplevel string, '' on any failure); `_target_repo` returns exactly what develop returned.
 - writing-code:15 (blocking I/O declares a timeout): the git call keeps `timeout=3`.
-- writing-tests:1 (tests fail if behavior breaks): on unmodified develop 8043c583 the new file reports "FAILED (failures=8)" for 13 tests: 6 test methods fail (8 failure records with the 3 transient subtests), all performance/cache, and the 7 scope-guard methods pass (50 operands 11.65 s with 650 git calls; 182→1300 calls for 14→100 operands; same-origin checkouts 98→700; 5 toplevel lookups where 1 is expected). On the change → 13 passed. The signal-killed-git sibling case was also RED against the change's own first classification (a nested foreign-repository sibling was allowed) before the fix to `error.returncode > 0`.
+- writing-tests:1 (tests fail if behavior breaks): on unmodified develop 8043c583 the new file reports "FAILED (failures=8)" for 13 tests: 6 test methods fail (8 failure records with the 3 transient subtests), all performance/cache, and the 7 scope-guard methods pass (50 operands 11.65 s with 650 git calls; 182→1300 calls for 14→100 operands; same-origin checkouts 98→700; 5 toplevel lookups where 1 is expected). On the change → 13 passed. The signal-killed-git sibling case was also RED against the change's own first classification (a nested foreign-repository sibling was allowed) before the fix to `error.returncode > 0`. (Those develop counts are for the 834e18ab test file.) Cross-family P1 repair (2026-11-11): the rewritten file is RED on the unrepaired resolver f4e4d04c with "FAILED (failures=2)": `test_transient_toplevel_failure_cannot_authorize_nested_siblings` (real exit-128 shim, gate ALLOWED: "AssertionError: 0 != 2") and `test_failed_lookup_never_authorizes_foreign_siblings` [CalledProcessError(128)]. It is GREEN after the repair: "Ran 13 tests ... OK". The tests that pinned post-failure control flow (`test_transient_git_failure_is_retried_not_cached`, `test_unsuccessful_lookups_are_never_reused`) were removed so that #1281's deny-on-failure contract is not contradicted.
 - writing-tests:4 (mock fidelity): end-to-end cases run the real `hooks/bash/universal-mutation-gate.sh` with a counting git shim; unit cases patch only `subprocess.check_output` for the `rev-parse --show-toplevel` argv and pass every other git call through to real git.
-- writing-tests:5 (every except fires): `CalledProcessError` positive (reused), negative (retried), `OSError` and `TimeoutExpired` (retried) are each forced by a unit case.
+- writing-tests:5 (every except fires): `TimeoutExpired`, `OSError`, `CalledProcessError(128)` and `CalledProcessError(-9)` are each forced by `test_failed_lookup_never_authorizes_foreign_siblings`; none of them is cached as an identity.
+- Non-Git controls: `test_genuine_non_git_own_task_is_allowed_and_unowned_is_denied` (an explicit own Task for an existing non-Git directory → exit 0; an unowned non-Git directory → exit 2) passes before and after the repair.
 - writing-tests:7 (acceptance criteria have falsifiers): AC1 → `test_fifty_operand_copy_is_allowed_within_half_the_hook_timeout` (< 5.0 s) and the two scale-invariance cases; AC2 → `test_one_out_of_scope_operand_denies_the_whole_command`.
 - writing-tests:8 (shared-function changes are caller-covered): `select_task` callers (resolve_action local/remote/review/metadata branches, `select_metadata_post_task`) are exercised by the affected suites listed in Quantified claims, run on both develop and the change.
 - Gate 1 syntax: `python3 -m py_compile hooks/lib/resolve-think-gate.py hooks/_test/long_operand_resolution_1167.py` → exit 0; `bash -n hooks/_test/long_operand_resolution_1167.test.sh` → exit 0; `python3 bin/build.py --check` → "Build check complete."
-- Gate 2 tests: new file → 13 passed; full hook suite → 76 PASS / 1 FAIL (environmental, identical on develop; see Quantified claims).
+- Gate 2 tests: new file → 13 passed; full hook suite → 76 PASS / 1 FAIL (environmental, identical on develop; see Quantified claims). Re-run after the P1 repair: 76 PASS / 1 FAIL, the same `ca_enforcement_runtime` 12/4.
 - Gate 3 docs: N/A, no documented behavior changed. Gate 4 notebooks: N/A.
 
 ## Lead review
@@ -82,6 +85,7 @@ Hostile S2-2: when `rev-parse --show-toplevel` fails, `expected_repo` is empty a
 | L3 | P3 | Hostile S3-1: a cached transient False from an origin read applies to later targets (deny direction only). | noted |
 | L4 | P3 | Hostile S3-4: diagnostic text/order is not pinned by a golden test. | noted |
 | L5 | P3 | About ten python3 launches per Bash call in universal-mutation-gate.sh (fixed cost, independent of operand count). | noted |
+| L6 | P1 | Cross-family review 5852585031 at 7fee01a8: a positive exit (128) from the first toplevel lookup was cached as an empty identity, so the parent Task gate authorized foreign nested siblings. Develop rechecks and denies. | fixed (only a successful non-empty toplevel is cached; red→green evidence in Peer review) |
 
 ## Test plan
 - `bash hooks/_test/long_operand_resolution_1167.test.sh` on the change and on unmodified develop (observed: 13 passed vs "FAILED (failures=8)").
@@ -94,6 +98,10 @@ Hostile S2-2: when `rev-parse --show-toplevel` fails, `expected_repo` is empty a
 - "0.52/0.35/0.36/0.40 s, 3 git calls each after the change" -- the same command on the changed checkout → the four in-scope lines quoted; out-of-scope lines exit 2.
 - "FAILED (failures=8) for 13 tests on develop; 6 methods fail, 7 pass" -- `python3 debug/develop-base/hooks/_test/long_operand_resolution_1167.py` (develop 8043c583 checkout, `git status --porcelain` → only `?? hooks/_test/long_operand_resolution_1167.py`, identical by `cmp`) → "Ran 13 tests in 109.803s / FAILED (failures=8)"; failing methods: fifty-operand, scale-invariance, same-origin (98 != 700), git refusal reuse, one toplevel lookup, transient retry (3 subtests).
 - "13 passed" -- `python3 hooks/_test/long_operand_resolution_1167.py` → "Ran 13 tests ... OK".
+- "P1 RED: FAILED (failures=2) on the unrepaired resolver" -- the same command with `hooks/lib/resolve-think-gate.py` at f4e4d04c (operator-restored, sha256 0cef209c…fb204e05) → "Ran 13 tests in 8.194s / FAILED (failures=2)"; "AssertionError: 0 != 2" from the real exit-128 shim case.
+- "P1 GREEN: 13 passed" -- the same command after the atomic repair → "Ran 13 tests in 8.443s / OK".
+- "after the P1 repair N=14/42/50/100: 0.48/0.35/0.36/0.38 s, 3 git calls each" -- `python3 debug/repro_1167.py <checkout> p1-fixed 14 42 50 100` → the four in-scope lines quoted; out-of-scope lines exit 2.
+- "a single target whose own lookup fails is still selected (#1281, unchanged)" -- `python3 debug/probe_1281_single_target.py <checkout>` → "single nested target, every toplevel lookup exits 128 -> gate selected: True" and "same target, healthy git -> gate selected: False".
 - "76 PASS / 1 FAIL" -- `bash debug/run_hook_suite.sh final` (CI loop mirror) → 77 files, single failing file `hooks/_test/ca_enforcement_runtime.test.sh`.
 - "ca_enforcement_runtime fails identically on develop" -- `bash debug/run_one.sh <develop checkout> hooks/_test/ca_enforcement_runtime.test.sh` → "Results: 12 passed, 4 failed" (the same four F4 / Craft-ancestry cases; the local process ancestry is a real Craft host).
 - "affected suites on develop" -- `bash debug/run_subset.sh <develop checkout> base` → "[base] all 21 affected suites passed." (`metadata_comment_reporting` has no own `.test.sh`). The same 21 files are PASS in the 76-PASS full run on the change.
@@ -108,6 +116,8 @@ Hostile S2-2: when `rev-parse --show-toplevel` fails, `expected_repo` is empty a
 | full suite restarted on final code | started the suite before hostile review returned | 0 | ~15 min suite time | n/a |
 | issue refs removed from new comments (writing-code:2) | did not re-read the shelf before writing comments | 1 min | 4 comment edits | 1:4 |
 | hosted CI "Generated source authority and drift": stale `catalog/skills-inventory.json` after adding the test files | ran `bin/build.py --check` locally but not `bin/generated-source-authority.py --check`, which CI runs separately | 3 s | CI cycle + regeneration commit | 1:60 |
+| cross-family P1: exit 128 cached as a definitive empty identity | treated a positive git exit status as proof of repository absence (a documented Assumption, now superseded) | 2 min | post-error revision + repair + test rewrite + review cycle | 1:60 |
+| self-inflicted gate lockout: half-applied resolver edit crashed the self-hosted repo-relative gate (fails closed) | applied a two-site interface change as two separate edits while the gate executes the edited file | 1 min | operator restore + hub coordination | 1:100 |
 | PR create blocked: work commit lacks `Inventoried-shape:` trailer | read the repo copy of the trailer contract but not the installed hook's v2.4 check before committing | 1 min | follow-up commit (pushed history not amended) | 1:10 |
 
 ## Evidence-predates-work

@@ -83,10 +83,10 @@ class LongOperandResolution(unittest.TestCase):
         (self.plans / f'pre-mortem-{slug}.md').write_text(
             f'---\nticket_refs:\n  - {task}: fixture\n---\n# Pre-mortem {task}\n\n### Tiger 1\nSeverity: LOW\n')
 
-    def run_gate(self, command):
+    def run_gate(self, command, shim=None):
         payload = json.dumps({'tool_name': 'Bash', 'hook_event_name': 'PreToolUse', 'session_id': SID,
                               'tool_input': {'command': command}, 'cwd': str(self.repo)})
-        env = {'PATH': f'{self.shim}:{os.path.dirname(sys.executable)}:/usr/bin:/bin', 'HOME': str(self.home),
+        env = {'PATH': f'{shim or self.shim}:{os.path.dirname(sys.executable)}:/usr/bin:/bin', 'HOME': str(self.home),
                'CRAFT_AGENT_WORKSPACE': str(self.ws), 'CRAFT_SESSION_ID': SID}
         self.log.unlink(missing_ok=True)
         start = time.monotonic()
@@ -168,6 +168,37 @@ class LongOperandResolution(unittest.TestCase):
         self.assertEqual(code, 2, output)
         self.assertRegex(output, 'Mutation spans multiple tasks|Ambiguous task ownership')
 
+    def test_genuine_non_git_own_task_is_allowed_and_unowned_is_denied(self):
+        # Outside Git every toplevel lookup fails; that must neither authorize
+        # an unowned directory nor deny an explicit own Task for that directory.
+        base = Path(self.tmp.name).resolve()
+        maintenance, unowned = base / 'maintenance', base / 'unowned'
+        maintenance.mkdir()
+        unowned.mkdir()
+        self.gate('maintenance', 'TEST-1167-maintenance', maintenance)
+        code, _, _, output = self.run_gate(f'touch {maintenance / "a.txt"} {maintenance / "b.txt"}')
+        self.assertEqual(code, 0, output)
+        code, _, _, output = self.run_gate(f'touch {unowned / "a.txt"} {unowned / "b.txt"}')
+        self.assertEqual(code, 2, output)
+
+    def test_transient_toplevel_failure_cannot_authorize_nested_siblings(self):
+        # Real git behind a shim whose first --show-toplevel exits 128. A
+        # failed lookup must never authorize the foreign nested repository.
+        nested = self.repo / 'nested'
+        nested.mkdir()
+        self.git_init(nested)
+        flaky = Path(self.tmp.name).resolve() / 'flaky-shim'
+        flaky.mkdir()
+        marker = flaky / 'failed-once'
+        (flaky / 'git').write_text(
+            '#!/bin/sh\n'
+            f'case " $* " in *" --show-toplevel "*) [ -e \'{marker}\' ] || {{ : > \'{marker}\'; exit 128; }} ;; esac\n'
+            f"exec '{self.git}' \"$@\"\n")
+        (flaky / 'git').chmod(0o755)
+        code, _, _, output = self.run_gate(f'touch {nested / "a.txt"} {nested / "b.txt"}', shim=flaky)
+        self.assertTrue(marker.exists(), 'the shim never failed a toplevel lookup')
+        self.assertEqual(code, 2, output)
+
     def test_unowned_repository_lists_every_rejected_gate(self):
         stranger = self.outside / 'stranger'
         stranger.mkdir()
@@ -221,31 +252,23 @@ class ResolutionCache(unittest.TestCase):
         self.assertTrue(selected['gate'], selected)
         self.assertEqual(len(calls), 1)
 
-    def test_transient_git_failure_is_retried_not_cached(self):
-        for failure in (subprocess.TimeoutExpired(['git'], 3), OSError('exec failed'),
-                        subprocess.CalledProcessError(-9, ['git'])):  # signal-killed git
-            with self.subTest(failure=type(failure).__name__):
-                selected, calls = self.toplevel_calls(lambda n: failure if n == 1 else None)
-                self.assertTrue(selected['gate'], selected)
-                self.assertEqual(len(calls), 2)
+    # A git exit status, timeout, launch failure or signal is never proof of
+    # stable repository absence, so a failure is never reused as an identity.
+    FAILURES = (subprocess.TimeoutExpired(['git'], 3), OSError('exec failed'),
+                subprocess.CalledProcessError(128, ['git']),  # positive fatal status
+                subprocess.CalledProcessError(-9, ['git']))   # signal-killed git
 
-    def test_git_refusal_is_definitive_and_reused(self):
-        refusal = subprocess.CalledProcessError(128, ['git'])  # git's own "not a repository"
-        _, calls = self.toplevel_calls(lambda n: refusal)
-        self.assertEqual(len(calls), 1)
-
-    def test_signal_killed_git_cannot_skip_the_repository_check_for_siblings(self):
-        # A transient empty toplevel skips the repo comparison for that one
-        # target (pre-existing behavior); it must not do so for its siblings.
+    def test_failed_lookup_never_authorizes_foreign_siblings(self):
+        # A failed identity lookup must not be cached as an identity: the
+        # foreign nested siblings stay unowned whatever the failure was.
         nested = self.repo / 'nested'
         nested.mkdir()
         subprocess.run(['git', 'init', '-q', str(nested)], check=True, timeout=60)
         self.paths = [str(nested / 'a.txt'), str(nested / 'b.txt')]
-        killed = subprocess.CalledProcessError(-9, ['git'])
-        selected, calls = self.toplevel_calls(lambda n: killed if n == 1 else None)
-        self.assertIsNone(selected['gate'], selected)
-        self.assertIn('Task gate scope rejected', selected['error'])
-        self.assertEqual(len(calls), 2)
+        for failure in self.FAILURES:
+            with self.subTest(failure=repr(failure)):
+                selected, _ = self.toplevel_calls(lambda n: failure if n == 1 else None)
+                self.assertIsNone(selected['gate'], selected)
 
 
 if __name__ == '__main__':
