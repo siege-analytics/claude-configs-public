@@ -9248,6 +9248,7 @@
         "plans/runtime-final-source-verification.json",
         "plans/scanner-recovery-identities.json",
         "plans/self-review-386.md",
+        "plans/self-review-per-trailer-1291.md",
         "plans/strict-test-evidence-1063.md",
         "skills/RESOLVER.md",
         "skills/_definition-of-done-rules.md",
@@ -10822,6 +10823,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/git/post-error-revision-required.sh",
+        "plans/self-review-per-trailer-1291.md",
         "scripts/discipline/check-post-error-revision.sh",
         "skills/self-review/artifact-contract.md",
         "skills/verify-failure-premise/SKILL.md"
