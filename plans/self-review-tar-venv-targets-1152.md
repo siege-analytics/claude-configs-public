@@ -10,6 +10,7 @@ Refs #1152
 ## Assumptions
 
 Domain(s): software engineering
+Working as: software engineer (author of the change)
 Geospatial cross-cut: no
 Goal source: ticket siege-analytics/claude-configs-public#1152. The ticket predates this work; addenda arrived on 11-05 and 11-10. The scope grew per Root issuecomment-6785389467 (non-Git own-data floor, the same case as operator outbox entry 235).
 Goal source verification: PASS: ticket siege-analytics/claude-configs-public#1152 is fit for execution (`./scripts/discipline/evaluate-ticket.sh siege-analytics/claude-configs-public#1152`, after Context/Goal/Acceptance/Design/Assumptions were appended; the original report text is unchanged)
