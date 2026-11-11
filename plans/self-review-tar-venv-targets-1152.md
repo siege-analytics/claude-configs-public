@@ -145,10 +145,13 @@ Adversarial fixtures from frame:
   - Against baseline 8043c583 libs: explicit fails 21 subtests (all positives); nongit fails 4 plus 2 errors (new API).
   - The S1-1/S1-2 red on the reviewed diff was reproduced with `debug/repro_s1.py`.
   - The S3-6/S3-7 tests discriminate: the old rule accepted "not a git repository: (null)", and the unscrubbed listing floored a tracked file to A.
-- Full suite: `debug/run_suite.sh` (scratch; all 78 `hooks/_test/*.test.sh`) in the authoring session gives 74 PASS, 4 FAIL.
-  - Provenance: the run started on resolver 93651c94 and loaded 9f549d94 for later files. The two differ only by two `env.pop` lines in `_outside_git`. `task_actions` was ec991a45 throughout.
-  - All 4 failures are environmental, as listed below.
-  - On the final bytes, `session_signal_resolution`, `universal_mutation_gate` and `universal_mutation_gate_empty_reporoot` PASS in a CI-like environment (`debug/rerun_clean.sh . real ...`).
+- Official receipt, bound to the FINAL bytes (resolver 9f549d94, task_actions ec991a45): the focused affected checks, `nongit_own_data_floor` 16 OK and `explicit_target_operands` 17 OK. Also Root's independent acceptance issuecomment-6786044258, and the required hosted CI on the PR head.
+- HYBRID run, discovery only and NOT a final-bytes full-suite pass (corrected per Root entry 251): `debug/run_suite.sh` over all 78 `hooks/_test/*.test.sh` in the authoring session gave 74 PASS, 4 FAIL.
+  - That run started BEFORE the last runtime edits. While it ran, the resolver toggled between 93651c94 (with discovery-limit pops) and 9f549d94 (final), and a ceiling control test was added to and later removed from `nongit_own_data_floor.py`.
+  - An earlier full run was stopped and not restarted.
+  - The run's output is kept in the author's scratch.
+  - Its 4 failures are triaged as environmental below; the 3 leakage cases also PASS on the final bytes in a CI-like environment (`debug/rerun_clean.sh . real ...`).
+  - The `Full-Suite:` trailers of e76445f6 and d6c0e2e describe this run less precisely: the merge commit's "pre-merge full run on e76445f6 bytes" is inaccurate. This section is the corrected record; pushed history is not rewritten.
 - Environmental failures proven independent of the diff, by the same failure on baseline in the same environment and a pass in a CI-like environment:
   - `ca_enforcement_manifest` and `verify_enforcement` (no `dist/` until built);
   - `session_signal_resolution`, `universal_mutation_gate` (n0) and `universal_mutation_gate_empty_reporoot` (session `CRAFT_*` environment leakage);
