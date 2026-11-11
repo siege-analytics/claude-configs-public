@@ -6141,10 +6141,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 33092,
-      "content_sha256": "ed199a4acfc41c1cd35d9a9c87a4ffefc781963f79a20076d05a7284be071dd0",
+      "characters": 33446,
+      "content_sha256": "90dcdb2652266863aea2780e21a401ebe06001aa674b874c0e7aa36f9e8131ca",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 8273,
+      "estimated_tokens": 8362,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6176,7 +6176,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 175,
+      "lines": 181,
       "owner": [
         "unknown"
       ],
@@ -12214,10 +12214,10 @@
     },
     {
       "canonical_source": "skills/stalled-session-recovery/SKILL.md",
-      "characters": 12810,
-      "content_sha256": "26613e080c12b471459d8b263b3ea114e90b21b87e60f381ec1ce13549b87e9d",
+      "characters": 16073,
+      "content_sha256": "3ae2de97a1b1a6665cd3dad3e15d84002801a730fea310a9862549c7280e13ff",
       "description": "How to diagnose and recover a session that has stopped producing useful turns -- stuck on a repeating error, silent for an abnormal stretch, or looping on the same tool call. Invoke when checking on a session that \"seems stuck,\" when a session's own error looks like it should have cleared but hasn't, when a hub is deciding whether to nudge or respawn a worker, or when auditing a fleet of sessions for health. Covers three failure shapes (transient error, persistent misconfiguration, wedged tool call) with distinct diagnostics and distinct fixes, the discipline of reading the last coherent content instead of trusting the error label, and how to respawn without duplicating work or losing in-flight state.",
-      "estimated_tokens": 3203,
+      "estimated_tokens": 4019,
       "frontmatter_name": "stalled-session-recovery",
       "generated_outputs": [
         "dist/nested/skills/stalled-session-recovery",
@@ -12236,7 +12236,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 98,
+      "lines": 152,
       "owner": [
         "unknown"
       ],
@@ -12940,9 +12940,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2640639,
+    "characters": 2644256,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 660239,
+    "estimated_tokens": 661144,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -12963,7 +12963,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1244245
+      "unclassified": 1247862
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12975,7 +12975,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 311105
+      "unclassified": 312010
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

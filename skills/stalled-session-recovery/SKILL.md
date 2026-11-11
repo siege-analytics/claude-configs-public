@@ -12,10 +12,52 @@ Before choosing a repair, read [host controls and deployment navigation](host-co
 
 ## When to invoke
 
-- Checking on a session that "seems stuck" or hasn't produced a turn in an abnormal stretch.
+- Checking a session at its duration/context checkpoint, or one that "seems stuck" or has not produced useful progress.
 - A session's own error (rate limit, timeout, generic failure) looks like it should have cleared on retry, but hasn't after several attempts.
 - You are a hub (see `hub/SKILL.md`) deciding whether to nudge a worker once more or replace it.
 - Auditing a fleet of sessions for health, e.g. before a large coordinated action.
+
+## Duration checkpoints and session renewal
+
+Workspace Config owns session health and renewal; hubs report evidence about
+their workers and TC keeps delivery ownership current. Choose a checkpoint
+interval **D** appropriate to the role and expected work, using an existing
+supported health sweep or return event where possible. Record the next check;
+do not create a separate timer per session by default. Reaching D, a large
+context, or a quiet interval triggers inspection, not automatic replacement.
+
+At a checkpoint compare the unfinished objective with actual recent tools and
+results, current instructions, pending messages/tools and the event that will
+resume the work. A Working label or a status summary alone is not progress.
+Then choose the smallest effective action:
+
+- **Healthy work or a real dependency:** retain the owner and its specific
+  return event. Continue independent eligible work; do not restart useful work
+  because its age crossed D.
+- **Missing wake-up or unnecessary stop:** deliver the missing result, correct
+  the mistaken restriction, or route the next concrete step under the existing
+  grant. A fresh session would inherit the same problem unless it is repaired.
+- **Evidence of context degradation:** when repeated stale-state decisions,
+  lost objectives or unrecoverable context pressure persist after a bounded
+  refresh, use the successor procedure below. Include the observed failure and
+  current canonical instructions so the successor does not inherit the error.
+- **Credential/configuration failure or an uncertain live mutation:** use the
+  corresponding diagnosis below. Respawning with the same expired connection
+  is not recovery; replacement does not settle an operation's unknown outcome.
+
+For renewal, save the unfinished outcome, next executable step, task/board
+ownership, exact source and evidence references, real holds and pending
+operations. Settle concurrent ownership before the successor writes. Confirm
+that the successor has accepted that objective and produced a useful turn,
+not merely a spawn receipt, before retiring the predecessor through supported
+controls. Actual acceptance satisfies this condition; do not add a separate
+Root/operator acknowledgment. Carry forward existing authority and real holds,
+not obsolete waiting instructions. Mark an ended predecessor for cleanup only
+after its durable handoff and retirement conditions are satisfied.
+
+This procedure does not itself install a scheduler or guarantee background
+execution. Verify the configured trigger and a real resulting check before
+claiming automatic supervision or renewal is active.
 
 ## The three failure shapes
 
@@ -60,7 +102,13 @@ An archive refusal such as "currently processing a turn" reports a current host 
 
 Do not respawn a stuck session's exact original task without checking whether it has already been picked up elsewhere. Search for other active sessions on the same ticket/scope (`list_sessions`, search by ticket number or topic). If one exists and is active, either skip the respawn (archive the stuck one only) or fold "your original task may be superseded, check with X first" into the respawn prompt instead of repeating stale instructions. This is the stalled-session-recovery instance of the hub federation query protocol (`hub/SKILL.md` Part 4) -- the same duplicate-work risk applies whether the collision is between two live hubs or between a stuck session's stale task and a newer session already covering it.
 
-Also check the session's own `status` field. A session already at a terminal status (e.g. `done`) that happens to have a trailing error is not stalled -- it finished. Don't respawn it.
+Check the session's status against its bounded objective and durable handoff.
+A terminal status with a verified completed or transferred objective needs no
+replacement, even if it has a trailing cosmetic error. A terminal label alone
+does not establish completion: if assigned work remains, reconcile actual
+ownership and pending results, then apply the checkpoint procedure above.
+Resume the existing owner or deliver the missing event where that suffices;
+do not automatically respawn or silently discard the unfinished objective.
 
 ## Respawning: what the successor needs
 
@@ -82,7 +130,13 @@ A minimal respawn prompt is a liability. Include, at minimum:
 
 ## Archiving
 
-Archive the predecessor once the successor is confirmed alive (a real turn produced, not just a spawn acknowledgment) -- not before, and not automatically. For shape 3 (wedged), see the note above: archiving may fail while the platform still considers the session mid-turn; that is expected, not an error to work around.
+Retire the predecessor only after the renewal conditions above are met:
+durable handoff, settled concurrent ownership, and a successor that accepts
+the unfinished objective and produces a useful turn. An authorized steward or
+verified supervision job may perform that retirement under its existing grant;
+passing D or receiving a spawn acknowledgment is insufficient. For a wedged
+session, the host may refuse retirement while it is processing; reconcile the
+live operation through supported controls rather than working around refusal.
 
 ## Cross-references
 
@@ -95,4 +149,4 @@ Archive the predecessor once the successor is confirmed alive (a real turn produ
 
 - **NOT a substitute for actually reading the transcript.** The diagnostic procedure requires reading real content, not pattern-matching on an error string. Skipping straight to "nudge" or "respawn" without reading the last coherent content is the exact failure mode this skill exists to prevent.
 - **NOT a license to respawn reflexively.** Check for superseding work first; a duplicate successor is its own kind of waste.
-- **NOT applicable to a session that finished normally.** A terminal `status` with a trailing cosmetic error is not stalled.
+- **NOT applicable to a verified completed or transferred objective.** A terminal label alone does not prove that unfinished assigned work has an owner or a return event.
