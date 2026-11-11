@@ -4,6 +4,10 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: Git archive outputs and apply inspection (#1166)
+
+- Model bounded tar archive output as the destination file rather than a source-repository mutation; stdout archives and inspection-only apply modes retain read semantics. Actual apply, foreign or aliased outputs, custom formats, remote execution and unknown options retain conservative controls. Git configuration remains trusted under the existing command boundary.
+
 ### Fixed: scoped hold provenance and review follow-through (#1271)
 
 - Distinguish review findings, failed checks and actual owner holds; apply completed evidence or authorized dispositions without a renewed acknowledgment loop. Preserve genuine readiness and financial/product decisions in their scope.
