@@ -35,6 +35,26 @@ class Payload(unittest.TestCase):
         with self.assertRaises(ValueError):
             payload.metadata_environment(value)
 
+    def test_explicit_turn_binding_is_bounded_and_excludes_code_or_tool_data(self):
+        binding = payload.turn_task_binding
+        self.assertEqual(binding({'task_id': 'o/r#1292'}), 'o/r#1292')
+        self.assertEqual(binding({'metadata': {'task_id': 'o/r#1292'}, 'prompt': 'CCP_TASK_ID=o/r#1292'}), 'o/r#1292')
+        for text in ('> CCP_TASK_ID=o/r#1292', 'Example CCP_TASK_ID=o/r#1292',
+                     '```text\nCCP_TASK_ID=o/r#1292\n```', '~~~\nCCP_TASK_ID=o/r#1292\n~~~',
+                     '````text\n```\nCCP_TASK_ID=o/r#1292\n````',
+                     '```text\n```not-a-close\nCCP_TASK_ID=o/r#1292\n```',
+                     '    CCP_TASK_ID=o/r#1292', 'x' * 4097 + '\nCCP_TASK_ID=o/r#1292'):
+            self.assertEqual(binding({'prompt': text}), '')
+        self.assertEqual(binding({'tool_input': {'content': 'CCP_TASK_ID=o/r#1292'}}), '')
+        self.assertEqual(binding({'hook_event_name': 'PreToolUse', 'task_id': 'o/r#1292'}), '')
+        for value in ({'task_id': None}, {'task_id': '../invalid task'}, {'task_id': 'x' * 513},
+                      {'task_id': 'o/r#1292', 'metadata': {'task_id': 'o/r#other'}},
+                      {'prompt': 'CCP_TASK_ID=o/r#1292\nCCP_TASK_ID=o/r#other'},
+                      {'prompt': 'CCP_TASK_ID=$(touch /tmp/no-execution)'},
+                      {'task_id': 'o/r#1292', 'prompt': 'CCP_TASK_ID=o/r#other'}):
+            with self.assertRaises(ValueError):
+                binding(value)
+
     def test_non_bash_command_uses_only_metadata_limit(self):
         value = {'tool_name': 'mcp__fixture', 'tool_input': {'command': 'x' * 70000}}
         self.assertEqual(json.loads(payload.metadata_environment(value)), value)
