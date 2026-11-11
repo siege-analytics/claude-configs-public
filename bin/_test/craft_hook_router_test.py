@@ -290,6 +290,85 @@ class Router(unittest.TestCase):
         self.assertFalse(bound)
         self.assertNotIn("CRAFT_SESSION_DIR", env)
 
+    def header_enoent(self, session, count):
+        """os.open raises ENOENT for session's header on its first `count` opens (#1284)."""
+        path, real, calls = str(session / "session.jsonl"), os.open, []
+
+        def fake(target, flags, *args, **kwargs):
+            if str(target) == path:
+                calls.append(target)
+                if len(calls) <= count:
+                    raise FileNotFoundError(2, "injected replacement window", target)
+            return real(target, flags, *args, **kwargs)
+        return patch.object(os, "open", fake)
+
+    def events(self, session):
+        audit = session / "data/craft-hook-router-events.jsonl"
+        return [json.loads(line) for line in audit.read_text().splitlines()] if audit.exists() else []
+
+    def test_transient_own_header_enoent_binds_and_records_retries(self):
+        self.activate()
+        with self.header_enoent(self.session, 2):
+            code, value, _ = self.route()
+        self.assertEqual(code, 0, value)
+        binding = self.events(self.session)[-1]["binding"]
+        self.assertEqual(binding, {"result": "bound", "check": "ok", "own_check": "ok",
+                                   "own_enoent_retries": 2, "matches": 1, "env_matched": True})
+
+    def test_own_header_enoent_beyond_bound_fails_closed_and_names_check(self):
+        self.activate()
+        with self.header_enoent(self.session, 1000):
+            code, value, _ = self.route(self.payload(command="touch must-not-exist"))
+        self.assertEqual(code, 2, value)
+        self.assertIn("Binding check: enoent.", value["hookSpecificOutput"]["permissionDecisionReason"])
+        self.assertFalse((self.workspace / "must-not-exist").exists())
+        # Unbound: no verified session exists to record in, so nothing is written.
+        self.assertEqual(self.events(self.session), [])
+        with self.header_enoent(self.session, 1000):
+            code, value, _ = self.route(event="UserPromptSubmit")
+        self.assertEqual(code, 0)
+        self.assertIn("Binding check: enoent.", value["hookSpecificOutput"]["additionalContext"])
+        self.assertEqual(self.events(self.session), [])
+
+    def test_unbound_multi_match_names_check_and_writes_no_event(self):
+        self.activate()
+        other = self.workspace / "sessions/two"
+        other.mkdir()
+        (other / "session.jsonl").write_text(json.dumps({"id": "two", "sdkSessionId": SDK_ID}) + "\n")
+        code, value, _ = self.route(self.payload(command="touch must-not-exist"))
+        self.assertEqual(code, 2, value)
+        self.assertIn("Binding check: multi-match.", value["hookSpecificOutput"]["permissionDecisionReason"])
+        self.assertEqual((self.events(self.session), self.events(other)), ([], []))
+        self.assertFalse((self.workspace / "must-not-exist").exists())
+
+    def test_mistagged_env_dir_with_failing_header_receives_no_event(self):
+        # #1099 mis-tag: the env names a concurrent sibling whose header fails a
+        # check (or is mid-replacement). The caller is unbound; the sibling must
+        # never receive this caller's event, whatever check failed.
+        self.activate()
+        other = self.workspace / "sessions/two"
+        other.mkdir()
+        (self.session / "session.jsonl").write_text(json.dumps({"id": "one"}) + "\n")
+        env = {**self.env, "CRAFT_SESSION_DIR": str(other)}
+        headers = {"id-mismatch": json.dumps({"id": "victim", "sdkSessionId": SDK_ID}) + "\n",
+                   "parse": "{half-written", "sdk-id-invalid": json.dumps({"id": "two", "sdkSessionId": "x"}) + "\n",
+                   "no-match": json.dumps({"id": "two", "sdkSessionId": "aaa0010a-0000-4000-8000-000000000000"}) + "\n"}
+        for check, header in headers.items():
+            with self.subTest(check=check):
+                (other / "session.jsonl").write_text(header)
+                code, value, _ = self.route(self.payload(command="touch must-not-exist"), env=env)
+                self.assertEqual(code, 2, value)
+                self.assertIn(f"Binding check: {check}.", value["hookSpecificOutput"]["permissionDecisionReason"])
+        with self.subTest(check="nlink"):
+            os.link(other / "session.jsonl", self.workspace / "second-link")
+            self.assertEqual(self.route(self.payload(command="touch must-not-exist"), env=env)[0], 2)
+            os.unlink(self.workspace / "second-link")
+        with self.subTest(check="enoent"), self.header_enoent(other, 1000):
+            code, value, _ = self.route(self.payload(command="touch must-not-exist"), env=env)
+            self.assertIn("Binding check: enoent.", value["hookSpecificOutput"]["permissionDecisionReason"])
+        self.assertFalse((other / "data").exists())
+        self.assertFalse((self.workspace / "must-not-exist").exists())
+
     def test_unbound_payload_aliases_cannot_authorize_mutations(self):
         self.activate()
         (self.session / "session.jsonl").write_text('{"id":"one"}\n')

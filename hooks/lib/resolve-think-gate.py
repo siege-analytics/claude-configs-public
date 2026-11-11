@@ -269,19 +269,61 @@ def _git_origin(path: str, *, git_environment: Optional[dict] = None) -> str:
         return ""
 
 
-def _target_repo(path: str, *, git_environment: Optional[dict] = None) -> str:
+def _nearest_directory(path: str) -> str:
+    """The canonical nearest existing directory at or above path, or ''."""
     directory = canonical(path)
     while not os.path.isdir(directory):
         parent = os.path.dirname(directory)
         if parent == directory:
             return ""
         directory = parent
+    return directory
+
+
+def _toplevel(directory: str, *, git_environment: Optional[dict] = None) -> str:
+    """The git toplevel for directory, or '' when the lookup fails. No failed
+    lookup (any exit status, timeout, launch failure or signal) proves that a
+    repository is absent, so only a non-empty result may be reused."""
     try:
         return canonical(subprocess.check_output(
             ["git", "-C", directory, "rev-parse", "--show-toplevel"],
             text=True, stderr=subprocess.DEVNULL, timeout=3, env=git_environment).strip())
     except Exception:
         return ""
+
+
+def _target_repo(path: str, *, git_environment: Optional[dict] = None) -> str:
+    directory = _nearest_directory(path)
+    return _toplevel(directory, git_environment=git_environment) if directory else ""
+
+
+def _entry_present(directory: str, name: str) -> bool:
+    try:
+        os.lstat(os.path.join(directory, name))
+        return True
+    except (FileNotFoundError, NotADirectoryError):
+        return False
+    except OSError:
+        return True
+
+
+def _git_entry_above(path: str) -> bool:
+    """Whether a Git layout exists at or above path (filesystem only, #1281).
+
+    A `.git` entry, or a Git directory itself (bare repository or `.git`
+    internals: HEAD, objects and refs), makes an empty toplevel a failed
+    lookup, not a non-Git target. A stat error other than absence counts as
+    present so it cannot reopen the skip.
+    """
+    directory = canonical(path)
+    while True:
+        if _entry_present(directory, ".git") or all(
+                _entry_present(directory, name) for name in ("HEAD", "objects", "refs")):
+            return True
+        parent = os.path.dirname(directory)
+        if parent == directory:
+            return False
+        directory = parent
 
 
 def _scope_diagnostic(gate: dict, expected_repo: str, *, git_environment: Optional[dict] = None) -> str:
@@ -579,21 +621,53 @@ def select_task(workspace: str, paths: list[str], binding: str = "", session_id:
     binding = binding or task_binding()
     if binding:
         candidates = [g for g in candidates if task_identity(g["data"]) == binding]
+    # Long literal operand lists must not cost git subprocesses per target.
+    # Within this one resolution, a toplevel depends only on the canonical
+    # nearest existing directory and an identity verdict only on its exact
+    # repository pair, so each is asked once. Only a successful toplevel is
+    # reused; a failed lookup is never cached as an identity.
+    toplevels: dict[str, str] = {}
+    identities: dict[tuple[str, str], bool] = {}
+
+    def expected_repo_of(path: str) -> str:
+        directory = _nearest_directory(path)
+        if not directory:
+            return ""
+        if directory not in toplevels:
+            toplevel = _toplevel(directory, git_environment=git_environment)
+            if not toplevel:
+                return toplevel
+            toplevels[directory] = toplevel
+        return toplevels[directory]
+
+    def same_repo(declared: str, expected: str) -> bool:
+        if (declared, expected) not in identities:
+            identities[(declared, expected)] = _same_repo(declared, expected, git_environment=git_environment)
+        return identities[(declared, expected)]
+
     selected = []
     for path in paths:
         scores = []
         rejected = []
-        expected_repo = _target_repo(path, git_environment=git_environment)
+        expected_repo = expected_repo_of(path)
+        # Failed observations inside Git layouts must deny immediately; only
+        # successful toplevels are cached, so failure never spreads to siblings.
+        unresolved = not expected_repo and _git_entry_above(path)
         for gate in candidates:
             declared = str(gate["data"].get("repo_root", ""))
-            if declared and expected_repo and not _same_repo(declared, expected_repo, git_environment=git_environment):
-                rejected.append(_scope_diagnostic(gate, expected_repo, git_environment=git_environment))
+            if declared and (expected_repo or unresolved) and not same_repo(declared, expected_repo):
+                rejected.append(gate)  # Diagnosed only if this target ends unowned.
                 continue
             matching = [len(p.split(os.sep)) for p in _scopes(gate) if _within(path, p)]
             if matching:
                 scores.append((max(matching), gate))
         if not scores:
-            return {"gate": None, "error": "Unscoped mutation: open a task gate with scope_paths for this action.\n" + task_bootstrap_help(workspace, session_id) + ("\n" + "\n".join(rejected) if rejected else "")}
+            diagnostics = [
+                _scope_diagnostic(gate, expected_repo, git_environment=git_environment) if expected_repo else
+                f"Task gate scope rejected: {gate['path']} declares repo_root={gate['data'].get('repo_root', '')}; "
+                f"target repository is unresolved for {path} (git rev-parse failed while a .git entry or Git directory exists at or above it)."
+                for gate in rejected]
+            return {"gate": None, "error": "Unscoped mutation: open a task gate with scope_paths for this action.\n" + "Unowned target: " + path + "\n" + task_bootstrap_help(workspace, session_id) + ("\n" + "\n".join(diagnostics) if diagnostics else "")}
         best = max(s for s, _ in scores)
         winners = [g for score, g in scores if score == best]
         if len(winners) != 1:
@@ -706,6 +780,8 @@ def find_session_gate(workspace: str, gate_name: str = "think-gate", session_id:
     if binding:
         gates = [g for g in gates if task_identity(g["data"]) == binding]
     if len(gates) != 1:
+        if len(gates) > 1:
+            print("Ambiguous task ownership: " + ", ".join(sorted(task_identity(g["data"]) for g in gates)), file=sys.stderr)
         return None
     return gates[0] if gate_name == "think-gate" else _artifact_for(gates[0], gate_name, workspace, session_id)
 
@@ -748,6 +824,23 @@ def own_session_directory(workspace: str, session_id: str = '') -> str:
         return ''
     return next((os.environ.get(k) for k in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR')
                  if os.environ.get(k)), os.path.join(workspace, 'sessions', sid))
+
+
+def own_session_data_root(workspace: str) -> str:
+    """The host-bound current session's own data/ directory, or '' (#1152).
+
+    Used only to floor untracked scratch targets at Tier A. A symlinked data/
+    directory, an unbound session or a directory not named for the session id
+    yields '' so classification stays unchanged.
+    """
+    sid = session_id_from_env()
+    if not sid:
+        return ''
+    root = canonical(own_session_directory(workspace, sid))
+    if root == canonical(workspace) or os.path.basename(root) != sid:
+        return ''
+    data = os.path.join(root, 'data')
+    return data if canonical(data) == data else ''
 
 
 def own_session_path(workspace: str, path: str, directory: bool = False, removal: bool = False) -> bool:
@@ -882,7 +975,8 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         result["session_dir"] = own_session_directory(workspace)
         result["artifacts"] = {name: g["path"] if (g := _artifact_for(tg, name, workspace)) else None for name in ("investigate-gate", "junior-senior-gate", "artifacts-posted-gate", "review-gate", "test-gate")}
         result["task"] = task_identity(tg["data"])
-        result["tier"] = task_tier(tg["data"], shape["paths"], command, cwd)
+        result["tier"] = task_tier(tg["data"], shape["paths"], command, cwd,
+                                   scratch_root=own_session_data_root(workspace))
     return result
 
 
@@ -1196,10 +1290,16 @@ def select_project_task(workspace: str, shape: dict) -> dict:
 TIER_ORDER = {"A": 0, "B": 1, "C": 2}
 
 
-def _git_lines(repo: str, *args: str) -> Optional[list]:
-    """Return Git lines, or None when Git cannot establish the requested listing."""
+def _git_lines(repo: str, *args: str, clean_env: bool = False) -> Optional[list]:
+    """Return Git lines, or None when Git cannot establish the requested listing.
+
+    clean_env applies the established physical-inspection scrub (#1152): an
+    ambient GIT_DIR/GIT_WORK_TREE or config injection cannot answer for a
+    different repository, while global/system safe.directory trust is kept.
+    The default (None) keeps ordinary Git action semantics unchanged."""
+    env = _metadata_git_environment() if clean_env else None
     try:
-        out = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, timeout=10)
+        out = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, timeout=10, env=env)
     except (OSError, subprocess.SubprocessError):
         return None
     return [l for l in out.stdout.split("\0" if "-z" in args else "\n") if l] if out.returncode == 0 else None
@@ -1474,7 +1574,73 @@ def _worktree_materialization_targets(command: str, cwd: str, repo_root: str) ->
         return None
 
 
-def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict:
+def _outside_git(path: str) -> bool:
+    """True only when Git positively reports that `path` (or its nearest existing
+    ancestor) lies outside every repository (#1152). Any other outcome is False,
+    so classification keeps its strict result: ownership errors, filesystem-
+    boundary stops, a missing git executable and inherited GIT_* overrides never
+    count as proof."""
+    probe = os.path.realpath(path)
+    # Any .git entry (directory or gitdir file, even a dangling one) on the path
+    # or above it means "not proven outside Git": a dangling `gitdir:` file makes
+    # Git print "not a git repository: (null)" for a path inside a repository.
+    walk = probe
+    while True:
+        if os.path.lexists(os.path.join(walk, ".git")):
+            return False
+        parent = os.path.dirname(walk)
+        if parent == walk:
+            break
+        walk = parent
+    while not os.path.isdir(probe):
+        parent = os.path.dirname(probe)
+        if parent == probe:
+            return False
+        probe = parent
+    # The established copied inspection environment (location/config-injection
+    # overrides removed, global/system safe.directory trust kept), with stable
+    # diagnostics. Discovery limits cannot fake the result: the .git ancestor
+    # walk above already refuses any path under a discoverable repository.
+    env = _metadata_git_environment()
+    env["LC_ALL"] = "C"
+    try:
+        out = subprocess.run(["git", "-C", probe, "rev-parse", "--git-dir"],
+                             capture_output=True, text=True, timeout=10, env=env)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    # Only Git's discovery message counts, never other "not a git repository" forms.
+    return (out.returncode == 128
+            and "not a git repository (or any of the parent directories)" in out.stderr
+            and "filesystem boundary" not in out.stderr)
+
+
+_NESTED_GIT_WALK_LIMIT = 20000
+
+
+def _nested_git(path: str, root: str) -> bool:
+    """True when a .git entry sits between `path` and `root` (inclusive) or,
+    for a directory target, anywhere beneath it (#1152). Such content belongs
+    to a nested repository and needs its own clone-rooted gate. A walk that
+    cannot finish within the bound counts as nested."""
+    probe = os.path.realpath(path)
+    stop = os.path.realpath(root)
+    walk = probe
+    while True:
+        if os.path.lexists(os.path.join(walk, ".git")):
+            return True
+        if walk == stop or os.path.dirname(walk) == walk:
+            break
+        walk = os.path.dirname(walk)
+    if os.path.isdir(probe) and not os.path.islink(probe):
+        seen = 0
+        for _dir, dirs, files in os.walk(probe):
+            seen += len(dirs) + len(files)
+            if ".git" in dirs or ".git" in files or seen > _NESTED_GIT_WALK_LIMIT:
+                return True
+    return False
+
+
+def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "", *, scratch_root: str = "") -> dict:
     """Effective review tier for this mutation (#1086): the higher of the gate's
     declared `tier` and the floor bin/review-risk.py computes for the targets.
 
@@ -1512,6 +1678,19 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict
         # repository itself is a target, so the staged set is what gets classified.
         lone_commit = _lone_git_commit(command) and any(os.path.realpath(p) == repo_root for p in paths)
         named_add = _named_git_add_targets(command, cwd or repo_root, repo_root)
+        scratch = []
+        # #1152: the cwd that the action parser substitutes for writes it cannot
+        # model is "unknown writes", never scratch content. Derived here from the
+        # same command so the caller seam stays unchanged; if it cannot be
+        # derived, no target gets the scratch floor.
+        fallback = set()
+        if scratch_root:
+            try:
+                fallback_shape = action(command, cwd) if command else {}
+                fallback = (None if fallback_shape.get("error") else
+                            {os.path.realpath(x) for x in fallback_shape.get("fallback_paths", [])})
+            except Exception:
+                fallback = None
         for p in paths:
             if worktree_targets is not None:
                 continue  # All paths already passed own-Task scope selection.
@@ -1521,6 +1700,32 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict
             if not (rp == repo_root or rp.startswith(repo_root + os.sep)):
                 raise ValueError("target outside the gate's repo_root")
             r = "" if rp == repo_root else os.path.relpath(rp, repo_root).replace(os.sep, "/")
+            if r and scratch_root and _within(rp, scratch_root) and not _within(repo_root, scratch_root):
+                # #1152: an explicit, untracked target in the host-bound
+                # session's own data/ is scratch (Tier A). Tracked files, clones
+                # (whose repo_root lies inside data/) and multiply-linked files
+                # keep normal classification. A cwd fallback ("unknown writes")
+                # and a path whose own policy class is C are classified normally
+                # from the proven-empty listing: never floored, and never
+                # escalated just because a non-Git directory cannot be listed.
+                # Outside every Git repository nothing can be tracked, but only a
+                # positive "not a git repository" for both repo_root and the
+                # target proves it; any other listing failure stays strict. The
+                # result does not depend on whether the directory exists yet.
+                tracked = _git_lines(repo_root, "ls-files", "-z", "--", r, clean_env=True)
+                if tracked is None and _outside_git(repo_root) and _outside_git(rp):
+                    tracked = []
+                if tracked is None:
+                    raise ValueError("cannot list files under " + r)
+                linked = os.path.lexists(rp) and not os.path.isdir(rp) and os.stat(rp).st_nlink > 1
+                if not tracked and not linked:
+                    probe = [r, r + "/__any__"]
+                    if (fallback is None or rp in fallback or _nested_git(rp, scratch_root)
+                            or module.classify(policy, probe)["computed_tier"] == "C"):
+                        rel.extend(probe)
+                    else:
+                        scratch.append(r)
+                    continue
             if r == "" and named_add is not None:
                 rel.extend(named_add)
             elif r == "" and pytest_targets is not None:
@@ -1542,6 +1747,8 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict
             rel.extend(worktree_targets)
         verdict = module.classify(policy, sorted(set(rel)))
         floor, reasons = verdict["computed_tier"], [x for x in verdict["reasons"] if x.startswith(verdict["computed_tier"])]
+        if scratch and floor == "A":
+            reasons += [f"A:{s}:own-session data scratch" for s in sorted(set(scratch))]
         if pytest_targets is not None and TIER_ORDER[floor] < TIER_ORDER['B']:
             floor, reasons = 'B', ['B:task-owned test execution']
         if worktree_targets is not None and TIER_ORDER[floor] < TIER_ORDER['B']:
@@ -1612,6 +1819,8 @@ def main():
 
     if args.session_gate:
         result = find_session_gate(args.workspace, args.gate_name, args.session_id)
+        if result and args.env_override and canonical(args.env_override) != canonical(result["path"]):
+            result = None
         print(json.dumps(result))
         return
 

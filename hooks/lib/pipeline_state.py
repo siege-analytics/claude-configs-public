@@ -1,12 +1,14 @@
 """Task-scoped pipeline audit and atomic artifact writer (#1051)."""
-import json, sys, os, glob
+import json, sys, os, glob, time
 
+WRITER_STARTED = time.monotonic()
 signal_path, workspace, lib_dir = sys.argv[1:4]
 sys.path.insert(0, lib_dir)
 import importlib.util
 spec = importlib.util.spec_from_file_location('gate_resolver', os.path.join(lib_dir, 'resolve-think-gate.py'))
 resolver = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(resolver)
+from task_actions import github_ticket_reference
 
 def atomic_signal(path, obj):
     import tempfile
@@ -43,6 +45,141 @@ ARTIFACT_HEADING_LINE = re.compile(
 # artifact that counts; author_association is attested by GitHub (#1164).
 APPROVED_ASSOCIATIONS = {'OWNER', 'MEMBER', 'COLLABORATOR'}
 COMMENT_QUERY = '.[] | {author: .user.login, association: .author_association, body: .body} | @json'
+# The PR identity read resolve-think-gate.py already makes for review actions
+# (#1274). An artifact heading naming the current ticket's own PR is resolved
+# with it; every other declaration keeps the strict ticket comparison.
+PR_IDENTITY_QUERY = ('query($owner:String!,$name:String!,$pr:Int!){repository(owner:$owner,name:$name){pullRequest(number:$pr){'
+                     'number body headRefOid repository{nameWithOwner} closingIssuesReferences(first:100){nodes{number repository{nameWithOwner}}}}}}')
+OWN_PR_LOOKUPS = 4             # GitHub reads per writer run
+OWN_PR_LOOKUP_SECONDS = 3.0    # each read
+OWN_PR_BUDGET_SECONDS = 8.0    # all reads together
+# The guard runs under a 10 s UserPromptSubmit timeout (.claude/settings.json),
+# so no read may start or run past this point measured from writer start.
+OWN_PR_WRITER_CEILING_SECONDS = 7.0
+OWN_PR_REPLY_BYTES = 5 * 65536  # a maximal PR body, JSON-escaped, plus links
+REPO_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+')
+# Relationship lines as develop-target PR bodies write them (#1274 review
+# S2-2): an optional list marker, a verb, a run of refs, then an optional note.
+_REF_TOKEN = (r'(?:#[0-9]+|[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_][A-Za-z0-9_.-]*#[0-9]+'
+              r'|https://github\.com/[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_][A-Za-z0-9_.-]*/(?:issues|pull)/[0-9]+)')
+# Only 1-4 ASCII spaces after the marker are paragraph padding (CommonMark
+# list items); a tab or 5+ spaces make the content indented code, which is
+# left untouched and so never counts (Root review of 05ecbbfb).
+_LIST_MARKER = re.compile(r'(?:[-*+]|[0-9]{1,9}[.)]) {1,4}(?=[^ \t])')
+_CODE_LIST_ITEM = re.compile(r'(?:[-*+]|[0-9]{1,9}[.)])(?:\t| {5,})')
+_RELATION_CLAUSE = re.compile(
+    r'(?P<head>(?:refs?|references|fix(?:es|ed)?|clos(?:es|ed)|resolv(?:es|ed))[ \t]*:?[ \t]+'
+    + _REF_TOKEN + r'(?:[ \t]*,[ \t]*' + _REF_TOKEN + r')*)(?:[ \t]*[,;(:.]|[ \t]+).*', re.I)
+
+
+def relationship_body(body):
+    """The PR body with one list marker removed per line and relation notes dropped.
+
+    `- Refs #N` becomes `Refs #N` when the marker sits after at most three
+    leading spaces and is followed by 1-4 spaces of padding; any other
+    indentation is code and is left as is. A list item whose content is code
+    (a tab or 5+ spaces after the marker) is rewritten as indented code, so the
+    shared parser's clause split cannot read `Refs #N` out of `1.     Refs #N`.
+    `Refs #N (note)`, `Refs #N; note` or
+    `Refs #N, item3 only` keep only the verb and the leading run of refs. The
+    note is discarded, never parsed, so a ref that appears only in a note or in
+    prose still never counts. Line structure is kept, so the shared parser's
+    fence, quote, indented-code and Example/hypothetical rules still apply.
+    Used only for own-PR resolution; the shared parser itself is unchanged.
+    """
+    lines = []
+    for line in body.splitlines():
+        indent, text = re.match(r'( {0,3})(.*)\Z', line, re.S).groups()
+        if _CODE_LIST_ITEM.match(text):
+            lines.append('    ' + line)
+            continue
+        marker = _LIST_MARKER.match(text)
+        if marker:
+            text = text[marker.end():]
+        clause = _RELATION_CLAUSE.fullmatch(text)
+        if clause:
+            text = clause.group('head')
+        lines.append(indent + text)
+    return '\n'.join(lines)
+
+
+class OwnPullRequests:
+    """Whether an artifact-heading ref is the current ticket's own pull request (#1274).
+
+    One bounded read per distinct ref, cached for the run: at most
+    OWN_PR_LOOKUPS reads, OWN_PR_LOOKUP_SECONDS each, OWN_PR_BUDGET_SECONDS in
+    total, and never past OWN_PR_WRITER_CEILING_SECONDS after the writer
+    started. A bare ref is looked up in the ticket repository, a qualified ref
+    only in its own repository. The PR counts when GitHub's
+    closingIssuesReferences names the current ticket, or its body declares a
+    Refs/Fixes relationship through the shared
+    task_actions.github_ticket_reference parser, with relative refs belonging
+    to the PR's repository. Any failure, timeout, malformed reply, exhausted
+    budget or a number that is not a PR returns False, which keeps the
+    pre-#1274 exclusion. It never changes api_ok or the written signals'
+    last-known-good state, and it grants nothing beyond not excluding.
+    """
+
+    def __init__(self, ticket_repo, issue_num):
+        self.ticket_repo, self.issue_num = ticket_repo.lower(), issue_num
+        self.cache, self.lookups, self.deadline = {}, 0, None
+
+    def __call__(self, ref):
+        repo, num = ref
+        # Never int() an unbounded digit string: Python's int-digit limit raises,
+        # and nothing here may escape to the caller's api_ok handling.
+        if not num.isdigit() or len(num) > 12:
+            return False
+        key = ((repo or self.ticket_repo).lower(), int(num))
+        if key not in self.cache:
+            self.cache[key] = self._resolve(*key)
+        return self.cache[key]
+
+    def _resolve(self, repo, num):
+        import subprocess
+        try:
+            if (self.lookups >= OWN_PR_LOOKUPS or not REPO_NAME.fullmatch(repo) or num < 1
+                    or (os.environ.get('GH_HOST') or 'github.com') != 'github.com'):
+                return False
+            now = time.monotonic()
+            if self.deadline is None:
+                self.deadline = min(now + OWN_PR_BUDGET_SECONDS, WRITER_STARTED + OWN_PR_WRITER_CEILING_SECONDS)
+            remaining = min(OWN_PR_LOOKUP_SECONDS, self.deadline - now)
+            if remaining <= 0:
+                return False
+            self.lookups += 1
+            owner, name = repo.split('/')
+            result = subprocess.run(['gh', 'api', 'graphql', '-f', 'query=' + PR_IDENTITY_QUERY, '-f', 'owner=' + owner,
+                                     '-f', 'name=' + name, '-F', 'pr=' + str(num)],
+                                    capture_output=True, text=True, timeout=remaining)
+            if result.returncode or len(result.stdout.encode()) > OWN_PR_REPLY_BYTES:
+                return False
+            pr = json.loads(result.stdout)['data']['repository']['pullRequest']
+            if (not isinstance(pr, dict) or type(pr.get('number')) is not int or pr['number'] != num
+                    or not isinstance(pr.get('repository'), dict)
+                    or not isinstance(pr['repository'].get('nameWithOwner'), str)
+                    or pr['repository']['nameWithOwner'].lower() != repo):
+                return False
+            links = pr.get('closingIssuesReferences')
+            if not isinstance(links, dict) or not isinstance(links.get('nodes'), list):
+                return False
+            current = '%s#%s' % (self.ticket_repo, self.issue_num)
+            for issue in links['nodes']:
+                if not (isinstance(issue, dict) and isinstance(issue.get('repository'), dict)
+                        and isinstance(issue['repository'].get('nameWithOwner'), str)
+                        and type(issue.get('number')) is int):
+                    return False
+                if '%s#%d' % (issue['repository']['nameWithOwner'].lower(), issue['number']) == current:
+                    return True
+            body = pr.get('body')
+            if not isinstance(body, str):
+                return False
+            body = relationship_body(body)
+            return any(
+                github_ticket_reference(body, int(self.issue_num), self.ticket_repo, kind=kind, source_repo=repo)
+                for kind in ('reference', 'fix'))
+        except Exception:
+            return False
 
 
 # CommonMark 0.31 HTML blocks (spec 4.6). Their lines are raw HTML, never
@@ -288,8 +425,11 @@ def declarations(text):
 FRONT_MATTER = re.compile(r'\s*---[ \t]*\n(.*?)\n[ \t]*---[ \t]*(?:\n|$)', re.S)
 
 
-def declares_other_ticket(identity, body, repo_slug, issue_num):
-    """True when front matter names any other ticket, or a body declaration names only other tickets.
+def ticket_exclusion(identity, body, repo_slug, issue_num):
+    """(excluded, pending): the strict identity verdict, and heading refs left to resolve.
+
+    excluded is True when front matter names any other ticket, or a body
+    declaration names only other tickets.
 
     Front matter is judged on the raw body as one whole region, not parsed
     (#1164 F2, N1): no YAML parser is available in the hook runtime as
@@ -298,6 +438,11 @@ def declares_other_ticket(identity, body, repo_slug, issue_num):
     lines, comments, flow collections and folded scalars cannot hide one.
     Body declarations and artifact headings come from the eligible identity
     text and are excluded only when they name tickets, none of them current.
+
+    An artifact heading naming only other refs is not excluded here: its ref
+    list is returned in pending, so the caller can resolve it to the current
+    ticket's own pull request (#1274) only after every strict check has run.
+    Front matter and Ticket:/Refs: keys never get that resolution.
     """
     def current(ref):
         repo, num = ref
@@ -305,9 +450,16 @@ def declares_other_ticket(identity, body, repo_slug, issue_num):
 
     front = FRONT_MATTER.match(body)
     if front and not all(current(ref) for ref in ticket_refs(front.group(1))):
-        return True
-    return any(refs and not any(current(ref) for ref in refs)
-               for refs in (ticket_refs(value) for value in declarations(identity)))
+        return True, []
+    pending = []
+    for value in declarations(identity):
+        refs = ticket_refs(value)
+        if not refs or any(current(ref) for ref in refs):
+            continue
+        if not ARTIFACT_HEADING_LINE.match(value):
+            return True, []
+        pending.append(refs)
+    return False, pending
 
 
 def artifact_heading(lowered_comments, names):
@@ -537,7 +689,8 @@ if status == 'implementing' and current_ticket:
                 if not re.fullmatch(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})', actor_login):
                     actor_login = ''
                 ticket_repo = (repo_slug or 'siege-analytics/claude-configs-public').lower()
-                texts = []
+                own_pr = OwnPullRequests(ticket_repo, issue_num)
+                views = []
                 for record in records:
                     if isinstance(record, str):
                         continue  # a bare body carries no author: it never counts
@@ -549,8 +702,18 @@ if status == 'implementing' and current_ticket:
                     # a CRLF or CR body must not skip the front-matter region.
                     comment_body = record['body'].replace('\r\n', '\n').replace('\r', '\n')
                     identity, text = (view.lower() for view in comment_views(comment_body))
-                    if not declares_other_ticket(identity, comment_body.lower(), ticket_repo, issue_num):
-                        texts.append(text)
+                    excluded, pending = ticket_exclusion(identity, comment_body.lower(), ticket_repo, issue_num)
+                    if not excluded:
+                        views.append((pending, text))
+                # Own-PR heading reads (#1274) run only for comments that passed
+                # every strict check, newest first (GitHub lists comments oldest
+                # first), so older foreign headings cannot use up the bounded
+                # budget before the current artifact is read.
+                kept = [None] * len(views)
+                for index in reversed(range(len(views))):
+                    pending, text = views[index]
+                    kept[index] = all(any(own_pr(ref) for ref in refs) for refs in pending)
+                texts = [text for (pending, text), keep in zip(views, kept) if keep]
                 comments = '\n# comment boundary\n'.join(texts)
                 junior_hits = sum(1 for s in junior_stems if s in comments)
                 if junior_hits >= 3:
