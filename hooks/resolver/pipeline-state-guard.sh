@@ -30,6 +30,16 @@ if ! _HOOK_METADATA=$(printf '%s' "$_METADATA_INPUT" | python3 "$SCRIPT_DIR/../l
     exit 0
 fi
 export CCP_HOOK_INPUT_JSON="$_HOOK_METADATA"
+# The desktop host cannot export a per-turn shell variable. Accept its typed
+# task identity or a strict standalone prompt directive for this diagnostic
+# process only. Explicit environment bindings retain their existing priority.
+if [[ -z "${CCP_TASK_ID:-}" ]]; then
+    if ! _TURN_TASK=$(printf '%s' "$_HOOK_METADATA" | python3 "$SCRIPT_DIR/../lib/hook_payload.py" --turn-task-binding); then
+        echo "Turn task binding unavailable; no task companions were derived." >&2
+        exit 0
+    fi
+    [[ -z "$_TURN_TASK" ]] || export CCP_TASK_ID="$_TURN_TASK"
+fi
 WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 # Turn-start diagnostics have no mutation target. Resolve the unique current
 # session task (or explicit task binding), independently of the host's cwd.
@@ -46,6 +56,9 @@ except Exception:
 fi
 
 if [ ! -f "$SIGNAL_FILE" ]; then
+    if [[ -n "${CCP_TASK_ID:-}" ]]; then
+        echo "No unique current-session Task matches the explicit turn binding; no companions were derived." >&2
+    fi
     exit 0
 fi
 
