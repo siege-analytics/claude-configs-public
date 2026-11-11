@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: explicit task evidence and steward succession (#1292, #1309, #1311)
+
+- Select turn-start evidence from an explicit current-session Task in bounded host metadata or an unfenced standalone prompt directive; preserve other active tasks and all per-action scope checks.
+- Recognize a qualifying artifact author through bounded, exact-repository GitHub write-permission attestation when installation authentication cannot identify the actor; contributor association alone remains insufficient.
+- Keep WC, TC and DT as peer stewards. Transfer child ownership and return routes during succession, verify supported parent-link changes separately from labels, and visibly retire predecessors without waking archived completed children or deleting history.
+
 ### BREAKING: unresolved Git target repositories (#1281)
 
 - A failed repository observation inside a detected Git layout now rejects Task ownership rather than treating the target as non-Git. Repair the actual Git/layout/trust or transient lookup failure and retry; this does not grant foreign repositories or require broader Task scope.
