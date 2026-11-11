@@ -706,6 +706,8 @@ def find_session_gate(workspace: str, gate_name: str = "think-gate", session_id:
     if binding:
         gates = [g for g in gates if task_identity(g["data"]) == binding]
     if len(gates) != 1:
+        if len(gates) > 1:
+            print("Ambiguous task ownership: " + ", ".join(sorted(task_identity(g["data"]) for g in gates)), file=sys.stderr)
         return None
     return gates[0] if gate_name == "think-gate" else _artifact_for(gates[0], gate_name, workspace, session_id)
 
@@ -1612,6 +1614,8 @@ def main():
 
     if args.session_gate:
         result = find_session_gate(args.workspace, args.gate_name, args.session_id)
+        if result and args.env_override and canonical(args.env_override) != canonical(result["path"]):
+            result = None
         print(json.dumps(result))
         return
 
