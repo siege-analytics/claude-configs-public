@@ -28,3 +28,11 @@ selecting a task from cwd would reintroduce the defect. No all-task fan-out,
 foreign session fallback, forged companions, or mutation-authority relaxation
 is introduced. Rollback: revert the single source commit. Native installed
 acceptance and hosted CI remain separate delivery steps.
+
+Hosted CI caught a stale dependency-use fingerprint in the review-risk test.
+The independently rederived record-set delta is exactly one real invocation:
+`--repo-root "$REPO_ROOT"` became `--session-gate` in this hook. The expected
+assignment-use SHA256 is updated to
+`353464de155f466922c0d3c5eb0868a00b9a5b4241f3f2f66126d0638cf9e89d`;
+helper counts, edge sets and removal/duplication/decoy/nonexecution controls
+remain unchanged. This is a test-contract repair, not a risk-policy relaxation.
