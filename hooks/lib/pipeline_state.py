@@ -42,8 +42,11 @@ TICKET_DECLARATION = re.compile(
 ARTIFACT_HEADING_LINE = re.compile(
     r'^#{1,6}[ \t]+[*_`]*(?:' + '|'.join((JUNIOR_HEADINGS, SENIOR_HEADINGS, INVESTIGATION_HEADINGS, PREMORTEM_HEADINGS)) + r')\b')
 # Only the task's own actor or an owner-granted GitHub role can post an
-# artifact that counts; author_association is attested by GitHub (#1164).
+# artifact that counts; author_association or exact-repository permission is
+# attested by GitHub (#1164/#1311).
 APPROVED_ASSOCIATIONS = {'OWNER', 'MEMBER', 'COLLABORATOR'}
+INVESTIGATION_STEMS = ('findings', 'citations', 'disposition', 'fact sheet', 'investigation', 'verified', 'evidence')
+PREMORTEM_STEMS = ('severity:', 'tiger', 'risks', 'pre-mortem', 'elephant', 'paper tiger', 'mitigation')
 COMMENT_QUERY = '.[] | {author: .user.login, association: .author_association, body: .body} | @json'
 # The PR identity read resolve-think-gate.py already makes for review actions
 # (#1274). An artifact heading naming the current ticket's own PR is resolved
@@ -180,6 +183,74 @@ class OwnPullRequests:
                 for kind in ('reference', 'fix'))
         except Exception:
             return False
+
+
+AUTHOR_PERMISSION_LOOKUPS = 4
+AUTHOR_PERMISSION_READ_SECONDS = 1.0
+AUTHOR_PERMISSION_BUDGET_SECONDS = 2.0
+AUTHOR_PERMISSION_REPLY_BYTES = 65536
+GITHUB_LOGIN = re.compile(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})')
+
+
+class RepositoryAuthorPermissions:
+    """Run-local, exact-repository attestation for authors hidden by app /user auth.
+
+    Comment association CONTRIBUTOR does not describe repository permission.
+    Read only the current ticket repository's collaborator permission endpoint,
+    and require its returned user to match the actual comment author. The role
+    name is descriptive; only GitHub's write-level permission grants trust.
+    Failures stay untrusted, never alter the task/ticket binding or credentials.
+    """
+    def __init__(self, repo):
+        self.repo = repo.lower()
+        self.cache, self.reasons, self.lookups, self.deadline = {}, {}, 0, None
+
+    def __call__(self, author):
+        key = author.lower()
+        if key not in self.cache:
+            self.cache[key] = self._resolve(author)
+        return self.cache[key]
+
+    def _resolve(self, author):
+        import subprocess
+        key = author.lower()
+        reason = 'permission lookup unavailable'
+        try:
+            if (not REPO_NAME.fullmatch(self.repo) or not GITHUB_LOGIN.fullmatch(author)
+                    or (os.environ.get('GH_HOST') or 'github.com') != 'github.com'):
+                reason = 'unsupported repository, author or host'
+                return False
+            now = time.monotonic()
+            if self.deadline is None:
+                self.deadline = min(now + AUTHOR_PERMISSION_BUDGET_SECONDS,
+                                    WRITER_STARTED + OWN_PR_WRITER_CEILING_SECONDS)
+            remaining = min(AUTHOR_PERMISSION_READ_SECONDS, self.deadline - now)
+            if self.lookups >= AUTHOR_PERMISSION_LOOKUPS or remaining <= 0:
+                reason = 'permission lookup budget exhausted'
+                return False
+            self.lookups += 1
+            result = subprocess.run(
+                ['gh', 'api', f'repos/{self.repo}/collaborators/{author}/permission'],
+                capture_output=True, text=True, timeout=remaining)
+            if result.returncode or len(result.stdout.encode()) > AUTHOR_PERMISSION_REPLY_BYTES:
+                return False
+            response = json.loads(result.stdout)
+            user = response.get('user') if isinstance(response, dict) else None
+            if (not isinstance(user, dict) or not isinstance(user.get('login'), str)
+                    or user['login'].lower() != key):
+                reason = 'permission response author mismatch'
+                return False
+            if response.get('permission') not in {'admin', 'maintain', 'write'}:
+                reason = 'no attested write-level repository permission'
+                return False
+            return True
+        except subprocess.TimeoutExpired:
+            reason = 'permission lookup timed out'
+            return False
+        except Exception:
+            return False
+        finally:
+            self.reasons[key] = reason
 
 
 # CommonMark 0.31 HTML blocks (spec 4.6). Their lines are raw HTML, never
@@ -694,26 +765,44 @@ if status == 'implementing' and current_ticket:
                 for record in records:
                     if isinstance(record, str):
                         continue  # a bare body carries no author: it never counts
-                    author = record.get('author') if isinstance(record.get('author'), str) else ''
-                    if not ((actor_login and author.lower() == actor_login.lower())
-                            or record.get('association') in APPROVED_ASSOCIATIONS):
-                        continue
                     # One line-ending form before identity and classification:
                     # a CRLF or CR body must not skip the front-matter region.
                     comment_body = record['body'].replace('\r\n', '\n').replace('\r', '\n')
                     identity, text = (view.lower() for view in comment_views(comment_body))
                     excluded, pending = ticket_exclusion(identity, comment_body.lower(), ticket_repo, issue_num)
                     if not excluded:
-                        views.append((pending, text))
+                        views.append((record, pending, text))
                 # Own-PR heading reads (#1274) run only for comments that passed
                 # every strict check, newest first (GitHub lists comments oldest
                 # first), so older foreign headings cannot use up the bounded
                 # budget before the current artifact is read.
-                kept = [None] * len(views)
+                permissions = RepositoryAuthorPermissions(ticket_repo)
+                kept = [False] * len(views)
                 for index in reversed(range(len(views))):
-                    pending, text = views[index]
-                    kept[index] = all(any(own_pr(ref) for ref in refs) for refs in pending)
-                texts = [text for (pending, text), keep in zip(views, kept) if keep]
+                    record, pending, text = views[index]
+                    author = record.get('author') if isinstance(record.get('author'), str) else ''
+                    trusted = ((actor_login and author.lower() == actor_login.lower())
+                               or record.get('association') in APPROVED_ASSOCIATIONS)
+                    # Untrusted discussion, examples and foreign tickets cannot
+                    # consume the bounded author-attestation reads. Existing
+                    # trusted fast paths are scanned even after that budget ends.
+                    candidate = (any(artifact_heading(text, heading) for heading in
+                                     (JUNIOR_HEADINGS, SENIOR_HEADINGS, INVESTIGATION_HEADINGS, PREMORTEM_HEADINGS))
+                                 or sum(stem in text for stem in junior_stems) >= 3
+                                 or sum(stem in text for stem in senior_stems) >= 5
+                                 or sum(stem in text for stem in INVESTIGATION_STEMS) >= 3
+                                 or sum(stem in text for stem in PREMORTEM_STEMS) >= 3)
+                    if not trusted and (not candidate or not permissions(author)):
+                        continue
+                    # Expensive PR relationship reads remain restricted to
+                    # attested authors; an outsider cannot drain that budget.
+                    if not all(any(own_pr(ref) for ref in refs) for refs in pending):
+                        continue
+                    kept[index] = True
+                for author, reason in permissions.reasons.items():
+                    if not permissions.cache.get(author):
+                        warnings.append(f'ARTIFACT AUTHOR: {ticket_repo}/{author}: {reason}; artifact not counted.')
+                texts = [text for (record, pending, text), keep in zip(views, kept) if keep]
                 comments = '\n# comment boundary\n'.join(texts)
                 junior_hits = sum(1 for s in junior_stems if s in comments)
                 if junior_hits >= 3:
@@ -759,14 +848,8 @@ if status == 'implementing' and current_ticket:
     # 6. Check if investigation and pre-mortem were posted to ticket (#513).
     investigate_posted = False
     premortem_posted = False
-    invest_stems = [
-        'findings', 'citations', 'disposition', 'fact sheet',
-        'investigation', 'verified', 'evidence',
-    ]
-    premortem_stems = [
-        'severity:', 'tiger', 'risks', 'pre-mortem',
-        'elephant', 'paper tiger', 'mitigation',
-    ]
+    invest_stems = INVESTIGATION_STEMS
+    premortem_stems = PREMORTEM_STEMS
     try:
         if result.returncode == 0 and comments:
             invest_hits = sum(1 for s in invest_stems if s in comments)
