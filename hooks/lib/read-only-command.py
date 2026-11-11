@@ -135,7 +135,99 @@ def base64_ok(args):
     return operands <= 1
 
 
+def git_file_effects(words):
+    """Direct archive/dry-apply effects, within the existing trusted Git config boundary.
+
+    Custom archive formats can run commands. Certify only built-in tar, with
+    unambiguous default format inference; unknown selections stay guarded.
+    """
+    if not words or words[0] != 'git':
+        return None
+    i = 1
+    while i < len(words):
+        if words[i] == '-C':
+            if i + 1 >= len(words):
+                return None
+            i += 2
+        elif words[i].startswith('-C') and len(words[i]) > 2 or words[i] in {'--no-pager', '--no-optional-locks'}:
+            i += 1
+        else:
+            break
+    if i >= len(words) or words[i] not in {'archive', 'apply'}:
+        return None
+    sub, args = words[i], words[i + 1:]
+    if sub == 'apply':
+        dry, literal, i = False, False, 0
+        modes = {'--check', '--stat', '--numstat', '--summary'}
+        flags = modes | {'-R', '--reverse', '--recount', '--inaccurate-eof',
+                         '--ignore-space-change', '--ignore-whitespace', '--allow-empty', '-z', '-v', '--verbose'}
+        values = {'-p', '-C', '--directory', '--include', '--exclude'}
+        while i < len(args):
+            a = args[i]
+            if literal or not a.startswith('-') or a == '-':
+                pass  # patch inputs are reads, including stdin
+            elif a == '--':
+                literal = True
+            elif a in flags:
+                dry |= a in modes
+            elif a in values:
+                i += 1
+                if i >= len(args):
+                    return None
+            elif a.startswith(('-p', '-C')) and a[2:].isdigit():
+                pass
+            elif a.partition('=')[0] in {'--directory', '--include', '--exclude'} and '=' in a:
+                pass
+            else:
+                return None  # --apply, auxiliary outputs and unknown options are not readers
+            i += 1
+        return {'kind': 'apply-check', 'read_only': True, 'output': None} if dry else None
+    error = {'error': 'Unproven git archive shape; use one explicit -o/--output and built-in --format=tar, without remote/helper options'}
+    if args in (['--list'], ['-l']):
+        return {'kind': 'archive', 'read_only': True, 'output': None}
+    output, fmt, literal, operands, i = None, None, False, [], 0
+    while i < len(args):
+        a = args[i]
+        if literal or not a.startswith('-'):
+            operands.append(a)
+        elif a == '--':
+            literal = True
+        elif a in {'-v', '--verbose', '--worktree-attributes'}:
+            pass
+        else:
+            flag, equal, value = a.partition('=')
+            if a.startswith('-o') and not a.startswith('--') and len(a) > 2:
+                flag, value = '-o', a[2:]
+            elif flag in {'-o', '--output', '--format', '--prefix'}:
+                if not equal:
+                    i += 1
+                    if i >= len(args):
+                        return error
+                    value = args[i]
+            else:
+                return error
+            if flag in {'-o', '--output'}:
+                if output is not None or not value:
+                    return error
+                output = value
+            elif flag == '--format':
+                if fmt is not None or value != 'tar':
+                    return error
+                fmt = value
+        i += 1
+    if not operands or not operands[0]:
+        return error
+    if fmt is None and output is not None:
+        name = output.rsplit('/', 1)[-1]
+        if '.' in name and (name.count('.') != 1 or not name.endswith('.tar')):
+            return error  # a configured format can match a longer filename suffix
+    return {'kind': 'archive', 'read_only': output is None, 'output': output}
+
+
 def git_ok(args):
+    effect = git_file_effects(["git"] + args)
+    if effect is not None:
+        return effect.get("read_only", False)
     i = 0
     while i < len(args) and args[i] == "-C" and i + 1 < len(args):
         i += 2
