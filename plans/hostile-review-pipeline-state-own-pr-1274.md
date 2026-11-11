@@ -9,6 +9,14 @@ Reviewer: a fresh read-only reviewer with no implementation context, prompted to
 Target: worktree diff against develop 8043c583 (hooks/lib/pipeline_state.py, hooks/_test/pipeline_state_own_pr_1274.{py,test.sh}).
 Role limits given: review only; no edits, mutating git commands or GitHub posts.
 
+## Recovery review @ 35ea7797 (separate reviewer session, same model family)
+
+Source: https://github.com/siege-analytics/claude-configs-public/pull/1279#issuecomment-6785649710 (posted 2026-11-11T02:58:27Z). It replaced the assigned cross-family review, whose reviewer failed at startup with an expired provider token, so cross-family review is still owed. Verdict ACCEPT; S1 0, S2 3, S3 4; no merge blockers. Author response in round 2, on hub instruction:
+- S2-1 (GraphQL failure keeps returning False with api_ok true): not changed; Root's design decision.
+- S2-2 (bulleted/annotated Refs lines): fixed with `relationship_body()` inside OwnPullRequests. Positive tests for bulleted refs, fixes, qualified refs and 3 annotated forms; negatives for a bulleted foreign ref, a ticket only in an annotation, bulleted prose mentions, and bulleted Example/fence/quote forms.
+- S2-3 (mixed headings): test added; the reviewer's mutant now fails it.
+- S3 notes: carried to Root as follow-ups.
+
 ## Round 1 (initial diff, 25 tests)
 
 Verdict: approve with notes. No S1.

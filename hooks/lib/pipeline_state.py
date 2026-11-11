@@ -58,6 +58,37 @@ OWN_PR_BUDGET_SECONDS = 8.0    # all reads together
 OWN_PR_WRITER_CEILING_SECONDS = 7.0
 OWN_PR_REPLY_BYTES = 5 * 65536  # a maximal PR body, JSON-escaped, plus links
 REPO_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+')
+# Relationship lines as develop-target PR bodies write them (#1274 review
+# S2-2): an optional list marker, a verb, a run of refs, then an optional note.
+_REF_TOKEN = (r'(?:#[0-9]+|[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_][A-Za-z0-9_.-]*#[0-9]+'
+              r'|https://github\.com/[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_][A-Za-z0-9_.-]*/(?:issues|pull)/[0-9]+)')
+_LIST_MARKER = re.compile(r'(?:[-*+]|[0-9]{1,9}[.)])[ \t]+')
+_RELATION_CLAUSE = re.compile(
+    r'(?P<head>(?:refs?|references|fix(?:es|ed)?|clos(?:es|ed)|resolv(?:es|ed))[ \t]*:?[ \t]+'
+    + _REF_TOKEN + r'(?:[ \t]*,[ \t]*' + _REF_TOKEN + r')*)(?:[ \t]*[,;(:.]|[ \t]+).*', re.I)
+
+
+def relationship_body(body):
+    """The PR body with one list marker removed per line and relation notes dropped.
+
+    `- Refs #N` becomes `Refs #N`, and `Refs #N (note)`, `Refs #N; note` or
+    `Refs #N, item3 only` keep only the verb and the leading run of refs. The
+    note is discarded, never parsed, so a ref that appears only in a note or in
+    prose still never counts. Line structure is kept, so the shared parser's
+    fence, quote, indented-code and Example/hypothetical rules still apply.
+    Used only for own-PR resolution; the shared parser itself is unchanged.
+    """
+    lines = []
+    for line in body.splitlines():
+        indent, text = re.match(r'([ \t]{0,3})(.*)\Z', line, re.S).groups()
+        marker = _LIST_MARKER.match(text)
+        if marker:
+            text = text[marker.end():]
+        clause = _RELATION_CLAUSE.fullmatch(text)
+        if clause:
+            text = clause.group('head')
+        lines.append(indent + text)
+    return '\n'.join(lines)
 
 
 class OwnPullRequests:
@@ -129,7 +160,10 @@ class OwnPullRequests:
                 if '%s#%d' % (issue['repository']['nameWithOwner'].lower(), issue['number']) == current:
                     return True
             body = pr.get('body')
-            return isinstance(body, str) and any(
+            if not isinstance(body, str):
+                return False
+            body = relationship_body(body)
+            return any(
                 github_ticket_reference(body, int(self.issue_num), self.ticket_repo, kind=kind, source_repo=repo)
                 for kind in ('reference', 'fix'))
         except Exception:

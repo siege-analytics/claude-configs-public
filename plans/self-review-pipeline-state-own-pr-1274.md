@@ -51,7 +51,7 @@ Falsification: an assumption listed here turns out false in the installed runtim
 - Contact-point measurements: one `gh api graphql` read per distinct heading ref; at most 4; each ≤3 s; all ≤8 s from the first read and never past 7 s after writer start.
 - Surface areas: only artifact-heading declarations whose refs are not already current. Front matter and Ticket:/Refs:/Issue:/Task: keys are untouched.
 - Hypothesis: a heading ref resolving to a PR whose GitHub relationship names the current ticket is the ticket's own PR; anything else, including every failure, keeps today's exclusion.
-- Conclusions: confirmed by 32 hook-level tests through the real writer, real jq and the unchanged Tier C gate, plus a revert proof.
+- Conclusions: confirmed by 42 hook-level tests (32 in round 1, 10 added in round 2) through the real writer, real jq and the unchanged Tier C gate, plus a revert proof.
 
 ## Peer review
 
@@ -91,18 +91,26 @@ Falsification: an assumption listed here turns out false in the installed runtim
 | H-F7 | P3 | Test gaps (mixed case, Refs:/Issue:, GH_HOST, strict key after heading) | fixed: tests added. Not added: end-to-end through pipeline-state-guard.sh (tests drive the writer exactly as the guard does) |
 | N1 | P2 | Re-review: the F6 fix moved `int(num)` outside the try, so a 4301+-digit heading ref on Python 3.9.14+/3.11 raised into the outer handler and set api_ok false | fixed: reject non-digit or >12-digit refs before int(); test_huge_ref_number_excluded_without_read; guard-removed proof on 3.11 shows the writer skipping junior-senior-gate.json; round-3 re-review approves |
 | H-F1r | P3 | Round-2 residual: the 7 s ceiling is measured from writer start, so the guard's own pre-writer work (hook_payload, git rev-parse, resolver process) sits outside it; about 1-2 s headroom remains | noted: not changed; a guard-level timing test is not added |
+| R-S2-1 | P2 | Recovery review: a GraphQL-only failure returns False with api_ok true, so the signal can flip to false and back with network state | not changed: design decision reserved for Root (reviewer recommends a three-valued lookup feeding the #708 last-known-good path) |
+| R-S2-2 | P2 | Recovery review: the shared parser missed bulleted `- Refs #N` and annotated `Refs #N (note)` / `Refs #N; note` / `Refs #N, item3 only` lines, which are the main path for develop-target PRs (closingIssuesReferences empty) | fixed in round 2: `relationship_body()` strips one list marker per line and keeps only the verb plus the leading run of refs; notes are discarded unparsed. Used only inside OwnPullRequests; `task_actions.github_ticket_reference` unchanged |
+| R-S2-3 | P2 | Recovery review: no test pinned that one own-PR heading cannot carry a foreign heading in the same comment | fixed in round 2: test_own_pr_heading_cannot_carry_a_foreign_heading; the reviewer's mutant (`all(` → `not pending or any(`) fails exactly that test |
+| R-S3 | P3 | Recovery review S3-1..S3-4 (headroom, combined-PR Refs widening, unused headRefOid/state, parsing/injection clean) | noted; follow-ups for Root. Inner-any intent now pinned by test_one_heading_naming_own_pr_and_another_ref_counts |
 | L-1 | P3 | pipeline_state.py's local pre-mortem lookup does not scan the host session's own plans/ (the mutation gate does), so a valid session pre-mortem shows a "PRE-MORTEM: No pre-mortem artifact found" advisory | noted: outside #1274; observed in this task's own prompt hook |
 
 ## Test plan
 
-- `python3 -B hooks/_test/pipeline_state_own_pr_1274.py` (32 tests; run under both /usr/bin/python3 3.9.6 and Python 3.11), via `hooks/_test/pipeline_state_own_pr_1274.test.sh`, which CI's "Hook scenario tests" step picks up through the `hooks/_test/*.test.sh` glob.
+- `python3 -B hooks/_test/pipeline_state_own_pr_1274.py` (42 tests after round 2; run under both /usr/bin/python3 3.9.6 and Python 3.11), via `hooks/_test/pipeline_state_own_pr_1274.test.sh`, which CI's "Hook scenario tests" step picks up through the `hooks/_test/*.test.sh` glob.
 - Revert proof: the same tests against the 8043c583 writer.
 - Full hook suite: every `hooks/_test/*.test.sh`, mirroring CI (result under Quantified claims).
 
 ## Quantified claims
 
-- "32 tests pass" -- `/usr/bin/python3 -B hooks/_test/pipeline_state_own_pr_1274.py` → "Ran 32 tests in 53.167s / OK"; Python 3.11 → "Ran 32 tests in 50.789s / OK"
+- "round 1: 32 tests pass" -- `/usr/bin/python3 -B hooks/_test/pipeline_state_own_pr_1274.py` → "Ran 32 tests in 53.167s / OK"; Python 3.11 → "Ran 32 tests in 50.789s / OK"
 - "revert proof: 13 failures, 1 error" -- `/usr/bin/python3 -B debug/revert_proof_1274.py <worktree>` (swaps in `git show 8043c583:hooks/lib/pipeline_state.py`, runs the then-31 tests, restores) → "FAILED (failures=13, errors=1) / reverted-writer exit 1 / restored True"
+- "round 2: 42 tests pass" -- `/usr/bin/python3 -B hooks/_test/pipeline_state_own_pr_1274.py` → "Ran 42 tests in 69.915s / OK"; Python 3.11 → "Ran 42 tests in 70.584s / OK"
+- "round 2 full hook suite: 73 of 77 files pass; the same 4 environmental failures as round 1" -- `debug/run_hook_suite.sh <worktree>` on the round-2 tree → "files=77 failed: ca_enforcement_runtime session_signal_resolution universal_mutation_gate universal_mutation_gate_empty_reporoot"; pipeline_state_own_pr_1274 (56s), gate_bypass_1164, pipeline_review_headings_1164 and task_keyed_gates PASS
+- "round 2 repro: 6 S2-2 tests red before the fix" -- same command on 35ea7797's writer with the new tests → "FAILED (failures=6)" (bulleted refs, bulleted fixes, bulleted qualified, annotated ×3 subtests); negatives and S2-3 already green
+- "round 2 mutation proofs" -- `/usr/bin/python3 -B debug/mutation_proof_round2.py <worktree>` → "S2-3 all->any: FAILED (failures=3)"; "S2-3 reviewer mutant (not pending or any): FAILED (failures=1) test_own_pr_heading_cannot_carry_a_foreign_heading"; "S2-2 normalizer removed: FAILED (failures=6)"; "restored True"
 - "N1 red without the guard" -- Python 3.11 `debug/revert_proof_n1.py <worktree>` → "FileNotFoundError ... junior-senior-gate.json / FAILED (errors=1) / guard-removed exit 1 / restored True"
 - "red baseline on 8043c583" -- `/usr/bin/python3 -I -B debug/probe_1274.py <worktree> <out>` before any source edit → own-PR x3 `FFFF/2,2`, exclusions x4 `FFFF/2,2`, controls x2 `TTTT/0,0`
 - "probe green after the fix" -- same probe → own-PR x3 `TTTT/0,0`, exclusions x4 `FFFF/2,2`, controls x2 `TTTT/0,0`
@@ -118,6 +126,7 @@ Falsification: an assumption listed here turns out false in the installed runtim
 | Re-review N1 (int() outside try) | F6 fix moved int() without re-checking the exception boundary | ~1 min | gate hold until the self-review post (comment 6780744152), one guard line, one test, N1 revert proof | ~10:1 |
 | Second full-suite run stopped for the N1 edit | suite started before the N1 fix | 0 | rerun | n/a |
 | Push hook refused twice: artifact lacked a 'Working as:' role line (and Peer review shelf citations); then the commit lacked a Design-Note-Source: trailer | did not read hooks/git/self-review.sh field and trailer checks before the first commit | ~1 min | two amends of the unpushed commit (20e48755 → 5de76835 → final) and push retries | ~4:1 |
+| Recovery review S2-2/S2-3 (Refs styles; mixed-heading test) | fixtures used only the one Refs style that matched; no survey of real develop PR bodies | ~5 min (estimate: reading ~30 develop PR bodies) | round-2 normalizer, 10 tests, mutation proofs, suite rerun, additive commit | ~10:1 |
 | Debug probe fake lacked `repository.nameWithOwner` | inherited fixture predates the stricter reply check | ~0 | one probe edit in ignored debug/ | n/a |
 
 ## Process disclosures

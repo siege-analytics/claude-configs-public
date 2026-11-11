@@ -49,6 +49,20 @@ PULLS = {
     'o/r#1749': pr('o/r', 1749, 'Second round.', closing=[('o/r', 1526)]),
     'o/r#1750': pr('o/r', 1750, 'Fixes #1526'),
     'o/r#1751': pr('O/R', 1751, 'Mixed-case identity.', closing=[('O/R', 1526)]),
+    # Relationship styles used by real develop-target PRs (review S2-2).
+    'o/r#1752': pr('o/r', 1752, '## Tickets\n\n- Refs #1526'),
+    'o/r#1753': pr('o/r', 1753, '## Tickets\n\n- Refs #1600'),
+    'o/r#1754': pr('o/r', 1754, '* Fixes #1526'),
+    'o/r#1755': pr('o/r', 1755, 'Refs #1526 (hook-side lane only; the rest lands later)'),
+    'o/r#1756': pr('o/r', 1756, 'Refs #1526, item3 only; follow-ups elsewhere'),
+    'o/r#1757': pr('o/r', 1757, 'Refs #1526; related to #1600'),
+    'o/r#1758': pr('o/r', 1758, '- Refs o/r#1526 for the hook path'),
+    'o/r#1759': pr('o/r', 1759, '- Refs #1600 (also touches #1526)'),
+    'o/r#1760': pr('o/r', 1760, '- See #1526 for context'),
+    'o/r#1761': pr('o/r', 1761, '- Example: Refs #1526'),
+    'o/r#1762': pr('o/r', 1762, '```\n- Refs #1526\n```'),
+    'o/r#1763': pr('o/r', 1763, '> - Refs #1526'),
+    'o/r#1764': pr('o/r', 1764, '- Related to #1526, refs #1600'),
     'o/r#1900': pr('o/r', 1900, 'Unrelated cleanup.\n\nRefs #1600', closing=[('o/r', 1600)]),
     'o/r#1901': pr('o/r', 1901, 'This is related to #1526 in spirit, see the discussion there.'),
     'o/r#1902': pr('o/r', 1902, 'Example: Refs #1526'),
@@ -177,6 +191,48 @@ class OwnPullRequestHeading(unittest.TestCase):
     def test_qualified_cross_repository_pr_naming_ticket_counts(self):
         calls, _ = self.assertChain('cross-repo-own', headed('other/repo#7'), True)
         self.assertEqual([(c['owner'], c['name']) for c in calls], [('other', 'repo')])
+
+    # Bulleted and annotated relationship lines (review S2-2): the leading run
+    # of refs after the verb counts; annotations and prose mentions never do.
+    def test_bulleted_refs_line_counts(self):
+        self.assertChain('bulleted-refs', headed('PR #1752'), True)
+
+    def test_bulleted_fixes_line_counts(self):
+        self.assertChain('bulleted-fixes', headed('PR #1754'), True)
+
+    def test_annotated_refs_lines_count(self):
+        for number in (1755, 1756, 1757):
+            with self.subTest(number):
+                self.assertChain('annotated-%d' % number, headed('PR #%d' % number), True)
+
+    def test_bulleted_qualified_refs_line_counts(self):
+        self.assertChain('bulleted-qualified', headed('PR #1758'), True)
+
+    def test_bulleted_foreign_refs_excluded(self):
+        self.assertChain('bulleted-foreign', headed('PR #1753'), False)
+
+    def test_ticket_only_in_annotation_excluded(self):
+        self.assertChain('annotation-only', headed('PR #1759'), False)
+
+    def test_bulleted_prose_mentions_excluded(self):
+        for number in (1760, 1764):
+            with self.subTest(number):
+                self.assertChain('bulleted-prose-%d' % number, headed('PR #%d' % number), False)
+
+    def test_bulleted_example_fence_and_quote_excluded(self):
+        for number in (1761, 1762, 1763):
+            with self.subTest(number):
+                self.assertChain('bulleted-hidden-%d' % number, headed('PR #%d' % number), False)
+
+    # Mixed outcomes across headings in one comment (review S2-3).
+    def test_own_pr_heading_cannot_carry_a_foreign_heading(self):
+        body = headed('PR #1748').replace('## Investigation\n', '## Investigation for #9001\n')
+        self.assertChain('mixed-headings', body, False)
+
+    def test_one_heading_naming_own_pr_and_another_ref_counts(self):
+        # Within ONE heading any resolving ref is enough, matching the
+        # existing rule for a heading naming the current ticket among others.
+        self.assertChain('mixed-refs-one-heading', headed('PR #1748 and #9001'), True)
 
     # Unrelated and foreign references stay excluded.
     def test_unrelated_pr_excluded(self):
