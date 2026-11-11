@@ -1,0 +1,301 @@
+#!/bin/bash
+# Hook: test-tracking-guard
+# Enforces: _writing-tests-rules.md (test files must be git-tracked, not silently ignored)
+# Trigger: PreToolUse on Bash(git push *), Bash(gh pr create *), Bash(gh pr merge *),
+#          Bash(glab mr create *), Bash(glab mr merge *)
+#
+# Rejects pushes/PR-creates/PR-merges when a test file under a tests/
+# directory (basename test_*.py) is present on disk but silently
+# git-ignored: untracked AND matched by a .gitignore rule. The canonical
+# cause is a user-level ~/.gitignore `test_*.py` pattern that masks every
+# tests/test_*.py from `git status` and `git add` without warning, so
+# local pytest passes while the test never lands in git history.
+#
+# Scope is a tests/ path component only, so deliberately-ignored scratch
+# files elsewhere (test_scratch.py, test_old.py in working dirs) are not
+# flagged. Tracked files matching the pattern are never reported by
+# `git ls-files --others --ignored` (verified), so there is no false
+# positive on properly-tracked tests. A push with no silently-dropped
+# test files is a warning-free exit 0.
+#
+# Remedy printed on rejection: add `!tests/test_*.py` to the repo
+# .gitignore to override the global rule for that repo.
+#
+# Override: [test-track-skip: Reason: ...; Evidence: ...; Falsification: ...]
+# in the latest commit message. The bare form is rejected (mirrors
+# test-guard.sh / #579).
+#
+# Ref: claude-configs-public#931
+
+set -uo pipefail
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
+
+INPUT=$(cat)
+# Fast skip (#1083): exit before starting python3 when the tool payload's
+# command cannot match this hook's trigger. Only taken when tool_input's first
+# key is a non-empty "command" (an empty or missing command keeps the git-push
+# fallback) and the command uses no JSON escape other than \n \t \r \" \\ \/
+# (\u, \f, \b could hide letters or whitespace). \n \t \r become spaces, so an
+# escaped newline before the trigger still counts as a boundary. Git-hook
+# invocations (refs on stdin, no JSON) take the full path.
+_FAST_CMDS=$(printf '%s' "$INPUT" | grep -oE '"command"[[:space:]]*:[[:space:]]*"(\\.|[^"\\])*"' 2>/dev/null || true)
+# A long command takes the full path (#1098): bash substitutions slow down
+# superlinearly under a UTF-8 locale, and past the hook timeout a skip check
+# would let the command through. 16 KiB keeps the check in milliseconds.
+_FAST_FULL=0; (( ${#_FAST_CMDS} > 16384 )) && { _FAST_FULL=1; _FAST_CMDS=""; }
+_FAST_ESC="${_FAST_CMDS//'\\'/}"; _FAST_ESC="${_FAST_ESC//'\"'/}"; _FAST_ESC="${_FAST_ESC//'\/'/}"
+_FAST_ESC="${_FAST_ESC//'\n'/}"; _FAST_ESC="${_FAST_ESC//'\t'/}"; _FAST_ESC="${_FAST_ESC//'\r'/}"
+_FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CMDS="${_FAST_CMDS//'\r'/ }"
+# The shell rebuilds words from quotes and backslashes (#1098): `git "add"`,
+# `g\it add` and `git  add` all run git add. Match the trigger against the text
+# as written and against a copy with quote and backslash characters dropped and
+# blanks squeezed; skip only if neither matches. A command containing ANSI-C
+# $'...' (which can spell any byte) takes the full path.
+[[ "$_FAST_CMDS" == *"\$'"* ]] && _FAST_FULL=1
+# A quote or backslash between two letters or digits (`pr"x"`, `x\git`) joins
+# words; only the full path's quote handling decides what that runs. In the
+# JSON text a shell `"` or `\` is itself escaped, hence the leading backslash.
+[[ "$_FAST_CMDS" == *[[:alnum:]]\\[\"\\][[:alnum:]]* || "$_FAST_CMDS" == *[[:alnum:]]\'[[:alnum:]]* ]] && _FAST_FULL=1
+_FAST_BUILT="${_FAST_CMDS//[\"\'\\]/}"
+while [[ "$_FAST_BUILT" == *"  "* ]]; do _FAST_BUILT="${_FAST_BUILT//  / }"; done
+_FAST_FIRST='"tool_input"[[:space:]]*:[[:space:]]*[{][[:space:]]*"command"[[:space:]]*:[[:space:]]*"[^"]'
+_FAST_RE='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|glab[[:space:]]+mr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
+if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE || "$_FAST_BUILT" =~ $_FAST_RE ]]; then exit 0; fi
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
+CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+# Only a proven required-queue request skips these local publication checks.
+# This predicate grants no permission; UMG owns admission and its audit.
+if [[ -n "$COMMAND" ]] && python3 "$HOOK_DIR/../lib/github-merge-queue.py" --queue-required "$COMMAND" "$CWD" >/dev/null 2>&1; then
+    exit 0
+fi
+
+# Native git hook path: when called from .githooks/pre-push, stdin is the
+# ref list (not PreToolUse JSON). Detect and set COMMAND/CWD so the rest
+# of the hook works unchanged. Mirrors test-guard.sh (#411).
+if [[ -z "$COMMAND" ]]; then
+    if git rev-parse --git-dir >/dev/null 2>&1; then
+        COMMAND="git push"
+        CWD="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+    else
+        exit 0
+    fi
+fi
+
+# Trigger on git push, gh pr create / merge, or glab mr create / merge.
+# Word boundaries via portable character-class form (not BSD-incompatible
+# \b); mirrors self-review.sh / test-guard.sh (CCP#201 pattern).
+# Match only the part of the command the shell runs (#1162): an issue title or
+# body that mentions pushing is data, and treating it as a push made this hook
+# list every ignored file of a large repo and pass its timeout. ct_code_only
+# keeps `bash -c` arguments and unbalanced text, and falls back to the raw
+# command when its helper cannot run, so a real push still matches. Without
+# the library at all, the raw command is matched as before.
+# ct_code_only drops double-quoted text and heredoc bodies whole, but a `$(...)`
+# or backtick inside them still runs: `echo "$(git push)"` pushes. A command
+# with any live expansion keeps the raw text, which over-matches (#1179 review).
+COMMAND_CODE=$COMMAND
+source "$HOOK_DIR/../lib/command-text.sh" 2>/dev/null
+if declare -F ct_code_only >/dev/null; then
+    case "$COMMAND" in
+        *'$('*|*'`'*) ;;
+        *) COMMAND_CODE=$(ct_code_only "$COMMAND") ;;
+    esac
+fi
+# A literal pipeline into a direct shell feeds it executable stdin (#1204).
+# Detect the consumer in quote-stripped code, so a quoted example containing
+# "| bash" remains data. Retain raw producer text only for this bounded shape;
+# ordinary issue prose and printf-to-cat do not become push triggers.
+SHELL_STDIN='[|][[:space:]]*([^[:space:];|&]*/)?(bash|sh|zsh|dash|ash|ksh)([[:space:]]+-s)?[[:space:]]*($|[;&|])'
+if printf '%s\n' "$COMMAND_CODE" | grep -qE "$SHELL_STDIN"; then
+    COMMAND_CODE=$COMMAND
+fi
+TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|glab[[:space:]]+mr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
+if ! printf '%s\n' "$COMMAND_CODE" | grep -qE "$TRIGGERS"; then
+    exit 0
+fi
+
+# Multi-statement-with-cd yield (mirrors branch-guard.sh / test-guard.sh, #101).
+CD_COUNT=$(echo "$COMMAND" | { grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null || true; } | wc -l | tr -d ' ')
+if [[ "$CD_COUNT" -gt 0 ]]; then
+    case "$COMMAND" in
+        *$'\n'*|*';'*|*'||'*) exit 0 ;;
+    esac
+    if [[ "$CD_COUNT" -gt 1 ]]; then
+        exit 0
+    fi
+fi
+
+if [[ -z "$CWD" ]]; then
+    exit 0
+fi
+
+# Resolve effective CWD when command starts with cd <path> (mirrors test-guard.sh).
+EFFECTIVE_CWD="$CWD"
+if [[ "$COMMAND" =~ ^[[:space:]]*cd[[:space:]]+([^[:space:];&]+) ]]; then
+    CD_TARGET="${BASH_REMATCH[1]}"
+    CD_TARGET="${CD_TARGET%\"}"; CD_TARGET="${CD_TARGET#\"}"
+    CD_TARGET="${CD_TARGET%\'}"; CD_TARGET="${CD_TARGET#\'}"
+    case "$CD_TARGET" in
+        /*) ;;
+        *) CD_TARGET="$CWD/$CD_TARGET" ;;
+    esac
+    if [[ -d "$CD_TARGET" ]]; then
+        OUTER_TOP=$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null || echo "")
+        TARGET_TOP=$(git -C "$CD_TARGET" rev-parse --show-toplevel 2>/dev/null || echo "")
+        if [[ -z "$TARGET_TOP" ]]; then
+            exit 0
+        fi
+        if [[ "$OUTER_TOP" != "$TARGET_TOP" ]]; then
+            exit 0
+        fi
+        EFFECTIVE_CWD="$CD_TARGET"
+    else
+        exit 0
+    fi
+fi
+
+REPO_ROOT=$(git -C "$EFFECTIVE_CWD" rev-parse --show-toplevel 2>/dev/null || echo "")
+if [[ -z "$REPO_ROOT" ]]; then
+    exit 0
+fi
+
+# --- Find test files that are present on disk but silently git-ignored ---
+# `--others --ignored --exclude-standard` returns exactly the files that are
+# untracked AND matched by a gitignore rule (tracked files are never listed).
+# Filter to a `tests/` path component with a test_*.py basename, so scratch
+# files outside tests/ are not flagged.
+#
+# The listing is bounded (#1162). The pathspec asks git for exactly the paths
+# the loop below keeps, so a repo with a large ignored tree no longer feeds tens
+# of thousands of lines through bash (46 s in the Craft workspace repo). git
+# still walks that tree, so the walk gets a deadline inside the 10 s hook
+# timeout. A listing that fails or runs out of time blocks with its reason; it
+# never counts as "no offenders".
+LIST_SECONDS=6
+LIST_START=$SECONDS
+LIST_CMD=(git -C "$REPO_ROOT" ls-files --others --ignored --exclude-standard -- ':(glob)**/tests/**/test_*.py')
+# Every path has a deadline: there is no unbounded fallback (#1179 review).
+# 142 is the shell's code for SIGALRM; both runners report a timeout with it.
+LIST_RUNNER=""
+if command -v perl >/dev/null 2>&1; then
+    LIST_RUNNER=perl
+    # alarm survives exec, so git itself receives SIGALRM at the deadline.
+    IGNORED_UNTRACKED=$(perl -e 'alarm shift; exec @ARGV or exit 127' "$LIST_SECONDS" "${LIST_CMD[@]}" 2>/dev/null)
+    LIST_RC=$?
+elif command -v python3 >/dev/null 2>&1; then
+    LIST_RUNNER=python3
+    # subprocess.run kills the child when the timeout expires.
+    IGNORED_UNTRACKED=$(python3 -c '
+import subprocess, sys
+try:
+    r = subprocess.run(sys.argv[2:], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=float(sys.argv[1]))
+except subprocess.TimeoutExpired:
+    sys.exit(142)
+except OSError:
+    sys.exit(127)
+sys.stdout.buffer.write(r.stdout)
+sys.exit(r.returncode if r.returncode >= 0 else 128 - r.returncode)
+' "$LIST_SECONDS" "${LIST_CMD[@]}" 2>/dev/null)
+    LIST_RC=$?
+else
+    IGNORED_UNTRACKED=""
+    LIST_RC=127
+fi
+if [[ "$LIST_RC" -ne 0 ]]; then
+    if [[ -z "$LIST_RUNNER" ]]; then
+        LIST_REASON="could not run: neither perl nor python3 is on PATH to bound it"
+    elif [[ "$LIST_RC" -eq 142 ]]; then
+        LIST_REASON="did not finish within its ${LIST_SECONDS}s bound"
+    else
+        LIST_REASON="failed with exit status ${LIST_RC}"
+    fi
+    cat >&2 <<HOOKEOF
+BLOCKED: test-tracking-guard could not check for silently git-ignored test files.
+
+Listing ignored tests/test_*.py files in ${REPO_ROOT} ${LIST_REASON}
+(after $((SECONDS - LIST_START))s). Without that list the hook cannot tell
+whether a test file would be left out of this push, so it does not allow it.
+
+Check the repository with:
+
+  git -C "${REPO_ROOT}" ls-files --others --ignored --exclude-standard -- ':(glob)**/tests/**/test_*.py'
+
+A very large ignored tree (virtualenvs, build output, session data) is the
+usual cause of a slow listing; run the command from a checkout without it.
+
+Ref: #931, #1162
+HOOKEOF
+    exit 2
+fi
+
+# Keep a test_*.py basename with a `tests` directory somewhere in the path (the
+# pathspec's predicate, re-checked here). One awk pass, not a bash loop: growing
+# a bash string line by line was quadratic and took about 40 s for 7,000 paths
+# (#1162). The block lists the first 50 and counts the rest.
+OFFENDERS=$(printf '%s\n' "$IGNORED_UNTRACKED" | LC_ALL=C awk '
+    $0 == "" { next }
+    { n = split($0, part, "/") }
+    part[n] ~ /^test_.*\.py$/ && ("/" $0) ~ /\/tests\// {
+        count++
+        if (count <= 50) print "  - " $0
+    }
+    END { if (count > 50) print "  ... and " (count - 50) " more" }')
+
+# No silently-dropped test files — warning-free pass.
+if [[ -z "$OFFENDERS" ]]; then
+    exit 0
+fi
+OFFENDERS+=$'\n'
+
+# --- Offenders found: check for a structured [test-track-skip: ...] override ---
+# Evidence-chain override accepted per writing-rules:4; bare form rejected (#579).
+LATEST_MSG=$(git -C "$EFFECTIVE_CWD" log -1 --format=%B 2>/dev/null || echo "")
+if echo "$LATEST_MSG" | grep -qE '\[test-track-skip:[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]'; then
+    echo "WARNING: test-tracking-guard: [test-track-skip] override with evidence chain found in latest commit." >&2
+    echo "Test-tracking verification skipped per structured override." >&2
+    exit 0
+fi
+if echo "$LATEST_MSG" | grep -qE '\[test-track-skip(\]|:[[:space:]]*\]|:[[:space:]]+[^R])'; then
+    cat >&2 <<'HOOKEOF'
+BLOCKED: '[test-track-skip]' override requires an evidence chain.
+
+Per writing-rules:4, every "this doesn't apply" claim requires the
+evidence chain. Replace the bare form with:
+
+  [test-track-skip: Reason: <falsifiable why this test is intentionally untracked>;
+                    Evidence: <observable supporting the claim>;
+                    Falsification: <what would prove it SHOULD be tracked>]
+HOOKEOF
+    exit 2
+fi
+
+cat >&2 <<HOOKEOF
+BLOCKED: test file(s) present on disk but silently git-ignored (untracked).
+
+The following test file(s) under a tests/ directory are matched by a
+.gitignore rule and are NOT tracked by git. They will never be pushed;
+local pytest passes while the test is absent from git history:
+
+${OFFENDERS}
+Most common cause: a user-level ~/.gitignore \`test_*.py\` pattern that
+masks every tests/test_*.py from \`git status\` and \`git add\` with no
+warning.
+
+Remedy (per-repo override of the global rule):
+
+  printf '!tests/test_*.py\n' >> "$REPO_ROOT/.gitignore"
+  git add "$REPO_ROOT/.gitignore" <the test files>
+  # verify: git check-ignore -v tests/test_*.py  (should print nothing)
+
+Then re-stage the test file(s) and re-push. See [rule:writing-tests].
+
+If a test file under tests/ is intentionally untracked, add a structured
+override to the latest commit body:
+
+  [test-track-skip: Reason: <why>; Evidence: <obs>; Falsification: <disproof>]
+
+Ref: #931
+HOOKEOF
+exit 2
