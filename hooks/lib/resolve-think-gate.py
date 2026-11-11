@@ -295,6 +295,8 @@ def _toplevel(directory: str, *, git_environment: Optional[dict] = None) -> str:
 def _target_repo(path: str, *, git_environment: Optional[dict] = None) -> str:
     directory = _nearest_directory(path)
     return _toplevel(directory, git_environment=git_environment) if directory else ""
+
+
 def _entry_present(directory: str, name: str) -> bool:
     try:
         os.lstat(os.path.join(directory, name))
