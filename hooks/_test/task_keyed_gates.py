@@ -679,6 +679,8 @@ class Gates(unittest.TestCase):
                 for name in ('junior-senior-gate.json', 'artifacts-posted-gate.json'):
                     (target / name).unlink(missing_ok=True)
             env = {**self.env, 'CRAFT_SESSION_DIR': str(directory.parent.parent), 'PATH': str(fakebin) + os.pathsep + self.env['PATH']}
+            if legacy:
+                env['CCP_TASK_ID'] = ticket
             result = subprocess.run(['bash', str(self.ws / 'hooks/resolver/pipeline-state-guard.sh')], input=json.dumps(craft_payload(cwd=str(self.repo))), env=env, capture_output=True, text=True, timeout=120)
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             for name in ('junior-senior', 'artifacts-posted'):
@@ -692,6 +694,68 @@ class Gates(unittest.TestCase):
         env = {'CRAFT_SESSION_DIR': str(legacy_dir.parent.parent)}
         self.assertGate(0, 'touch file', cwd=self.b, env=env)
         self.assertGate(2, 'touch file', cwd=self.a, env=env)
+
+
+    def test_pipeline_session_task_independent_of_cwd(self):
+        shutil.copytree(ROOT / 'hooks', self.ws / 'hooks')
+        fakebin = self.ws / 'fakebin'; fakebin.mkdir()
+        comment = ('current behavior intended behavior steps to get there success criteria '
+                   'what could go wrong hasty mistakes observable behavior over-focusing '
+                   'leave out prior work right environment failure case instance or class '
+                   'done match skip if nobody findings citations disposition fact sheet '
+                   'investigation verified evidence severity: tiger risks pre-mortem elephant mitigation')
+        gh = fakebin / 'gh'
+        gh.write_text('#!' + sys.executable + '\nimport json\nprint(json.dumps(' + repr(comment) + '))\n')
+        gh.chmod(0o755)
+        git_env = {**self.env, 'GIT_AUTHOR_NAME': 'Fixture', 'GIT_AUTHOR_EMAIL': 'fixture@example.invalid',
+                   'GIT_COMMITTER_NAME': 'Fixture', 'GIT_COMMITTER_EMAIL': 'fixture@example.invalid'}
+        tree = subprocess.check_output(['git', '-C', str(self.repo), 'mktree'], input=b'', env=git_env).decode().strip()
+        commit = subprocess.check_output(['git', '-C', str(self.repo), 'commit-tree', tree, '-m', 'fixture'], env=git_env).decode().strip()
+        subprocess.run(['git', '-C', str(self.repo), 'update-ref', 'HEAD', commit], check=True, env=git_env)
+        subprocess.run(['git', '-C', str(self.repo), 'remote', 'add', 'origin', 'https://github.com/o/r.git'], check=True)
+        sibling = self.ws / 'sibling-worktree'
+        subprocess.run(['git', '-C', str(self.repo), 'worktree', 'add', '--detach', str(sibling), commit], check=True, capture_output=True, env=git_env)
+
+        def check(label, cwd, *, extra=False, binding='', override='', foreign=False, expect=True):
+            sid = 'pipeline-' + label
+            write(self.ws / 'sessions' / sid / 'session.jsonl', {'id': sid, 'sdkSessionId': SDK_UUID})
+            directory = self.task('o/r#1292', sibling, sid=sid)
+            data = json.loads((directory / 'think-gate.json').read_text())
+            data['repo_root'] = str(sibling)
+            write(directory / 'think-gate.json', data)
+            if foreign:
+                data['sessionId'] = 'other'
+                write(directory / 'think-gate.json', data)
+            if extra:
+                self.task('o/r#1293', self.repo, sid=sid, artifacts=False)
+            for name in ('junior-senior', 'artifacts-posted'):
+                (directory / (name + '-gate.json')).unlink()
+            env = {**self.env, 'CRAFT_SESSION_DIR': str(directory.parent.parent),
+                   'PATH': str(fakebin) + os.pathsep + self.env['PATH'],
+                   'CCP_TASK_ID': binding, 'CLAUDE_THINK_GATE': override}
+            payload = craft_payload(cwd=str(cwd), hook_event_name='UserPromptSubmit')
+            result = subprocess.run(['bash', str(self.ws / 'hooks/resolver/pipeline-state-guard.sh')],
+                                    input=json.dumps(payload), env=env, capture_output=True, text=True, timeout=120)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            if label == 'ambiguous':
+                self.assertIn('Ambiguous task ownership', result.stderr)
+            for name in ('junior-senior', 'artifacts-posted'):
+                artifact = directory / (name + '-gate.json')
+                self.assertEqual(artifact.exists(), expect, label + result.stdout + result.stderr)
+                if expect:
+                    self.assertEqual(json.loads(artifact.read_text())['ticket'], 'o/r#1292')
+            # Diagnostic discovery must not expand mutation authority to the cwd.
+            if expect and cwd != sibling:
+                self.assertGate(2, 'touch unauthorized', cwd=cwd, env=env)
+
+        check('sibling', self.repo)
+        check('nongit', self.ws)
+        check('same', sibling)
+        check('foreign', self.repo, foreign=True, expect=False)
+        check('ambiguous', self.repo, extra=True, expect=False)
+        check('bound', self.repo, extra=True, binding='o/r#1292')
+        check('unknown-binding', self.repo, binding='o/r#9999', expect=False)
+        check('foreign-override', self.repo, override=str(self.ws / 'foreign.json'), expect=False)
 
 
     def test_ticketless_pipeline_does_not_borrow_other_task_plans(self):
