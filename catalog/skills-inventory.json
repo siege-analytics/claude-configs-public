@@ -9200,6 +9200,7 @@
       "source_path": "skills/coding/SKILL.md",
       "test_evidence": [
         "bin/_test/data_scope_test.py",
+        "bin/_test/effective_policy_test.py",
         "bin/_test/frontmatter_validation_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/ontology_test.py",
@@ -10804,10 +10805,10 @@
     },
     {
       "canonical_source": "skills/post-error-revision/SKILL.md",
-      "characters": 16468,
-      "content_sha256": "1cd7bef1c8a29c2efe5d8f8cc56810ad328456244cb14e8957e2422d3084ff94",
+      "characters": 16849,
+      "content_sha256": "d3272125a94beff1e07a30546368aec6f0e34c2eca195e2a0ddb54c067e7dfa4",
       "description": "MANDATORY when a failure contradicts a documented Assumption. Walk failure -> commit -> PR -> ticket; append a five-field Post-error revision block (Triggered by / Observed / Falsified assumption / Revised model / Implication) to the originating ticket; preserve-and-annotate the original Assumption; THEN draft the fix or revert PR with a Refs: + Post-error-revision: trailer pair. Implements writing-rules:6. Canonical implementations: scripts/discipline/check-post-error-revision.sh (block-structure validator), hooks/git/post-error-revision-required.sh (trailer requirement on revert / regression-fix).",
-      "estimated_tokens": 4117,
+      "estimated_tokens": 4213,
       "frontmatter_name": "post-error-revision",
       "generated_outputs": [
         "dist/nested/skills/post-error-revision",
@@ -10816,6 +10817,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "bin/_test/effective_policy_test.py",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -10827,7 +10829,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 230,
+      "lines": 232,
       "owner": [
         "unknown"
       ],
@@ -10844,6 +10846,7 @@
       "slug": "post-error-revision",
       "source_path": "skills/post-error-revision/SKILL.md",
       "test_evidence": [
+        "bin/_test/effective_policy_test.py",
         "bin/_test/review_risk_test.py",
         "hooks/_test/git_hook_fast_skip.test.sh"
       ],
@@ -12935,9 +12938,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2640258,
+    "characters": 2640639,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 660143,
+    "estimated_tokens": 660239,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -12958,7 +12961,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1243864
+      "unclassified": 1244245
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12970,7 +12973,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 311009
+      "unclassified": 311105
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

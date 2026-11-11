@@ -2274,29 +2274,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/post-error-revision",
           "file_count": 1,
-          "tree_sha256": "d78b1f74e67aba6a16c51b766688cc5fef15058a11a2f50d410401d86ee298ef"
+          "tree_sha256": "2e454ee6a4b45e98790025de586d8bc858ebdf2f68033110ac2e2933c71cd2e5"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/post-error-revision",
           "file_count": 1,
-          "tree_sha256": "d78b1f74e67aba6a16c51b766688cc5fef15058a11a2f50d410401d86ee298ef"
+          "tree_sha256": "2e454ee6a4b45e98790025de586d8bc858ebdf2f68033110ac2e2933c71cd2e5"
         },
         "flat": {
           "destination": "dist/flat/skills/post-error-revision",
           "file_count": 1,
-          "tree_sha256": "d78b1f74e67aba6a16c51b766688cc5fef15058a11a2f50d410401d86ee298ef"
+          "tree_sha256": "2e454ee6a4b45e98790025de586d8bc858ebdf2f68033110ac2e2933c71cd2e5"
         },
         "nested": {
           "destination": "dist/nested/skills/post-error-revision",
           "file_count": 1,
-          "tree_sha256": "d78b1f74e67aba6a16c51b766688cc5fef15058a11a2f50d410401d86ee298ef"
+          "tree_sha256": "2e454ee6a4b45e98790025de586d8bc858ebdf2f68033110ac2e2933c71cd2e5"
         }
       },
       "canonical_source": "skills/post-error-revision/SKILL.md",
       "kind": "skill",
       "slug": "post-error-revision",
       "source_file_count": 1,
-      "source_tree_sha256": "1ebe88014de9e168fbd3f52f54bd17ab3e4df1d2cb088fb810fca11622607b50"
+      "source_tree_sha256": "4b83be6d39e563f6ae50c9fc0ae5c731e10e83f5c511e1bababdc59ff3f5e3f2"
     },
     {
       "artifacts": {
