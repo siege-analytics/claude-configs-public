@@ -282,7 +282,9 @@ def metadata_environment(payload: dict, helper_path=None) -> str:
         raise RoutingError(str(error)) from error
 
 
-def session_context(raw: bytes, event: str, environment: dict):
+def session_context(raw: bytes, event: str, environment: dict, diagnostics=None):
+    """Policy, sealed child environment and binding state; diagnostics, when a
+    dict, receives the non-authorizing binding diagnostic (#1284)."""
     payload = object_json(raw)
     if payload.get("hook_event_name") != event:
         raise RoutingError("SDK event does not match the registered bootstrap event")
@@ -307,7 +309,9 @@ def session_context(raw: bytes, event: str, environment: dict):
     sdk_id = module.payload_uuid(payload)
     if not sdk_id:
         raise RoutingError("SDK session identity is missing")
-    corrected = module.registered_session_dir(str(workspace), str(original), payload)
+    corrected, binding = module.registered_session_binding(str(workspace), str(original), payload)
+    if isinstance(diagnostics, dict):
+        diagnostics.update(binding)
     child_environment = dict(environment)
     policy_environment = policy.get("env", {})
     if not isinstance(policy_environment, dict) or any(not isinstance(key, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key)
@@ -526,7 +530,19 @@ def aggregate(event: str, outputs: list[tuple[int, str, str]]) -> tuple[int, dic
     return (2 if blocked else 0), result, "\n\n".join(errors)
 
 
-def local_audit(environment, payload, event, commands, outputs, value):
+BINDING_AUDIT_FIELDS = {"result": str, "check": str, "own_check": str, "own_enoent_retries": int,
+                        "matches": int, "env_matched": bool}
+
+
+def binding_audit(binding) -> dict:
+    """Only the fixed, non-path diagnostic fields of a session binding (#1284)."""
+    if not isinstance(binding, dict):
+        return {}
+    return {key: binding[key] for key, kind in BINDING_AUDIT_FIELDS.items()
+            if type(binding.get(key)) is kind and (kind is not str or re.fullmatch(r"[a-z-]{1,32}", binding[key]))}
+
+
+def local_audit(environment, payload, event, commands, outputs, value, binding=None):
     """Non-authorizing local observation; never raw prompt/input/result logging."""
     if not environment.get("CRAFT_SESSION_DIR"):
         return
@@ -558,6 +574,8 @@ def local_audit(environment, payload, event, commands, outputs, value):
              "policy_sha256": environment["CCP_CRAFT_ROUTER_POLICY_SHA256"],
              "router_sha256": environment["CCP_CRAFT_ROUTER_SHA256"],
              "selected_hooks": selected, "verdict": "deny" if denied else "allow"}
+    if binding_audit(binding):
+        entry["binding"] = binding_audit(binding)
     fd = os.open(directory / "craft-hook-router-events.jsonl", os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0), 0o600)
     with os.fdopen(fd, "w") as target:
         info = os.fstat(target.fileno())
@@ -590,10 +608,22 @@ def route(raw: bytes, event: str, workspace: Path, environment=None):
         raise RoutingError("enrolled Craft workspace has no usable absolute session binding")
     if len(raw) > LIMIT:
         raise RoutingError("SDK payload exceeds its size limit")
-    policy, child_environment, bound = session_context(raw, event, environment)
+    binding = {}
+    policy, child_environment, bound = session_context(raw, event, environment, binding)
     payload = object_json(raw)
+
+    def audit(commands, outputs, value):
+        # Only a verified binding names a session to record in. An unbound
+        # env-named directory may be a mis-tagged sibling (#1099), so its failed
+        # check is reported in the refusal note and never written there (#1284).
+        try:
+            local_audit(child_environment, payload, event, commands, outputs, value, binding)
+        except (OSError, ValueError):
+            pass  # Audit availability is not permission and never selects a fallback directory.
+
     if not bound:
-        note = "Craft session identity metadata is pending or ambiguous. No task authority was borrowed; reads and existing-artifact text edits remain available. Task mutations require a verified own-session binding; retry after host metadata is persisted."
+        note = ("Craft session identity metadata is pending or ambiguous. No task authority was borrowed; reads and existing-artifact text edits remain available. Task mutations require a verified own-session binding; retry after host metadata is persisted."
+                " Binding check: " + binding_audit(binding).get("check", "unknown") + ".")
         if event != "PreToolUse":
             return 0, {"hookSpecificOutput": {"hookEventName": event, "additionalContext": note}}, ""
         permitted_without_identity = payload.get("tool_name") in {"Read", "Glob", "Grep", "LS"}
@@ -632,10 +662,7 @@ def route(raw: bytes, event: str, workspace: Path, environment=None):
     result = aggregate(event, outputs)
     if len(json.dumps(result[1], ensure_ascii=True).encode()) > LIMIT:
         raise RoutingError("combined SDK hook response exceeds its bound")
-    try:
-        local_audit(child_environment, payload, event, commands, outputs, result[1])
-    except (OSError, ValueError):
-        pass  # Audit availability is not permission and never selects a fallback directory.
+    audit(commands, outputs, result[1])
     return result
 
 
