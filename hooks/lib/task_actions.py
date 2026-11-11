@@ -1206,10 +1206,8 @@ def canonical(path: str, cwd: str = "") -> str:
 _RELEASED_READS = None
 
 
-def released_read_verdict(command: str) -> int:
-    """Verdict of the released read classifier (hooks/lib/read-only-command.py,
-    #1057): 0 proven read, 3 veto (writes or runs a program), 1/4 unproven.
-    One classifier decides what is a read on main and here (#846, #1051 slim)."""
+def _released_read_classifier():
+    """Load the existing single released reader/operand grammar once."""
     global _RELEASED_READS
     if _RELEASED_READS is None:
         import importlib.util
@@ -1218,8 +1216,14 @@ def released_read_verdict(command: str) -> int:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         _RELEASED_READS = module
+    return _RELEASED_READS
+
+
+def released_read_verdict(command: str) -> int:
+    """0 proven read, 3 write/exec veto, 1/4 unproven; one released grammar."""
+    module = _released_read_classifier()
     try:
-        return int(_RELEASED_READS.main(command))
+        return int(module.main(command))
     except Exception:
         return 1
 
@@ -1893,6 +1897,10 @@ def _action(command: str, cwd: str) -> dict:
             self_managed = False
             args, arg_globs = [], []
             return
+        elif (effect := _released_read_classifier().git_file_effects(args)) and effect.get('read_only'):
+            _reader_globs(args, arg_globs)
+            if released_read_verdict(shlex.join(args)) != 0:
+                unproven_companions.append(effective)
         elif investigation(args):
             _reader_globs(args, arg_globs)
             diagnostic = True
@@ -1977,8 +1985,25 @@ def _action(command: str, cwd: str) -> dict:
                                                    '--upload-pack', '--receive-pack')) for a in operation["args"][1:]):
                     raise UnknownShape("Git helper execution has unbounded effects; use --no-textconv/--no-ext-diff for inspection")
                 local = operation["cwd"]
+                effect = _released_read_classifier().git_file_effects(args)
+                if effect and effect.get('error'):
+                    raise UnknownShape(effect['error'])
                 bootstrap = _git_bootstrap_destination(operation)
-                if bootstrap is not None:
+                if effect and effect['kind'] == 'archive':
+                    if effect['output'] is None:
+                        raise UnknownShape('unproven archive reader normalization')
+                    target = canonical(effect['output'], local)
+                    try:
+                        info = os.stat(target)
+                    except FileNotFoundError:
+                        info = None
+                    except OSError as exc:
+                        raise UnknownShape('cannot inspect archive output; use a fresh explicit file') from exc
+                    if info is not None and (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1):
+                        raise UnknownShape('archive output has unproven write aliases; use a fresh single-link file')
+                    paths.append(target)
+                    file_paths.append(target)
+                elif bootstrap is not None:
                     paths.append(bootstrap)
                     directory_paths.append(bootstrap)
                 else:
