@@ -295,6 +295,33 @@ def _toplevel(directory: str, *, git_environment: Optional[dict] = None) -> str:
 def _target_repo(path: str, *, git_environment: Optional[dict] = None) -> str:
     directory = _nearest_directory(path)
     return _toplevel(directory, git_environment=git_environment) if directory else ""
+def _entry_present(directory: str, name: str) -> bool:
+    try:
+        os.lstat(os.path.join(directory, name))
+        return True
+    except (FileNotFoundError, NotADirectoryError):
+        return False
+    except OSError:
+        return True
+
+
+def _git_entry_above(path: str) -> bool:
+    """Whether a Git layout exists at or above path (filesystem only, #1281).
+
+    A `.git` entry, or a Git directory itself (bare repository or `.git`
+    internals: HEAD, objects and refs), makes an empty toplevel a failed
+    lookup, not a non-Git target. A stat error other than absence counts as
+    present so it cannot reopen the skip.
+    """
+    directory = canonical(path)
+    while True:
+        if _entry_present(directory, ".git") or all(
+                _entry_present(directory, name) for name in ("HEAD", "objects", "refs")):
+            return True
+        parent = os.path.dirname(directory)
+        if parent == directory:
+            return False
+        directory = parent
 
 
 def _scope_diagnostic(gate: dict, expected_repo: str, *, git_environment: Optional[dict] = None) -> str:
@@ -621,16 +648,23 @@ def select_task(workspace: str, paths: list[str], binding: str = "", session_id:
         scores = []
         rejected = []
         expected_repo = expected_repo_of(path)
+        # Failed observations inside Git layouts must deny immediately; only
+        # successful toplevels are cached, so failure never spreads to siblings.
+        unresolved = not expected_repo and _git_entry_above(path)
         for gate in candidates:
             declared = str(gate["data"].get("repo_root", ""))
-            if declared and expected_repo and not same_repo(declared, expected_repo):
+            if declared and (expected_repo or unresolved) and not same_repo(declared, expected_repo):
                 rejected.append(gate)  # Diagnosed only if this target ends unowned.
                 continue
             matching = [len(p.split(os.sep)) for p in _scopes(gate) if _within(path, p)]
             if matching:
                 scores.append((max(matching), gate))
         if not scores:
-            diagnostics = [_scope_diagnostic(gate, expected_repo, git_environment=git_environment) for gate in rejected]
+            diagnostics = [
+                _scope_diagnostic(gate, expected_repo, git_environment=git_environment) if expected_repo else
+                f"Task gate scope rejected: {gate['path']} declares repo_root={gate['data'].get('repo_root', '')}; "
+                f"target repository is unresolved for {path} (git rev-parse failed while a .git entry or Git directory exists at or above it)."
+                for gate in rejected]
             return {"gate": None, "error": "Unscoped mutation: open a task gate with scope_paths for this action.\n" + task_bootstrap_help(workspace, session_id) + ("\n" + "\n".join(diagnostics) if diagnostics else "")}
         best = max(s for s, _ in scores)
         winners = [g for score, g in scores if score == best]
