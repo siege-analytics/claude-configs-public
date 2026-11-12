@@ -9,6 +9,93 @@ ROOT = Path(__file__).resolve().parents[2]
 HOOK = ROOT / 'hooks/bash/coordinator-status-guard.sh'
 
 class Reporting(unittest.TestCase):
+    def test_private_report_task_posts_only_its_exact_canonical_issue(self):
+        import shlex
+        import shutil
+        import tempfile
+        from unittest.mock import patch
+        import task_keyed_gates as fixture
+        temporary = tempfile.TemporaryDirectory(); self.addCleanup(temporary.cleanup)
+        f = fixture.Gates()
+        # The default fixture is nested below this source Git checkout. A real
+        # private report workspace must not inherit its repository as a witness.
+        with patch.object(fixture, 'ROOT', Path(temporary.name)):
+            f.setUp()
+        self.addCleanup(f.tearDown)
+        private = f.ws / 'sessions/one/data'; private.mkdir()
+        body = private / 'senior.md'; body.write_text('Senior review complete; owner hold remains.\n')
+        gate = f.task('example/target#803', private, status='reviewing', artifacts=False)
+        data = json.loads((gate / 'think-gate.json').read_text())
+        data['repo_root'] = str(private)
+        fixture.write(gate / 'think-gate.json', data)
+        command = 'gh issue comment 803 --repo example/target --body-file ' + shlex.quote(str(body))
+        result = f.hook(command, cwd=private)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        foreign = f.ws / 'sessions/two/data/report.md'; foreign.parent.mkdir(parents=True)
+        foreign.write_text('foreign report\n')
+        child = foreign.parent / 'child'; child.mkdir()
+        (foreign.parent / body.name).write_text('foreign senior evidence\n')
+        foreign_alias = private / 'foreign-alias'; foreign_alias.symlink_to(child, target_is_directory=True)
+        own_alias = private / 'own-alias'; own_alias.symlink_to(private, target_is_directory=True)
+        for operand in [str(foreign_alias / '..' / body.name), str(own_alias / body.name),
+                        str(foreign_alias / '..' / foreign.name)]:
+            with self.subTest(parent_alias=operand):
+                self.assertEqual(f.hook(command.replace(str(body), operand), cwd=private).returncode, 2)
+        unclaimed = private / 'unclaimed'; unclaimed.mkdir()
+        unclaimed_body = unclaimed / 'report.md'; unclaimed_body.write_text('unclaimed\n')
+        secret = private / '.env'; secret.write_text('PRIVATE_FIXTURE=value\n')
+        hidden = private / '.secrets/report.md'; hidden.parent.mkdir(); hidden.write_text('private\n')
+        key = private / 'key.pem'; key.write_text('fixture key\n')
+        link = private / 'linked.md'; link.symlink_to(body)
+        hardlink = private / 'hardlink.md'; os.link(body, hardlink)
+        for operand in [foreign, secret, hidden, key, link, hardlink]:
+            with self.subTest(operand=operand):
+                self.assertEqual(f.hook(command.replace(str(body), str(operand)), cwd=private).returncode, 2)
+        hardlink.unlink()
+        # A legitimate report outside this Task's claimed scope also denies.
+        fixture.write(gate / 'think-gate.json', {**data, 'scope_paths': [str(body)]})
+        self.assertEqual(f.hook(command.replace(str(body), str(unclaimed_body)), cwd=private).returncode, 2)
+        fixture.write(gate / 'think-gate.json', data)
+        self.assertEqual(f.hook(command.replace('--body-file ' + str(body), '--body report'), cwd=private).returncode, 0)
+        for name in ['report.txt', 'report.json', '.review-report']:
+            report = private / name; report.write_text('Descriptive report evidence.\n')
+            self.assertEqual(f.hook(command.replace(str(body), str(report)), cwd=private).returncode, 0)
+        for name, content in [('credentials.json', b'{}'), ('invalid.txt', b'\xff'),
+                              ('binary.txt', b'hello\0world'), ('oversize.txt', b'x' * (1024 * 1024 + 1))]:
+            report = private / name; report.write_bytes(content)
+            self.assertEqual(f.hook(command.replace(str(body), str(report)), cwd=private).returncode, 2)
+        for denied in [command.replace('comment 803', 'comment 804'),
+                       command.replace('example/target', 'foreign/repo'),
+                       command.replace('issue comment', 'pr comment'),
+                       command.replace(' --repo example/target', ''),
+                       'GH_HOST=foreign.example ' + command,
+                       'CCP_TASK_ID=foreign/repo#803 ' + command,
+                       command + ' && touch ' + str(f.b / 'code'),
+                       command + ' && gh issue close 803 --repo example/target',
+                       'gh pr review 803 --repo example/target --approve --body report',
+                       'gh api graphql -f query=mutation']:
+            with self.subTest(command=denied):
+                self.assertEqual(f.hook(denied, cwd=private).returncode, 2)
+        url = command.replace('803 --repo example/target', 'https://github.com/example/target/issues/803')
+        self.assertEqual(f.hook(url, cwd=private).returncode, 0)
+        settings = json.loads((ROOT / 'hooks/settings-snippet.json').read_text())
+        hooks = [ROOT / h['command'].split('/claude-configs-public/', 1)[1]
+                 for group in settings['hooks']['PreToolUse'] if group.get('matcher') == 'Bash'
+                 for h in group['hooks']]
+        for hook in hooks:
+            result = subprocess.run(['bash', str(hook)], input=json.dumps(fixture.craft_payload(
+                tool_name='Bash', cwd=str(private), tool_input={'command': command})),
+                env=f.env, text=True, capture_output=True, timeout=15)
+            self.assertEqual(result.returncode, 0, (hook.name, result.stderr))
+        fixture.write(gate / 'think-gate.json', {**data, 'sessionId': 'foreign'})
+        self.assertEqual(f.hook(command, cwd=private).returncode, 2)
+        fixture.write(gate / 'think-gate.json', data)
+        duplicate = f.task('example/target#803', private, slug='duplicate', artifacts=False)
+        self.assertEqual(f.hook(command, cwd=private).returncode, 2)
+        shutil.rmtree(duplicate)
+        shutil.rmtree(gate)
+        self.assertEqual(f.hook(command, cwd=private).returncode, 2)
+
     def decision(self, command, hook=None):
         result = subprocess.run(['bash', str(hook or HOOK)], input=json.dumps({
             'tool_name': 'Bash', 'cwd': str(ROOT), 'tool_input': {'command': command}}),

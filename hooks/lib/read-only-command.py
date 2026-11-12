@@ -29,7 +29,7 @@ PLAIN = {
 }
 # Verbs whose options can write or run programs: their arguments must reach the
 # per-tool check exactly as bash will see them, so no unquoted expansion.
-GUARDED = {"sed", "find", "sort", "uniq", "jq", "yq", "date", "rg", "git", "gh", "kubectl", "docker",
+GUARDED = {"sed", "find", "sort", "uniq", "jq", "yq", "date", "rg", "git", "gh", "kubectl", "docker", "curl",
            "timeout", "nice", "time", "base64", "command"}
 SHELL_WORDS = {"do", "done", "then", "else", "fi", "!", "{", "}", "while", "until", "if", "elif"}
 GIT_READ = {"log", "show", "diff", "status", "rev-parse", "rev-list", "ls-files", "ls-remote",
@@ -416,6 +416,10 @@ def simple_ok(words):
                 and all(name and not name.startswith("-") for name in args[1:]))
     if w in PLAIN:
         return True
+    if w == "curl":
+        # curlrc is disabled only when -q is first (curl.se/docs/manpage.html).
+        # Prove this exact transfer-free diagnostic, never other curl effects.
+        return args == ["-q", "--version"]
     if w == "base64":
         return base64_ok(args)
     if w == "printf":

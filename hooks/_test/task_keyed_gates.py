@@ -716,24 +716,28 @@ class Gates(unittest.TestCase):
         sibling = self.ws / 'sibling-worktree'
         subprocess.run(['git', '-C', str(self.repo), 'worktree', 'add', '--detach', str(sibling), commit], check=True, capture_output=True, env=git_env)
 
-        def check(label, cwd, *, extra=False, binding='', override='', foreign=False, expect=True):
+        def check(label, cwd, *, extra=False, binding='', override='', foreign=False, expect=True, request=None):
             sid = 'pipeline-' + label
             write(self.ws / 'sessions' / sid / 'session.jsonl', {'id': sid, 'sdkSessionId': SDK_UUID})
             directory = self.task('o/r#1292', sibling, sid=sid)
             data = json.loads((directory / 'think-gate.json').read_text())
             data['repo_root'] = str(sibling)
+            data['task_id'] = 'legacy-local-task-id'
             write(directory / 'think-gate.json', data)
             if foreign:
                 data['sessionId'] = 'other'
                 write(directory / 'think-gate.json', data)
+            other_directory = None
             if extra:
-                self.task('o/r#1293', self.repo, sid=sid, artifacts=False)
+                other_directory = self.task('o/r#1293', self.repo, sid=sid, artifacts=False)
+                other_before = (other_directory / 'think-gate.json').read_bytes()
             for name in ('junior-senior', 'artifacts-posted'):
                 (directory / (name + '-gate.json')).unlink()
             env = {**self.env, 'CRAFT_SESSION_DIR': str(directory.parent.parent),
                    'PATH': str(fakebin) + os.pathsep + self.env['PATH'],
                    'CCP_TASK_ID': binding, 'CLAUDE_THINK_GATE': override}
             payload = craft_payload(cwd=str(cwd), hook_event_name='UserPromptSubmit')
+            payload.update(request or {})
             result = subprocess.run(['bash', str(self.ws / 'hooks/resolver/pipeline-state-guard.sh')],
                                     input=json.dumps(payload), env=env, capture_output=True, text=True, timeout=120)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -744,6 +748,10 @@ class Gates(unittest.TestCase):
                 self.assertEqual(artifact.exists(), expect, label + result.stdout + result.stderr)
                 if expect:
                     self.assertEqual(json.loads(artifact.read_text())['ticket'], 'o/r#1292')
+            if other_directory:
+                self.assertEqual((other_directory / 'think-gate.json').read_bytes(), other_before)
+                for name in ('junior-senior', 'artifacts-posted'):
+                    self.assertFalse((other_directory / (name + '-gate.json')).exists(), label)
             # Diagnostic discovery must not expand mutation authority to the cwd.
             if expect and cwd != sibling:
                 self.assertGate(2, 'touch unauthorized', cwd=cwd, env=env)
@@ -754,6 +762,22 @@ class Gates(unittest.TestCase):
         check('foreign', self.repo, foreign=True, expect=False)
         check('ambiguous', self.repo, extra=True, expect=False)
         check('bound', self.repo, extra=True, binding='o/r#1292')
+        check('typed-turn', self.repo, extra=True, request={'task_id': 'o/r#1292'})
+        check('environment-priority', self.repo, extra=True, binding='o/r#1292', request={'task_id': 'o/r#1293'})
+        check('environment-prompt-priority', self.repo, extra=True, binding='o/r#1292', request={'prompt': 'CCP_TASK_ID=o/r#1293'})
+        check('environment-conflict-priority', self.repo, extra=True, binding='o/r#1292', request={'task_id': 'o/r#1293', 'prompt': 'CCP_TASK_ID=o/r#1292'})
+        check('prompt-turn', self.repo, extra=True, request={'prompt': 'Continue the assigned task.\nCCP_TASK_ID=o/r#1292\nPreserve the other task.'})
+        check('long-prompt-turn', self.repo, extra=True, request={'prompt': 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1292'})
+        check('long-conflict-turn', self.repo, extra=True, expect=False, request={'prompt': 'CCP_TASK_ID=o/r#1292\n' + 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1293'})
+        check('nested-turn', self.repo, extra=True, request={'metadata': {'task_id': 'o/r#1292'}})
+        check('conflicting-turn', self.repo, extra=True, expect=False, request={'task_id': 'o/r#1292', 'prompt': 'CCP_TASK_ID=o/r#1293'})
+        check('unknown-turn', self.repo, extra=True, expect=False, request={'task_id': 'o/r#9999'})
+        check('noncanonical-turn', self.repo, extra=True, expect=False, request={'task_id': 'legacy-local-task-id'})
+        check('quoted-turn', self.repo, extra=True, expect=False, request={'prompt': '> CCP_TASK_ID=o/r#1292'})
+        check('fenced-turn', self.repo, extra=True, expect=False, request={'prompt': '```text\nCCP_TASK_ID=o/r#1292\n```'})
+        check('quote-fence-blank-turn', self.repo, extra=True, expect=False, request={'prompt': '> Example task:\n```text\n\nCCP_TASK_ID=o/r#1293\n```'})
+        check('invalid-turn', self.repo, extra=True, expect=False, request={'task_id': '../invalid task'})
+        check('foreign-typed', self.repo, extra=True, foreign=True, expect=False, request={'task_id': 'o/r#1292'})
         check('unknown-binding', self.repo, binding='o/r#9999', expect=False)
         check('foreign-override', self.repo, override=str(self.ws / 'foreign.json'), expect=False)
 

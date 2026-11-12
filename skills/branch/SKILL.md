@@ -13,7 +13,7 @@ allowed-tools: Bash
 2. Choose the base branch
    1. Normal development starts from verified `develop` or `origin/develop`; refresh when available and identify cached refs honestly when offline.
    2. If remote `develop` is absent after successful fetch and remote verification, create it under the user's standing instruction using [skill:develop-guard]. No new confirmation is needed for routine bootstrap.
-   3. If develop does not contain current main, use the reviewed sync procedure within existing authority before branching. Do not fall back to main.
+   3. Existing verified develop remains the normal feature source when main is ahead or diverged. Preparation does not require a global main-to-develop sync and must not silently merge or reset either branch. Protected promotion and deployment retain their separate ancestry checks.
    4. Explicitly authorized version release/backport work retains its exact approved source. A branch name or label alone grants no exception.
 3. Create the branch with the correct naming convention
 4. Push the branch to the remote
@@ -164,7 +164,7 @@ Never delete branches that haven't been merged without confirming with the user.
 - [ ] Branch type matches the work being done (bugfix, feature, task, chore, hotfix)
 - [ ] Descriptive string is specific, snake_case, under 60 chars total
 - [ ] Normal development branched from verified `develop`; any distinct release source has explicit task authorization
-- [ ] Confirmed `develop` is a superset of `main` (`git log origin/develop..origin/main` is empty); otherwise surfaced sync decision
+- [ ] Used exact verified develop even if main is ahead or diverged; no implicit synchronization or main fallback
 - [ ] If remote develop was absent, verified absence and bootstrapped it safely under the standing instruction
 - [ ] Ticket exists for this work (if branchable, it's ticketable)
 - [ ] Branch pushed to remote with tracking (`-u`)

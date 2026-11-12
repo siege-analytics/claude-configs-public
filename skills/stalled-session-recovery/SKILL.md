@@ -125,7 +125,7 @@ A minimal respawn prompt is a liability. Include, at minimum:
 - **The real diagnosis**, not the surface error -- state plainly what actually killed the predecessor and why the visible error was misleading, so the successor doesn't waste its own time re-diagnosing or repeat the same mistake.
 - **The last coherent task state** -- what was confirmed done, what was in flight, what open question was blocking forward progress.
 - **Any incomplete live mutation**, with instructions to verify actual state before continuing (see diagnostic step 4).
-- **Dependents that need re-routing** -- any other session that was told to report back to the now-dead session and doesn't know about the successor. Message each directly with the new session ID; don't wait for them to discover it.
+- **Children and return routes** -- inventory the predecessor's direct children and pending returns. Transfer their coordination ownership and report targets to the successor, preserving session IDs, work and subordinate trees. Use supported hierarchy controls to reparent non-steward children to the successor. Keep any steward children at the shared workspace level (WC, TC and DT are peers); transfer their coordination ownership and return routes without making them subordinate. Retain the successor's intended role level. Message sessions with unfinished work or pending returns directly with the new return target; do not wake an archived, completed child merely for an acknowledgment. Verify the resulting links rather than treating a role label as a hierarchy change. If reparenting is unsupported, record the remaining graph discrepancy and the explicit coordination roster; do not edit private session storage or respawn healthy workers to disguise it. This host limitation does not suspend their eligible work.
 - **An explicit instruction not to reproduce the failure mode** that killed the predecessor (chunk large pushes; verify live state before big mutations; don't build ad hoc polling loops; manage context deliberately if the predecessor was already a quota/context-exhaustion successor itself).
 
 ## Archiving
@@ -134,7 +134,10 @@ Retire the predecessor only after the renewal conditions above are met:
 durable handoff, settled concurrent ownership, and a successor that accepts
 the unfinished objective and produces a useful turn. An authorized steward or
 verified supervision job may perform that retirement under its existing grant;
-passing D or receiving a spawn acknowledgment is insufficient. For a wedged
+passing D or receiving a spawn acknowledgment is insufficient. Once the handoff
+is settled, apply the host's retirement/deletion-candidate label and retire the
+obsolete role assignment so it is visibly superseded; preserve transcript and
+handoff history rather than physically deleting it without authorization. For a wedged
 session, the host may refuse retirement while it is processing; reconcile the
 live operation through supported controls rather than working around refusal.
 

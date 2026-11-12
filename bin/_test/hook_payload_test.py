@@ -35,6 +35,50 @@ class Payload(unittest.TestCase):
         with self.assertRaises(ValueError):
             payload.metadata_environment(value)
 
+    def test_explicit_turn_binding_is_bounded_and_excludes_code_or_tool_data(self):
+        binding = payload.turn_task_binding
+        self.assertEqual(binding({'task_id': 'o/r#1292'}), 'o/r#1292')
+        self.assertEqual(binding({'metadata': {'task_id': 'o/r#1292'}, 'prompt': 'CCP_TASK_ID=o/r#1292'}), 'o/r#1292')
+        for text in ('> CCP_TASK_ID=o/r#1292', 'Example CCP_TASK_ID=o/r#1292',
+                     '```text\nCCP_TASK_ID=o/r#1292\n```', '~~~\nCCP_TASK_ID=o/r#1292\n~~~',
+                     '````text\n```\nCCP_TASK_ID=o/r#1292\n````',
+                     '```text\n```not-a-close\nCCP_TASK_ID=o/r#1292\n```',
+                     '    CCP_TASK_ID=o/r#1292'):
+            self.assertEqual(binding({'prompt': text}), '')
+        long_prompt = 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1292'
+        self.assertEqual(json.loads(payload.metadata_environment({'prompt': long_prompt}))['prompt'], '')
+        self.assertEqual(binding({'prompt': long_prompt}), 'o/r#1292')
+        with self.assertRaises(ValueError):
+            binding({'prompt': long_prompt + '\nCCP_TASK_ID=o/r#other'})
+        with self.assertRaises(ValueError):
+            binding({'prompt': 'x' * (payload.INPUT_LIMIT + 1)})
+        self.assertEqual(binding({'tool_input': {'content': 'CCP_TASK_ID=o/r#1292'}}), '')
+        self.assertEqual(binding({'hook_event_name': 'PreToolUse', 'task_id': 'o/r#1292'}), '')
+        for value in ({'task_id': None}, {'task_id': '../invalid task'}, {'task_id': 'x' * 513},
+                      {'task_id': 'o/r#1292', 'metadata': {'task_id': 'o/r#other'}},
+                      {'prompt': 'CCP_TASK_ID=o/r#1292\nCCP_TASK_ID=o/r#other'},
+                      {'prompt': 'CCP_TASK_ID=$(touch /tmp/no-execution)'},
+                      {'task_id': 'o/r#1292', 'prompt': 'CCP_TASK_ID=o/r#other'}):
+            with self.assertRaises(ValueError):
+                binding(value)
+
+    def test_turn_binding_excludes_lazy_blockquote_continuations(self):
+        binding = payload.turn_task_binding
+        for quoted in ('> Example task:', '   > Example task:', '> > Example task:',
+                       '> Example task:\ncontinued quoted paragraph'):
+            with self.subTest(quoted=quoted):
+                prompt = quoted + '\nCCP_TASK_ID=o/r#other'
+                self.assertEqual(binding({'prompt': prompt}), '')
+                self.assertEqual(binding({'task_id': 'o/r#1292', 'prompt': prompt}), 'o/r#1292')
+                self.assertEqual(binding({'prompt': prompt + '\n\nCCP_TASK_ID=o/r#1292'}), 'o/r#1292')
+        self.assertEqual(binding({'prompt': '> Example task:\n>\nCCP_TASK_ID=o/r#other'}), '')
+        self.assertEqual(binding({'prompt': '```text\n> Example task:\n```\nCCP_TASK_ID=o/r#1292'}), 'o/r#1292')
+        for fence in ('```text', '~~~text', '````text'):
+            close = fence.removesuffix('text')
+            quoted_fence = '> Example task:\n' + fence + '\n\nCCP_TASK_ID=o/r#other\n' + close
+            self.assertEqual(binding({'prompt': quoted_fence}), '')
+            self.assertEqual(binding({'prompt': quoted_fence + '\n\nCCP_TASK_ID=o/r#1292'}), 'o/r#1292')
+
     def test_non_bash_command_uses_only_metadata_limit(self):
         value = {'tool_name': 'mcp__fixture', 'tool_input': {'command': 'x' * 70000}}
         self.assertEqual(json.loads(payload.metadata_environment(value)), value)
