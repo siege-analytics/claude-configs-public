@@ -69,9 +69,13 @@ class QuotedOperands(unittest.TestCase):
         self.assertFalse(shape.get('error'), shape)
         self.assertFalse(shape['read_only'])
         self.assertFalse(shape.get('investigation'))
-        self.f.assertGate(2, command)
-        self.task(full=True)
+        data = json.loads((self.task() / 'think-gate.json').read_text())
+        self.assertEqual(f.r.task_tier(data, [str(self.repo)], command, str(self.repo))['effective'], 'C')
         self.f.assertGate(0, command)
+        foreign = str(self.f.ws / 'outside-task.xml')
+        redirected = command.replace(' 2>&1 | tail -n 20', ' --junitxml=' + foreign + ' 2>&1 | tail -n 20')
+        self.f.assertGate(2, redirected)
+        self.assertFalse(Path(foreign).exists())
 
     def test_actual_unquoted_globs_and_shell_expansion_stay_denied(self):
         self.task(full=True)
@@ -81,7 +85,11 @@ class QuotedOperands(unittest.TestCase):
     def test_unknown_plugins_and_inline_programs_keep_their_guards(self):
         self.task()
         for command in ['pytest -p arbitrary ' + shlex.quote('tests/test_demo.py::test_case[param]'), 'pytest -c pytest.ini ' + shlex.quote('tests/test_demo.py::test_case[param]')]:
-            with self.subTest(command=command): self.f.assertGate(2, command)
+            with self.subTest(command=command):
+                data = json.loads((self.f.ws / 'sessions/one/tasks' / f.r.task_slug('example/app#1194') / 'think-gate.json').read_text())
+                self.assertEqual(f.r.task_tier(data, [str(self.repo)], command, str(self.repo))['effective'], 'C')
+                self.f.assertGate(0, command)
+                self.f.assertGate(2, command + ' --junitxml=' + str(self.f.ws / 'outside-task.xml'))
         self.task(full=True)
         for command in ["python3 -c 'print([1])'", "./unknown '[literal]'", "/absolute/venv/bin/python -c 'print([1])'", "env pytest 'tests/test_demo.py::test_case[param]'", "git add '[literal]'", "touch '~literal' "]:
             with self.subTest(command=command): self.f.assertGate(2, command)

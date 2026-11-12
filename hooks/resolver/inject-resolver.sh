@@ -73,45 +73,7 @@ EOF
   fi
 fi
 
-# --- Pipeline status: scan for plan artifacts and warn on incomplete chains ---
-# Scan locations: CRAFT_AGENT_PLANS_PATH (session plans) and CWD/plans/ (repo plans).
-# Only emit the warning if think-*.md files exist (no noise otherwise).
-
-PLANS_DIRS=()
-[[ -n "${CRAFT_AGENT_PLANS_PATH:-}" ]] && [[ -d "$CRAFT_AGENT_PLANS_PATH" ]] && PLANS_DIRS+=("$CRAFT_AGENT_PLANS_PATH")
-[[ -d "plans" ]] && PLANS_DIRS+=("plans")
-
-if [[ "${#PLANS_DIRS[@]}" -gt 0 ]]; then
-    THINK_FILES=$(find "${PLANS_DIRS[@]}" -maxdepth 1 -name 'think-*.md' 2>/dev/null | sed -n '1,10p' || true)
-
-    if [[ -n "$THINK_FILES" ]]; then
-        # Check for downstream artifacts (any, not ticket-matched — v1)
-        HAS_INVESTIGATE=$(find "${PLANS_DIRS[@]}" -maxdepth 1 -name 'investigate-*.md' 2>/dev/null | sed -n '1p' || true)
-        HAS_PREMORTEM=$(find "${PLANS_DIRS[@]}" -maxdepth 1 \( -name 'pre-mortem-*.md' -o -name 'premortem-*.md' \) 2>/dev/null | sed -n '1p' || true)
-        HAS_SELFREVIEW=$(find "${PLANS_DIRS[@]}" -maxdepth 1 -name 'self-review-*.md' 2>/dev/null | sed -n '1p' || true)
-
-        MISSING=""
-        [[ -z "$HAS_INVESTIGATE" ]] && MISSING="${MISSING}  [!] investigate artifact: MISSING — produce Fact Sheet before implementation\n"
-        [[ -z "$HAS_PREMORTEM" ]] && MISSING="${MISSING}  [!] pre-mortem artifact: MISSING — classify risks before implementation\n"
-
-        if [[ -n "$MISSING" ]]; then
-            THINK_LIST=$(echo "$THINK_FILES" | sed 's/^/  /')
-            cat <<PIPELINE
-
->>> PIPELINE STATUS (think Step 7 enforcement) <<<
-Design note(s) found:
-$THINK_LIST
-
-Downstream artifacts incomplete:
-$(printf '%b' "$MISSING")
-DO NOT proceed to implementation until investigate and pre-mortem
-are complete. Post each artifact to the ticket before the next stage.
-The self-review hook will block your push if these are missing.
-
-PIPELINE
-        fi
-    fi
-fi
+# Preparation notes are optional task context, not prompt-time edit prerequisites.
 
 } > "$DELIVERY_FILE"
 DELIVERY_BYTES="$(LC_ALL=C wc -c < "$DELIVERY_FILE")"

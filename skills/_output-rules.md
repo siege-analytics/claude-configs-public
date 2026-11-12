@@ -14,8 +14,11 @@ An existing prohibited trailer is a candidate-history repair, not a reason to ab
 
 ## Author Identity
 
-Git commit authorship is determined by session labels, not by the machine's
-git config. Check session labels before every commit.
+In CraftAgents, Git commit authorship follows actual session labels rather than
+the machine default. Check those labels before committing in that host. Outside
+CraftAgents, preserve the existing configured Git identity unless the operator
+has supplied a different author. Do not invent a session label or stop CLI work
+to request labels that its host does not provide.
 
 | Session label | `user.name` | `user.email` |
 |---|---|---|
@@ -23,7 +26,7 @@ git config. Check session labels before every commit.
 | `dheeraj` | `Dheeraj Chand` | `dheeraj@siegeanalytics.com` |
 | `steve` | `Steve Blackmon` | `steve@blackmon.org` |
 
-Apply via `-c` flags on every `git commit` invocation:
+For CraftAgents commits, apply the selected label identity via `-c` flags:
 
 ```bash
 git -c user.name="Craft Agent" -c user.email="agents-noreply@craft.do" commit -m "..."

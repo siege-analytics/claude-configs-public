@@ -70,9 +70,11 @@ validate_committed_artifact() {
     if [[ "$tier" == "B" ]]; then
         for section in "## Assumptions" "## Test plan"; do grep -qF "$section" <<<"$content" || return 1; done
     else
-        for section in "## Assumptions" "## Peer review" "## Lead review" "## Quantified claims"; do grep -qF "$section" <<<"$content" || return 1; done
-        grep -qE '^Pre-mortem-artifact:[[:space:]]+\S' <<<"$content" || return 1
-        grep -qE '^Hostile-review-artifact:[[:space:]]+\S' <<<"$content" || return 1
+        if grep -qxF '## Peer review' <<<"$content" && grep -qxF '## Lead review' <<<"$content" && grep -qxF '## Quantified claims' <<<"$content"; then
+            for section in "## Assumptions" "## Peer review" "## Lead review" "## Quantified claims"; do grep -qF "$section" <<<"$content" || return 1; done
+        else
+            for section in "## Assumptions" "## Test plan" "## Findings" "## Independent review"; do grep -qF "$section" <<<"$content" || return 1; done
+        fi
     fi
 }
 
@@ -159,16 +161,7 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA EXTRA || [[ -n "$LOCAL_R
             elif [[ "$TIER" == "C" && ! "$HOSTILE_VALUE" =~ ^(https?://|#[0-9]+$) ]] && { ! git cat-file -e "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || [[ $(git cat-file -s "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || echo 0) -eq 0 ]]; }; then
                 REASONS+=("Hostile-Review is not a URL, ticket, or non-empty file in the commit")
             fi
-            if [[ "$TIER" == "C" ]]; then
-                for EVIDENCE in Negative-Tests Full-Suite Canary-Rollback; do
-                    case "$EVIDENCE" in
-                        Negative-Tests) EXAMPLE="<negative cases exercised and their result>" ;;
-                        Full-Suite) EXAMPLE="<full suite command and pass/fail counts>" ;;
-                        Canary-Rollback) EXAMPLE="<canary or revert proof, or N/A with reason>" ;;
-                    esac
-                    [[ $(echo "$TRAILERS" | grep -cE "^${EVIDENCE}:[[:space:]]+\\S") -eq 1 ]] || REASONS+=("$EVIDENCE: $EXAMPLE  (Tier C requires exactly one $EVIDENCE trailer)")
-                done
-            fi
+
         fi
         if [[ ${#REASONS[@]} -gt 0 ]]; then
             BLOCKED=1
@@ -189,9 +182,9 @@ The following commits violate proportional review policy:
 $(echo -e "$BLOCKED_COMMITS")
 
 Every non-merge commit must include Review-Tier: A|B|C and Self-Review:.
-Tier B/C also require Self-Review-Source:. Tier C also requires Hostile-Review:,
-Negative-Tests:, Full-Suite: and Canary-Rollback:. Each commit lists every
-violation found, so one amend can fix them all (#1168).
+Tier B/C also require Self-Review-Source:. Tier C requires actual independent
+Hostile-Review: evidence. The compact record contains actual source facts,
+checks/results and findings; compatible historical review records remain valid.
 The declared tier may escalate but cannot be lower than the machine-computed tier.
 
 To add trailers, amend the commit:

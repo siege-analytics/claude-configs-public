@@ -100,13 +100,13 @@ class EmptyTrailers(unittest.TestCase):
         return subprocess.run(['bash', str(self.repo / '.githooks/commit-msg'), str(path)],
                               cwd=self.repo, text=True, capture_output=True, timeout=20)
 
-    def full(self, self_review='fixture', source='https://example.com/review', negative='fixture'):
-        return f'fix(#1168): fixture\n\nReview-Tier: C\nSelf-Review: {self_review}\nSelf-Review-Source: {source}\nHostile-Review: https://example.com/hostile\nNegative-Tests: {negative}\nFull-Suite: fixture\nCanary-Rollback: fixture\n'
+    def full(self, self_review='fixture', source='https://example.com/review', negative='fixture', hostile='https://example.com/hostile'):
+        return f'fix(#1168): fixture\n\nReview-Tier: C\nSelf-Review: {self_review}\nSelf-Review-Source: {source}\nHostile-Review: {hostile}\nNegative-Tests: {negative}\nFull-Suite: fixture\nCanary-Rollback: fixture\n'
 
     def test_three_empty_values_are_reported_in_one_rejection(self):
-        result = self.message(self.full('', '', ''))
+        result = self.message(self.full('', '', hostile=''))
         self.assertEqual(result.returncode, 1)
-        for name in ['Self-Review', 'Self-Review-Source', 'Negative-Tests']:
+        for name in ['Self-Review', 'Self-Review-Source', 'Hostile-Review']:
             self.assertRegex(result.stdout + result.stderr, r'(?m)^\s+- ' + name + ':')
         self.assertEqual((result.stdout + result.stderr).count('BLOCKED:'), 1)
 
@@ -114,10 +114,11 @@ class EmptyTrailers(unittest.TestCase):
         self.assertEqual(self.message(self.full('', '')).returncode, 1)
 
     def test_valid_fields_are_not_reported_missing(self):
-        result = self.message(self.full(negative=''))
+        result = self.message(self.full(hostile=''))
         self.assertEqual(result.returncode, 1)
         self.assertNotRegex(result.stdout + result.stderr, r'(?m)^\s+- Self-Review(?:-Source)?:')
         self.assertEqual(self.message(self.full()).returncode, 0)
+        self.assertEqual(self.message(self.full(negative='')).returncode, 0)
 
     def test_tier_A_no_review_exemption_is_unchanged(self):
         self.git('reset', '-q')

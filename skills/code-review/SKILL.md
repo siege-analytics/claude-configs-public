@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "MANDATORY review gate for any PR / diff / session-end code. Pre-review (run first): evaluate-ticket against the PR's linked ticket; produce Reviewer Assumptions block (Working as / Reading for / Failure shapes). THEN: mechanical pre-flight scanner + eight-layer review (correctness, security, data integrity, performance, error handling, domain correctness, resource management, readability). Layers 6-7 added from hostile-review round 9 findings (domain invariant enforcement, resource leak prevention). Reciprocal of self-review's author-side discipline. Do NOT skip this skill; reviewing a diff without first reading the ticket reviews against the reviewer's mental model, not the author's intent."
+description: "Review the actual change against its requested outcome, relevant failure modes and validation. Produce useful actionable findings; use proportionate depth without mandatory ticket-format or rank ceremonies."
 allowed-tools: Read Grep Glob
 ---
 
@@ -46,45 +46,9 @@ A review comment, green CI, or obvious patch is not implementation authorization
 
 When reviewing a pull request, a diff, or code written during a session. Apply this methodology systematically -- don't rely on skimming to catch issues.
 
-## Pre-review: ticket + reviewer assumptions (before everything else)
+## Establish intent
 
-Per claude-configs-public#146, the reviewer side of the discipline mirrors the author side: ground the review in the author's stated intent BEFORE judging the diff. Two steps, in this order.
-
-### 1. Verify the ticket the PR cites is fit
-
-```bash
-bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>
-```
-
-(Path: `scripts/discipline/evaluate-ticket.sh` in claude-configs-public; rubric documented in `evaluate-ticket/SKILL.md`.)
-
-**PASS** → proceed to step 2.
-
-**BLOCK** → your **first review comment** is the gap list from the script's output. Do NOT review the diff until either (a) the author fixes the ticket and re-runs evaluate-ticket, or (b) the author pastes an exemption block in their self-review artifact per `_writing-rules-rules.md` writing-rules:4.
-
-Reviewing a diff against an unfit ticket reviews against the reviewer's mental model, not the author's stated intent. That's where reviewer / author drift starts.
-
-### 2. Produce a Reviewer Assumptions block
-
-Before reading the diff, write (in the PR review body, or in a reviewer-side artifact alongside the PR):
-
-```
-## Reviewer Assumptions
-Working as: <reviewer role(s)>
-Reading for: <intent restated in your own words from the ticket -- NOT from
-              the PR body. If you can't restate the intent from the ticket
-              alone, that's evidence the ticket is unfit; loop back to step 1.>
-Failure shapes I would flag before reading the diff: <list 2-3 concrete
-              observable failures a bad version of this would exhibit --
-              e.g. "regression in the X test suite," "silent data drop in
-              the Y branch," "race condition on Z").
-```
-
-The Reading-for restatement is the equivalent of the author's `Goal source verification`: it forces the reviewer to read the ticket, not just the PR body. The failure-shapes prediction exposes the reviewer's mental model up front, so when the review surfaces a finding the contrast with the predicted shape is auditable.
-
-### 3. THEN run the mechanical pre-flight + 6-layer review below
-
-The existing scanner + judgement layers fire after the ticket and Reviewer Assumptions are settled.
+Read the original request or relevant task and inspect the actual diff. Resolve material ambiguity from source and context; ask only when the requested outcome itself is unclear. A missing ticket heading, formal rubric result or reviewer-role block does not prohibit review. Record consequential assumptions when they affect the verdict, without a prescribed pre-reading ceremony or invented number of predicted failures.
 
 ## Mechanical pre-flight (run first)
 
@@ -95,7 +59,7 @@ bash <skills-dir>/detect-ai-fingerprints/scan.sh         # for staged diffs
 bash <skills-dir>/detect-ai-fingerprints/scan.sh --pr 43  # for a GitHub PR
 ```
 
-The scanner catches the four stylistic prose rules (`[rule:writing-prose]` writing-prose:1, :2, :3, :4) plus history-reference detection in code comments (`[rule:writing-code]` writing-code:2), Django ORM kwarg checks for same-file models (`[rule:writing-code]` writing-code:4), silent exception swallowing (`[rule:writing-code]` writing-code:7), optional-import callsite hygiene (`[rule:writing-code]` writing-code:8), silently-dropped defaulted parameters (`[rule:writing-code]` writing-code:9), unbounded blocking I/O (`[rule:writing-code]` writing-code:15), actionable skip messages (`[rule:writing-tests]` writing-tests:3), untested named exception handlers (`[rule:writing-tests]` writing-tests:5), countable claims missing a `Verified-by:` trailer (`[rule:writing-claims]` writing-claims:2), rule citations missing `Rule-executed:` evidence, and deprecation messages without version-or-date plus removal target (`[rule:writing-releases]` writing-releases:3). Surface scanner findings first and apply [skill:detect-ai-fingerprints] task-scoped acceptance. Incomplete scans block. New, changed and newly exposed true violations must be fixed; only evidenced unaffected inherited findings or demonstrated false positives can receive independent per-finding disposition. A non-clean scan is never a scan PASS. The scanner is silent on the rest; those require the judgment layer below. Judgment-only checks worth calling out specifically include `[rule:writing-tests]` writing-tests:4 mock and fixture shape, `[rule:writing-claims]` writing-claims:3 completeness claims outside the countable-claim patterns, and `[rule:writing-releases]` writing-releases:2 skip-count trending.
+The scanner catches the four stylistic prose rules (`[rule:writing-prose]` writing-prose:1, :2, :3, :4) plus history-reference detection in code comments (`[rule:writing-code]` writing-code:2), Django ORM kwarg checks for same-file models (`[rule:writing-code]` writing-code:4), silent exception swallowing (`[rule:writing-code]` writing-code:7), optional-import callsite hygiene (`[rule:writing-code]` writing-code:8), silently-dropped defaulted parameters (`[rule:writing-code]` writing-code:9), unbounded blocking I/O (`[rule:writing-code]` writing-code:15), actionable skip messages (`[rule:writing-tests]` writing-tests:3), untested named exception handlers (`[rule:writing-tests]` writing-tests:5), countable claims missing a `Verified-by:` trailer (`[rule:writing-claims]` writing-claims:2), rule citations missing `Rule-executed:` evidence, and deprecation messages without version-or-date plus removal target (`[rule:writing-releases]` writing-releases:3). Surface scanner findings first and apply [skill:detect-ai-fingerprints] task-scoped acceptance. An incomplete scan needs repair before dependent publication; it does not prohibit the independent review or other eligible work needed to resolve it. New, changed and newly exposed true violations must be fixed; only evidenced unaffected inherited findings or demonstrated false positives can receive independent per-finding disposition. A non-clean scan is never a scan PASS. The scanner is silent on the rest; those require the judgment layer below. Judgment-only checks worth calling out specifically include `[rule:writing-tests]` writing-tests:4 mock and fixture shape, `[rule:writing-claims]` writing-claims:3 completeness claims outside the countable-claim patterns, and `[rule:writing-releases]` writing-releases:2 skip-count trending.
 
 ## Project-local rules (load first)
 

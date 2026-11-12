@@ -221,7 +221,7 @@ closed:
 This rule applies to the **original task's enforcement**, not to the
 fix ticket's pipeline. When you file a ticket to fix a broken gate and
 then work on that ticket, the fix ticket goes through the normal
-pipeline (think gate, investigation, pre-mortem, self-review).
+workflow: proportionate preparation, actual task scope, validation and useful review. Separate investigation/pre-mortem artifacts and rank stages are not universal prerequisites.
 
 **Cascade depth limit**: If the fix ticket's pipeline ALSO produces a
 contradiction, attach the reproduction as a comment on the root

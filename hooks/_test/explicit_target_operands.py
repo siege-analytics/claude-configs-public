@@ -247,7 +247,7 @@ class ExplicitTargets(unittest.TestCase):
 
     def test_cwd_fallback_in_own_data_is_never_scratch(self):
         # An unmodelled command's cwd stands for unknown writes, not untracked
-        # content, so it keeps baseline B (needs investigation and pre-mortem).
+        # content, so it keeps baseline B for publication review.
         self.task(self.scope, tier='A', artifacts=False)
         for command in ('make install', './run.sh', 'tar -xzf src.tar.gz && make',
                         'python3 -m venv --without-pip v4'):
@@ -255,7 +255,8 @@ class ExplicitTargets(unittest.TestCase):
                 tier = self.tier(command, cwd=self.scope)
                 self.assertEqual(tier['floor'], 'B', tier)
                 self.assertFalse(any('own-session data scratch' in r for r in tier['reasons']), tier)
-                self.f.assertGate(2, command, cwd=self.scope)
+                self.f.assertGate(0, command, cwd=self.scope)
+                self.f.assertGate(2, command, cwd=self.outside)
 
     def test_tracked_content_under_data_keeps_normal_classification(self):
         self.task(self.scope, tier='A', artifacts=False)
@@ -263,7 +264,8 @@ class ExplicitTargets(unittest.TestCase):
         self.git('-C', str(self.ws), 'add', '-f', 'sessions/one/data/extract/tool.py')
         tier = self.tier(f'cd {q(str(self.scope))} && tar -xzf src.tar.gz')
         self.assertEqual(tier['floor'], 'B', tier)
-        self.f.assertGate(2, f'cd {q(str(self.scope))} && tar -xzf src.tar.gz', cwd=self.outside)
+        self.f.assertGate(0, f'cd {q(str(self.scope))} && tar -xzf src.tar.gz', cwd=self.outside)
+        self.f.assertGate(2, f'tar -xzf src.tar.gz', cwd=self.outside)
 
     def test_hardlinked_file_under_data_is_not_scratch(self):
         self.task(self.scope, tier='A', artifacts=False)

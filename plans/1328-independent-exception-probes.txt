@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Metadata/classifier-only exception probes; no candidate command execution."""
+from pathlib import Path
+import contextlib, importlib.util, io, json, os, subprocess, sys
+from unittest.mock import patch
+from contextlib import ExitStack
+root=Path(sys.argv[1]).resolve()
+sys.dont_write_bytecode=True
+sys.path.insert(0,str(root/'hooks/lib'))
+def load(name,path):
+    spec=importlib.util.spec_from_file_location(name,root/path)
+    module=importlib.util.module_from_spec(spec);sys.modules[name]=module;spec.loader.exec_module(module)
+    return module
+r=load('independent1328_resolver','hooks/lib/resolve-think-gate.py')
+a=__import__('task_actions')
+b=load('independent1328_risk_test','bin/_test/review_risk_test.py')
+checks=[]
+def check(name,result,expected):
+    assert result==expected,(name,result,expected)
+    checks.append(name)
+with patch.dict(os.environ,{},clear=True):
+    for error in (ValueError,TypeError):
+        with patch.object(r.json,'loads',side_effect=error('injected invalid metadata')):
+            check('host_binding_present/'+error.__name__,r.host_binding_present(),True)
+            check('find_gate_for_repo/'+error.__name__,r.find_gate_for_repo('/synthetic','/synthetic'),None)
+    for error in (FileNotFoundError,NotADirectoryError,PermissionError):
+        with patch.object(r.os,'lstat',side_effect=error('injected entry lookup')):
+            check('_entry_present/'+error.__name__,r._entry_present('/synthetic','.git'),error is PermissionError)
+    for error in (ValueError,TypeError):
+        with patch.object(r,'canonical',side_effect=error('injected path failure')):
+            check('_within/'+error.__name__,r._within('/a','/b'),False)
+    for error in (OSError,subprocess.SubprocessError):
+        with patch.object(r.subprocess,'check_output',side_effect=error('injected Git read failure')):
+            check('_git_origin/'+error.__name__,r._git_origin('/synthetic'), '')
+            check('_toplevel/'+error.__name__,r._toplevel('/synthetic'), '')
+        with patch.object(r.subprocess,'run',side_effect=error('injected Git read failure')):
+            check('_git_lines/'+error.__name__,r._git_lines('/synthetic','diff'),None)
+            with patch.object(r.os.path,'lexists',return_value=False),patch.object(r.os.path,'isdir',return_value=True):
+                check('_outside_git/'+error.__name__,r._outside_git('/synthetic'),False)
+    with patch.object(a,'shell_tokens',side_effect=a.UnknownShape('injected unknown shell')):
+        check('_lone_git_commit/UnknownShape',r._lone_git_commit('git commit -m fixture'),False)
+        check('_pytest_execution_targets/UnknownShape',r._pytest_execution_targets('pytest','/synthetic','/synthetic'),None)
+    for error in (a.UnknownShape,OSError,subprocess.SubprocessError):
+        with patch.object(a,'shell_tokens',side_effect=error('injected unproved command')):
+            check('_named_git_add_targets/'+error.__name__,r._named_git_add_targets('git add file','/synthetic','/synthetic'),None)
+            check('_worktree_materialization_targets/'+error.__name__,r._worktree_materialization_targets('git worktree add x','/synthetic','/synthetic'),None)
+    for error in (OSError,ValueError,TypeError):
+        with patch.object(r.os.path,'isfile',return_value=True),patch('builtins.open',side_effect=error('injected gate read failure')):
+            check('_load/'+error.__name__,r._load('/synthetic/gate.json'),None)
+    for error in (OSError,TypeError):
+        with patch.object(r.os.path,'realpath',side_effect=error('injected repository comparison')):
+            with contextlib.redirect_stderr(io.StringIO()):
+                check('_same_repo/'+error.__name__,r._same_repo('/a','/b'),False)
+    for error in (OSError,ValueError,TypeError):
+        with patch.object(r,'session_id_from_env',return_value='one'),patch.object(r,'project_policy',side_effect=error('injected invalid policy')):
+            result=r.select_project_task('/synthetic',{'remote_actions':[]})
+            check('select_project_task/policy/'+error.__name__,(result['gate'],'cannot validate installed standing policy' in result['error']),(None,True))
+    gate={'path':'/synthetic/one/tasks/t/think-gate.json','data':{'ticket':'o/r#42','repo_root':'/synthetic/one/data','scope_paths':['/synthetic/one/data'],'status':'implementing'}}
+    shape={'binding':'o/r#42','metadata_posts':[{'repository':'o/r','resource':'issue','operation':'comment','selector':'42','body_source':'file','body_path':'/synthetic/one/data/report.txt'}]}
+    for error in (OSError,ValueError,UnicodeError):
+        with ExitStack() as stack:
+            for name,value in [('session_id_from_env','one'),('_session_thinks',[gate]),('_target_repo',''),('own_session_data_root','/synthetic/one/data'),('own_session_path',True),('select_task',{'gate':gate})]:
+                stack.enter_context(patch.object(r,name,return_value=value))
+            stack.enter_context(patch.object(r,'canonical',side_effect=lambda p,*args:p))
+            stack.enter_context(patch.object(r.os.path,'islink',return_value=False))
+            stack.enter_context(patch.object(r.os,'lstat',side_effect=error('injected unreadable report')))
+            result=r.select_metadata_post_task('/synthetic',shape)
+            check('select_metadata_post_task/'+error.__name__,result['gate'],None)
+    source,target,chain=b.PYTHON_HELPER_LOAD_CHAINS[0]
+    malformed=b.replace_nth_line((root/source).read_text(),chain[0],'if invalid Python',0)
+    check('python_helper_chain_sites/SyntaxError',b.python_helper_chain_sites({source},{source:malformed}),[])
+    check('helper_site_problems/SyntaxError-diagnostic',bool(b.helper_site_problems({source},{source:malformed})),True)
+print(json.dumps({'status':'PASS','checks':checks,'count':len(checks)},indent=2))

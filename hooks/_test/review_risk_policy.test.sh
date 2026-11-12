@@ -82,14 +82,12 @@ printf 'risk evidence\n' > "$R/plans/pre.md"; printf 'independent findings\n' > 
 cat > "$R/plans/full.md" <<'EOF'
 ## Assumptions
 Goal source: fixture
-Pre-mortem-artifact: plans/pre.md
-Hostile-review-artifact: plans/hostile.md
-## Peer review
-checked
-## Lead review
-checked
-## Quantified claims
-one file
+## Test plan
+Relevant hook and negative fixtures passed.
+## Findings
+None.
+## Independent review
+Separate reviewer findings: plans/hostile.md
 EOF
 git -C "$R" add plans/full.md plans/pre.md plans/hostile.md
 cat > "$TMP/c.msg" <<'EOF'
@@ -99,12 +97,26 @@ Review-Tier: C
 Self-Review: full review
 Self-Review-Source: plans/full.md
 Hostile-Review: plans/hostile.md
-Negative-Tests: review_risk_policy.test.sh
-Full-Suite: hook suites
-Canary-Rollback: fixture and revert
 EOF
 run_msg "$TMP/c.msg" >/dev/null 2>&1 && ok "Tier C accepts full trailers/artifact" || bad "Tier C valid evidence blocked"
 git -C "$R" commit --no-verify -q -F "$TMP/c.msg"
+# Previously valid rich records can move to a new destination unchanged.
+cat > "$R/plans/historical.md" <<'EOF'
+## Assumptions
+Goal source: fixture
+Pre-mortem-artifact: plans/pre.md
+Hostile-review-artifact: plans/hostile.md
+## Peer review
+Actual fixture verification.
+## Lead review
+Actual fixture findings.
+## Quantified claims
+See fixture results.
+EOF
+sed 's@Self-Review-Source: plans/full.md@Self-Review-Source: plans/historical.md@' "$TMP/c.msg" > "$TMP/historical.msg"
+git -C "$R" add plans/historical.md
+run_msg "$TMP/historical.msg" >/dev/null 2>&1 && ok "historical Tier C format remains valid with actual review evidence" || bad "historical Tier C format blocked"
+git -C "$R" commit --no-verify -q -F "$TMP/historical.msg"
 ZERO=0000000000000000000000000000000000000000
 printf 'refs/heads/test %s refs/heads/test %s\n' "$(git -C "$R" rev-parse HEAD)" "$ZERO" | (cd "$R" && bash hooks/git/pre-push-self-review.sh) >/dev/null 2>&1 && ok "pre-push validates tiered commit history" || bad "pre-push rejected valid tiered history"
 : > "$R/plans/full.md"; git -C "$R" add plans/full.md; git -C "$R" commit --amend --no-verify -q -F "$TMP/c.msg"

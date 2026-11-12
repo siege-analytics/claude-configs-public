@@ -47,6 +47,12 @@ class ExecutionRisk(unittest.TestCase):
         self.assertEqual(result.returncode, code, result.stdout + result.stderr)
         return result
 
+    def assert_c_risk_with_owned_execution(self, command="pytest"):
+        data = json.loads((self.gate / "think-gate.json").read_text())
+        verdict = f.r.task_tier(data, [str(self.repo)], command, str(self.repo))
+        self.assertEqual(verdict['effective'], 'C', verdict)
+        self.hook(command)
+
     def test_root_no_selector_uses_execution_floor(self):
         self.hook()
         self.hook("python3 -m pytest -q")
@@ -62,32 +68,32 @@ class ExecutionRisk(unittest.TestCase):
     def test_actual_c_working_staged_and_untracked_changes_stay_c(self):
         workflow = self.repo / ".github/workflows/ci.yml"
         workflow.write_text("name: changed\n")
-        self.hook(code=2)
+        self.assert_c_risk_with_owned_execution()
         self.git("add", ".github/workflows/ci.yml")
-        self.hook(code=2)
+        self.assert_c_risk_with_owned_execution()
         self.git("reset", "-q", "HEAD", "--", ".github/workflows/ci.yml")
         workflow.write_text("name: fixture\n")
         (self.repo / ".github/workflows/new.yml").write_text("name: new\n")
-        self.hook(code=2)
+        self.assert_c_risk_with_owned_execution()
 
     def test_committed_c_delta_and_deleted_c_stay_c(self):
         workflow = self.repo / ".github/workflows/ci.yml"
         workflow.write_text("name: changed\n")
         self.git("add", ".github/workflows/ci.yml")
         self.git("commit", "-qm", "fixture critical change")
-        self.hook(code=2)
+        self.assert_c_risk_with_owned_execution()
         workflow.unlink()
-        self.hook(code=2)
+        self.assert_c_risk_with_owned_execution()
 
     def test_declared_c_and_missing_baseline_stay_c(self):
         data = json.loads((self.gate / "think-gate.json").read_text())
         data["tier"] = "C"
         f.write(self.gate / "think-gate.json", data)
-        self.hook(code=2)
+        self.assert_c_risk_with_owned_execution()
         data["tier"] = "B"
         f.write(self.gate / "think-gate.json", data)
         self.git("update-ref", "-d", "refs/remotes/origin/main")
-        self.hook(code=2)
+        self.assert_c_risk_with_owned_execution()
 
     def test_missing_baseline_is_c_even_without_any_c_source(self):
         self.git("rm", ".github/workflows/ci.yml")
@@ -111,7 +117,7 @@ class ExecutionRisk(unittest.TestCase):
         right = self.git("rev-parse", "HEAD").stdout.strip()
         self.git("update-ref", "refs/remotes/origin/develop", right)
         self.git("merge", "--no-ff", "--no-edit", left)
-        self.hook(code=2)
+        self.assert_c_risk_with_owned_execution()
 
     def test_listing_failure_is_c(self):
         original = f.r._git_lines
@@ -125,17 +131,23 @@ class ExecutionRisk(unittest.TestCase):
         self.assertEqual(verdict["floor"], "C")
         self.assertIn("cannot enumerate", " ".join(verdict["reasons"]))
 
-    def test_unknown_options_wrappers_and_mixed_mutations_stay_conservative(self):
-        for command in ["timeout 5 pytest", "nice pytest", "pytest -p arbitrary", "pytest -c pytest.ini", "pytest --junitxml=out.xml", "env pytest", "python3 -c 'import pytest; pytest.main()'", "pytest && touch app.py", "pytest > result.txt", "pytest tests/*.py"]:
+    def test_execution_risk_does_not_authorize_foreign_effects_or_unresolved_shapes(self):
+        owned = ["timeout 5 pytest", "nice pytest", "pytest -p arbitrary", "pytest -c pytest.ini",
+                 "pytest --junitxml=out.xml", "pytest && touch app.py", "pytest > result.txt"]
+        for command in owned:
+            with self.subTest(command=command):
+                self.assert_c_risk_with_owned_execution(command)
+        foreign = str(self.f.ws / 'outside-task.xml')
+        for command in ['env pytest', "python3 -c 'import pytest; pytest.main()'", 'pytest tests/*.py',
+                        'pytest --junitxml=' + foreign, 'pytest > ' + foreign, 'pytest && touch ' + foreign]:
             with self.subTest(command=command):
                 self.hook(command, 2)
-
         self.assertIsNone(f.r._pytest_execution_targets('pytest "', str(self.repo), str(self.repo)))
 
     def test_ordinary_changes_and_c_selector(self):
         (self.repo / "app.py").write_text("value = 2\n")
         self.hook()
-        self.hook("pytest .github/workflows/ci.yml", 2)
+        self.assert_c_risk_with_owned_execution("pytest .github/workflows/ci.yml")
 
     def test_ignored_directory_selectors_include_c_and_preserve_b(self):
         critical = self.repo / 'hooks/bash'
@@ -146,8 +158,7 @@ class ExecutionRisk(unittest.TestCase):
         (self.repo / '.gitignore').write_text('hooks/bash/\ntests/ignored-only/\n')
         self.git('add','.gitignore'); self.git('commit','-qm','fixture ignore selected tests')
         self.hook('pytest tests/ignored-only')
-        result = self.hook('pytest hooks',2)
-        self.assertIn('review tier is C',result.stderr)
+        self.assert_c_risk_with_owned_execution('pytest hooks')
         paths = f.r._pytest_execution_targets('pytest hooks',str(self.repo),str(self.repo))
         self.assertIn('hooks/bash/test_risk.py',paths)
 

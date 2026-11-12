@@ -23,11 +23,8 @@
       "required_evidence": [
         "Self-Review",
         "Self-Review-Source",
-        "Pre-mortem-artifact",
         "Hostile-Review",
-        "negative-tests",
-        "full-suite",
-        "canary"
+        "focused-tests"
       ],
       "description": "Enforcement, branch/release/deployment, credentials, destructive operations, or review-policy changes."
     }

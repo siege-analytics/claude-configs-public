@@ -100,7 +100,8 @@ else:
         directory.write_text(json.dumps(data))
         self.hook()
         mixed = EDIT + '; touch ' + str(self.f.f.a / 'notes.md')
-        self.hook(mixed, 2)  # Remote permission cannot replace local artifacts.
+        self.hook(mixed)  # The same implementing Task owns both bounded actions.
+        self.hook(EDIT + '; touch ' + str(self.f.f.b / 'outside-task.md'), 2)
         self.f.f.task('electinfo/enterprise#3300', self.f.f.a, artifacts=True)
         self.hook(mixed)
         data['ticket'] = 'electinfo/enterprise#3301'
