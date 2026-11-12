@@ -1,0 +1,1088 @@
+{
+  "reviewerRole": "independent review-only; source not authored by reviewer",
+  "reviewerAssumptions": {
+    "readingFor": "Issue1327 exact literal native quiet cleanliness comparison without mutation/phase/foreign-scope bypass.",
+    "failureShapes": [
+      "helper/output option becomes read",
+      "probe supplies cwd authority to companion mutation",
+      "private/default index semantics or exception fallbacks change"
+    ]
+  },
+  "protectedBase": "d3581bbd429d03ae82128187b9e46bcc624df278",
+  "candidateStagedTree": "74e2429a620ddf16d48d85852e841e0378248b71",
+  "sourceBlobs": {
+    "hooks/lib/read-only-command.py": {
+      "base": "aa2e3b5fc06383cbaa1aa0fd7f82ebccf61dffdd",
+      "candidate": "43aaa9876aba1652a65041c5f70fb71732244e6a"
+    },
+    "hooks/lib/task_actions.py": {
+      "base": "0670aa898bbd094ad47b428de62e322dee383bc0",
+      "candidate": "4e69b946a9b03836552906bb7b302b86bac5660a"
+    }
+  },
+  "scannerBlobs": {
+    "skills/detect-ai-fingerprints/scan.sh": "633280ea6b4e196e3a4e2eca8819bbce2a2f4669",
+    "skills/detect-ai-fingerprints/scan_ast.py": "e295d2dcfdf6e8b9567c6ac4a8c88f01b65c2609",
+    "skills/detect-ai-fingerprints/scan_snapshot.py": "e2e394b24e69b6db8d4e3931135da50efd120951"
+  },
+  "scannerConfiguration": {
+    "path": ".claude/scanner-config.toml",
+    "base": "absent",
+    "candidate": "absent",
+    "independentVerification": "git cat-file -e on exact base and selected tree both report path absent"
+  },
+  "scan": {
+    "command": "PATH=<genuine Python3.11 and Bash> bash skills/detect-ai-fingerprints/scan.sh",
+    "exitCode": 1,
+    "status": "complete, non-clean, independently reviewed per-finding dispositions",
+    "rawOutputSha256": "732d3cdcbb8b03a9adbb8e56f8e477652fa207fbecb70e366bb054ecd5ba7c16",
+    "rawOutput": "hooks/lib/read-only-command.py:346:writing-code-7-silent-swallow(Return): except (ValueError, TypeError, KeyError): <Return>\nhooks/lib/read-only-command.py:555:writing-tests-5: source has 5 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/task_actions.py:221:writing-code-7-silent-swallow(Return): except (ValueError, SyntaxError): <Return>\nhooks/lib/task_actions.py:221:writing-tests-5: except ValueError: no matching pytest.raises(ValueError) in task_keyed_gates.py\nhooks/lib/task_actions.py:221:writing-tests-5: except SyntaxError: no matching pytest.raises(SyntaxError) in task_keyed_gates.py\nhooks/lib/task_actions.py:494:writing-tests-5: except SubprocessError: no matching pytest.raises(SubprocessError) in task_keyed_gates.py\nhooks/lib/task_actions.py:494:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py\nhooks/lib/task_actions.py:516:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py\nhooks/lib/task_actions.py:516:writing-tests-5: except SubprocessError: no matching pytest.raises(SubprocessError) in task_keyed_gates.py\nhooks/lib/task_actions.py:625:writing-tests-5: except UnicodeError: no matching pytest.raises(UnicodeError) in task_keyed_gates.py\nhooks/lib/task_actions.py:640:writing-tests-5: except UnicodeError: no matching pytest.raises(UnicodeError) in task_keyed_gates.py\nhooks/lib/task_actions.py:922:writing-tests-5: except Exception: no matching pytest.raises(Exception) in task_keyed_gates.py\nhooks/lib/task_actions.py:1000:writing-tests-5: except ValueError: no matching pytest.raises(ValueError) in task_keyed_gates.py\nhooks/lib/task_actions.py:1234:writing-tests-5: except Exception: no matching pytest.raises(Exception) in task_keyed_gates.py\nhooks/lib/task_actions.py:1541:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py\nhooks/lib/task_actions.py:1541:writing-tests-5: except ValueError: no matching pytest.raises(ValueError) in task_keyed_gates.py\nhooks/lib/task_actions.py:1541:writing-tests-5: except TypeError: no matching pytest.raises(TypeError) in task_keyed_gates.py\nhooks/lib/task_actions.py:1551:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py\nhooks/lib/task_actions.py:1607:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py\nhooks/lib/task_actions.py:1607:writing-tests-5: except ValueError: no matching pytest.raises(ValueError) in task_keyed_gates.py\nhooks/lib/task_actions.py:1973:writing-tests-5: except UnknownShape: no matching pytest.raises(UnknownShape) in task_keyed_gates.py\nhooks/lib/task_actions.py:2334:writing-tests-5: except UnknownShape: no matching pytest.raises(UnknownShape) in task_keyed_gates.py\nhooks/lib/task_actions.py:417:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py\nhooks/lib/task_actions.py:784:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py\nhooks/lib/task_actions.py:796:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py\nhooks/lib/task_actions.py:796:writing-tests-5: except SubprocessError: no matching pytest.raises(SubprocessError) in task_keyed_gates.py\nhooks/lib/task_actions.py:1313:writing-tests-5: except UnicodeError: no matching pytest.raises(UnicodeError) in task_keyed_gates.py\nhooks/lib/task_actions.py:741:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py\nhooks/lib/task_actions.py:761:writing-tests-5: except ValueError: no matching pytest.raises(ValueError) in task_keyed_gates.py\nhooks/lib/task_actions.py:2144:writing-tests-5: except FileNotFoundError: no matching pytest.raises(FileNotFoundError) in task_keyed_gates.py\nhooks/lib/task_actions.py:2146:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py\n\nscanned: writing-prose:1-4 (stylistic; broader Unicode class), writing-code:2 (history references in code comments), writing-code:4 (Django ORM kwarg validation, same-file models; AST), writing-code:7 (silent error swallowing; AST), writing-code:8 (optional-import callsite guards; AST), writing-code:9 (silently-dropped parameters; AST scoped visitor), writing-code:15 (unbounded blocking I/O; AST, incl. Popen chains, Session/Client instance methods, invalid literal timeouts), writing-tests:3 (skip messages must be actionable), writing-tests:5 (untested named exception handlers, cross-file; AST), writing-claims:2 (countable claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:3 (deprecation messages need version+removal-keyword anchors; AST). Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4, writing-claims:1/3, writing-releases:1/2.\nviolations: 31\n",
+    "independentlyReproducedByteIdentical": true
+  },
+  "callerAnalysis": "The public action() calls released_read_verdict before _action, so loading the shared module is not newly introduced on hook paths. Within finish(), git_file_effects precedes reader. Candidate reader admits only exact git diff-files --quiet and thereby removes its old mutation/bootstrap/toplevel fallback; it does not add helper calls to a safety-critical handler. All actual companion argv/cwd and their error checks retain their previous branch contracts. A gh companion in shared main is newly reachable after this prefix, so direct ValueError/TypeError/KeyError fault injection was required and demonstrated non-admission rather than relying on unchanged lines.",
+  "targetedChecks": [
+    {
+      "name": "exact literal probe reader",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files ",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files -q",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files --quiet --ext-diff",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files --quiet --textconv",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files --quiet --output=x",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files --quiet -ox",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files --quiet --help",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files --quiet --unknown",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files --quiet --exit-code",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files --quiet -- tracked",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files --quiet $OPTS",
+      "result": "PASS"
+    },
+    {
+      "name": "reject diff-files --quiet \"${OPTS}\"",
+      "result": "PASS"
+    },
+    {
+      "name": "reject git -c diff.external=evil diff-files --quiet",
+      "result": "PASS"
+    },
+    {
+      "name": "reject git --config-env=diff.external=EVIL diff-files --quiet",
+      "result": "PASS"
+    },
+    {
+      "name": "reject git diff-files --quiet > outside",
+      "result": "PASS"
+    },
+    {
+      "name": "reject git diff-files --quiet | tee outside",
+      "result": "PASS"
+    },
+    {
+      "name": "reject git diff-files --quiet; touch outside",
+      "result": "PASS"
+    },
+    {
+      "name": "reject git diff-files --quiet && bash evil.sh",
+      "result": "PASS"
+    },
+    {
+      "name": "gh_ok ValueError maps to not proven read",
+      "result": "PASS"
+    },
+    {
+      "name": "new probe prefix never grants malformed GraphQL ValueError",
+      "result": "PASS"
+    },
+    {
+      "name": "gh_ok TypeError maps to not proven read",
+      "result": "PASS"
+    },
+    {
+      "name": "new probe prefix never grants malformed GraphQL TypeError",
+      "result": "PASS"
+    },
+    {
+      "name": "gh_ok KeyError maps to not proven read",
+      "result": "PASS"
+    },
+    {
+      "name": "new probe prefix never grants malformed GraphQL KeyError",
+      "result": "PASS"
+    },
+    {
+      "name": "_python_read ValueError maps to not proven read",
+      "result": "PASS"
+    },
+    {
+      "name": "_python_read SyntaxError maps to not proven read",
+      "result": "PASS"
+    },
+    {
+      "name": "lead_verbs malformed quotes sentinel",
+      "result": "PASS"
+    },
+    {
+      "name": "main malformed quotes not proven read",
+      "result": "PASS"
+    },
+    {
+      "name": "new probe reader does not contribute cwd authority to companion mutation",
+      "result": "PASS",
+      "paths": [
+        "/synthetic/other/file"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "finding": "hooks/lib/read-only-command.py:346:writing-code-7-silent-swallow(Return): except (ValueError, TypeError, KeyError): <Return>",
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "location": {
+        "path": "hooks/lib/read-only-command.py",
+        "line": 346
+      },
+      "function": "gh_ok",
+      "baseRange": [
+        328,
+        347
+      ],
+      "candidateRange": [
+        334,
+        353
+      ],
+      "functionAstSha256": "5bdb5f9edab7076579b544f41695a3949493eaccc1072a94b6aca4d2ea496fc7",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "main -> simple_ok -> gh_ok -> github_graphql",
+      "disposition": "demonstrated false positive",
+      "Reason": "This companion can be reached after the newly admitted prefix; the existing handler converts invalid GraphQL classification into False rather than read authority. Direct injected ValueError, TypeError and KeyError all return False, including the compound prefix.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 5bdb5f9edab7076579b544f41695a3949493eaccc1072a94b6aca4d2ea496fc7 is equal.",
+        "main -> simple_ok -> gh_ok -> github_graphql",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes.",
+        "Independent targeted fault checks included below."
+      ],
+      "Falsification": "Any injected error returns True/0, changes API/GraphQL effects, or a new branch bypasses the shared option veto.",
+      "followUp": null
+    },
+    {
+      "finding": "hooks/lib/read-only-command.py:555:writing-tests-5: source has 5 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/read-only-command.py",
+        "line": 555
+      },
+      "function": "lead_verbs",
+      "baseRange": [
+        545,
+        559
+      ],
+      "candidateRange": [
+        551,
+        565
+      ],
+      "functionAstSha256": "ab29657ede7475354d0e951343e3f8a11048be59de7ef76fdfd86122a90d7d2d",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "main -> segment_expansions/lead_verbs and shlex tokenization; main -> simple_ok -> gh_ok",
+      "disposition": "demonstrated false positive",
+      "Reason": "Scanner sibling-test discovery misses the hook test layout. Existing reader_git_safety.Safety.test_malformed_reader_syntax_grants_no_read_authority and the independent fault checks directly exercise intended non-raising parser rejection; diff_files_reader imports the real classifier.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 ab29657ede7475354d0e951343e3f8a11048be59de7ef76fdfd86122a90d7d2d is equal.",
+        "main -> segment_expansions/lead_verbs and shlex tokenization; main -> simple_ok -> gh_ok",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes.",
+        "Independent targeted fault checks included below."
+      ],
+      "Falsification": "A missing/invalid reader input becomes verdict0, the related hook test cannot load selected source, or source/handler/config identity differs.",
+      "followUp": null
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:221:writing-code-7-silent-swallow(Return): except (ValueError, SyntaxError): <Return>",
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 221
+      },
+      "function": "_python_read",
+      "baseRange": [
+        210,
+        271
+      ],
+      "candidateRange": [
+        210,
+        271
+      ],
+      "functionAstSha256": "29c8141b4f458409ca96d5570a3c3365ee503e9445dea590d3c2a894ebadbd0b",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action.finish -> reader -> _python_read",
+      "disposition": "demonstrated false positive",
+      "Reason": "Malformed Python is not certified as a reader. Both ValueError and SyntaxError return False under direct fault injection; reader_git_safety also tests the real malformed if program. New reader branch is confined to cmd==git, so no Python grammar/helper was added.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 29c8141b4f458409ca96d5570a3c3365ee503e9445dea590d3c2a894ebadbd0b is equal.",
+        "_action.finish -> reader -> _python_read",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes.",
+        "Independent targeted fault checks included below."
+      ],
+      "Falsification": "A malformed AST input becomes True, opaque execution bypasses its existing denial, or reader changes Python handling.",
+      "followUp": null
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:221:writing-tests-5: except ValueError: no matching pytest.raises(ValueError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 221
+      },
+      "function": "_python_read",
+      "baseRange": [
+        210,
+        271
+      ],
+      "candidateRange": [
+        210,
+        271
+      ],
+      "functionAstSha256": "29c8141b4f458409ca96d5570a3c3365ee503e9445dea590d3c2a894ebadbd0b",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action.finish -> reader -> _python_read",
+      "disposition": "demonstrated false positive",
+      "Reason": "Malformed Python is not certified as a reader. Both ValueError and SyntaxError return False under direct fault injection; reader_git_safety also tests the real malformed if program. New reader branch is confined to cmd==git, so no Python grammar/helper was added.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 29c8141b4f458409ca96d5570a3c3365ee503e9445dea590d3c2a894ebadbd0b is equal.",
+        "_action.finish -> reader -> _python_read",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes.",
+        "Independent targeted fault checks included below."
+      ],
+      "Falsification": "A malformed AST input becomes True, opaque execution bypasses its existing denial, or reader changes Python handling.",
+      "followUp": null
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:221:writing-tests-5: except SyntaxError: no matching pytest.raises(SyntaxError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 221
+      },
+      "function": "_python_read",
+      "baseRange": [
+        210,
+        271
+      ],
+      "candidateRange": [
+        210,
+        271
+      ],
+      "functionAstSha256": "29c8141b4f458409ca96d5570a3c3365ee503e9445dea590d3c2a894ebadbd0b",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action.finish -> reader -> _python_read",
+      "disposition": "demonstrated false positive",
+      "Reason": "Malformed Python is not certified as a reader. Both ValueError and SyntaxError return False under direct fault injection; reader_git_safety also tests the real malformed if program. New reader branch is confined to cmd==git, so no Python grammar/helper was added.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 29c8141b4f458409ca96d5570a3c3365ee503e9445dea590d3c2a894ebadbd0b is equal.",
+        "_action.finish -> reader -> _python_read",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes.",
+        "Independent targeted fault checks included below."
+      ],
+      "Falsification": "A malformed AST input becomes True, opaque execution bypasses its existing denial, or reader changes Python handling.",
+      "followUp": null
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:494:writing-tests-5: except SubprocessError: no matching pytest.raises(SubprocessError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 494
+      },
+      "function": "_git_toplevel",
+      "baseRange": [
+        491,
+        495
+      ],
+      "candidateRange": [
+        491,
+        495
+      ],
+      "functionAstSha256": "fa7652834ede60f15ce24bb5ac141ce4d9b8c6c913c1926f30324c4c71d4f65f",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action.finish -> Git mutation fallback -> _git_toplevel; test-receipt validation -> _git_toplevel",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "The exact probe formerly entered Git mutation fallback; it now bypasses this lookup. Other Git mutations and receipt repo checks retain the same call/arguments/UnknownShape fallback. No new subprocess lookup or exception reach is added.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 fa7652834ede60f15ce24bb5ac141ce4d9b8c6c913c1926f30324c4c71d4f65f is equal.",
+        "_action.finish -> Git mutation fallback -> _git_toplevel; test-receipt validation -> _git_toplevel",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "A newly admitted shape invokes this handler differently, or a failed toplevel lookup yields a proven mutation scope.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:494:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 494
+      },
+      "function": "_git_toplevel",
+      "baseRange": [
+        491,
+        495
+      ],
+      "candidateRange": [
+        491,
+        495
+      ],
+      "functionAstSha256": "fa7652834ede60f15ce24bb5ac141ce4d9b8c6c913c1926f30324c4c71d4f65f",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action.finish -> Git mutation fallback -> _git_toplevel; test-receipt validation -> _git_toplevel",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "The exact probe formerly entered Git mutation fallback; it now bypasses this lookup. Other Git mutations and receipt repo checks retain the same call/arguments/UnknownShape fallback. No new subprocess lookup or exception reach is added.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 fa7652834ede60f15ce24bb5ac141ce4d9b8c6c913c1926f30324c4c71d4f65f is equal.",
+        "_action.finish -> Git mutation fallback -> _git_toplevel; test-receipt validation -> _git_toplevel",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "A newly admitted shape invokes this handler differently, or a failed toplevel lookup yields a proven mutation scope.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:516:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 516
+      },
+      "function": "_git_bootstrap_read",
+      "baseRange": [
+        500,
+        520
+      ],
+      "candidateRange": [
+        500,
+        520
+      ],
+      "functionAstSha256": "1ed19f63e03481828169b9663f911637cf06a86e2a5f1a95ad6474f8fb312cab",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_git_bootstrap_destination -> clone configuration helpers -> _git_bootstrap_read",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Only clone/init bootstrap analysis calls this bounded subprocess helper. The diff-files probe no longer enters bootstrap analysis; clone/init arguments, neutral cwd and timeout3 remain unchanged.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 1ed19f63e03481828169b9663f911637cf06a86e2a5f1a95ad6474f8fb312cab is equal.",
+        "_git_bootstrap_destination -> clone configuration helpers -> _git_bootstrap_read",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "The diff-files reader enables clone/init/config shapes or changes bootstrap lookup/timeout/error semantics.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:516:writing-tests-5: except SubprocessError: no matching pytest.raises(SubprocessError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 516
+      },
+      "function": "_git_bootstrap_read",
+      "baseRange": [
+        500,
+        520
+      ],
+      "candidateRange": [
+        500,
+        520
+      ],
+      "functionAstSha256": "1ed19f63e03481828169b9663f911637cf06a86e2a5f1a95ad6474f8fb312cab",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_git_bootstrap_destination -> clone configuration helpers -> _git_bootstrap_read",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Only clone/init bootstrap analysis calls this bounded subprocess helper. The diff-files probe no longer enters bootstrap analysis; clone/init arguments, neutral cwd and timeout3 remain unchanged.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 1ed19f63e03481828169b9663f911637cf06a86e2a5f1a95ad6474f8fb312cab is equal.",
+        "_git_bootstrap_destination -> clone configuration helpers -> _git_bootstrap_read",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "The diff-files reader enables clone/init/config shapes or changes bootstrap lookup/timeout/error semantics.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:625:writing-tests-5: except UnicodeError: no matching pytest.raises(UnicodeError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 625
+      },
+      "function": "_git_clone_effective_source",
+      "baseRange": [
+        617,
+        641
+      ],
+      "candidateRange": [
+        617,
+        641
+      ],
+      "functionAstSha256": "ee6d7cd6fd6c30c1d75ea32a6076693d7756d23698bd8894f87861d3ef30fd50",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_git_bootstrap_destination(clone) -> _git_clone_effective_source -> configured remote-name decode",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Clone remote-name decoding raises caused UnknownShape on invalid UTF-8. Exact diff-files reader neither calls this path nor changes its configuration source; original compound clone argv is unaffected.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 ee6d7cd6fd6c30c1d75ea32a6076693d7756d23698bd8894f87861d3ef30fd50 is equal.",
+        "_git_bootstrap_destination(clone) -> _git_clone_effective_source -> configured remote-name decode",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "New classifier grammar reaches clone decode as a reader or accepts bad UTF-8 as an owned local source.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:640:writing-tests-5: except UnicodeError: no matching pytest.raises(UnicodeError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 640
+      },
+      "function": "_git_clone_effective_source",
+      "baseRange": [
+        617,
+        641
+      ],
+      "candidateRange": [
+        617,
+        641
+      ],
+      "functionAstSha256": "ee6d7cd6fd6c30c1d75ea32a6076693d7756d23698bd8894f87861d3ef30fd50",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_git_bootstrap_destination(clone) -> _git_clone_effective_source -> effective source decode",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Clone URL/source decode is separate from diff-files and retains caused UnknownShape. No transport/config option was admitted by the exact quiet grammar.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 ee6d7cd6fd6c30c1d75ea32a6076693d7756d23698bd8894f87861d3ef30fd50 is equal.",
+        "_git_bootstrap_destination(clone) -> _git_clone_effective_source -> effective source decode",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "New diff-files grammar changes effective clone-source bytes or swallows decode failure into a usable source.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:922:writing-tests-5: except Exception: no matching pytest.raises(Exception) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 922
+      },
+      "function": "ssh_allowlist",
+      "baseRange": [
+        884,
+        923
+      ],
+      "candidateRange": [
+        884,
+        923
+      ],
+      "functionAstSha256": "7d1177c0cf2c1a2ef3fc62c09af60c3de7198153547b374071d388a347a52e13",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action.finish -> ssh_invocation -> ssh_allowlist",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "SSH-only fixed-file policy load returns an empty host set plus an unusable diagnostic for every defect. Git reader does not change wrapper unwrapping, destination matching, policy file or host allowlist; an SSH companion still runs this same branch.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 7d1177c0cf2c1a2ef3fc62c09af60c3de7198153547b374071d388a347a52e13 is equal.",
+        "_action.finish -> ssh_invocation -> ssh_allowlist",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "A failing policy load admits a host, diagnostic disappears or git reader donates SSH authority.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:1000:writing-tests-5: except ValueError: no matching pytest.raises(ValueError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 1000
+      },
+      "function": "_command_string",
+      "baseRange": [
+        997,
+        1001
+      ],
+      "candidateRange": [
+        997,
+        1001
+      ],
+      "functionAstSha256": "4b29f71be2dd848505d4f6bdccdc9de532ff35356b2a661e6975d7510956a137",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "ssh_invocation -> _wrapped_command -> _command_string",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Malformed shell text in SSH wrapper analysis keeps the existing conservative split fallback; exact diff-files changes neither wrapper matching nor SSH denial. This remains inherited coverage/degradation debt, not a newly accepted wrapper.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 4b29f71be2dd848505d4f6bdccdc9de532ff35356b2a661e6975d7510956a137 is equal.",
+        "ssh_invocation -> _wrapped_command -> _command_string",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "New reader admits wrapped SSH or changes the fallback tokens/unsupported-wrapper denial.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:1234:writing-tests-5: except Exception: no matching pytest.raises(Exception) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 1234
+      },
+      "function": "released_read_verdict",
+      "baseRange": [
+        1226,
+        1232
+      ],
+      "candidateRange": [
+        1229,
+        1235
+      ],
+      "functionAstSha256": "f7a674a5445e143b85ce48dc635127e9f1cea15d1880940f973070946ad61df5",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "action -> released_read_verdict -> already-loaded shared main; _action.finish per-companion read proof",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "action already invokes the shared classifier before _action on every command. The new local git reader calls the already-loaded git_ok, whose new branch is pure literal-list equality. The existing exception-to-unproven1 fallback is unchanged; candidate does not add a natural exception-producing helper.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 f7a674a5445e143b85ce48dc635127e9f1cea15d1880940f973070946ad61df5 is equal.",
+        "action -> released_read_verdict -> already-loaded shared main; _action.finish per-companion read proof",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "The new branch adds an exception-producing dependency or changes classifier-failure fallback into mutation authority.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:1541:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 1541
+      },
+      "function": "_test_receipt_record",
+      "baseRange": [
+        1487,
+        1589
+      ],
+      "candidateRange": [
+        1490,
+        1592
+      ],
+      "functionAstSha256": "1e2f8e7e720294972d8cde5c419c935b14a69dd6a442fdba31713c44c53aa693",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action initial _test_receipt_record -> registered provider lookup",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "This handler executes before finish/classifying any simple component, in base and candidate. It converts invalid registration metadata to caused UnknownShape, before any new git reader branch can run.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 1e2f8e7e720294972d8cde5c419c935b14a69dd6a442fdba31713c44c53aa693 is equal.",
+        "_action initial _test_receipt_record -> registered provider lookup",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Reader branch moves ahead of receipt validation or alters registration environment/provider lookup.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:1541:writing-tests-5: except ValueError: no matching pytest.raises(ValueError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 1541
+      },
+      "function": "_test_receipt_record",
+      "baseRange": [
+        1487,
+        1589
+      ],
+      "candidateRange": [
+        1490,
+        1592
+      ],
+      "functionAstSha256": "1e2f8e7e720294972d8cde5c419c935b14a69dd6a442fdba31713c44c53aa693",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action initial _test_receipt_record -> registered provider lookup",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "This handler executes before finish/classifying any simple component, in base and candidate. It converts invalid registration metadata to caused UnknownShape, before any new git reader branch can run.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 1e2f8e7e720294972d8cde5c419c935b14a69dd6a442fdba31713c44c53aa693 is equal.",
+        "_action initial _test_receipt_record -> registered provider lookup",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Reader branch moves ahead of receipt validation or alters registration environment/provider lookup.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:1541:writing-tests-5: except TypeError: no matching pytest.raises(TypeError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 1541
+      },
+      "function": "_test_receipt_record",
+      "baseRange": [
+        1487,
+        1589
+      ],
+      "candidateRange": [
+        1490,
+        1592
+      ],
+      "functionAstSha256": "1e2f8e7e720294972d8cde5c419c935b14a69dd6a442fdba31713c44c53aa693",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action initial _test_receipt_record -> registered provider lookup",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "This handler executes before finish/classifying any simple component, in base and candidate. It converts invalid registration metadata to caused UnknownShape, before any new git reader branch can run.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 1e2f8e7e720294972d8cde5c419c935b14a69dd6a442fdba31713c44c53aa693 is equal.",
+        "_action initial _test_receipt_record -> registered provider lookup",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Reader branch moves ahead of receipt validation or alters registration environment/provider lookup.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:1551:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 1551
+      },
+      "function": "_test_receipt_record",
+      "baseRange": [
+        1487,
+        1589
+      ],
+      "candidateRange": [
+        1490,
+        1592
+      ],
+      "functionAstSha256": "1e2f8e7e720294972d8cde5c419c935b14a69dd6a442fdba31713c44c53aa693",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action initial _test_receipt_record -> selected producer os.stat",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Fixed producer availability check precedes the changed git reader branch; file identity and singly linked regular-file checks remain unchanged.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 1e2f8e7e720294972d8cde5c419c935b14a69dd6a442fdba31713c44c53aa693 is equal.",
+        "_action initial _test_receipt_record -> selected producer os.stat",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "New branch bypasses provider availability/identity validation or grants receipt execution to the probe.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:1607:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 1607
+      },
+      "function": "_metadata_file",
+      "baseRange": [
+        1592,
+        1605
+      ],
+      "candidateRange": [
+        1595,
+        1608
+      ],
+      "functionAstSha256": "1a3dd4f5b8ee9973963e37382ba50ad23a2c7f1f7007c32282e1de78e753618d",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "github_review_reply/github_metadata_target -> _metadata_file",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Only modeled metadata body operands reach this regular-file read; OSError/ValueError become caused UnknownShape. The new probe may be a read companion but neither changes body operand nor bodyfile validation.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 1a3dd4f5b8ee9973963e37382ba50ad23a2c7f1f7007c32282e1de78e753618d is equal.",
+        "github_review_reply/github_metadata_target -> _metadata_file",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Git read companion bypasses metadata bodyfile validation or enables a foreign/unreadable body.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:1607:writing-tests-5: except ValueError: no matching pytest.raises(ValueError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 1607
+      },
+      "function": "_metadata_file",
+      "baseRange": [
+        1592,
+        1605
+      ],
+      "candidateRange": [
+        1595,
+        1608
+      ],
+      "functionAstSha256": "1a3dd4f5b8ee9973963e37382ba50ad23a2c7f1f7007c32282e1de78e753618d",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "github_review_reply/github_metadata_target -> _metadata_file",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Only modeled metadata body operands reach this regular-file read; OSError/ValueError become caused UnknownShape. The new probe may be a read companion but neither changes body operand nor bodyfile validation.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 1a3dd4f5b8ee9973963e37382ba50ad23a2c7f1f7007c32282e1de78e753618d is equal.",
+        "github_review_reply/github_metadata_target -> _metadata_file",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Git read companion bypasses metadata bodyfile validation or enables a foreign/unreadable body.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:1973:writing-tests-5: except UnknownShape: no matching pytest.raises(UnknownShape) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 1973
+      },
+      "function": "_action",
+      "baseRange": [
+        1964,
+        2351
+      ],
+      "candidateRange": [
+        1967,
+        2354
+      ],
+      "functionAstSha256": "360a3f344192acce9f24592bea91d32efd6a8d58319f29cc248343547c3446cc",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "action -> _action initial shell_tokens/_test_receipt_record",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "The complete shell tokenization and receipt-validation try/except occurs before changed reader dispatch. This returns read_onlyFalse, cwd/error on UnknownShape identically in both trees.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 360a3f344192acce9f24592bea91d32efd6a8d58319f29cc248343547c3446cc is equal.",
+        "action -> _action initial shell_tokens/_test_receipt_record",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Reader runs before initial parser error handling or a malformed shell/receipt yields read_onlyTrue.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:2334:writing-tests-5: except UnknownShape: no matching pytest.raises(UnknownShape) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 2334
+      },
+      "function": "_action",
+      "baseRange": [
+        1964,
+        2351
+      ],
+      "candidateRange": [
+        1967,
+        2354
+      ],
+      "functionAstSha256": "360a3f344192acce9f24592bea91d32efd6a8d58319f29cc248343547c3446cc",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action shell loop/finish -> UnknownShape boundary result",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "The whole _action function AST is identical. The changed reader only removes the probe cwd proxy; actual companion mutations still use finish and this read_onlyFalse/error/paths boundary. Independent synthetic compound proves only the true touch target is collected.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 360a3f344192acce9f24592bea91d32efd6a8d58319f29cc248343547c3446cc is equal.",
+        "_action shell loop/finish -> UnknownShape boundary result",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "A compound parse/mutation error returns read_onlyTrue, loses its own target, or the probe supplies companion authority.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:417:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 417
+      },
+      "function": "inspect",
+      "baseRange": [
+        409,
+        421
+      ],
+      "candidateRange": [
+        409,
+        421
+      ],
+      "functionAstSha256": "2a26cc594d7c4b409b5ce59fb2fcf58022f25917250a5dbe7117784dfb6a667c",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action.finish -> copy mutation -> _copy_alias_targets -> inspect",
+      "disposition": "demonstrated false positive",
+      "Reason": "Only cp preserved-alias inspection uses this lstat error handler, which raises UnknownShape with its cause. The new git-only reader takes neither the cp branch nor copy operands; compound cp retains exactly the same argv/cwd and existing scope checks. Existing Gates.test_copy_inspection_failures_never_invent_source_writes exercises OSError.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 2a26cc594d7c4b409b5ce59fb2fcf58022f25917250a5dbe7117784dfb6a667c is equal.",
+        "_action.finish -> copy mutation -> _copy_alias_targets -> inspect",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "New reader changes copy argv/cwd/alias classification or turns lstat failure into safe-copy authority.",
+      "followUp": null
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:784:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 784
+      },
+      "function": "_git_bootstrap_destination",
+      "baseRange": [
+        644,
+        806
+      ],
+      "candidateRange": [
+        644,
+        806
+      ],
+      "functionAstSha256": "d4f5b9efc5b613c283c653b2844aaf0a4fa1187ffeecf3eb6323a56ed645d6a6",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_git_bootstrap_destination(clone/bare init) -> destination listdir",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Empty-destination validation is unchanged and is not used by exact diff-files reader. Other mutation components remain in their existing finish branch with literal target scoping.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 d4f5b9efc5b613c283c653b2844aaf0a4fa1187ffeecf3eb6323a56ed645d6a6 is equal.",
+        "_git_bootstrap_destination(clone/bare init) -> destination listdir",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "A new read classification skips destination emptiness for a clone/init component.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:796:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 796
+      },
+      "function": "_git_bootstrap_destination",
+      "baseRange": [
+        644,
+        806
+      ],
+      "candidateRange": [
+        644,
+        806
+      ],
+      "functionAstSha256": "d4f5b9efc5b613c283c653b2844aaf0a4fa1187ffeecf3eb6323a56ed645d6a6",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_git_bootstrap_destination(init) -> rev-parse absolute-git-dir",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Init metadata identity inspection retains timeout3 and caused UnknownShape on OSError/SubprocessError. The candidate removes this path for the probe and does not recognize init as a reader.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 d4f5b9efc5b613c283c653b2844aaf0a4fa1187ffeecf3eb6323a56ed645d6a6 is equal.",
+        "_git_bootstrap_destination(init) -> rev-parse absolute-git-dir",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Init metadata lookup errors gain authority or invocation/environment/timeout changes.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:796:writing-tests-5: except SubprocessError: no matching pytest.raises(SubprocessError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 796
+      },
+      "function": "_git_bootstrap_destination",
+      "baseRange": [
+        644,
+        806
+      ],
+      "candidateRange": [
+        644,
+        806
+      ],
+      "functionAstSha256": "d4f5b9efc5b613c283c653b2844aaf0a4fa1187ffeecf3eb6323a56ed645d6a6",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_git_bootstrap_destination(init) -> rev-parse absolute-git-dir",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Init metadata identity inspection retains timeout3 and caused UnknownShape on OSError/SubprocessError. The candidate removes this path for the probe and does not recognize init as a reader.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 d4f5b9efc5b613c283c653b2844aaf0a4fa1187ffeecf3eb6323a56ed645d6a6 is equal.",
+        "_git_bootstrap_destination(init) -> rev-parse absolute-git-dir",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Init metadata lookup errors gain authority or invocation/environment/timeout changes.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:1313:writing-tests-5: except UnicodeError: no matching pytest.raises(UnicodeError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 1313
+      },
+      "function": "__init__",
+      "baseRange": [
+        1305,
+        1326
+      ],
+      "candidateRange": [
+        1308,
+        1329
+      ],
+      "functionAstSha256": "05a71fb8e628a8551bf4a2cc63b6c0b40fd51d4ebc0dc6d73825699fc992a4fd",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "github_graphql -> _GraphQL parser initialization -> UTF-8 bound",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Only GraphQL document encoding reaches this caused UnknownShape. The git-only branch passes no document/config/body into it; a GraphQL companion retains existing exact argv and parser.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 05a71fb8e628a8551bf4a2cc63b6c0b40fd51d4ebc0dc6d73825699fc992a4fd is equal.",
+        "github_graphql -> _GraphQL parser initialization -> UTF-8 bound",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "New reader changes document bytes, size/encoding guards or unsupported mutation authority.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:741:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 741
+      },
+      "function": "_git_bootstrap_destination",
+      "baseRange": [
+        644,
+        806
+      ],
+      "candidateRange": [
+        644,
+        806
+      ],
+      "functionAstSha256": "d4f5b9efc5b613c283c653b2844aaf0a4fa1187ffeecf3eb6323a56ed645d6a6",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_git_bootstrap_destination(clone) -> existing destination listdir",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "This clone-only destination check remains a caused UnknownShape on OSError; the exact probe skips bootstrap processing and does not alter compound clone cwd/args.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 d4f5b9efc5b613c283c653b2844aaf0a4fa1187ffeecf3eb6323a56ed645d6a6 is equal.",
+        "_git_bootstrap_destination(clone) -> existing destination listdir",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Probe reader changes clone destination inspection or unreadable directory permits bootstrap.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:761:writing-tests-5: except ValueError: no matching pytest.raises(ValueError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 761
+      },
+      "function": "_git_bootstrap_destination",
+      "baseRange": [
+        644,
+        806
+      ],
+      "candidateRange": [
+        644,
+        806
+      ],
+      "functionAstSha256": "d4f5b9efc5b613c283c653b2844aaf0a4fa1187ffeecf3eb6323a56ed645d6a6",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_git_bootstrap_destination(clone) -> urllib.parse.urlsplit/port",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Malformed clone URL raises caused UnknownShape; no new URL parsing or transport/config authority is introduced by a literal quiet comparison.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 d4f5b9efc5b613c283c653b2844aaf0a4fa1187ffeecf3eb6323a56ed645d6a6 is equal.",
+        "_git_bootstrap_destination(clone) -> urllib.parse.urlsplit/port",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Malformed URL/port becomes accepted or a new reader grants clone transport authority.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:2144:writing-tests-5: except FileNotFoundError: no matching pytest.raises(FileNotFoundError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 2144
+      },
+      "function": "finish",
+      "baseRange": [
+        1997,
+        2295
+      ],
+      "candidateRange": [
+        2000,
+        2298
+      ],
+      "functionAstSha256": "301aafa8e3050057e070c9eddb90dc60e70417fa9f407547f6e614e7abc62582",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action.finish -> Git archive output -> os.stat missing file",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Fresh archive output FileNotFoundError maps to info=None so later exact output target can be scoped; git_file_effects recognition precedes reader in both versions. Exact diff-files produces no archive effect/output and enables no archive option.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 301aafa8e3050057e070c9eddb90dc60e70417fa9f407547f6e614e7abc62582 is equal.",
+        "_action.finish -> Git archive output -> os.stat missing file",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "New reader changes archive effect dispatch or allows archive output without its exact Task target.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    },
+    {
+      "finding": "hooks/lib/task_actions.py:2146:writing-tests-5: except OSError: no matching pytest.raises(OSError) in task_keyed_gates.py",
+      "rule": "writing-tests-5",
+      "location": {
+        "path": "hooks/lib/task_actions.py",
+        "line": 2146
+      },
+      "function": "finish",
+      "baseRange": [
+        1997,
+        2295
+      ],
+      "candidateRange": [
+        2000,
+        2298
+      ],
+      "functionAstSha256": "301aafa8e3050057e070c9eddb90dc60e70417fa9f407547f6e614e7abc62582",
+      "handlerAndEnclosingFunctionAstEqual": true,
+      "callerChain": "_action.finish -> Git archive output -> os.stat failure",
+      "disposition": "unaffected inherited coverage debt",
+      "Reason": "Archive output non-ENOENT stat failures retain caused UnknownShape; same effect branch precedes reader and no output/helper option was added.",
+      "Evidence": [
+        "Base/candidate enclosing function AST SHA-256 301aafa8e3050057e070c9eddb90dc60e70417fa9f407547f6e614e7abc62582 is equal.",
+        "_action.finish -> Git archive output -> os.stat failure",
+        "Production diff is only git_ok exact-list admission and reader delegation; no exception handler AST changes."
+      ],
+      "Falsification": "Archive stat failure becomes fresh-output success or a new quiet variant carries an output filename.",
+      "followUp": "https://github.com/siege-analytics/claude-configs-public/issues/1329"
+    }
+  ],
+  "independentVerdict": "ACCEPT the narrow source and all31 individually documented dispositions for this exact base/tree, with issue1329 retaining inherited coverage debt. This is a complete non-clean scan, not scan PASS; protected CI and genuine published native acceptance remain separate.",
+  "semanticReferences": [
+    "https://github.com/git/git/blob/v2.47.3/builtin/diff-files.c#L30-L81",
+    "https://github.com/git/git/blob/v2.47.3/diff.c#L4389-L4390",
+    "https://github.com/git/git/blob/v2.47.3/diff.c#L4677-L4685",
+    "https://github.com/git/git/blob/v2.47.3/diff.c#L5515-L5522"
+  ],
+  "semanticLimits": "Git repository/environment configuration retains the existing trust boundary (including other index/config mechanisms); no new -c/config-env/environment grammar. Official plumbing config differs from porcelain defaults. --quiet does not universally suppress an enabled trusted external helper; --ext-diff/textconv remain vetoed. Author real Git fixture proves default/private-index/no-write/helper-negative controls; this review did not replay any live F99 command.",
+  "targetedProbeArtifact": {
+    "filename": "core1327-independent-classifier-probes-20261112.txt",
+    "sha256": "5dafafec92b6b787944aa4dcdf87403ed73294362c6fbcb40029679d1edf8e73",
+    "command": "python3.11 <probe-artifact.txt> <exact-reviewed-repo-worktree>",
+    "sourceIdentityChecks": "Probe checks both exact production Git blobs before importing selected source; no refused shell command is executed."
+  }
+}

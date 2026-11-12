@@ -246,6 +246,12 @@ def git_ok(args):
         return False
     if sub == "reflog":
         return not any(a in {"expire", "delete", "drop", "write"} for a in rest)
+    if sub == "diff-files":
+        # Plumbing defaults do not enable external diff/textconv. Certify only
+        # the native worktree cleanliness probe, not common-diff-options.
+        # Quiet alone is NOT a helper veto: trusted external helpers can still
+        # execute when enabled. Keep the option vetoes above and exact grammar.
+        return rest == ["--quiet"]
     if sub in GIT_READ:
         return True
     if sub == "fsck":
