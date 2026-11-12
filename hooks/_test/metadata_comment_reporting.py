@@ -27,6 +27,7 @@ class Reporting(unittest.TestCase):
         gate = f.task('example/target#803', private, status='reviewing', artifacts=False)
         data = json.loads((gate / 'think-gate.json').read_text())
         data['repo_root'] = str(private)
+        data['task_id'] = 'own-independent-senior-review'
         fixture.write(gate / 'think-gate.json', data)
         command = 'gh issue comment 803 --repo example/target --body-file ' + shlex.quote(str(body))
         result = f.hook(command, cwd=private)
