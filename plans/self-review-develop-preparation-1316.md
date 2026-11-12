@@ -1,0 +1,9 @@
+# Task-scoped develop preparation (#1316)
+
+The operator requires normal feature work to use verified develop, bootstrapping it safely when absent. The helper additionally required current main to be an ancestor of develop before any new feature worktree. That made a separate integration reconciliation a prerequisite for every task, including cases where verified develop was the explicitly intended source.
+
+Remove only that four-line ancestry prerequisite. The exact current develop tip, remote identity, successful online verification, create-only bootstrap/racing creator handling, offline cached-ref disclosure, branch/isolation validation and caller preservation remain unchanged. Existing protected promotion and deployment ancestry checks remain authoritative and are not changed. Preparation does not merge, reset, synchronize or approve either branch or any held work.
+
+Two red-first bare-remote cases fail on the old prerequisite: main ahead and main/develop diverged. Both corrected cases create the feature at exact develop rather than main, and assert unchanged caller branch/HEAD/status/index, existing local refs and all remote refs. The author ran all 32 branch-source tests successfully; Root independently reviewed the full three-file source/test/doc delta and ran the two new cases. Root also inspected the separate promotion/deployment enforcement paths rather than assuming removal was global.
+
+Risks considered: accidentally falling back to main, silently synchronizing shared refs, overwriting an active worktree, confusing source selection with permission to promote/deploy, and treating a source repair as permission to bypass the currently installed helper. Tests and scope preserve these boundaries. Normal exact-head review/CI and develop→main publication precede consumer installation. The existing remote held tree remains held; live adoption and preservation must be verified after normal delivery.
