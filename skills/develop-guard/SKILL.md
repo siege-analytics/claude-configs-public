@@ -56,10 +56,12 @@ release commit. Refresh when available; local branch lists alone cannot prove re
 
 # Existing develop and existing work
 
-In the develop-first route, current main must be an ancestor of develop. If it
-isn't, use existing scoped sync authority and the reviewed integration procedure.
-Do not silently merge main, reset a branch, switch the feature source to main,
-or ask for a new grant when the needed sync is already authorized.
+Existing verified develop remains the normal feature-preparation source when
+main is ahead or diverged. Do not make a global main-to-develop sync a prerequisite
+for creating that task's branch, or silently merge/reset either branch or fall
+back to main. Protected PR, promotion and deployment ancestry checks still apply
+to those operations; perform any needed reconciliation under existing scoped
+authority through its reviewed procedure.
 
 Do not rebase, reset or recreate another task's existing branch to repair its
 provenance without explicit authority for that history change. Preserve its

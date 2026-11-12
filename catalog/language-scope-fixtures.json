@@ -645,18 +645,18 @@
       "slugs": [],
       "measurements": {
         "source": {
-          "characters": 152830,
-          "estimated_tokens": 38211,
+          "characters": 153002,
+          "estimated_tokens": 38253,
           "items": 13
         },
         "claude-code": {
-          "characters": 155263,
-          "estimated_tokens": 38820,
+          "characters": 155435,
+          "estimated_tokens": 38863,
           "items": 13
         },
         "craft-agent": {
-          "characters": 155263,
-          "estimated_tokens": 38820,
+          "characters": 155435,
+          "estimated_tokens": 38863,
           "items": 13
         }
       },
@@ -2213,18 +2213,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 20890,
-          "estimated_tokens": 5223,
+          "characters": 20948,
+          "estimated_tokens": 5237,
           "items": 2
         },
         "claude-code": {
-          "characters": 20978,
-          "estimated_tokens": 5245,
+          "characters": 21036,
+          "estimated_tokens": 5259,
           "items": 2
         },
         "craft-agent": {
-          "characters": 20978,
-          "estimated_tokens": 5245,
+          "characters": 21036,
+          "estimated_tokens": 5259,
           "items": 2
         }
       }
@@ -2278,18 +2278,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 13057,
-          "estimated_tokens": 3265,
+          "characters": 13115,
+          "estimated_tokens": 3279,
           "items": 2
         },
         "claude-code": {
-          "characters": 13085,
-          "estimated_tokens": 3272,
+          "characters": 13143,
+          "estimated_tokens": 3286,
           "items": 2
         },
         "craft-agent": {
-          "characters": 13085,
-          "estimated_tokens": 3272,
+          "characters": 13143,
+          "estimated_tokens": 3286,
           "items": 2
         }
       }

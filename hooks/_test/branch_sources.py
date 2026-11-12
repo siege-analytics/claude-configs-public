@@ -65,6 +65,45 @@ class BranchSources(unittest.TestCase):
         self.assertEqual(self.run_git(self.base / 'task', 'rev-parse', 'HEAD'), tip)
         self.assertEqual(self.run_git(self.remote, 'rev-parse', 'refs/heads/main'), self.main)
 
+    def assert_existing_develop_source(self, diverged):
+        self.develop()
+        if diverged:
+            self.run_git(self.repo, 'checkout', 'develop')
+            (self.repo / 'develop-only').write_text('integration work\n')
+            self.run_git(self.repo, 'add', 'develop-only')
+            self.run_git(self.repo, 'commit', '-m', 'develop work')
+            self.run_git(self.repo, 'push', 'origin', 'develop')
+            self.run_git(self.repo, 'checkout', 'main')
+        (self.repo / 'tracked').write_text('main ahead\n')
+        self.run_git(self.repo, 'commit', '-am', 'main work')
+        self.run_git(self.repo, 'push', 'origin', 'main')
+        develop = self.run_git(self.remote, 'rev-parse', 'refs/heads/develop')
+        main = self.inspect('rev-parse', 'HEAD')
+        self.assertNotEqual(develop, main)
+        (self.repo / 'tracked').write_text('uncommitted\n')
+        (self.repo / 'untracked').write_text('keep\n')
+        before = self.inspect('status', '--porcelain')
+        index = (self.repo / '.git/index').read_bytes()
+        local_refs = self.inspect('for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads')
+        remote_refs = self.run_git(self.remote, 'for-each-ref', '--format=%(refname) %(objectname)')
+        branch = 'feature/diverged' if diverged else 'feature/main-ahead'
+        task = self.base / branch.removeprefix('feature/')
+        self.assertEqual(prepare_task.prepare(self.repo, branch, task), develop)
+        self.assertEqual(self.run_git(task, 'rev-parse', 'HEAD'), develop)
+        self.assertEqual(self.inspect('branch', '--show-current'), 'main')
+        self.assertEqual(self.inspect('rev-parse', 'HEAD'), main)
+        self.assertEqual(self.inspect('status', '--porcelain'), before)
+        self.assertEqual((self.repo / '.git/index').read_bytes(), index)
+        self.assertEqual(self.inspect('for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads'),
+                         '\n'.join(sorted(local_refs.splitlines() + ['refs/heads/' + branch + ' ' + develop])))
+        self.assertEqual(self.run_git(self.remote, 'for-each-ref', '--format=%(refname) %(objectname)'), remote_refs)
+
+    def test_existing_develop_is_source_when_main_is_ahead(self):
+        self.assert_existing_develop_source(False)
+
+    def test_existing_develop_is_source_when_main_has_diverged(self):
+        self.assert_existing_develop_source(True)
+
     def test_missing_develop_bootstraps_then_branches(self):
         tip = prepare_task.prepare(self.repo, 'feature/bootstrap', self.base / 'task')
         self.assertEqual(self.run_git(self.remote, 'rev-parse', 'refs/heads/develop'), self.main)

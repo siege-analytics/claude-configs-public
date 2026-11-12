@@ -63,7 +63,7 @@ Present the user with options:
 >
 > This is a one-time setup per workspace. I won't ask again once configured.
 
-Do NOT proceed with non-trivial work until the user answers. Do NOT default silently. The develop-guard asks before creating a branch; this guard asks before starting work.
+Do NOT proceed with non-trivial work until the user answers. Do NOT default silently. This question resolves a missing durable destination; develop-guard uses the normal verified-develop preparation route under existing authority.
 
 ### Step 3: Validate the destination is reachable
 

@@ -6161,10 +6161,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 33969,
-      "content_sha256": "2a492eb4e40bef010eb65a9c2300876a6e6d234ba12681b19da54bbe8033e0bd",
+      "characters": 34106,
+      "content_sha256": "e389f2fe1cc4ff7c099f0c0f943c18cb4946bb5881ac3f3319c67777798bd269",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 8493,
+      "estimated_tokens": 8527,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6188,6 +6188,7 @@
         "plans/self-review-718-orphan-dispatch.md",
         "plans/self-review-867-hub-rule-count.md",
         "skills/KERNEL.md",
+        "skills/_strategic-agency-rules.md",
         "skills/_tandem-agent-rules.md",
         "skills/_ticket-lifecycle-rules.md",
         "skills/ask-questions/SKILL.md",
@@ -6497,10 +6498,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 3858,
-      "content_sha256": "512b9bd8d4b7becc72de18297c0788e31117fd22828cca1cb5044bdaf9be7234",
+      "characters": 4564,
+      "content_sha256": "f929c91c8b2cebf4f981a14ebd0fec23783401a01591944b8179805ed9b1dc65",
       "description": "Always-on. Mission-first doctrine for hubs and workers. Skills exist to help agents accomplish strategic goals by deriving and advancing tactical goals with bounded initiative. Agents should keep moving when tactical ordering is safe and non-critical, and should ask for guidance when the choice affects strategy, authorization, risk, or operator control.",
-      "estimated_tokens": 965,
+      "estimated_tokens": 1141,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -6520,7 +6521,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 30,
+      "lines": 32,
       "owner": [
         "unknown"
       ],
@@ -8798,10 +8799,10 @@
     },
     {
       "canonical_source": "skills/branch/SKILL.md",
-      "characters": 7353,
-      "content_sha256": "bc2840a05557c987620f7a86016ec931a35c97c62f8c0ce99f9706bb01a94218",
+      "characters": 7467,
+      "content_sha256": "fbb2b7a33be1cc9b5e43998ca8f5f5bbfeea2a932004d8ae67f9b08a6b93e253",
       "description": "Create and manage git branches using a consistent naming convention (type/descriptive_string) that mirrors ticket taxonomy.",
-      "estimated_tokens": 1839,
+      "estimated_tokens": 1867,
       "frontmatter_name": "branch",
       "generated_outputs": [
         "dist/nested/skills/branch",
@@ -9818,10 +9819,10 @@
     },
     {
       "canonical_source": "skills/develop-guard/SKILL.md",
-      "characters": 8094,
-      "content_sha256": "9dced87a1474468ee6eaff4d4f22b8d8588bd3796910fbe38fd22d460ef22c3c",
+      "characters": 8227,
+      "content_sha256": "6892adcd65186c7960d36b72216e9b7305023d2e822593a6aa88363a0fe5bd22",
       "description": "Normal development starts at develop. Verify remote refs, bootstrap a missing develop safely, and preserve separately authorized release sources.",
-      "estimated_tokens": 2024,
+      "estimated_tokens": 2057,
       "frontmatter_name": "develop-guard",
       "generated_outputs": [
         "dist/nested/skills/develop-guard",
@@ -9849,7 +9850,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 141,
+      "lines": 143,
       "owner": [
         "unknown"
       ],
@@ -11923,6 +11924,7 @@
         "hooks/_test/fixtures/metadata-issues-1251.json",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
+        "hooks/_test/pipeline_author_permissions.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/review_risk_policy.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
@@ -12257,10 +12259,10 @@
     },
     {
       "canonical_source": "skills/stalled-session-recovery/SKILL.md",
-      "characters": 16946,
-      "content_sha256": "0aad5bed3baaafadd3e876e651e15b4cfb15fab003a6b20935b4a3e644ea1ce6",
+      "characters": 17112,
+      "content_sha256": "65924a7b1a7666168065e9a08f88c49625246c590c4b0fed944aca9b89a3ffe3",
       "description": "How to diagnose and recover a session that has stopped producing useful turns -- stuck on a repeating error, silent for an abnormal stretch, or looping on the same tool call. Invoke when checking on a session that \"seems stuck,\" when a session's own error looks like it should have cleared but hasn't, when a hub is deciding whether to nudge or respawn a worker, or when auditing a fleet of sessions for health. Covers three failure shapes (transient error, persistent misconfiguration, wedged tool call) with distinct diagnostics and distinct fixes, the discipline of reading the last coherent content instead of trusting the error label, and how to respawn without duplicating work or losing in-flight state.",
-      "estimated_tokens": 4237,
+      "estimated_tokens": 4278,
       "frontmatter_name": "stalled-session-recovery",
       "generated_outputs": [
         "dist/nested/skills/stalled-session-recovery",
@@ -12639,10 +12641,10 @@
     },
     {
       "canonical_source": "skills/ticket-guard/SKILL.md",
-      "characters": 6434,
-      "content_sha256": "40350ec6c43a2d4390844d005f2b987d2b1e147fd5c59cc85159f7fdb9d0e9df",
+      "characters": 6492,
+      "content_sha256": "b40016b26ac8026827f86fed5c4ebb070cbe40735579509b21a23aa5c4453851",
       "description": "Pre-work gate: ensures a ticket destination is configured before non-trivial work begins. Like develop-guard enforces branching, this enforces that strategic decisions and work-tracking have a durable, human-visible destination. Fires before any non-trivial action.",
-      "estimated_tokens": 1609,
+      "estimated_tokens": 1623,
       "frontmatter_name": "ticket-guard",
       "generated_outputs": [
         "dist/nested/skills/ticket-guard",
@@ -12987,9 +12989,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2645826,
+    "characters": 2647140,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 661536,
+    "estimated_tokens": 661862,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13010,7 +13012,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1249432
+      "unclassified": 1250746
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13022,7 +13024,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 312402
+      "unclassified": 312728
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
