@@ -5522,29 +5522,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/think",
           "file_count": 4,
-          "tree_sha256": "b629f620d87a37a6187b581f3b2a6cce91b3b3ea22d97ff40ae133bb2ed830cf"
+          "tree_sha256": "3d11e5b7319d2a5c8e5d383499abd0eeb5b9e62648f380eeee7f10914af0b254"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/think",
           "file_count": 4,
-          "tree_sha256": "b629f620d87a37a6187b581f3b2a6cce91b3b3ea22d97ff40ae133bb2ed830cf"
+          "tree_sha256": "3d11e5b7319d2a5c8e5d383499abd0eeb5b9e62648f380eeee7f10914af0b254"
         },
         "flat": {
           "destination": "dist/flat/skills/think",
           "file_count": 4,
-          "tree_sha256": "b629f620d87a37a6187b581f3b2a6cce91b3b3ea22d97ff40ae133bb2ed830cf"
+          "tree_sha256": "3d11e5b7319d2a5c8e5d383499abd0eeb5b9e62648f380eeee7f10914af0b254"
         },
         "nested": {
           "destination": "dist/nested/skills/think",
           "file_count": 4,
-          "tree_sha256": "b629f620d87a37a6187b581f3b2a6cce91b3b3ea22d97ff40ae133bb2ed830cf"
+          "tree_sha256": "3d11e5b7319d2a5c8e5d383499abd0eeb5b9e62648f380eeee7f10914af0b254"
         }
       },
       "canonical_source": "skills/think/SKILL.md",
       "kind": "skill",
       "slug": "think",
       "source_file_count": 4,
-      "source_tree_sha256": "d25dbbcbc469b70fa9e4d83c2f5a21287cea0f6e3a1c00bc2a1f8c83e436aa9f"
+      "source_tree_sha256": "b49de5475663004778068cdfcc9491c6ce32b8e79b4a236f8695a81819a8133d"
     },
     {
       "artifacts": {

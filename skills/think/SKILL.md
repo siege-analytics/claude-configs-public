@@ -30,7 +30,7 @@ Commit review is a separate checkpoint owned by [skill:self-review], with its ow
 
 ## Task scope
 
-`repo_root` is the actual target clone/worktree, not session CWD or the Craft configs workspace merely because it is the CWD; scratch under this session's `data/` uses the repository that physically contains it (see task evidence, "Gate metadata for scratch execution"). Declare actual absolute `scope_paths`; binding never widens scope. Another task's status cannot authorize or block this task. Use the host-resolved own `tasks/<stable-slug>/think-gate.json`; an authorized operational task may use an explicit task_id without a ticket or hash. Read task evidence for complete schema, path, companion and compatibility requirements. Never bypass scope rejection with root copies or another task's artifacts.
+`repo_root` is the actual target clone/worktree, not session CWD or the Craft configs workspace merely because it is the CWD; scratch under this session's `data/` uses the repository that physically contains it (see task evidence, "Gate metadata for scratch execution"). For an exact canonical issue report outside Git, use the truthful private data root and the [non-Git reporting guidance](task-evidence.md) under "Canonical issue reports from non-Git data". Declare actual absolute `scope_paths`; binding never widens scope. Another task's status cannot authorize or block this task. Use the host-resolved own `tasks/<stable-slug>/think-gate.json`; an authorized operational task may use an explicit task_id without a ticket or hash. Read task evidence for complete schema, path, companion and compatibility requirements. Never bypass scope rejection with root copies or another task's artifacts.
 
 ## When This Skill Applies
 

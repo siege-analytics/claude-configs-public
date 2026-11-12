@@ -118,4 +118,7 @@ def metadata_comment(command, cwd, *, details=None):
             return False
     if details is not None:
         details.update(resource=resource, operation=verb, repository=repository, selector=target)
+        details['body_source'] = 'file' if 'file' in values else 'literal'
+        # Preserve symlink/.. semantics: gh opens the original operand.
+        details['body_path'] = str(path) if 'file' in values else ''
     return True
