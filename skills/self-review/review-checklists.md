@@ -1,12 +1,8 @@
 # Self-review methods and checklists
 
-Optional reference only. The compact contract in [Self-review](SKILL.md) governs; historical role descriptions below do not require rank stages, pre-coding approval or mandatory findings. Use relevant substantive domain checks without reenacting those roles. Activate only the domain checklists required by the diff and project policy. This content does not grant a reviewer implementation authority.
+Optional domain and method reference. The compact contract in [Self-review](SKILL.md) governs; these checks do not require rank stages, pre-coding approval or mandatory findings. Use relevant substantive domain checks. Activate only the domain checklists required by the diff and project policy. This content does not grant a reviewer implementation authority.
 
-## Domains and roles
-
-Work happens in a **domain**. Review happens between two **roles**.
-
-### Domains
+## Domains
 
 The domain declares what kind of work is under review. Each domain
 has its own affirmative standards -- the things that must be true for
