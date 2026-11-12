@@ -142,8 +142,11 @@ No aggregate count substitutes for individual scanner dispositions.
 
 ## Evidence-predates-work
 
-These durable review/recovery records are being committed before the source
-implementation commit, while truthfully recording that their authoring followed
-the source edits. Their first-added commit and the later source commit will be
-reported from Git history after those commits exist; no future commit hash or
-pre-edit artifact existence is asserted here.
+Artifact: plans/self-review-bounded-diff-files-1327.md.
+First-added commit: `5c42e9e50810752eb15c595b70f95c112d36a858`.
+Work commit: `bcc545dec6f8409e666981d583b4b278f640934b`.
+Verification: `git merge-base --is-ancestor 5c42e9e50810752eb15c595b70f95c112d36a858 bcc545dec6f8409e666981d583b4b278f640934b` exited zero.
+
+The durable evidence commit precedes the source implementation commit. Its
+authoring followed source edits, as the recovery records state; this ancestry
+proof does not claim pre-edit artifact existence.
