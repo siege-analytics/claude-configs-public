@@ -29,3 +29,7 @@ The adjacent execution-risk suite also passed 13 tests in 13.298 seconds. Public
 Independent rebind evidence: `env-project-final-independent-rebind-20261112.json`, SHA256 `25ac4bb6394a4d8ef968eaf67de0e160f191e6e6aa078a591f0b7ab5e8a119fc`.
 
 Root integrated the preserved local commit into the combined #1334 tree. The six-method native hook regression passed again on that actual integrated tree, and canonical local refresh passed. Its only generated change adds the new maintained test paths to the inventory. No candidate command was executed on ElectInfo and final protected CI remains required.
+
+## Integrated CI fixture correction
+
+Hosted run 43282290249 found two remaining expectations that classified literal env-wrapped pytest as an unsupported command. That expectation belongs to the retired wrapper behavior. The fixtures now exercise it as an owned C-floor mutation and preserve absent/designing/narrow Task, foreign output/HOME and unknown-wrapper denials. No production code changed. Root inspected both diffs independently. Actual CI entrypoints passed: quoted operands 8 tests, execution risk 13 tests, and env project execution 6 tests. Earlier base-tree results are not substituted for this integrated rerun.

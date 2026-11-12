@@ -132,14 +132,16 @@ class ExecutionRisk(unittest.TestCase):
         self.assertIn("cannot enumerate", " ".join(verdict["reasons"]))
 
     def test_execution_risk_does_not_authorize_foreign_effects_or_unresolved_shapes(self):
-        owned = ["timeout 5 pytest", "nice pytest", "pytest -p arbitrary", "pytest -c pytest.ini",
+        owned = ["env pytest", "env -i CI=1 pytest", "timeout 5 pytest", "nice pytest", "pytest -p arbitrary", "pytest -c pytest.ini",
                  "pytest --junitxml=out.xml", "pytest && touch app.py", "pytest > result.txt"]
         for command in owned:
             with self.subTest(command=command):
                 self.assert_c_risk_with_owned_execution(command)
         foreign = str(self.f.ws / 'outside-task.xml')
-        for command in ['env pytest', "python3 -c 'import pytest; pytest.main()'", 'pytest tests/*.py',
-                        'pytest --junitxml=' + foreign, 'pytest > ' + foreign, 'pytest && touch ' + foreign]:
+        for command in ['env unknown-runner test', "python3 -c 'import pytest; pytest.main()'", 'pytest tests/*.py',
+                        'pytest --junitxml=' + foreign, 'pytest > ' + foreign, 'pytest && touch ' + foreign,
+                        'env pytest --junitxml=' + foreign, 'env pytest > ' + foreign,
+                        'env HOME=' + str(self.f.ws / 'outside-home') + ' pytest']:
             with self.subTest(command=command):
                 self.hook(command, 2)
         self.assertIsNone(f.r._pytest_execution_targets('pytest "', str(self.repo), str(self.repo)))
@@ -179,10 +181,12 @@ class ExecutionRisk(unittest.TestCase):
         data["status"] = "designing"
         f.write(self.gate / "think-gate.json", data)
         self.hook(code=2)
+        self.hook("env pytest", code=2)
         data["status"] = "implementing"
         data["scope_paths"] = [str(self.repo / "tests")]
         f.write(self.gate / "think-gate.json", data)
         self.hook(code=2)
+        self.hook("env pytest", code=2)
 
 
 if __name__ == "__main__":

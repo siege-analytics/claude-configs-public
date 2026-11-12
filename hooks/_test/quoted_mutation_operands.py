@@ -91,8 +91,31 @@ class QuotedOperands(unittest.TestCase):
                 self.f.assertGate(0, command)
                 self.f.assertGate(2, command + ' --junitxml=' + str(self.f.ws / 'outside-task.xml'))
         self.task(full=True)
-        for command in ["python3 -c 'print([1])'", "./unknown '[literal]'", "/absolute/venv/bin/python -c 'print([1])'", "env pytest 'tests/test_demo.py::test_case[param]'", "git add '[literal]'", "touch '~literal' "]:
+        for command in ["python3 -c 'print([1])'", "./unknown '[literal]'", "/absolute/venv/bin/python -c 'print([1])'", "env unknown-runner '[literal]'", "git add '[literal]'", "touch '~literal' "]:
             with self.subTest(command=command): self.f.assertGate(2, command)
+
+    def test_env_literal_selector_is_owned_mutation_not_wrapper_permission(self):
+        command = "env pytest 'tests/test_demo.py::test_case[param]'"
+        self.f.assertGate(2, command)
+        gate = self.task(status='designing')
+        self.f.assertGate(2, command)
+        data = json.loads((gate / 'think-gate.json').read_text())
+        data['status'] = 'implementing'
+        f.write(gate / 'think-gate.json', data)
+        shape = f.r.action(command, str(self.repo))
+        self.assertFalse(shape.get('error'), shape)
+        self.assertFalse(shape['read_only'])
+        self.assertIn(str(self.repo), shape['fallback_paths'])
+        self.assertEqual(f.r.task_tier(data, shape['paths'], command, str(self.repo))['effective'], 'C')
+        self.f.assertGate(0, command)
+        foreign = self.f.ws / 'outside-task.xml'
+        for suffix in (' --junitxml=' + str(foreign), ' > ' + str(foreign)):
+            with self.subTest(suffix=suffix):
+                self.f.assertGate(2, command + suffix)
+        self.assertFalse(foreign.exists())
+        data['scope_paths'] = [str(self.repo / 'tests')]
+        f.write(gate / 'think-gate.json', data)
+        self.f.assertGate(2, command)
 
     def test_mixed_or_foreign_targets_cannot_borrow_pytest_authority(self):
         self.task(full=True)
