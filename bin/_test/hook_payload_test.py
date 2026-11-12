@@ -73,6 +73,11 @@ class Payload(unittest.TestCase):
                 self.assertEqual(binding({'prompt': prompt + '\n\nCCP_TASK_ID=o/r#1292'}), 'o/r#1292')
         self.assertEqual(binding({'prompt': '> Example task:\n>\nCCP_TASK_ID=o/r#other'}), '')
         self.assertEqual(binding({'prompt': '```text\n> Example task:\n```\nCCP_TASK_ID=o/r#1292'}), 'o/r#1292')
+        for fence in ('```text', '~~~text', '````text'):
+            close = fence.removesuffix('text')
+            quoted_fence = '> Example task:\n' + fence + '\n\nCCP_TASK_ID=o/r#other\n' + close
+            self.assertEqual(binding({'prompt': quoted_fence}), '')
+            self.assertEqual(binding({'prompt': quoted_fence + '\n\nCCP_TASK_ID=o/r#1292'}), 'o/r#1292')
 
     def test_non_bash_command_uses_only_metadata_limit(self):
         value = {'tool_name': 'mcp__fixture', 'tool_input': {'command': 'x' * 70000}}

@@ -83,6 +83,16 @@ def turn_task_binding(payload: dict) -> str:
     fence = ''
     quoted_paragraph = False
     for line in prompt.splitlines():
+        # Track even a fence following quoted material: blank lines within
+        # that fence must not expose its contents as plain directives.
+        marker = re.match(r'^ {0,3}(`{3,}|~{3,})(.*)$', line)
+        if marker:
+            mark, tail = marker.groups()
+            if not fence:
+                fence = mark
+            elif mark[0] == fence[0] and len(mark) >= len(fence) and not tail.strip():
+                fence = ''
+            continue
         if not fence:
             if not line.strip():
                 quoted_paragraph = False
@@ -93,14 +103,6 @@ def turn_task_binding(payload: dict) -> str:
             # accepting a plain directive after quoted material.
             if quoted_paragraph:
                 continue
-        marker = re.match(r'^ {0,3}(`{3,}|~{3,})(.*)$', line)
-        if marker:
-            mark, tail = marker.groups()
-            if not fence:
-                fence = mark
-            elif mark[0] == fence[0] and len(mark) >= len(fence) and not tail.strip():
-                fence = ''
-            continue
         if not fence and line.startswith('CCP_TASK_ID='):
             candidates.append(line[len('CCP_TASK_ID='):])
     if not candidates:

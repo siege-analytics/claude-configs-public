@@ -50,14 +50,20 @@ unrelated legacy tasks remain independent.
 
 **Tier (optional, #1086).** The task lifecycle uses the [canonical pre-edit tier contract](SKILL.md#before-an-edit-versus-before-a-commit). Declare a higher tier when needed; this field cannot lower the target-path floor. That entrypoint owns the evidence table, classification failure behavior and separation from commit review.
 
-For turn-start companion derivation with multiple active tasks, use the host's
+For turn-start companion derivation, an existing `CCP_TASK_ID` in the hook's
+host environment takes precedence. When it is absent, use the host's
 `task_id` metadata or one unfenced, unquoted standalone prompt line
 `CCP_TASK_ID=owner/repo#NNN` within the hook's 1 MiB input bound. Separate a directive from preceding quoted material with a blank line; lazy quote continuations are not directives. Long prompt text is not exported to the hook environment. Use the full ticket when the Task has a `ticket`;
 its separate `task_id` does not replace that identity. This selects only an
 existing current-session Task for that turn's evidence derivation. It does not
 bind later Write/Edit calls, expand scope or make a companion count as earned.
-Conflicting or unknown bindings derive no companions; retain other unfinished
-tasks rather than closing them to manufacture uniqueness.
+Without a host environment binding, conflicting metadata/prompt bindings or an
+unknown selected Task derive no companions. An existing host binding selects
+its Task even when metadata or prompt names another Task. Change or clear that
+binding through the host's supported environment/session configuration before
+the next event; unsetting it in a child shell cannot change an earlier host
+callback. Do not handwrite companions to compensate. Retain other unfinished
+Tasks rather than closing them to manufacture uniqueness or widening scope.
 
 Keep investigate, junior-senior, artifacts-posted, review and test gate files
 beside this task's think gate, with the same exact identity. Never overwrite
@@ -105,6 +111,36 @@ repository or to widen write scope over it. Its target semantics are governed
 by #1166. Until that lands, a refusal there is a known gap, not something to
 work around with broader scope. Work outside any Git repository keeps its normal
 operational route; a non-Git directory is not given a made-up Git identity.
+
+**Canonical issue reports from non-Git data (#1319).** An existing own-session
+Task may post descriptive evidence to its exact full `owner/repo#issue` without
+a Git-backed scope witness. For a report prepared outside every Git repository,
+declare the truthful absolute private report directory under this session's
+`data/` as `repo_root` and its actual report paths as `scope_paths`. Keep the
+full canonical ticket and current host-resolved `sessionId` in that Task's own
+`tasks/<stable-slug>/think-gate.json`. Record its real status, such as
+`reviewing`; reporting does not require an implementing Task or code artifacts.
+Do not invent a clone or dummy Git witness, or borrow another Task's artifacts.
+The Git-backed scratch execution rules above still apply when a repository
+physically contains the work.
+
+Use an explicit literal repository or canonical issue URL, for example:
+
+```bash
+CCP_TASK_ID='owner/repo#803' gh issue comment 803 --repo owner/repo --body 'Review complete; the owner hold remains.'
+CCP_TASK_ID='owner/repo#803' gh issue comment https://github.com/owner/repo/issues/803 --body-file /absolute/own-session/data/review/report.txt
+```
+
+A file operand must be a bounded UTF-8 regular text file (at most 1 MiB),
+physically inside the current session's `data/` and claimed by the selected
+Task. Sensitive credential paths, symlinks within that private path boundary,
+hardlinks and foreign or unclaimed files are rejected; benign suffixes and
+hidden report names do not confer or remove authority. Literal inline text
+does not require a file operand, but still requires that Task's own private
+data scope. A binding selects an existing Task; missing or ambiguous ownership,
+foreign tickets/repositories/sessions and host overrides do not gain authority.
+This route grants descriptive issue comments only, not code mutation, state
+changes, review approval, merge, general API access or release of an owner hold.
 
 A positive reader classifier runs before gate lookup. Bounded diagnostics
 (syntax checks, standard test/bytecode/lint commands, document/package readers,
