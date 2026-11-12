@@ -81,7 +81,18 @@ def turn_task_binding(payload: dict) -> str:
     if len(prompt.encode('utf-8', 'surrogatepass')) > INPUT_LIMIT:
         raise ValueError('turn prompt exceeds the hook input bound')
     fence = ''
+    quoted_paragraph = False
     for line in prompt.splitlines():
+        if not fence:
+            if not line.strip():
+                quoted_paragraph = False
+            elif re.match(r'^ {0,3}>', line):
+                quoted_paragraph = True
+            # Unprefixed lines can still belong to a blockquote (Markdown's
+            # lazy paragraph continuation). Require a blank separator before
+            # accepting a plain directive after quoted material.
+            if quoted_paragraph:
+                continue
         marker = re.match(r'^ {0,3}(`{3,}|~{3,})(.*)$', line)
         if marker:
             mark, tail = marker.groups()

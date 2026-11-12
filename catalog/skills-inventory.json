@@ -11923,6 +11923,7 @@
         "hooks/_test/fixtures/metadata-issues-1251.json",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
+        "hooks/_test/pipeline_author_permissions.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/review_risk_policy.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
@@ -12257,10 +12258,10 @@
     },
     {
       "canonical_source": "skills/stalled-session-recovery/SKILL.md",
-      "characters": 16946,
-      "content_sha256": "0aad5bed3baaafadd3e876e651e15b4cfb15fab003a6b20935b4a3e644ea1ce6",
+      "characters": 17112,
+      "content_sha256": "65924a7b1a7666168065e9a08f88c49625246c590c4b0fed944aca9b89a3ffe3",
       "description": "How to diagnose and recover a session that has stopped producing useful turns -- stuck on a repeating error, silent for an abnormal stretch, or looping on the same tool call. Invoke when checking on a session that \"seems stuck,\" when a session's own error looks like it should have cleared but hasn't, when a hub is deciding whether to nudge or respawn a worker, or when auditing a fleet of sessions for health. Covers three failure shapes (transient error, persistent misconfiguration, wedged tool call) with distinct diagnostics and distinct fixes, the discipline of reading the last coherent content instead of trusting the error label, and how to respawn without duplicating work or losing in-flight state.",
-      "estimated_tokens": 4237,
+      "estimated_tokens": 4278,
       "frontmatter_name": "stalled-session-recovery",
       "generated_outputs": [
         "dist/nested/skills/stalled-session-recovery",
@@ -12987,9 +12988,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2645826,
+    "characters": 2645992,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 661536,
+    "estimated_tokens": 661577,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13010,7 +13011,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1249432
+      "unclassified": 1249598
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13022,7 +13023,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 312402
+      "unclassified": 312443
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
