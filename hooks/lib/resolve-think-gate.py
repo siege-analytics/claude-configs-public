@@ -984,7 +984,8 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
     """Bind descriptive remote posts to existing own-Task repository authority.
 
     Repository paths below prove already declared scope; they are not invented
-    filesystem mutation targets. Pure reports do not acquire code-mutation rights.
+    filesystem mutation targets. A non-Git Task can post only its canonical
+    issue's literal text or scoped private text report. Reports grant no code rights.
     """
     def deny(message):
         return {'gate': None, 'error': 'GitHub metadata target scope: ' + message}
@@ -1070,20 +1071,66 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
                 verified_scope = True
                 slug = repository(root)
                 if slug: allowed.add(slug)
-        if not verified_scope:
-            continue
         ticket = re.fullmatch(r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*)', identity)
         matched = True
         for target in shape['metadata_posts']:
             actual = target['repository'] or implicit_repository(target['cwd'])
             own_ticket = bool(ticket and target['resource'] == 'issue' and target['operation'] == 'comment'
-                              and actual == ticket[1].casefold() and target['selector'] == ticket[2])
-            if not actual or actual not in allowed and not own_ticket:
+                              and actual == ticket[1].casefold() and target['selector'] == ticket[2]
+                              and (verified_scope or target['repository']))
+            if own_ticket and not verified_scope:
+                # Exact-ticket reporting grants no general external file read.
+                private = own_session_data_root(workspace)
+                source, body = target.get('body_source'), target.get('body_path', '')
+                witnesses = [body] if source == 'file' else _scopes(gate)
+                own_ticket = False
+                for witness in witnesses:
+                    path = canonical(witness)
+                    if not private or not _within(path, private) or not own_session_path(workspace, path, directory=True):
+                        continue
+                    proof = select_task(workspace, [path], identity, git_environment=inspection_environment)
+                    if not proof.get('gate') or canonical(proof['gate']['path']) != canonical(gate['path']):
+                        continue
+                    if source == 'literal':
+                        own_ticket = True; break  # No external body operand.
+                    # Match the established no-sensitive-files basename policy,
+                    # including credential directories, without guessing prose.
+                    sensitive = r'(?:\.env(?:$|\.)|credentials\.json|service-account.*\.json|\.(?:pem|key|p12|pfx)$|id_rsa|id_ed25519|token\.json|\.secrets?$|^\.(?:ssh|aws|gnupg)$)'
+                    if any(re.search(sensitive, part, re.I) for part in path.split(os.sep)):
+                        continue
+                    # A private report operand must retain physical provenance
+                    # under data/, including each of its directory operands.
+                    # System aliases above data/ (such as /var on macOS) are
+                    # outside this Task boundary and do not change ownership.
+                    parent, linked = os.sep, False
+                    for part in body.split(os.sep)[1:-1]:
+                        prefix = os.path.join(parent, part)
+                        if os.path.islink(prefix) and (_within(canonical(parent), private) or _within(canonical(prefix), private)):
+                            linked = True; break
+                        parent = prefix
+                    if linked:
+                        continue
+                    try:
+                        if not stat.S_ISREG(os.lstat(body).st_mode):
+                            continue  # A symlink is not the report operand.
+                        fd = os.open(body, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+                        with os.fdopen(fd, 'rb') as stream:
+                            info = os.fstat(stream.fileno())
+                            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size > 1024 * 1024:
+                                continue
+                            content = stream.read(1024 * 1024 + 1)
+                        if len(content) > 1024 * 1024 or b'\0' in content:
+                            continue
+                        content.decode('utf-8')
+                    except (OSError, ValueError, UnicodeError):
+                        continue
+                    own_ticket = True; break
+            if not actual or not (verified_scope and actual in allowed or own_ticket):
                 matched = False; break
         if matched:
             owners.append(gate)
     if len(owners) != 1:
-        return deny('one unambiguous own Task with actual repository scope or its canonical ticket is required; use a literal --repo/canonical URL when gh defaults or URL rewrites are ambiguous, and do not borrow cwd for another remote repository')
+        return deny('one unambiguous own Task with actual repository scope or its canonical ticket is required; non-Git canonical issue reports require a literal --repo/canonical URL and a literal body or scoped own-session data text body file; do not borrow cwd for another remote repository')
     return {'gate': owners[0], 'error': ''}
 
 
