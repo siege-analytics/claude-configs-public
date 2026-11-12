@@ -1,0 +1,41 @@
+# Goal continuity and proportionate work review
+
+## Assumptions
+Goal source: https://github.com/siege-analytics/claude-configs-public/issues/1328 and the user's explicit request to simplify redundant pre-mortems and junior/senior/VP gates.
+
+Preparation evidence: read the original `skills/think/SKILL.md` pre-edit table and `skills/self-review/SKILL.md` proportional tiers at base `d3581bbd`; they disagree about standard-work investigation/pre-mortem requirements. Read `hooks/bash/universal-mutation-gate.sh` and the resolver/publication diffs to separate scope/status admission from ceremonial companion checks. Read `catalog/review-risk-policy.json` and native commit/pre-push adapters to preserve the high-risk classification and real independent review while replacing the artifact format. Consulted `bin/validate-local.py --mode refresh --list` to use the canonical generator/check sequence rather than hand-edit generated catalogs. These facts motivated one compact evidence record and coherent enforcement changes. No new external service API is introduced, and no external-documentation research is claimed for this local policy redesign.
+
+The observed failures involve both missing supported continuation and authored/enforced preparation ceremonies. Existing user authorization covers this configuration redesign and normal reviewed publication. It does not waive actual protected operations, operator settings or action-specific holds in business workspaces.
+
+## Test plan
+Executed: `git diff --check` passed. `bin/build.py --check` under the existing ccp virtual environment passed token/project/gate validation and all 199 packaged frontmatter headers. The system Python lacked PyYAML; the existing project environment supplied it, without changing dependencies or disabling checks.
+
+Executed full selection: all 82 current hook scenario scripts were run at two workers. Initial result was 64 passing and 18 failing; the failures identified obsolete preparation/trailer expectations, an old inline-metric constant, and the verifier's old rendered-kernel trust anchor. Each affected component was inspected and rerun after correction; no script was excluded or failure relabeled passing. Actual affected results include 91 Task cases, 80 coordinator scenarios (including the 24 metadata cases), foreign-output controls, real receipt production, historical record compatibility, and 41 enforcement-verifier checks. Detailed initial results and affected reruns are retained in the evidence directory and writer handoff. A final risk unit run and protected hosted CI remain separately tracked; this record does not claim a hosted result from local tests.
+
+Canonical `validate-local.py --mode refresh` completed successfully, including generated source authority, kernel budget, language/data scope fixtures, token resolution and inventory freshness. A fresh agent without parent conversation completed a separate three-test local implementation under the actual draft procedures; Root inspected the resulting function and reran those tests. This controlled exercise is not sustained remote acceptance.
+
+The first complete selected scanner returned exit 1 with 78 findings. Added style and timeout issues were corrected. The independent scanner record binds remaining resolver handler findings to real fault probes or unchanged inherited coverage gaps tracked in #1329, and demonstrates the pipeline-diagnostic test-discovery false positive. This is not a clean-scan claim; final selected scan evidence remains required. Runtime sustained-outcome acceptance is outstanding. No Core deployment or autonomous-completion claim is made here.
+
+## Findings
+The design removes universal pre-edit investigation/pre-mortem/rank/posting prerequisites, compulsory mistake-finding, repeated same-turn verification blocks, and unconditional new-ticket/board/peer dependencies. It retains actual task/session scope, truthful lifecycle, explicit owner holds, risk classification, meaningful validation and real independent review for high-risk publication. Reviewers are inspecting the actual combined diff for unintended loss of protections and remaining selected-path contradictions.
+
+## Independent review
+Completed by a separate review-only task that did not author this simplification: `plans/independent-review-goal-continuity-1328.md` pins the reviewed file manifest and actual preparation, findings, resolutions and limits. `plans/1328-independent-scanner-review.json` and `plans/1328-independent-exception-probes.txt` retain per-handler dispositions and real probe evidence. The reviewer verified that the new code-owned verifier anchor matches the authored kernel after canonical token rendering and that altered/symlinked/broad policy protections remain. Any later substantive source delta needs review; generated-only freshness updates do not silently change reviewed behavior.
+
+## Hosted CI fixture repair
+
+The hosted Skill inventory fixtures/freshness step stopped in `ReviewDisclosure`: its fixtures still pinned the removed pre-author/Junior/Lead contract, assumed a mandatory optional-checklist role anchor, and extracted the new `markdown` fenced template incorrectly. The bounded repair changes only `bin/_test/self_review_disclosure_test.py`: compact consulted-source/actual-validation/independence checks replace obsolete byte and ceremony assumptions. All four packaged layouts retain sibling/link closure checks. Missing artifact/method files and invalid fragments still reject. The actual native Tier C parser accepts the extracted compact record and rejects each missing required section and missing independent-review trailer. No production or builder permission was weakened.
+
+Executed after repair: frontmatter validation passed; ReviewDisclosure seven tests passed (including the section subcases); skill inventory fixtures passed; inventory freshness and diff checks passed. Root independently inspected and accepted the exact single-file test delta before publication. Hosted CI rerun remains pending; these local results do not claim hosted or runtime acceptance.
+
+Root also identified stale rank framing in the optional checklist introduction. The concise follow-up removes the two-role claim and labels the surviving domain/method reference accurately; substantive domain checks are unchanged. Canonical metadata is refreshed for the authored Markdown change, with disclosure/support closure tests rerun before publication.
+
+## Combined explicit Done-grant integration
+
+The repository requires an up-to-date protected base. Rather than serially merge the separately reviewed Done capability and repeat the full required build, PR #1334 now preserves that exact feature commit as a merge parent and integrates #1331. PR #1333 remains historical source/review/green-CI evidence, superseded by this combined delivery. No protection or required check is waived.
+
+Root executed the combined actual tree: Status 14/14, project scope 14/14, lean Task 5/5, lean publication 5/5 and real disclosure/parser/support-closure 7/7 passed. The canonical validate-local refresh completed successfully with no generated delta. The original #1333 hosted build 43268616858 independently completed successfully; final integrated hosted CI remains required.
+
+The complete staged integration scanner exited 1/non-clean with 62 findings (raw SHA256 303aa90dd46a2ac396eee0d217a5ae07dc1debc87a9930e5c0ce8a174dccc4d2). Every normalized path/rule/description entry is a multiset subset of the reviewed Core1328 final-v3 scan. Resolver exception-handler ASTs exactly match preintegration 3956bda1; the production delta changes the installed grant's Status vocabulary only. Existing independently reviewed dispositions and #1329 debt remain applicable; no clean scan is claimed.
+
+Bounded_reader independently inspected the actual staged three-file integration tree 65d03ae4c86864d33be0c01e1b4236029a3b83d6 and accepted it with no blocking finding: empty defaults, current-session implementing Task/exact canonical Issue binding, installed owner/project/field/value proofs and current-Done reset rejection remain intact. This review precedes the merge commit; this appended evidence paragraph adds no behavior. Native/runtime acceptance still depends on canonical publication, client import and actual installed observations.

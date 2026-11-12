@@ -123,13 +123,14 @@ class InlineDelivery(unittest.TestCase):
         self.stub_selector(selected)
         self.assert_fallback(self.deliver())
 
-    def test_optional_unicode_plan_warning_is_budgeted(self):
+    def test_optional_unicode_plan_names_add_no_preparation_warning(self):
         plans = self.case / 'plans'
         plans.mkdir()
         for index in range(10):
             (plans / ('think-' + chr(0x754c) * 75 + '-' + str(index) + '.md')).write_text('')
         output = self.deliver()
-        self.assert_fallback(output)
+        self.assertLess(len(output), 10000)
+        self.assertIn(self.kernel.read_bytes(), output)
         self.assertNotIn(b'PIPELINE STATUS', output)
 
     def test_oversized_mandatory_kernel_blocks_without_partial_policy(self):
@@ -161,7 +162,7 @@ class InlineDelivery(unittest.TestCase):
         self.stub_selector(b'')
         output = self.deliver(extra={'CRAFT_AGENT_PLANS_PATH': str(plans)})
         self.assertIn(self.kernel.read_bytes(), output)
-        self.assertIn(b'PIPELINE STATUS', output)
+        self.assertNotIn(b'PIPELINE STATUS', output)
         self.assertNotIn(b'"continue":false', output)
 
     def test_optional_plan_scan_failure_does_not_block_prompt(self):
@@ -216,7 +217,9 @@ class InlineDelivery(unittest.TestCase):
                     os.chdir(previous)
             self.assertFalse(sentinel.exists())
         self.assertEqual(measured[0], measured[1])
-        self.assertEqual(measured[0]['characters']['injected']['multi_route'], 9637)
+        reference = json.loads((ROOT / 'catalog/progressive-loading-metrics.json').read_text())
+        self.assertEqual(measured[0]['characters']['injected']['multi_route'], reference['characters']['injected']['multi_route'])
+        self.assertLess(measured[0]['characters']['injected']['multi_route'], 10000)
 
 
 

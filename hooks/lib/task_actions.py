@@ -1964,6 +1964,57 @@ def task_branch_preparation(args, cwd):
         raise UnknownShape('invalid branch preparation name')
     return [canonical(values.get('--repo', cwd), cwd), canonical(values['--worktree'], cwd)]
 
+
+def _project_execution_wrapper(args: list[str]):
+    """Literal env/command project execution; retain mutation and environment targets.
+
+    This is not a reader or a general wrapper parser. Git keeps its existing
+    stricter normalizer; shell/remote/unknown dispatch cannot borrow cwd scope.
+    """
+    wrapper = os.path.basename(args[0])
+    if wrapper not in {'env', 'command'}:
+        return None
+    index, targets, environment = 1, [], []
+    if wrapper == 'env':
+        if args[index:index + 1] in (['-i'], ['--ignore-environment']):
+            index += 1
+        if args[index:index + 1] == ['--']:
+            index += 1
+        while index < len(args) and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*=.*', args[index], re.S):
+            environment.append(args[index].split('=', 1))
+            index += 1
+    elif args[index:index + 1] == ['--']:
+        index += 1
+    dispatch = args[index:]
+    if dispatch and os.path.basename(dispatch[0]) == 'git':
+        return None  # all Git environment/options remain with its existing normalizer
+    for name, value in environment:
+        if name == 'PATH':
+            if not value or any(not os.path.isabs(part) for part in value.split(':')):
+                raise UnknownShape('project execution PATH needs literal absolute search directories')
+        elif name == 'PYTHONPATH':
+            targets.extend(part or '.' for part in value.split(':'))
+        elif name in {'HOME', 'XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'TMPDIR', 'BUN_RUNTIME_TRANSPILER_CACHE_PATH'}:
+            if not value:
+                raise UnknownShape('project execution environment target is empty')
+            if name != 'BUN_RUNTIME_TRANSPILER_CACHE_PATH' or value != '0':
+                targets.append(value)
+        elif name not in {'NODE_ENV', 'CI', 'DO_NOT_TRACK', 'LANG', 'LC_ALL', 'LC_CTYPE'}:
+            raise UnknownShape('unsupported project execution environment override: ' + name)
+    if not dispatch or dispatch[0].startswith('-'):
+        raise UnknownShape('unsupported project execution wrapper options or missing executable')
+    executable = os.path.basename(dispatch[0])
+    if executable not in {'bun', 'node', 'python', 'python3', 'pytest', 'make', 'npm', 'pnpm', 'yarn'}:
+        raise UnknownShape('unsupported project execution wrapper executable')
+    inline = ('-c',) if executable in {'python', 'python3'} else ('-e', '-p') if executable in {'bun', 'node'} else ()
+    if inline and any(word.startswith(inline) or executable in {'python', 'python3'}
+                      and word.startswith('-') and not word.startswith('--') and 'c' in word[1:]
+                      for word in dispatch[1:]):
+        raise UnknownShape('opaque inline execution has unbounded mutation targets')
+    if executable in {'bun', 'node'} and any(word.partition('=')[0] in {'--eval', '--print'} for word in dispatch[1:]):
+        raise UnknownShape('opaque inline execution has unbounded mutation targets')
+    return dispatch, targets
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
@@ -2107,6 +2158,11 @@ def _action(command: str, cwd: str) -> dict:
                 self_managed = False
                 args, arg_globs = [], []
                 return
+            wrapped = _project_execution_wrapper(args)
+            if wrapped is not None:
+                args, environment_targets = wrapped
+                paths.extend(canonical(value, effective) for value in environment_targets)
+                # This branch is already a mutation; do not rerun reader admission.
             self_managed = self_managed and args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "ln"}
             if args[0] in {'eval', 'exec', 'bash', 'sh', 'zsh', 'dash', 'ksh'} or args[0] in {'python', 'python3'} and any(x == '-c' or x.startswith('-c') for x in args[1:]):
                 raise UnknownShape('opaque inline execution has unbounded mutation targets')

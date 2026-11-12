@@ -130,12 +130,13 @@ class ProjectScope(unittest.TestCase):
                 self.hook(command, 2)
                 self.assertFalse(target.exists())
 
-    def test_same_task_local_companion_still_requires_code_pipeline(self):
+    def test_same_task_local_companion_requires_owned_implementing_scope(self):
         self.task()
         command = ADD + '; touch ' + str(self.f.a / 'own.md')
-        self.hook(command, 2)
-        self.f.task('electinfo/enterprise#3300', self.f.a, artifacts=True)
         self.hook(command)
+        self.hook(ADD + '; touch ' + str(self.f.b / 'foreign.md'), 2)
+        self.f.task('electinfo/enterprise#3300', self.f.a, status='designing', artifacts=False)
+        self.hook(command, 2)
 
     def test_unsupported_remote_mutations_fail_with_broad_local_gate(self):
         self.f.task('electinfo/enterprise#3300', self.f.ws, artifacts=True)

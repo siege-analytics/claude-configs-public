@@ -93,14 +93,9 @@ if ! out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HO
 fi
 
 rm -f "$TASK_DIR/"{investigate,junior-senior,artifacts-posted}-gate.json "$WS/sessions/$SESSION_ID/plans/pre-mortem-current.md"
-if out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload 'git checkout -b feature/test2')" 2>&1)"; then
+if ! out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload 'git checkout -b feature/test2')" 2>&1)"; then
   echo "$out" >&2
-  echo "FAIL: mutation should block when only stale wrong-ticket session artifacts exist" >&2
-  exit 1
-fi
-if ! grep -q 'artifacts missing or wrong ticket' <<<"$out"; then
-  echo "$out" >&2
-  echo "FAIL: expected missing-artifacts diagnostic" >&2
+  echo "FAIL: stale optional artifacts must not block an owned implementing Task" >&2
   exit 1
 fi
 
@@ -108,9 +103,9 @@ fi
 write_json "$WS/sessions/$SESSION_ID/investigate-gate.json" "{\"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"findings\": [{\"id\": \"GENERIC\"}]}"
 write_json "$WS/sessions/$SESSION_ID/junior-senior-gate.json" "{\"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"junior_found\": true, \"senior_found\": true}"
 write_json "$WS/sessions/$SESSION_ID/artifacts-posted-gate.json" "{\"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"investigate_posted\": true, \"premortem_posted\": true}"
-if out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload 'git checkout -b feature/test3')" 2>&1)"; then
+if ! out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload 'git checkout -b feature/test3')" 2>&1)"; then
   echo "$out" >&2
-  echo "FAIL: generic session artifacts without ticket/task should not authorize current-task mutation" >&2
+  echo "FAIL: generic optional artifacts must not block current owned Task admission" >&2
   exit 1
 fi
 
@@ -119,9 +114,9 @@ rm -f "$WS/sessions/$SESSION_ID/"{investigate-gate,junior-senior-gate,artifacts-
 write_json "$WS/investigate-gate.json" "{\"status\": \"complete\", \"findings\": [{\"id\": \"GLOBAL\"}]}"
 write_json "$WS/junior-senior-gate.json" "{\"status\": \"complete\", \"junior_found\": true, \"senior_found\": true}"
 write_json "$WS/artifacts-posted-gate.json" "{\"status\": \"complete\", \"investigate_posted\": true, \"premortem_posted\": true}"
-if out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload 'git checkout -b feature/test4')" 2>&1)"; then
+if ! out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload 'git checkout -b feature/test4')" 2>&1)"; then
   echo "$out" >&2
-  echo "FAIL: generic workspace-root artifacts should not authorize current-task mutation" >&2
+  echo "FAIL: generic workspace-root artifacts must not block current owned Task admission" >&2
   exit 1
 fi
 rm -f "$WS/"{investigate-gate,junior-senior-gate,artifacts-posted-gate}.json
@@ -149,7 +144,7 @@ Ticket: $TICKET
 Severity: LOW
 Mitigation: fixture current artifact.
 EOF2
-if out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload 'git checkout -b feature/test5')" 2>&1)"; then
+if out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload "git -C '$OTHER' checkout -b feature/test5")" 2>&1)"; then
   echo "$out" >&2
   echo "FAIL: same-basename different repo artifacts should not authorize mutation" >&2
   exit 1

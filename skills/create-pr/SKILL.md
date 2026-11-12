@@ -23,10 +23,10 @@ base, not authority to rewrite an existing branch.
    2. Run `git diff "$REVIEW_BASE_COMMIT"...HEAD --stat` to see all files changed
    3. Run `git diff "$REVIEW_BASE_COMMIT"...HEAD` to review the actual changes if needed
    4. Read the related ticket(s) to understand the intended outcome
-2. **Verify ticket references exist** (see Ticket enforcement below)
-   1. Check that all commits on the branch reference tickets
-   2. Collect the set of unique tickets referenced
-   3. If any commits lack ticket references, flag them to the user
+2. **Identify the motivating task** (see Task references below)
+   1. Collect existing ticket references and the authorized request
+   2. Link relevant tickets without creating a new issue solely for ceremony
+   3. Preserve explicit project-specific tracking requirements
 3. Determine if the branch is ready
    1. All commits should be pushed to the remote
    2. Tests should pass (run the test suite before opening the PR)
@@ -47,36 +47,15 @@ A PR is a narrative, not a dump of commits. The reviewer is reading the PR to de
 
 **One PR, one purpose.** A PR that fixes a bug, refactors a module, and adds a feature is three PRs. Keep the scope tight so reviewers can evaluate one thing at a time.
 
-# Ticket enforcement
+# Readiness and tracking
 
-**Every PR must reference at least one ticket.** If the work is PR-able, it is ticketable. This is not optional.
+Before opening a PR, inspect the cumulative diff and provide the problem, resulting behavior, relevant validation and any remaining limitations. Use [skill:self-review] and [rule:definition-of-done]. Link the existing task or issue when available; a clear authorized request may be cited directly unless the project policy requires a ticket.
 
-## Before creating any PR
+A draft PR is useful for work that is still being reviewed or validated. State what remains. Opening a reviewable draft does not require every deployment check to have completed, and it does not certify merge readiness. Do not stop the whole goal for missing board placement, a bot or ceremonial artifact.
 
-### Definition of Done gate (mandatory)
+## Task references
 
-Before opening the PR, verify all five criteria from [rule:definition-of-done]:
-
-- [ ] **(a) Code-reviewed** -- at minimum, self-reviewed walking through the diff; CodeRabbit will run on push
-- [ ] **(b) Edge cases explored** -- reasoned through the edge-case checklist in [skill:code-review] §1
-- [ ] **(c) Tests written** -- every behavior change has tests; no "tests later" PRs without an explicit, reviewable justification in the PR description
-- [ ] **(d) Ticket updated** -- status moved (Todo → In Review), comments added for substantive changes, scope/blocker pivots captured
-- [ ] **(e) Work has a ticket** -- every commit has a ticket reference (see scan below)
-
-If **any** criterion fails: open the PR as a draft, list the failing criteria explicitly in the description under a `## Definition of Done` section, and surface to the user before requesting review.
-
-### Ticket-reference scan
-
-1. Scan all commits on the branch for ticket references:
-   ```bash
-   git log "$REVIEW_BASE_COMMIT"..HEAD --format='%s %b' | grep -iE '(fixes|closes|refs|part-of|#[0-9])'
-   ```
-2. If any commits lack ticket references, flag them to the user
-3. If no tickets exist for this work, create them first (use the create-ticket skill)
-
-## The Tickets section is mandatory
-
-The PR description must contain a `## Tickets` section listing every ticket this PR addresses:
+When the change addresses existing tickets, list them in the PR description:
 
 ```markdown
 ## Tickets
@@ -89,7 +68,7 @@ The PR description must contain a `## Tickets` section listing every ticket this
 - Use `Fixes` / `Closes` when the PR fully resolves the ticket
 - Use `Refs` when the PR is related but does not resolve the ticket
 - Use `Part-of` when the PR is one of several that address the ticket
-- **At least one ticket must be listed.** If the PR has no ticket, stop and create one first
+- If no ticket exists, cite the authorized request or task instead unless the project policy requires an issue.
 
 ## Bidirectional linking: Ticket → PR
 

@@ -69,9 +69,13 @@ class QuotedOperands(unittest.TestCase):
         self.assertFalse(shape.get('error'), shape)
         self.assertFalse(shape['read_only'])
         self.assertFalse(shape.get('investigation'))
-        self.f.assertGate(2, command)
-        self.task(full=True)
+        data = json.loads((self.task() / 'think-gate.json').read_text())
+        self.assertEqual(f.r.task_tier(data, [str(self.repo)], command, str(self.repo))['effective'], 'C')
         self.f.assertGate(0, command)
+        foreign = str(self.f.ws / 'outside-task.xml')
+        redirected = command.replace(' 2>&1 | tail -n 20', ' --junitxml=' + foreign + ' 2>&1 | tail -n 20')
+        self.f.assertGate(2, redirected)
+        self.assertFalse(Path(foreign).exists())
 
     def test_actual_unquoted_globs_and_shell_expansion_stay_denied(self):
         self.task(full=True)
@@ -81,10 +85,37 @@ class QuotedOperands(unittest.TestCase):
     def test_unknown_plugins_and_inline_programs_keep_their_guards(self):
         self.task()
         for command in ['pytest -p arbitrary ' + shlex.quote('tests/test_demo.py::test_case[param]'), 'pytest -c pytest.ini ' + shlex.quote('tests/test_demo.py::test_case[param]')]:
-            with self.subTest(command=command): self.f.assertGate(2, command)
+            with self.subTest(command=command):
+                data = json.loads((self.f.ws / 'sessions/one/tasks' / f.r.task_slug('example/app#1194') / 'think-gate.json').read_text())
+                self.assertEqual(f.r.task_tier(data, [str(self.repo)], command, str(self.repo))['effective'], 'C')
+                self.f.assertGate(0, command)
+                self.f.assertGate(2, command + ' --junitxml=' + str(self.f.ws / 'outside-task.xml'))
         self.task(full=True)
-        for command in ["python3 -c 'print([1])'", "./unknown '[literal]'", "/absolute/venv/bin/python -c 'print([1])'", "env pytest 'tests/test_demo.py::test_case[param]'", "git add '[literal]'", "touch '~literal' "]:
+        for command in ["python3 -c 'print([1])'", "./unknown '[literal]'", "/absolute/venv/bin/python -c 'print([1])'", "env unknown-runner '[literal]'", "git add '[literal]'", "touch '~literal' "]:
             with self.subTest(command=command): self.f.assertGate(2, command)
+
+    def test_env_literal_selector_is_owned_mutation_not_wrapper_permission(self):
+        command = "env pytest 'tests/test_demo.py::test_case[param]'"
+        self.f.assertGate(2, command)
+        gate = self.task(status='designing')
+        self.f.assertGate(2, command)
+        data = json.loads((gate / 'think-gate.json').read_text())
+        data['status'] = 'implementing'
+        f.write(gate / 'think-gate.json', data)
+        shape = f.r.action(command, str(self.repo))
+        self.assertFalse(shape.get('error'), shape)
+        self.assertFalse(shape['read_only'])
+        self.assertIn(str(self.repo), shape['fallback_paths'])
+        self.assertEqual(f.r.task_tier(data, shape['paths'], command, str(self.repo))['effective'], 'C')
+        self.f.assertGate(0, command)
+        foreign = self.f.ws / 'outside-task.xml'
+        for suffix in (' --junitxml=' + str(foreign), ' > ' + str(foreign)):
+            with self.subTest(suffix=suffix):
+                self.f.assertGate(2, command + suffix)
+        self.assertFalse(foreign.exists())
+        data['scope_paths'] = [str(self.repo / 'tests')]
+        f.write(gate / 'think-gate.json', data)
+        self.f.assertGate(2, command)
 
     def test_mixed_or_foreign_targets_cannot_borrow_pytest_authority(self):
         self.task(full=True)

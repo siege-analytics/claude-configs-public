@@ -608,8 +608,8 @@ def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
             "Choose a stable unique non-hidden slug; no hash computation or GitHub ticket is required. "
             "Set task_id (or the full ticket), sessionId, target repo_root, scope_paths and status for this task. "
             "Own-session task gate JSON and plans can be bootstrapped without another gate. "
-            "Keep JSON companions beside this task's gate; write its pre-mortem under this session's plans/ naming the task_id. Never overwrite root signals or another task. "
-            "Then satisfy only this task's effective review tier; see [skill:think].")
+            "Keep this Task gate in its own session/task directory. Never overwrite root signals or another Task. "
+            "Preparation is ordinary reading and checking; review evidence is checked at publication. No posted rank or preparation companion grants edit authority; see [skill:think].")
 
 
 def select_task(workspace: str, paths: list[str], binding: str = "", session_id: str = "",
@@ -973,7 +973,7 @@ def resolve_action(workspace: str, payload: dict) -> dict:
             if not valid:
                 return {**result, "gate": None, "error": "Test execution requires the selected own-task implementing think gate and its exact adjacent test-gate.json receipt; repair task/output ownership before rerunning."}
         result["session_dir"] = own_session_directory(workspace)
-        result["artifacts"] = {name: g["path"] if (g := _artifact_for(tg, name, workspace)) else None for name in ("investigate-gate", "junior-senior-gate", "artifacts-posted-gate", "review-gate", "test-gate")}
+        result["artifacts"] = {}  # Compatibility field; preparation companions do not authorize edits.
         result["task"] = task_identity(tg["data"])
         result["tier"] = task_tier(tg["data"], shape["paths"], command, cwd,
                                    scratch_root=own_session_data_root(workspace))
@@ -1266,9 +1266,9 @@ def project_policy() -> list:
             raise ValueError('invalid GitHub project standing grant values')
         if extra and (grant['field_name'] != 'Status' or grant['field_type'] != 'SINGLE_SELECT'
                       or not isinstance(grant['values'], list) or not grant['values']
-                      or any(v not in ('In Progress', 'In Review') for v in grant['values'])
+                      or any(v not in ('In Progress', 'In Review', 'Done') for v in grant['values'])
                       or len(set(grant['values'])) != len(grant['values'])):
-            raise ValueError('item-edit grant is limited to Status In Progress/In Review')
+            raise ValueError('item-edit grant is limited to Status In Progress/In Review/Done')
         key = (grant['host'], grant['owner'].lower(), grant['project'], grant['issue_owner'].lower(), grant['operation'])
         if key in seen:
             raise ValueError('ambiguous duplicate GitHub project standing grants')
@@ -1701,7 +1701,7 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "", *, scra
     wins; a missing classifier,
     policy, repo_root or git listing fails closed to C. Bounded root pytest
     uses its branch/working delta and selectors, with at least B; normal task
-    ownership and preparation requirements still apply."""
+    ownership and scope requirements still apply."""
     declared = str(gate.get("tier") or gate.get("review_tier") or "").strip().upper()
     declared = declared if declared in TIER_ORDER else ""
     root = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))

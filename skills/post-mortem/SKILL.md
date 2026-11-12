@@ -187,7 +187,7 @@ When a post-mortem's root cause is a skill, hook, or rule deficiency, the action
 
 Pipeline post-mortems have additional requirements:
 - The **Skill Pipeline Trace-Back** must include the skill/hook/rule that failed as both a gate that missed AND a contributing factor.
-- Action items that modify skills, hooks, or rules are themselves subject to the full pipeline (think → investigate → pre-mortem → implement → self-review). The recursive case -- the pipeline fixing itself -- is the highest-stakes change.
+- Action items that modify skills, hooks or rules use proportionate preparation, regression checks and publication review under [skill:think] and [skill:self-review]. Do not turn a retrospective into a mandatory investigation/pre-mortem/rank sequence for every repair.
 - The **Codebase sweep** must grep for the same class of deficiency across all skills/hooks/rules, not just the one where the failure surfaced.
 
 The post-mortem for the SU#632-636 batch is the worked example: the root cause was "the agent assumed data shapes instead of reading them." The action item was not "be more careful" -- it was "create the investigate skill with mandatory data-shape verification." That action item was itself a pipeline edit that required the full pipeline.

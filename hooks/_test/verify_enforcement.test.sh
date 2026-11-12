@@ -67,10 +67,11 @@ cp "$REPO_ROOT/dist/craft-agent/enforcement-manifest.json" "$WIRED/hooks/"
 cp "$REPO_ROOT/bin/review-risk.py" "$WIRED/bin/"
 cp "$REPO_ROOT/catalog/review-risk-policy.json" "$WIRED/catalog/"
 
-if bash "$PROBE" --target "$WIRED" --mode craft-agent >/dev/null 2>&1; then
+if probe_output="$(bash "$PROBE" --target "$WIRED" --mode craft-agent 2>&1)"; then
     ok "fully-wired fixture passes"
 else
     bad "fully-wired fixture should pass but did not"
+    printf '%s\n' "$probe_output"
 fi
 
 mv "$WIRED/hooks/enforcement-manifest.json" "$TMP/registry-manifest.json"

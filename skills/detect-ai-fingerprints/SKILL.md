@@ -211,7 +211,11 @@ $ echo $?
 1
 ```
 
-The `[skill:commit]` pre-review gate checks the exit code; non-zero stops the commit until the violation is fixed.
+The `[skill:commit]` caller applies the task-scoped acceptance contract above.
+An incomplete scan needs diagnosis and a complete result before dependent
+publication. A complete non-clean result needs the prescribed independent
+per-finding dispositions; it must not be relabeled clean. The review needed to
+make those dispositions may proceed, as may unrelated authorized work.
 
 ### Scanning a PR before review
 
@@ -233,7 +237,7 @@ Lexical diff checks inspect added lines (`+` prefix), not removed or context lin
 ## Cross-references
 
 - The per-act rule files `[rule:writing-prose]`, `[rule:writing-code]`, `[rule:writing-tests]`, `[rule:writing-claims]`, `[rule:writing-releases]` are the rules this skill enforces. Mechanical coverage is enumerated in "What the scanner covers" above; everything else requires `[skill:code-review]` judgment. See `_coverage.md` for the per-rule prevention-path that names what tooling would mechanize each judgment row.
-- `[skill:commit]` calls this skill in step 3 (pre-review gate). A non-zero exit blocks the commit.
+- `[skill:commit]` calls this skill in step 3 and applies the task-scoped acceptance contract above; a non-clean result is not an automatic whole-task stop.
 - `[skill:code-review]` calls this skill at the start of the review pass. Findings prefix the six-layer review.
 
 ## Attribution

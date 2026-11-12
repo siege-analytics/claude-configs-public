@@ -13,11 +13,11 @@
   },
   "legacy_minimum_artifact_for_all_tiers": true,
   "load_set_change": 0,
-  "policy_characters": 5236,
+  "policy_characters": 5164,
   "required_evidence_counts": {
     "A": 1,
     "B": 3,
-    "C": 7
+    "C": 4
   },
   "schema_version": 1
 }

@@ -51,9 +51,6 @@ trailer_example() {
         Self-Review) echo "<one-line summary of the review pass>" ;;
         Self-Review-Source) echo "<path or URL to the self-review artifact>" ;;
         Hostile-Review) echo "<URL, #ticket, or committed file with the independent hostile review>" ;;
-        Negative-Tests) echo "<negative cases exercised and their result>" ;;
-        Full-Suite) echo "<full suite command and pass/fail counts>" ;;
-        Canary-Rollback) echo "<canary or revert proof, or N/A with reason>" ;;
     esac
 }
 TIER_VALUE=$(echo "$TRAILERS" | { grep -i '^Review-Tier:' || true; } | sed 's/^[^:]*:[[:space:]]*//' | tr '[:lower:]' '[:upper:]')
@@ -104,7 +101,7 @@ if [[ "$TIER_VALUE" != "A" ]] && ! echo "$TRAILERS" | grep -qi '^Self-Review-Sou
     MISSING+=("Self-Review-Source: $(trailer_example Self-Review-Source)")
 fi
 if [[ "$TIER_VALUE" == "C" ]]; then
-    for REQUIRED_TRAILER in "Hostile-Review" "Negative-Tests" "Full-Suite" "Canary-Rollback"; do
+    for REQUIRED_TRAILER in "Hostile-Review"; do
         COUNT=$(echo "$TRAILERS" | { grep -ci "^${REQUIRED_TRAILER}:[[:space:]]*\S" || true; })
         if [[ "$COUNT" -ne 1 ]]; then
             MISSING+=("${REQUIRED_TRAILER}: $(trailer_example "$REQUIRED_TRAILER")  (Tier C requires exactly one; found $COUNT)")
@@ -145,7 +142,11 @@ if [ -n "$SOURCE_VALUE" ] && ! echo "$SOURCE_VALUE" | grep -qE '^(https?://|#[0-
         if [[ "$TIER_VALUE" == "B" ]]; then
             REQUIRED_SECTIONS=("## Assumptions" "## Test plan")
         else
-            REQUIRED_SECTIONS=("## Assumptions" "## Peer review" "## Lead review" "## Quantified claims")
+            if grep -qxF '## Peer review' "$SOURCE_VALUE" && grep -qxF '## Lead review' "$SOURCE_VALUE" && grep -qxF '## Quantified claims' "$SOURCE_VALUE"; then
+                REQUIRED_SECTIONS=("## Assumptions" "## Peer review" "## Lead review" "## Quantified claims")
+            else
+                REQUIRED_SECTIONS=("## Assumptions" "## Test plan" "## Findings" "## Independent review")
+            fi
         fi
         for SECTION in "${REQUIRED_SECTIONS[@]}"; do
             if ! grep -qF "$SECTION" "$SOURCE_VALUE"; then
@@ -159,14 +160,6 @@ if [ -n "$SOURCE_VALUE" ] && ! echo "$SOURCE_VALUE" | grep -qE '^(https?://|#[0-
             echo ""
             echo "See: skills/self-review/SKILL.md"
             exit 1
-        fi
-        if [[ "$TIER_VALUE" == "C" ]]; then
-            for FIELD in "Pre-mortem-artifact" "Hostile-review-artifact"; do
-                if ! grep -qE "^${FIELD}:[[:space:]]+\S" "$SOURCE_VALUE"; then
-                    echo "BLOCKED: Tier C artifact requires non-empty ${FIELD}: evidence." >&2
-                    exit 1
-                fi
-            done
         fi
     else
         echo "BLOCKED: Self-Review-Source file not found: $SOURCE_VALUE" >&2

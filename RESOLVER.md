@@ -4,25 +4,9 @@ This is a legacy navigation document, **not the executable automatic loading con
 
 ---
 
-## Disposition: slow is smooth, smooth is fast
+## Disposition: informed execution
 
-Every gate in this resolver exists because a 2-second check prevents
-a 2-hour rework. The Junior experiences verification as friction —
-something that slows down the "real work" of writing code. This is
-backwards. **Verification IS the work.** Code is the easy part. Knowing
-that the code does what you think it does, in the environment where
-it will actually run, is the hard part.
-
-The agent's seconds are cheap. The human's hours are not. When the
-agent skips a 30-second check, it is not saving the agent's time — it
-is gambling the human's time at 20:1. This is not caution. This is
-the correct resource allocation given the actual cost function.
-
-Speed comes from precision, not velocity. The fastest path through
-a task is doing it right the first time. Every shortcut that skips
-verification borrows time from the human at compound interest. When
-a check feels like friction, that feeling is the signal that the
-check matters.
+Advance the requested outcome with evidence appropriate to the consequences. Consult relevant documentation and current source, retain what they establish, implement, and verify delivery. Neither unchecked action nor accumulating preparation artifacts establishes success. Choose useful checks; do not preserve a gate merely because it exists or treat process friction as proof of value. Keep actual authorization, scope and protected operations intact.
 
 ---
 
@@ -50,11 +34,7 @@ non-trivial — diff size does not matter.
 
 ## Design and task authorization: `think`
 
-Before non-trivial implementation, use [skill:think] for applicability, design and required preparation. Its ordinary sibling references contain the design workflow, exact task evidence/lifecycle and verifiable premise claims; they ship with the same discoverable skill.
-
-Think distinguishes authored preparation, the mutation gate's pre-edit A/B/C evidence and the separate [skill:self-review] commit-review contract. A mechanically permitted operation does not waive applicable preparation. A signal's existence does not prove approval. Follow [rule:strategic-agency], [rule:autonomy] and [rule:standing-approval] for existing authorization, material owner decisions, role limits and actual holds. Continue authorized work without inventing a fresh approval checkpoint.
-
-For existing entities, follow Think's [skill:survey-context] and [skill:investigate] routing; [skill:pre-mortem] classifies risks against verified facts. [skill:post-mortem] applies to confirmed failures. Preserve their coherence, posting and evidence requirements through the owning procedures rather than a copied summary here.
+Use [skill:think] for proportionate preparation and actual task scope, and [skill:self-review] for validation and publication review. Investigation and pre-mortem are optional aids, not universal pre-edit artifacts or posting gates. A task signal records scope and lifecycle; it does not grant authority or release an explicit hold. Continue within existing authorization and ask only for materially missing decisions.
 
 ---
 
@@ -189,7 +169,7 @@ The executable contract is `catalog/resolver-manifest.json`: operational action 
 
 | About to… | Read first |
 |---|---|
-| Implement a new feature, refactor, or architecture change | `skills/thinking/think/SKILL.md` (MANDATORY before any code) → `skills/thinking/investigate/SKILL.md` (Fact Sheet before implementation) → `skills/thinking/pre-mortem/SKILL.md` (Tiger/Paper Tiger/Elephant before implementation) |
+| Implement a new feature, refactor, or architecture change | `skills/think/SKILL.md` for proportionate preparation and actual task scope; investigate/pre-mortem are optional aids, not universal gates |
 | Fix a shipped bug (post-merge, found by user/reviewer/CI) | `skills/post-mortem/SKILL.md` (trace failure through skill pipeline) → then `skills/thinking/think/SKILL.md` for the fix |
 | Perform spatial / geographic analysis | `skills/analysis/SKILL.md` for named spatial analysis + `skills/spatial/SKILL.md`; generic geospatial operations select `spatial` |
 | Perform statistical modeling, graph analysis, or entity matching | `skills/analysis/SKILL.md` (no unpublished sub-skill is selected); text/NLP remains explicit-only pending evidence |
@@ -250,19 +230,19 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 
 These fire for every non-trivial action, regardless of whether a pattern above matched:
 
-0. **THINK FIRST** (the non-negotiable gate): for anything beyond a change to non-executable content only (markdown prose, comments with no functional effect, whitespace), read `skills/thinking/think/SKILL.md` and write a design note. Any change to `.sh`, `.py`, `.sql`, `.js`, `.ts`, or other executable code is non-trivial - the Junior cannot classify code changes out of the pipeline. If you can't state what you're about to do, why, what could go wrong, and what the rollback looks like - you are not ready to act. Every serious failure in this session traces back to skipping this. **Signal file:** after producing the design note, resolve the current host session and full task identity, then write that task's `think-gate.json` under `$CRAFT_SESSION_DIR/tasks/<task-slug>/` or `<workspace>/sessions/<session-id>/tasks/<task-slug>/`, following `skills/thinking/think/SKILL.md`. Declare the target repository and task scope; include falsifiable claims encoding design premises. Resume an existing gate only for that exact task within its authorized scope. A new task gets its own directory; never clear a shared-root signal or delete another active task's gate. If ownership is ambiguous, diagnose the binding and hold only the affected mutation. Complete and retire an owned task through Think's task-scoped lifecycle; deleting a signal is not required to start another task. Stale claims require re-examination, not inferred authority or release of a hold. **Class-of-bug fixes** (same pattern in multiple files) require at least one Schema A claim (file + grep + expected) asserting zero remaining unguarded instances. See #262, #338.
+0. **Understand and act:** read relevant current source and context, choose a proportionate approach, and implement within actual task scope. Where the host requires task binding, use the current session's own task. Do not require a separately posted design, pre-mortem or rank ceremony before every edit. See [skill:think].
 
 1. **Catalog-first**: if the action touches data that lives under a catalog (Unity Catalog, Hive Metastore), go through the catalog. Never write raw paths to bucket locations the catalog manages. Confirm the table's registered location BEFORE writing.
 
 2. **Brain-first** (borrowed from GBrain): before calling any external API or running any mutation, check if we have the answer / target already. Re-use before recreating. For shared-state writes outside git/PR workflow, apply the non-git mutation inversion design in `docs/non-git-mutation-inversion.md`: durable workflow first, evidence before external mutation, and no self-authorized bypasses.
 
-3. **Dependency-audit**: before writing code that calls external binaries, imports optional libraries, or connects to services, verify each dependency is present in the execution environment. `which <binary>`, `python3 -c "import <module>"`, or equivalent. Silent failure on missing dependencies is the most expensive class of bug — the code runs, produces no error, and does nothing. Every hook, script, and pipeline step must either (a) verify its dependencies at startup and fail loudly, or (b) document the dependency in a machine-readable manifest that a pre-merge check validates. For hooks and scripts, include a `Hook-Dependencies:` section in the self-review artifact listing each external binary, its category (safe: bash/git/python3; risky: jq/node/gh/glab/curl), and its fallback behavior (loud error / silent skip / N/A). Ref: #280 (14 jq calls silently failing), #286.
+3. **Dependency-audit**: verify relevant execution dependencies before relying on them. `which <binary>`, `python3 -c "import <module>"`, or equivalent. A missing dependency must produce a useful error rather than silent non-operation. Every hook, script, and pipeline step must either (a) verify its dependencies at startup and fail loudly, or (b) document the dependency in a machine-readable manifest that a pre-merge check validates. Document consequential dependencies and meaningful failure behavior in the existing review or manifest; no additional mandatory artifact section is required. Ref: #280 (14 jq calls silently failing), #286.
 
 4. **Verify-failure-premise**: before debugging a reported failure (someone else's report OR your own non-zero exit), confirm the work actually didn't durably commit. Look at **durable-commit evidence** (fsync / COMMIT / ACK / downstream-observable in a fresh transaction or process), NOT the failure signal. If evidence says the work succeeded, the reporter is the bug — trace the **causal path** from commit-point to signal-point (enumerate every step between durability and the FAILED status; bisect by instrumentation, not hunch). See `skills/thinking/verify-failure-premise/SKILL.md`. Iron law: state the evidence verdict (did-happen / didn't-happen / ambiguous) explicitly before picking an investigation layer; pin both pivots before tracing.
 
 5. **Test-before-bulk**: any batch operation (≥20 items) runs on 3–5 items first, verifies, then scales.
 
-6. **Ticket-required + Epic-in-project + Dependency-clear**: Any work that creates a change in state or behavior of the software that will impact the product requires a ticket. Typographical corrections with no functional effect are exempt. That ticket must belong to a project or epic — unprojected tickets are not worked. All blocking upstream tickets must be Done before you start. Include the ticket reference in every commit. Read `skills/planning/pre-work-check/SKILL.md` before starting any such work.
+6. **Track useful work:** maintain the existing task or PR with material decisions, outcomes and dependencies. An authorized operational request does not universally need a new ticket, board placement or completed upstream epic before independent work can start. Respect actual dependency conditions for the actions they affect.
 
 7. **Branch-correct**: read `skills/develop-guard/SKILL.md` and apply the target project's approved workflow. For the Siege scaffold, K5 requires feature/fix -> develop -> main. Other projects follow their independently approved integration and release policy. Branch existence or observed PR history does not authorize changing that policy. The guard owns mode detection and missing/stale integration-branch repair; use its procedure rather than inventing another route here.
 
@@ -270,21 +250,9 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 9. **No-attribution**: never add Claude/AI attribution to commits, PRs, or public-facing content.
 
-10. **Measure twice, cut once**: for destructive or irreversible actions (drops, deletes, force-push, hard-reset), confirm scope first. More broadly: the Junior optimizes for speed of one task; the Lead optimizes for speed of the project. Every 2-second check the agent skips costs the human operator hours of rework. The agent's seconds are cheap; the human's hours are not. This is not caution — it is resource allocation.
+10. **Verify consequences and completion:** verify targets before consequential destructive actions. Check actual behavior and delivery, not only source changes or artifact presence. Preserve real owner holds and protected operations.
 
-    **Done is not "code committed."** Done is all four:
-    - (a) code committed on feature branch
-    - (b) deployed to target environment (if applicable — hooks, configs, skills)
-    - (c) tested in target environment (not just the repo checkout)
-    - (d) pipeline-gate green (no warnings, no missing artifacts)
-
-    Each of (b), (c), (d) is a verification step. Each costs seconds. Skipping any of them is the Junior borrowing time from the human. If any of (a)–(d) is not satisfied, the task is in progress, not done.
-
-11. **Batch-execution is not one action**: when executing multiple tickets, issues, or tasks in sequence (epic breakdown, audit remediation, batch triage fixes), each ticket is a separate non-trivial action. Each gets its own `think` gate (design note), its own branch, its own self-review artifact. "I'm doing 8 tickets" is 8 actions, not 1 action done 8 times. No amortization of investigation, design, or review across tickets. The agent will take any excuse to skip per-ticket discipline during batch work — speed, momentum, "they're all similar," "I already understand the pattern." These are the Junior's rationalizations. The gates exist precisely for the moments when skipping them feels efficient.
-
-    **Mechanical test:** if you are about to commit work for ticket N+1 without having produced a design note for ticket N+1 specifically (not "the epic design note that covers all of them"), you are violating this check. Stop and produce the note.
-
-    **Interaction with test-before-bulk (#5):** test-before-bulk applies to batch data operations (20+ items). This check applies to batch ticket execution (2+ tickets). They are complementary: test-before-bulk prevents data damage from untested batch operations; batch-execution-is-not-one-action prevents quality damage from uninvestigated batch implementations. Both fire when the agent is doing "many of something."
+11. **Batch work:** retain clear scope and outcomes for each assignment, but reuse valid shared investigation, design and review evidence. Separate branches or records when ownership, behavior or delivery boundaries require them; do not duplicate ceremony solely because several related tickets exist.
 
 12. **Spawn-protocol**: Before dispatching a collaborator, apply [rule:session-coordination], section **Dispatch protocol**, for prior-work checks, isolation, supervision/checkpoints, durable artifacts, investigation preparation and creation-time configuration. Apply [rule:tandem-agent] for the role contract, permitted actions and re-review. Delegation does not expand existing authority or release an owner hold.
 
