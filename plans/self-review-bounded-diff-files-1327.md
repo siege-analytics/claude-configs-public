@@ -139,6 +139,7 @@ No aggregate count substitutes for individual scanner dispositions.
 | Ticket rubric rejected missing structured sections | Existing issue prose was not rubric-shaped | One evaluator run | Preserved body and appended structured sections; evaluator passed | Not timed |
 | Missing durable prerequisites | Memos were not created before editing | Source investigation existed only in tool history | Authorized truthful recovery plus independent review | Not timed |
 | Full-hook prerequisite/load failures | Clean worktree lacked dist and system Python dependency; parallel synthetic deadlines | Full hook run | Normal build, existing pinned venv, and bounded serial reruns | Not timed |
+| CI generated inventory check | New fixture inbound references were not regenerated | Failed run 43257031866 | Canonical inventory regeneration and generated-source authority checks; production/test bytes unchanged | Not timed |
 
 ## Evidence-predates-work
 

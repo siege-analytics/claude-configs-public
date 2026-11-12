@@ -53,6 +53,16 @@ logs are `/tmp/1327-coordinator-serial.log`, `/tmp/1327-project-status-serial.lo
 and `/tmp/1327-spawn-serial.log`. The focused producer reported four tests OK;
 standalone regression outputs supplied the counts recorded above.
 
+## Generated inventory CI repair
+
+CI run 43257031866 failed the generated-source authority check because the
+new fixture references were absent from the committed canonical inventory.
+Normal `bin/skill-inventory.py` regeneration updated the inbound-reference
+entries in `catalog/skills-inventory.json`; the generated-source authority
+check then passed. Production, focused test, and independent review artifact
+bytes were unchanged. This generated-only repair does not require repeating
+the source hook suite.
+
 ## Scanner and runtime boundaries
 
 The selected-source scanner completed with exit 1 and 31 findings. It is
