@@ -29,3 +29,13 @@ The hosted Skill inventory fixtures/freshness step stopped in `ReviewDisclosure`
 Executed after repair: frontmatter validation passed; ReviewDisclosure seven tests passed (including the section subcases); skill inventory fixtures passed; inventory freshness and diff checks passed. Root independently inspected and accepted the exact single-file test delta before publication. Hosted CI rerun remains pending; these local results do not claim hosted or runtime acceptance.
 
 Root also identified stale rank framing in the optional checklist introduction. The concise follow-up removes the two-role claim and labels the surviving domain/method reference accurately; substantive domain checks are unchanged. Canonical metadata is refreshed for the authored Markdown change, with disclosure/support closure tests rerun before publication.
+
+## Combined explicit Done-grant integration
+
+The repository requires an up-to-date protected base. Rather than serially merge the separately reviewed Done capability and repeat the full required build, PR #1334 now preserves that exact feature commit as a merge parent and integrates #1331. PR #1333 remains historical source/review/green-CI evidence, superseded by this combined delivery. No protection or required check is waived.
+
+Root executed the combined actual tree: Status 14/14, project scope 14/14, lean Task 5/5, lean publication 5/5 and real disclosure/parser/support-closure 7/7 passed. The canonical validate-local refresh completed successfully with no generated delta. The original #1333 hosted build 43268616858 independently completed successfully; final integrated hosted CI remains required.
+
+The complete staged integration scanner exited 1/non-clean with 62 findings (raw SHA256 303aa90dd46a2ac396eee0d217a5ae07dc1debc87a9930e5c0ce8a174dccc4d2). Every normalized path/rule/description entry is a multiset subset of the reviewed Core1328 final-v3 scan. Resolver exception-handler ASTs exactly match preintegration 3956bda1; the production delta changes the explicitly installed Status vocabulary only. Existing independently reviewed dispositions and #1329 debt remain applicable; no clean scan is claimed.
+
+Bounded_reader independently inspected the actual staged three-file integration tree 65d03ae4c86864d33be0c01e1b4236029a3b83d6 and accepted it with no blocking finding: empty defaults, current-session implementing Task/exact canonical Issue binding, installed owner/project/field/value proofs and current-Done reset rejection remain intact. This review precedes the merge commit; this appended evidence paragraph adds no behavior. Native/runtime acceptance still depends on canonical publication, client import and actual installed observations.
