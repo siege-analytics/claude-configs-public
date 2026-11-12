@@ -53,6 +53,9 @@ grant removes Done permission without changing other board operations.
 
 ## Independent review
 
-Actual independent source review is requested before publication. This record
-will link that review and its specific revision; this pending statement is not
-an approval.
+Root independently reviewed commit `5156f4c3db1e1b264755aa2ad6a9f312a60e2503`
+and accepted with no blocking finding: the two-line vocabulary change retains
+the explicit-value/project/current-Task/field proofs, unchanged empty default
+policy and current-Done reset guard; actual tests cover grant and foreign
+identities. This review was communicated directly on 2026-11-12; Root will post
+the direct review on PR #1332. CI remains pending; no full-suite claim is made.
