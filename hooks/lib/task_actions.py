@@ -1174,6 +1174,9 @@ def reader(args: list[str]) -> bool:
         if not rest:
             return False
         sub, opts = rest[0], rest[1:]
+        if sub == "diff-files":
+            # Reuse the authoritative bounded grammar for companion mutations.
+            return _released_read_classifier().git_ok(args[1:])
         if any(a.startswith(("--output", "--ext-diff", "--textconv", "--exec", "-o")) for a in opts):
             return False
         if sub == "reflog":
