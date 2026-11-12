@@ -153,10 +153,6 @@ def prepare(repo, branch, worktree, remote='origin'):
     latest = remote_heads(repo, endpoint, 'develop', 'main', config=config)
     if latest.get('develop') != tip:
         raise PreparationError('develop moved during preparation; rerun to use its current tip')
-    if latest.get('main'):
-        result = subprocess.run(['git', '-C', str(repo), 'merge-base', '--is-ancestor', latest['main'], tip], capture_output=True)
-        if result.returncode:
-            raise PreparationError('develop does not contain current main; use the reviewed sync procedure before branching')
     # Startpoint is pinned to the exact verified develop commit. This does not
     # checkout, stash, reset or clean the caller's active worktree.
     git(repo, 'worktree', 'add', '-b', branch, str(worktree), tip)

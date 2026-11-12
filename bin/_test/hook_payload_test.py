@@ -62,6 +62,18 @@ class Payload(unittest.TestCase):
             with self.assertRaises(ValueError):
                 binding(value)
 
+    def test_turn_binding_excludes_lazy_blockquote_continuations(self):
+        binding = payload.turn_task_binding
+        for quoted in ('> Example task:', '   > Example task:', '> > Example task:',
+                       '> Example task:\ncontinued quoted paragraph'):
+            with self.subTest(quoted=quoted):
+                prompt = quoted + '\nCCP_TASK_ID=o/r#other'
+                self.assertEqual(binding({'prompt': prompt}), '')
+                self.assertEqual(binding({'task_id': 'o/r#1292', 'prompt': prompt}), 'o/r#1292')
+                self.assertEqual(binding({'prompt': prompt + '\n\nCCP_TASK_ID=o/r#1292'}), 'o/r#1292')
+        self.assertEqual(binding({'prompt': '> Example task:\n>\nCCP_TASK_ID=o/r#other'}), '')
+        self.assertEqual(binding({'prompt': '```text\n> Example task:\n```\nCCP_TASK_ID=o/r#1292'}), 'o/r#1292')
+
     def test_non_bash_command_uses_only_metadata_limit(self):
         value = {'tool_name': 'mcp__fixture', 'tool_input': {'command': 'x' * 70000}}
         self.assertEqual(json.loads(payload.metadata_environment(value)), value)

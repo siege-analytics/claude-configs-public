@@ -47,6 +47,7 @@ ARTIFACT_HEADING_LINE = re.compile(
 APPROVED_ASSOCIATIONS = {'OWNER', 'MEMBER', 'COLLABORATOR'}
 INVESTIGATION_STEMS = ('findings', 'citations', 'disposition', 'fact sheet', 'investigation', 'verified', 'evidence')
 PREMORTEM_STEMS = ('severity:', 'tiger', 'risks', 'pre-mortem', 'elephant', 'paper tiger', 'mitigation')
+SELFREVIEW_STEMS = ('peer review', 'lead review', 'syntax check', 'rework ledger', 'findings')
 COMMENT_QUERY = '.[] | {author: .user.login, association: .author_association, body: .body} | @json'
 # The PR identity read resolve-think-gate.py already makes for review actions
 # (#1274). An artifact heading naming the current ticket's own PR is resolved
@@ -791,7 +792,8 @@ if status == 'implementing' and current_ticket:
                                  or sum(stem in text for stem in junior_stems) >= 3
                                  or sum(stem in text for stem in senior_stems) >= 5
                                  or sum(stem in text for stem in INVESTIGATION_STEMS) >= 3
-                                 or sum(stem in text for stem in PREMORTEM_STEMS) >= 3)
+                                 or sum(stem in text for stem in PREMORTEM_STEMS) >= 3
+                                 or sum(stem in text for stem in SELFREVIEW_STEMS) >= 3)
                     if not trusted and (not candidate or not permissions(author)):
                         continue
                     # Expensive PR relationship reads remain restricted to
@@ -885,10 +887,7 @@ if status == 'implementing' and current_ticket:
     selfreview_posted = True
     if review:
         selfreview_posted = False
-        selfreview_stems = [
-            'peer review', 'lead review', 'syntax check',
-            'rework ledger', 'findings',
-        ]
+        selfreview_stems = SELFREVIEW_STEMS
         try:
             if result.returncode == 0 and comments:
                 sr_hits = sum(1 for s in selfreview_stems if s in comments)

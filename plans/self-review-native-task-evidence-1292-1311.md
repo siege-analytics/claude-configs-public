@@ -39,3 +39,9 @@ A composed red-first case exposed loss of an explicit Task directive in an 8 KB 
 ## Canary and rollback
 
 Verify exact published manifest/archive bytes, then normal managed flat installation with settings/hold preservation. Verify genuine native task selection and companion derivation, own exact-file allow and foreign-file denial/absence. A failed native result is not repaired by forging companions or closing unrelated active Tasks. Retain the prior immutable release and registration/managed-file backups for normal rollback. Source CI and generated manifests do not claim whole-library completion.
+
+## Promotion review corrections
+
+Promotion review reproduced two bounded missed cases: a lazy Markdown quote continuation could select another own-session Task, and a separately posted self-review could be skipped by the cheap author-attestation candidate filter despite satisfying the final self-review detector. The selector now conservatively requires a blank separator after quoted material; the candidate and final self-review detectors share the same stems. Red-first controls cover both; mutation scope and exact-repository author attestation remain unchanged. Steward succession now explicitly keeps steward children at peer workspace level while reparenting non-steward children.
+
+The existing issue/comment and actor reads can consume the writer deadline before attestation begins. This is the previously recorded complete-hook timing limitation in #1307, not a newly guaranteed end-to-end bound. Timeout exhaustion still grants nothing. Full invocation budgeting, including selection, original reads and signal-write reserve, remains that explicit follow-up rather than a blanket timeout increase or an authority exemption.

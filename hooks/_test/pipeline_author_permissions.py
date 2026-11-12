@@ -38,17 +38,29 @@ def permission(value='admin', author='maintainer', **extra):
 
 
 class AuthorPermissions(unittest.TestCase):
-    def run_chain(self, response, records=None, actor=None, extra_env=None):
+    def run_chain(self, response, records=None, actor=None, extra_env=None, local_review=False):
         case = fixture.WriterGateChain(methodName='runTest')
         case.setUp()
         self.addCleanup(case.doCleanups)
         fake = fixture.FAKE_GH.replace("assert args[:2] == ['api', 'repos/o/r/issues/1164/comments'], args", PERMISSION_GH + "\nassert args[:2] == ['api', 'repos/o/r/issues/1164/comments'], args")
         env = dict(fixture.ENV, TEST_PERMISSION=json.dumps(response), **(extra_env or {}))
         comments = records or [fixture.comment('Ticket: o/r#1164\n' + fixture.H, 'maintainer', 'CONTRIBUTOR')]
-        with mock.patch.object(fixture, 'FAKE_GH', fake), mock.patch.object(fixture, 'ENV', env):
+        original_run = fixture.subprocess.run
+        def run(command, **kwargs):
+            if local_review and len(command) > 1 and command[1] == str(fixture.LIB / 'pipeline_state.py'):
+                workspace = __import__('pathlib').Path(command[3])
+                original_run(['git', 'init', '-q', str(workspace)], check=True)
+                changed = workspace / 'changed.py'
+                changed.write_text('before')
+                original_run(['git', '-C', str(workspace), 'add', 'changed.py'], check=True)
+                (__import__('pathlib').Path(kwargs['cwd']) / 'plans/self-review-local.md').write_text('o/r#1164\nPeer review complete.')
+            return original_run(command, **kwargs)
+        with mock.patch.object(fixture, 'FAKE_GH', fake), mock.patch.object(fixture, 'ENV', env), mock.patch.object(fixture.subprocess, 'run', side_effect=run):
             start = time.monotonic()
             flags, exits = case.chain('permission', comments, actor)
             elapsed = time.monotonic() - start
+        task = __import__('pathlib').Path(case.tmp.name) / 'permission/workspace/sessions/fixture-session/tasks/t'
+        self.selfreview_posted = json.loads((task / 'artifacts-posted-gate.json').read_text())['selfreview_posted']
         log = __import__('pathlib').Path(case.tmp.name) / 'permission/permission-calls.jsonl'
         calls = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
         return flags, exits, calls, elapsed
@@ -63,6 +75,13 @@ class AuthorPermissions(unittest.TestCase):
     def test_installation_user_failure_exact_admin_author_counts(self):
         calls, _ = self.assert_chain(permission(), True)
         self.assertEqual(calls[0][:2], ['api', 'repos/o/r/collaborators/maintainer/permission'])
+        self.assertEqual(len(calls), 1)
+
+    def test_separate_selfreview_author_gets_exact_permission_attestation(self):
+        records = [fixture.comment('Ticket: o/r#1164\n' + fixture.H, 'trusted', 'MEMBER'),
+                   fixture.comment('Ticket: o/r#1164\nPeer review; lead review; syntax check.', 'maintainer', 'CONTRIBUTOR')]
+        calls, _ = self.assert_chain(permission(), True, records=records, local_review=True)
+        self.assertTrue(self.selfreview_posted)
         self.assertEqual(len(calls), 1)
 
     def test_write_and_maintain_count_without_role_name_upgrade(self):
@@ -91,7 +110,9 @@ class AuthorPermissions(unittest.TestCase):
         self.assertEqual(calls, [])
 
     def test_quotes_examples_and_non_artifacts_do_not_spend_lookup(self):
-        for body in ['> ' + fixture.H.replace('\n', '\n> '), '```\n' + fixture.H + '\n```', 'ordinary discussion only']:
+        selfreview = 'Peer review; lead review; syntax check.'
+        for body in ['> ' + fixture.H.replace('\n', '\n> '), '```\n' + fixture.H + '\n```', 'ordinary discussion only',
+                     '> ' + selfreview, '```\n' + selfreview + '\n```', 'peer review; lead review only']:
             with self.subTest(body):
                 calls, _ = self.assert_chain(permission(), False, records=[fixture.comment(body, 'maintainer', 'CONTRIBUTOR')])
                 self.assertEqual(calls, [])
