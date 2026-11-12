@@ -106,6 +106,36 @@ by #1166. Until that lands, a refusal there is a known gap, not something to
 work around with broader scope. Work outside any Git repository keeps its normal
 operational route; a non-Git directory is not given a made-up Git identity.
 
+**Canonical issue reports from non-Git data (#1319).** An existing own-session
+Task may post descriptive evidence to its exact full `owner/repo#issue` without
+a Git-backed scope witness. For a report prepared outside every Git repository,
+declare the truthful absolute private report directory under this session's
+`data/` as `repo_root` and its actual report paths as `scope_paths`. Keep the
+full canonical ticket and current host-resolved `sessionId` in that Task's own
+`tasks/<stable-slug>/think-gate.json`. Record its real status, such as
+`reviewing`; reporting does not require an implementing Task or code artifacts.
+Do not invent a clone or dummy Git witness, or borrow another Task's artifacts.
+The Git-backed scratch execution rules above still apply when a repository
+physically contains the work.
+
+Use an explicit literal repository or canonical issue URL, for example:
+
+```bash
+CCP_TASK_ID='owner/repo#803' gh issue comment 803 --repo owner/repo --body 'Review complete; the owner hold remains.'
+CCP_TASK_ID='owner/repo#803' gh issue comment https://github.com/owner/repo/issues/803 --body-file /absolute/own-session/data/review/report.txt
+```
+
+A file operand must be a bounded UTF-8 regular text file (at most 1 MiB),
+physically inside the current session's `data/` and claimed by the selected
+Task. Sensitive credential paths, symlinks within that private path boundary,
+hardlinks and foreign or unclaimed files are rejected; benign suffixes and
+hidden report names do not confer or remove authority. Literal inline text
+does not require a file operand, but still requires that Task's own private
+data scope. A binding selects an existing Task; missing or ambiguous ownership,
+foreign tickets/repositories/sessions and host overrides do not gain authority.
+This route grants descriptive issue comments only, not code mutation, state
+changes, review approval, merge, general API access or release of an owner hold.
+
 A positive reader classifier runs before gate lookup. Bounded diagnostics
 (syntax checks, standard test/bytecode/lint commands, document/package readers,
 and Git fetch) are also allowed without artifacts during designing/reviewing.
