@@ -1094,6 +1094,10 @@ def reader(args: list[str]) -> bool:
     if not args:
         return False
     cmd, rest = args[0], args[1:]
+    if cmd == "curl":
+        # Reuse the shared exact diagnostic grammar when another segment has
+        # effects; curl's version component contributes no guessed cwd write.
+        return _released_read_classifier().simple_ok(args)
     if cmd in {"cat", "head", "tail", "less", "more", "wc", "file", "stat", "du", "df", "which", "readlink", "realpath", "md5", "sha256sum", "shasum", "xxd", "od", "hexdump", "ls", "cmp", "comm", "pwd", "dirname", "basename", "uname", "whoami", "id", "true", "false", "test", "[", "echo", "printenv"}:
         # xxd -r reverses into an output file; file -C compiles a database.
         if cmd == "xxd":
