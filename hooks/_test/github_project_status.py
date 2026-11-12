@@ -130,12 +130,45 @@ else:
         self.hook(EDIT + '; ' + EDIT, 2)
         self.assertFalse(self.calls.exists())
 
-    def test_policy_cannot_grant_done_other_fields_or_duplicate_values(self):
-        for patch in [{'values':['Done']}, {'field_name':'Priority'}, {'values':['In Progress','In Progress']}]:
+    def test_policy_cannot_grant_other_values_fields_or_duplicate_values(self):
+        for patch in [{'values':['Closed']}, {'field_name':'Priority'}, {'values':['In Progress','In Progress']}]:
             with self.subTest(patch=patch):
                 self.f.policy.write_text(json.dumps({'schema_version':1,'grants':[{**GRANT,**patch}]}))
                 self.hook(code=2)
         self.assertFalse(self.calls.exists())
+
+    def test_done_needs_its_explicit_installed_value_grant(self):
+        done = EDIT.replace('progress', 'done')
+        self.hook(done, 2)
+        grant = {**GRANT, 'values':['Done']}
+        self.f.policy.write_text(json.dumps({'schema_version':1, 'grants':[grant]}))
+        completed = copy.deepcopy(REPLY)
+        # Business completion is context, not a new Core Issue-state gate.
+        completed['data']['item']['content']['state'] = 'CLOSED'
+        self.reply.write_text(json.dumps(completed))
+        self.hook(done)
+        self.hook(EDIT, 2)
+        self.hook(EDIT.replace('progress', 'review'), 2)
+
+    def test_done_grant_does_not_expand_task_project_owner_or_field(self):
+        self.f.policy.write_text(json.dumps({'schema_version':1, 'grants':[{**GRANT, 'values':['Done']}]}))
+        done = EDIT.replace('progress', 'done')
+        for name, change in [
+                ('foreign-task', lambda value:value['data']['item']['content'].update(number=3301, url='https://github.com/electinfo/enterprise/issues/3301')),
+                ('foreign-project', lambda value:value['data']['item']['project'].update(number=2)),
+                ('foreign-owner', lambda value:value['data']['item']['project']['owner'].update(login='other')),
+                ('foreign-field', lambda value:value['data']['field']['project'].update(id='other'))]:
+            with self.subTest(name=name):
+                value = copy.deepcopy(REPLY); change(value)
+                self.reply.write_text(json.dumps(value)); self.hook(done, 2)
+
+    def test_done_grant_cannot_reset_an_already_done_item(self):
+        self.f.policy.write_text(json.dumps({'schema_version':1, 'grants':[{**GRANT, 'values':['In Progress','In Review','Done']}]}))
+        value = copy.deepcopy(REPLY)
+        value['data']['item']['status'] = {'__typename':'ProjectV2ItemFieldSingleSelectValue', 'optionId':'done', 'field':{'id':'PVTSSF_status'}}
+        self.reply.write_text(json.dumps(value))
+        for option in ('progress', 'review', 'done'):
+            with self.subTest(option=option):self.hook(EDIT.replace('progress', option), 2)
 
     def test_timeout_stops_descendant_writer(self):
         import time

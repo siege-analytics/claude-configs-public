@@ -1266,9 +1266,9 @@ def project_policy() -> list:
             raise ValueError('invalid GitHub project standing grant values')
         if extra and (grant['field_name'] != 'Status' or grant['field_type'] != 'SINGLE_SELECT'
                       or not isinstance(grant['values'], list) or not grant['values']
-                      or any(v not in ('In Progress', 'In Review') for v in grant['values'])
+                      or any(v not in ('In Progress', 'In Review', 'Done') for v in grant['values'])
                       or len(set(grant['values'])) != len(grant['values'])):
-            raise ValueError('item-edit grant is limited to Status In Progress/In Review')
+            raise ValueError('item-edit grant is limited to Status In Progress/In Review/Done')
         key = (grant['host'], grant['owner'].lower(), grant['project'], grant['issue_owner'].lower(), grant['operation'])
         if key in seen:
             raise ValueError('ambiguous duplicate GitHub project standing grants')
