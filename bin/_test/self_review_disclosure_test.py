@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Preserved review contracts, real flat assets and native parser outcomes."""
-import hashlib
 import importlib.util
 import os
 from pathlib import Path
@@ -18,13 +17,6 @@ SKILL = ROOT / "skills/self-review"
 spec = importlib.util.spec_from_file_location("compose_review_fixture", ROOT / "bin/compose-project.py")
 compose = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(compose)
-# Template/fields retain baseline7e1 bytes. The checks pin includes the
-# reviewed project-tooling correction after extraction (PR1203 findings).
-EXPECTED = {
-    "template": "75604494106ee6254c54ef657a739081c240ecd13ca6335cde3d396a8cb9a5f5",
-    "fields": "5b844bcc2a023e7a1a18dc6f8a7fe72d5138d39aad67583a5bac26cd80e5171a",
-    "checks": "fe89f4c4c025589717e91736e88ba5b6181a72ba0ddc5039c3b3116fa152400b",
-}
 
 
 class ReviewDisclosure(unittest.TestCase):
@@ -55,29 +47,27 @@ class ReviewDisclosure(unittest.TestCase):
         self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
         return result
 
-    def test_template_and_detailed_contracts_are_verbatim(self):
-        contract = (SKILL / "artifact-contract.md").read_bytes()
-        split = contract.index(b"## Pre-author-inventory field\n")
-        regions = {
-            "template": contract[contract.index(b"## Artifact format\n"):split],
-            "fields": contract[split:],
-        }
-        checks = (SKILL / "review-checklists.md").read_bytes()
-        regions["checks"] = checks[checks.index(b"## Domains and roles\n"):]
-        for name, content in regions.items():
-            self.assertEqual(hashlib.sha256(content).hexdigest(), EXPECTED[name], name)
+    def test_compact_contract_keeps_actual_evidence_and_independence(self):
+        contract = (SKILL / "artifact-contract.md").read_text()
+        template = re.search(r"```markdown\n(.*?)```", contract, re.S).group(1)
+        for heading in ("Assumptions", "Test plan", "Findings", "Independent review"):
+            self.assertIn("## " + heading, template)
+        for substance in ("actually consulted", "Actual commands and results",
+                          "reviewed revision/scope", "cannot manufacture independence",
+                          "Do not backdate", "non-clean scanner output clean"):
+            self.assertIn(substance, contract)
 
     def test_project_verification_contract_is_not_python_specific(self):
         entry = (SKILL / "SKILL.md").read_text()
+        contract = (SKILL / "artifact-contract.md").read_text()
         checks = (SKILL / "review-checklists.md").read_text()
-        lead = checks.split("5. **Did the Junior run the mechanical verification gates?**", 1)[1]
-        self.assertIn("Use the actual project test runner", entry)
-        self.assertIn("selected project's actual test", lead)
-        self.assertIn("Always\n     required for projects with a test suite", lead)
-        self.assertIn("plain Markdown without a builder", lead)
-        self.assertIn("Record the actual command and result", lead)
-        self.assertNotIn("evidence line for `pytest`. Always required", lead)
-        self.assertNotIn("evidence line for `sphinx-build`. Required", lead)
+        self.assertIn("Run checks appropriate to the change", entry)
+        self.assertIn("Record the command, actual result and limitations", entry)
+        self.assertIn("affected component's regression suite", entry)
+        self.assertIn("Actual commands and results", contract)
+        self.assertIn("tests demonstrate the behavior and important failure cases", checks)
+        self.assertNotIn("evidence line for `pytest`. Always required", checks)
+        self.assertNotIn("evidence line for `sphinx-build`. Required", checks)
 
     def test_dispatch_example_creates_a_named_task_branch_from_remote_ref(self):
         rules = (ROOT / "skills/_session-coordination-rules.md").read_text()
@@ -157,7 +147,8 @@ class ReviewDisclosure(unittest.TestCase):
                 sibling = target / name
                 self.assertTrue(sibling.is_file(), form + ":" + name)
                 self.assertFalse(sibling.read_text().startswith("---"))
-                self.assertIn("](" + name + "#", entry)
+                if name == "artifact-contract.md":
+                    self.assertIn("](" + name + "#", entry)
             # Validate real outgoing links from the changed entry/support files.
             # Other package paths remain available targets without revalidating
             # every unrelated legacy skill's Markdown in this focused test.
@@ -166,7 +157,8 @@ class ReviewDisclosure(unittest.TestCase):
                 files[path.relative_to(package).as_posix()] = path.read_bytes()
             compose.validate_packaged_links(files)
             self.support_fragments(entry, target)
-            self.assertIn("review-checklists.md#lead-review-the-leads-adversarial-pass", entry)
+            # Optional checklists remain packaged, without a mandatory role-stage link.
+            self.support_fragments("[Methods](review-checklists.md#review-perspective)", target)
             self.assertNotIn(str(ROOT), entry)
 
     def test_missing_required_support_and_invalid_fragments_fail(self):
@@ -175,7 +167,13 @@ class ReviewDisclosure(unittest.TestCase):
         entry = (target / "SKILL.md").read_text()
         self.support_fragments(entry, target)
         with self.assertRaisesRegex(ValueError, "missing required review fragment"):
-            self.support_fragments(entry.replace("#lead-review-the-leads-adversarial-pass", "#missing-lead-section"), target)
+            self.support_fragments(entry.replace("#artifact-format", "#missing-artifact-section"), target)
+        methods = "[Methods](review-checklists.md#review-perspective)"
+        with self.assertRaisesRegex(ValueError, "missing required review fragment"):
+            self.support_fragments(methods.replace("#review-perspective", "#missing-method"), target)
+        (target / "review-checklists.md").unlink()
+        with self.assertRaisesRegex(ValueError, "missing required review support"):
+            self.support_fragments(methods, target)
         (target / "artifact-contract.md").unlink()
         with self.assertRaisesRegex(ValueError, "missing required review support"):
             self.support_fragments(entry, target)
@@ -201,16 +199,17 @@ class ReviewDisclosure(unittest.TestCase):
 
     def test_tier_c_extracted_template_keeps_required_sections_and_trailers(self):
         contract = (SKILL / "artifact-contract.md").read_text()
-        template = contract.split("```\n", 1)[1].split("```", 1)[0]
+        template = re.search(r"```markdown\n(.*?)```", contract, re.S).group(1)
         path = self.repo / "review.md"
         # Placeholder values model structural input only; not a completed real review.
         path.write_text(template)
-        trailers = ("Hostile-Review: review.md\nNegative-Tests: fixture denial\n"
-                    "Full-Suite: fixture only\nCanary-Rollback: disposable fixture\n")
+        trailers = "Hostile-Review: review.md\n"
         self.native_check(self.message("C", trailers))
-        path.write_text(template.replace("## Lead review", "Lead section removed"))
-        denied = self.native_check(self.message("C", trailers), 1)
-        self.assertIn("## Lead review", denied.stdout + denied.stderr)
+        for heading in ("Assumptions", "Test plan", "Findings", "Independent review"):
+            with self.subTest(missing=heading):
+                path.write_text(template.replace("## " + heading, heading + " section removed"))
+                denied = self.native_check(self.message("C", trailers), 1)
+                self.assertIn("## " + heading, denied.stdout + denied.stderr)
         path.write_text(template)
         # Baseline set-e behavior can deny a missing trailer before printing a
         # diagnostic. This extraction preserves rejection, not new diagnostics.
