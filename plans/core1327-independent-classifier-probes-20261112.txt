@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+"""Classification-only review probes. Run with Python3.11 and repository path."""
+from pathlib import Path
+import hashlib, importlib.util, json, sys
+from unittest import mock
+repo=Path(sys.argv[1]).resolve()
+sys.dont_write_bytecode=True
+for relative,expected in {'hooks/lib/read-only-command.py':'43aaa9876aba1652a65041c5f70fb71732244e6a','hooks/lib/task_actions.py':'4e69b946a9b03836552906bb7b302b86bac5660a'}.items():
+    raw=(repo/relative).read_bytes()
+    actual=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
+    assert actual==expected,(relative,actual,expected)
+sys.path.insert(0,str(repo/'hooks/lib'))
+spec=importlib.util.spec_from_file_location('review1327_reader',repo/'hooks/lib/read-only-command.py')
+reader=importlib.util.module_from_spec(spec);spec.loader.exec_module(reader)
+import task_actions
+checks=[]
+def check(name,actual,expected):
+    assert actual==expected,(name,actual,expected)
+    checks.append(name)
+check('exact literal probe reader',reader.main('git -C /synthetic/owned diff-files --quiet'),0)
+for suffix in ['', '-q','--quiet --ext-diff','--quiet --textconv','--quiet --output=x','--quiet -ox','--quiet --help','--quiet --unknown','--quiet --exit-code','--quiet -- tracked','--quiet $OPTS','--quiet "${OPTS}"']:
+    check('reject diff-files '+suffix,reader.main('git diff-files '+suffix)!=0,True)
+for command in ['git -c diff.external=evil diff-files --quiet','git --config-env=diff.external=EVIL diff-files --quiet','git diff-files --quiet > outside','git diff-files --quiet | tee outside','git diff-files --quiet; touch outside','git diff-files --quiet && bash evil.sh']:
+    check('reject '+command,reader.main(command)!=0,True)
+for error in [ValueError,TypeError,KeyError]:
+    with mock.patch.object(task_actions,'github_graphql',side_effect=error('review injected invalid GraphQL')):
+        check('gh_ok '+error.__name__+' maps to not proven read',reader.gh_ok(['api','graphql','-f','query={viewer{login}}']),False)
+        check('new probe prefix rejects malformed GraphQL '+error.__name__,reader.main('git diff-files --quiet && gh api graphql -f query=bad')!=0,True)
+for error in [ValueError,SyntaxError]:
+    with mock.patch.object(task_actions.ast,'parse',side_effect=error('review injected malformed Python')):
+        check('_python_read '+error.__name__+' maps to not proven read',task_actions._python_read(['python3','-I','-c','print(1)']),False)
+check('lead_verbs malformed quotes sentinel',reader.lead_verbs("cat '"),{'?'})
+check('main malformed quotes not proven read',reader.main("cat '")!=0,True)
+compound=task_actions.action('git -C /synthetic/owned diff-files --quiet && touch /synthetic/other/file','/synthetic/owned')
+check('probe does not donate mutation authority',(compound['read_only'],compound['paths']),(False,['/synthetic/other/file']))
+print(json.dumps({'passed':len(checks),'failed':0,'checks':checks},indent=2))
