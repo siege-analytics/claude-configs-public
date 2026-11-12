@@ -6188,6 +6188,7 @@
         "plans/self-review-718-orphan-dispatch.md",
         "plans/self-review-867-hub-rule-count.md",
         "skills/KERNEL.md",
+        "skills/_strategic-agency-rules.md",
         "skills/_tandem-agent-rules.md",
         "skills/_ticket-lifecycle-rules.md",
         "skills/ask-questions/SKILL.md",
@@ -6497,10 +6498,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 3858,
-      "content_sha256": "512b9bd8d4b7becc72de18297c0788e31117fd22828cca1cb5044bdaf9be7234",
+      "characters": 4564,
+      "content_sha256": "f929c91c8b2cebf4f981a14ebd0fec23783401a01591944b8179805ed9b1dc65",
       "description": "Always-on. Mission-first doctrine for hubs and workers. Skills exist to help agents accomplish strategic goals by deriving and advancing tactical goals with bounded initiative. Agents should keep moving when tactical ordering is safe and non-critical, and should ask for guidance when the choice affects strategy, authorization, risk, or operator control.",
-      "estimated_tokens": 965,
+      "estimated_tokens": 1141,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -6520,7 +6521,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 30,
+      "lines": 32,
       "owner": [
         "unknown"
       ],
@@ -12987,9 +12988,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2645826,
+    "characters": 2646532,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 661536,
+    "estimated_tokens": 661712,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13010,7 +13011,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1249432
+      "unclassified": 1250138
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13022,7 +13023,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 312402
+      "unclassified": 312578
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
