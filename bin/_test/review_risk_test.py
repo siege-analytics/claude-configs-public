@@ -301,7 +301,7 @@ hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
 hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "ca9feb1bec965a3f88591805c0e35ff9861062308f3db81593dbf9be7a8b7a08"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "e219f469593464d6bf79b47cf05d86e623e6bed72cc52b2af2c2bebaefdf3604"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "30172ea93510731018bac4fc6e7003ee70e91a12111aa0493de912478a517e2d"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
@@ -569,7 +569,7 @@ def ci_site_problems(overrides:dict[str,str]|None=None)->list[tuple]:
  return problems
 
 # Paired helper calls serve the action/typed-reply consumers and turn metadata/binding.
-REQUIRED_HELPER_INVOCATION_SITE_COUNTS = {("hooks/bash/coordinator-status-guard.sh","hooks/lib/task_actions.py"):2, ("hooks/resolver/pipeline-state-guard.sh","hooks/lib/hook_payload.py"):2}
+REQUIRED_HELPER_INVOCATION_SITE_COUNTS = {("hooks/bash/coordinator-status-guard.sh","hooks/lib/git_command.py"):2, ("hooks/bash/coordinator-status-guard.sh","hooks/lib/task_actions.py"):2, ("hooks/resolver/pipeline-state-guard.sh","hooks/lib/hook_payload.py"):2}
 
 def verify_dependency_graph()->None:
  source_settings,manifest,generated_settings=entrypoint_surfaces()

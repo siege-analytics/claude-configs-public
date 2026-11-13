@@ -29,3 +29,11 @@ External Root inspected the successive actual diffs and independently reproduced
 This record claims source/admission-fixture behavior only, not installed-source delivery, hosted CI success, live API result validity or mission completion. No runtime/Main mutation or gate bypass is included.
 
 Final staged scan completed with exit0. The genuine unbound three-source test-evidence producer reran the six maintained methods at final bytes: PASS3.101s.
+
+## Hosted dependency-pin follow-through
+
+Hosted run43393770993 failed the maintained helper invocation-site digest. Comparing actual site sets against b030 proved one added executable import, `from git_command import literal_prefix`; no removed sites or changed dependency edges. Updated the exact digest to e219f469593464d6bf79b47cf05d86e623e6bed72cc52b2af2c2bebaefdf3604 and the coordinator-to-git_command invocation count from one to two. All existing dependency removal/duplication falsification controls remain unchanged. The production hook remains af53df0a609b176a1a834144929553375bff04285610c5b3e323c8b3249a2bc9.
+
+The complete local hosted risk step passed: review_risk_test.py PASS, review_risk_policy.test.sh 13 passed/0 failed, and review-risk-metrics.py --check current. A separate dependency-graph run also passed its removal/duplication controls. Official reference/build/inventory/source-authority checks passed without generated changes. These local results do not claim hosted acceptance.
+
+Root independently recomputed the one added site and its count, and confirmed removing or duplicating it is rejected. The staged repair scan completed with one inherited finding at review_risk_test.py:487: its unchanged SyntaxError handler cannot establish a helper chain, so the caller's missing-edge/digest checks fail closed. The maintained malformed-source regression and full dependency tests passed. This is not a clean scan claim.
