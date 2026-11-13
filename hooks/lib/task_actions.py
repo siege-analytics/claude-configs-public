@@ -1202,7 +1202,7 @@ def reader(args: list[str]) -> bool:
         return sub in {"stash", "worktree"} and bool(opts) and opts[0] == "list"
     if cmd == "gh" and rest:
         if rest[0] == "api":
-            return not any(a in {"-X", "--method", "--input", "--raw-field", "--field", "-f", "-F"} or a.startswith(("-X", "-f", "-F", "--method=", "--input=", "--field=", "--raw-field=")) for a in rest[1:])
+            return _released_read_classifier().gh_ok(rest)
         return len(rest) >= 2 and (rest[0], rest[1]) in {(x, y) for x in {"issue", "pr", "release", "run"} for y in {"view", "list", "checks", "diff", "status"}} | {("repo", "view")}
     return False
 
