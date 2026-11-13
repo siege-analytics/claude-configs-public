@@ -4,6 +4,8 @@
 from __future__ import annotations
 import argparse
 import copy
+from contextlib import contextmanager
+import fcntl
 import hashlib
 import importlib.util
 import json
@@ -20,10 +22,14 @@ import time
 sys.dont_write_bytecode = True
 EVENTS = ('UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'PostToolUseFailure')
 RELATIVE = Path('.claude/hooks/siege-project-bootstrap.py')
+RECEIPT = Path('.claude/hooks/siege-project-bootstrap.json')
+BOOTSTRAP_ABI = 'siege-project-settings/v1'
+PUBLISH_LOCK = Path('.claude/hooks/siege-project-bootstrap.lock')
 LIMIT = 1024 * 1024
-ADVICE = ('Craft: use reviewed bin/install-craft-hook-router.py --workspace <workspace> --apply. '
-          'Native CLI: use bin/install-hooks.sh --selected with the existing verified registration arguments '
-          'and --bootstrap-home <physical-home>; see examples/selected-registration/README.md.')
+ADVICE = ('Install reviewed exact-main bin/core-authoring-profile.py install --repo <primary-repo> '
+          '--package <external-versioned-package> --home <physical-home>; '
+          'add --workspace <verified-headless-workspace> for qualified Linux Craft. '
+          'See docs/core-authoring-profile.md.')
 SHELL = ('if [ -L "$HOME/.claude" ] || [ -L "$HOME/.claude/hooks" ] || [ -L "$HOME/.claude/hooks/siege-project-bootstrap.py" ]; then exit 2; fi; if [ ! -f "$HOME/.claude/hooks/siege-project-bootstrap.py" ]; then '
          'printf "%s\\n" "Project policy bootstrap missing; install the reviewed stable profile." >&2; exit 2; fi; '
          'python3 -I -B "$HOME/.claude/hooks/siege-project-bootstrap.py" --event "$1"; '
@@ -44,13 +50,27 @@ def profile():
 
 def profile_problems(settings):
     """Validate owned registrations without taking ownership of operator hooks."""
+    if not isinstance(settings, dict) or not isinstance(settings.get('hooks'), dict):
+        return ['profile hooks must be an object']
     expected = profile()['hooks']
     counts = {event: 0 for event in EVENTS}
     problems = []
-    for event, groups in settings.get('hooks', {}).items():
+    for event, groups in settings['hooks'].items():
+        if not isinstance(groups, list):
+            problems.append('profile hook groups must be arrays')
+            continue
         for group in groups:
-            for hook in group.get('hooks', []):
+            if not isinstance(group, dict) or not isinstance(group.get('hooks'), list):
+                problems.append('profile hook group must contain hooks')
+                continue
+            for hook in group['hooks']:
+                if not isinstance(hook, dict):
+                    problems.append('profile hook must be an object')
+                    continue
                 command = hook.get('command', '')
+                if not isinstance(command, str):
+                    problems.append('profile hook command must be a string')
+                    continue
                 if hook.get('type') != 'command' or 'siege-project-bootstrap/v1' not in command:
                     continue
                 metadata = {key: value for key, value in group.items() if key != 'hooks'}
@@ -282,8 +302,8 @@ def cli_binding(repo, workspace=None):
     if repo not in roots or registered not in roots or common_directory(registered) != common:
         raise ValueError('callback is not a registered worktree of the installed CLI project')
     package = Path(bound['hooks_root'])
-    if package == repo or package.is_relative_to(repo):
-        raise ValueError('CLI enforcement must be installed outside its authoring repository')
+    if any(package.is_relative_to(root) for root in roots):
+        raise ValueError('Core enforcement must be installed outside its authoring worktrees')
     if package_digest(package) != bound['package_sha256']:
         raise ValueError('independently installed CLI package bytes changed')
     return bound, package, installed['scope']
@@ -306,9 +326,22 @@ def cli(raw, event, payload, *, mode='native-cli'):
     bound, package, scope = cli_binding(repo, os.environ.get('CRAFT_WORKSPACE_PATH', '') if mode == 'headless-craft' else None)
     if scope.get('mode') != mode:
         raise ValueError('authoring profile is not enrolled for this verified host mode')
+    interpreter = Path(bound['interpreter'])
+    if not interpreter.is_absolute() or not interpreter.is_file() or not os.access(interpreter, os.X_OK):
+        raise ValueError('enrolled Core interpreter is unavailable')
+    if interpreter.resolve() != Path(sys.executable).resolve():
+        # The independent anchor selected this interpreter after package hashing;
+        # SDK PATH and project metadata cannot substitute package verifier code.
+        result = subprocess.run([str(interpreter), '-I', '-B', str(Path(__file__).resolve()), '--event', event],
+                                input=raw, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=90)
+        if len(result.stdout) + len(result.stderr) > LIMIT:
+            raise ValueError('installed callback relay output exceeds its bound')
+        print(result.stdout.decode('utf-8'), end='')
+        print(result.stderr.decode('utf-8'), end='', file=sys.stderr)
+        return 0 if result.returncode == 0 else 2
     sys.path.insert(0, str(package / 'bin'))
     try:
-        registration = load(package / 'bin/selected_registration.py', 'selected_registration')
+        registration = load(package / 'bin/core-authoring-profile.py', 'installed_core_authoring_profile')
         definition = registration.verify_runtime(bound)
         template = json.loads(regular(package / 'hooks/settings-snippet.json'))
         require_core_profile(definition, template, event, payload)
@@ -322,6 +355,7 @@ def cli(raw, event, payload, *, mode='native-cli'):
                       'CRAFT_AGENT_SESSION_ID', 'CRAFT_AGENT_WORKSPACE', 'CRAFT_IS_PACKAGED'}
         environment = {k: v for k, v in os.environ.items() if k not in craft_keys and not k.startswith('CCP_CRAFT_ROUTER_')}
         environment.update(PYTHONDONTWRITEBYTECODE='1', CCP_HOOK_STATE_DIR=str(state))
+        environment['PATH'] = str(interpreter.parent) + os.pathsep + environment.get('PATH', '')
         if mode == 'headless-craft':
             for key in ('CRAFT_SESSION_PATH', 'CRAFT_AGENT_SESSION_PATH', 'CLAUDE_SESSION_DIR', 'CLAUDE_SESSION_ID',
                         'CLAUDE_CODE_SESSION_ID', 'SESSION_ID', 'CLAUDE_SIGNAL_DIR', 'CRAFT_SIGNAL_DIR',
@@ -369,8 +403,6 @@ def cli(raw, event, payload, *, mode='native-cli'):
             if len(result.stdout) + len(result.stderr) > LIMIT:
                 raise ValueError('installed callback output exceeds its bound')
             outputs.append((result.returncode, result.stdout.decode('utf-8'), result.stderr.decode('utf-8')))
-            if result.returncode:
-                break
         return emit(event, outputs, definition, package)
     finally:
         sys.path.pop(0)
@@ -389,14 +421,6 @@ def emit(event, outputs, definition, package):
         if diagnostics:
             print(diagnostics, file=sys.stderr)
         return 0 if code == 0 else 2
-    if definition['adapter'] != 'policy' or len(outputs) > 1:
-        raise ValueError('unsupported independently installed CLI callback shape')
-    for code, output, error in outputs:
-        print(output, end='')
-        print(error, file=sys.stderr, end='')
-        if code:
-            return 2
-    return 0
 
 def dispatch(raw, event):
     payload = json.loads(raw)
@@ -422,8 +446,47 @@ def dispatch(raw, event):
 
 
 
-def publish(home, data):
-    """Publish reviewed bootstrap bytes, never an operator-owned replacement."""
+def registration_bytes(data):
+    return (json.dumps({'schema_version': 1, 'purpose': BOOTSTRAP_ABI,
+                        'sha256': hashlib.sha256(data).hexdigest()}, sort_keys=True) + '\n').encode()
+
+
+@contextmanager
+def publication_lock(home, *, shared=False):
+    path = home / PUBLISH_LOCK
+    if any(parent.is_symlink() for parent in (path, *path.parents)):
+        raise ValueError('shared bootstrap lock path must be physical')
+    flags = os.O_RDONLY if shared else os.O_RDWR | os.O_CREAT
+    fd = os.open(path, flags | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise ValueError('shared bootstrap lock must be a regular file')
+        deadline = time.monotonic() + 10
+        while True:
+            try:
+                fcntl.flock(fd, (fcntl.LOCK_SH if shared else fcntl.LOCK_EX) | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise ValueError('shared bootstrap publication is busy; retry after the active publisher')
+                time.sleep(0.05)
+        yield
+    finally:
+        os.close(fd)
+
+
+def verify_published(home):
+    with publication_lock(home, shared=True):
+        expected = json.loads(regular(home / RECEIPT))
+        if not isinstance(expected, dict) or expected.get('schema_version') != 1 or expected.get('purpose') != BOOTSTRAP_ABI:
+            raise ValueError('installed shared bootstrap registration is invalid')
+        if hashlib.sha256(regular(home / RELATIVE)).hexdigest() != expected.get('sha256'):
+            raise ValueError('installed shared bootstrap bytes changed')
+        return expected
+
+
+def publish(home, data, *, before_publish=None, expected=None):
+    """Serialize trusted common-ABI updates; readers never accept a split pair."""
     target = home / RELATIVE
     if not home.is_absolute() or home.resolve(strict=True) != home:
         raise ValueError('bootstrap home must be a physical absolute directory')
@@ -432,22 +495,37 @@ def publish(home, data):
         if directory.is_symlink():
             raise ValueError('bootstrap directory must not be a symlink')
         directory.mkdir(exist_ok=True, mode=0o700)
-    if target.exists():
-        old = regular(target)
-        if b'# Managed bootstrap: siege-project-settings/v1\n' not in old.splitlines(keepends=True)[:3]:
+    with publication_lock(home):
+        old = regular(target) if target.exists() else None
+        if old is not None and b'# Managed bootstrap: siege-project-settings/v1\n' not in old.splitlines(keepends=True)[:3]:
             raise ValueError('project bootstrap destination is operator-owned')
-    fd, temporary = tempfile.mkstemp(prefix='.project-bootstrap-', dir=parent)
-    try:
-        with os.fdopen(fd, 'wb') as stream:
-            stream.write(data)
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.chmod(temporary, 0o700)
-        os.replace(temporary, target)
-    finally:
-        if os.path.exists(temporary):
-            os.unlink(temporary)
+        receipt = home / RECEIPT
+        old_receipt = regular(receipt) if receipt.exists() else None
+        if old_receipt is not None:
+            value = json.loads(old_receipt)
+            if not isinstance(value, dict) or value.get('purpose') != BOOTSTRAP_ABI:
+                raise ValueError('shared bootstrap registration is operator-owned')
+        desired_receipt = registration_bytes(data)
+        if before_publish is not None:
+            before_publish()
+        if (old, old_receipt) == (data, desired_receipt):
+            return target
+        if expected is not None and (old, old_receipt) != expected:
+            raise ValueError('shared bootstrap changed during activation; retry with a fresh snapshot')
+        for destination, contents, mode in ((target, data, 0o700), (receipt, desired_receipt, 0o600)):
+            fd, temporary = tempfile.mkstemp(prefix='.project-bootstrap-', dir=parent)
+            try:
+                with os.fdopen(fd, 'wb') as stream:
+                    stream.write(contents)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                os.chmod(temporary, mode)
+                os.replace(temporary, destination)
+            finally:
+                if os.path.exists(temporary):
+                    os.unlink(temporary)
     return target
+
 
 
 def main():

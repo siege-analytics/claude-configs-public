@@ -30,7 +30,9 @@
     }
   },
   "high_risk_path_patterns": [
+    "^\\.claude/settings\\.authoring\\.json$",
     "^bin/project-settings-bootstrap\\.py$",
+    "^bin/core-authoring-profile\\.py$",
     "^bin/prepare-task-branch\\.py$",
     "^hooks/_test/branch_sources\\.(py|test\\.sh)$",
     "^\\.githooks/",

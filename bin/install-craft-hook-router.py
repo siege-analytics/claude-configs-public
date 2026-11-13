@@ -200,14 +200,17 @@ def install(workspace: Path, home: Path, *, apply=False):
                  "legacy-project.json": (legacy_path, saved(legacy_path)),
                  "router.py": (target, saved(target)),
                  "project-bootstrap.py": (home / project.RELATIVE, saved(home / project.RELATIVE)),
+                 "project-bootstrap.json": (home / project.RECEIPT, saved(home / project.RECEIPT)),
                  "registration.json": (receipt_path, saved(receipt_path))}
     old_router = snapshots["router.py"][1]["raw"]
     if old_router is not None and b"# Managed bootstrap: siege-craft-settings-router/v1\n" not in old_router.splitlines(keepends=True)[:3]:
         raise ValueError("router destination is operator-owned; refusing to overwrite it")
-    project_target = home / project.RELATIVE
     old_project = snapshots["project-bootstrap.py"][1]
     if old_project["raw"] is not None and b"# Managed bootstrap: siege-project-settings/v1\n" not in old_project["raw"].splitlines(keepends=True)[:3]:
         raise ValueError("project bootstrap destination is operator-owned")
+    old_project_receipt = snapshots["project-bootstrap.json"][1]
+    if old_project_receipt["raw"] is not None and trust.document(old_project_receipt).get("purpose") != project.BOOTSTRAP_ABI:
+        raise ValueError("shared project bootstrap registration is operator-owned")
     merged = merge_global(trust.document(snapshots["global-settings.json"][1]), target, workspace, policy=policy)
     router.verify_global(merged, target, workspace, policy=policy)
     legacy_original = trust.document(snapshots["legacy-project.json"][1])
@@ -253,7 +256,8 @@ def install(workspace: Path, home: Path, *, apply=False):
         old_receipt = None  # Reserved owned metadata is repairable after main/profile verification.
     changed = (merged != trust.document(snapshots["global-settings.json"][1]) or legacy != legacy_original
                or old_router != router_bytes or old_receipt != receipt
-               or snapshots["project-bootstrap.py"][1]["raw"] != project_bytes)
+               or snapshots["project-bootstrap.py"][1]["raw"] != project_bytes
+               or old_project_receipt["raw"] != project.registration_bytes(project_bytes))
     summary["changed"] = changed
     if not apply or not changed:
         if apply:
@@ -270,11 +274,15 @@ def install(workspace: Path, home: Path, *, apply=False):
         for relative, snapshot in inspected["watched"].items():
             if saved(workspace / relative)["fingerprint"] != snapshot["fingerprint"]:
                 raise ValueError("workspace policy changed before bootstrap activation")
+        def bootstrap_source_fresh():
+            if trust.source_authority() != revision:
+                raise ValueError("exact-main source changed before shared bootstrap publication")
+        project.publish(home, project_bytes, before_publish=bootstrap_source_fresh,
+                        expected=(old_project["raw"], old_project_receipt["raw"]))
         publish(receipt_path, snapshots["registration.json"][1], json_bytes({"schema_version": 1, "state": "staging"}))
         staging_receipt = saved(receipt_path)
         # Policy exists and is locally verified before global discovery points
         # at the router. Missing/incomplete enrollment fails closed in Craft.
-        publish(project_target, old_project, project_bytes)
         publish(target, snapshots["router.py"][1], router_bytes)
         publish(global_path, snapshots["global-settings.json"][1], json_bytes(merged))
         if legacy != legacy_original:

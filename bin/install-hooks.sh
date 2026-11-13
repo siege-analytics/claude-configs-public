@@ -135,8 +135,6 @@ try:
     if args.relative and (args.workspace or args.hooks_root):
         raise ValueError('--relative is incompatible with --hooks-root and --workspace')
     hooks_root = (args.hooks_root or root).resolve(strict=True)
-    if args.workspace and args.workspace.resolve(strict=True) == root and hooks_root == root and (root / 'bin/project-settings-bootstrap.py').is_file():
-        raise ValueError('Core source authoring requires the external bootstrap; use a separate verified policy workspace')
     target = args.target_file or (args.workspace / '.claude/settings.json' if args.workspace else root / ('.claude/settings.json' if args.relative else '.claude/settings.local.json'))
     target = target.absolute()
     if target.is_symlink():
@@ -165,15 +163,28 @@ try:
     bootstrap = None
     profile_source = root / 'bin/project-settings-bootstrap.py'
     source_profile = root / '.claude/settings.json'
-    if profile_source.is_file() and (args.relative or source_profile.is_file() and hooks_root == root and args.workspace is None):
-        spec = importlib.util.spec_from_file_location('source_project_bootstrap', profile_source)
-        bootstrap = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(bootstrap)
-        if args.relative or not bootstrap.profile_problems(json.loads(source_profile.read_text())):
+    if profile_source.is_file() and source_profile.is_file() and hooks_root == root and args.workspace is None:
+        source_value = json.loads(source_profile.read_text())
+        prepared_active = any(
+            shlex.split(hook.get('command', ''))[3:4] == ['siege-project-bootstrap/v1']
+            for groups in source_value.get('hooks', {}).values() for group in groups for hook in group.get('hooks', [])
+            if hook.get('type') == 'command')
+        if prepared_active:
+            spec = importlib.util.spec_from_file_location('source_project_bootstrap', profile_source)
+            bootstrap = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(bootstrap)
+            if bootstrap.profile_problems(source_value):
+                raise ValueError('active authoring profile has conflicting managed commands')
             snippet = bootstrap.profile()
     existing = json.loads(target.read_text()) if target.exists() else {}
     if bootstrap is not None and snippet == bootstrap.profile():
         existing = bootstrap.retire_source(existing, legacy_relative)
+        legacy_absolute = copy.deepcopy(legacy_relative)
+        for groups in legacy_absolute['hooks'].values():
+            for group in groups:
+                for hook in group['hooks']:
+                    hook['command'] = shlex.quote(str(hooks_root / shlex.split(hook['command'])[0]))
+        existing = bootstrap.retire_source(existing, legacy_absolute)
     merged, retired = merge_settings(existing, snippet, hooks_root)
     repo = args.git_repo or (root if not sys.argv[2:] else None)
     hooks_value = None

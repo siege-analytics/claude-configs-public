@@ -28,7 +28,7 @@ CORE_FILES = (
     'bin/frontmatter_validation.py',
     'bin/gate_contract.py', 'bin/package_selection.py', 'bin/source_snapshot.py',
     'bin/selected_registration.py', 'bin/native_git.py', 'bin/install-hooks.sh',
-    'bin/wire-enforcement.py', 'bin/verify-enforcement.sh', 'bin/project-settings-bootstrap.py', 'catalog/gate-contract-schema.json',
+    'bin/wire-enforcement.py', 'bin/verify-enforcement.sh', 'catalog/gate-contract-schema.json',
 )
 
 
@@ -359,23 +359,13 @@ def merge_settings(existing, incoming):
     return result
 
 
-
-def authoring_source_authority():
-    authority = selected.module('core_authoring_source_authority', selected.ROOT, 'build.py')
-    try:
-        revision = authority.validate_deploy_source(selected.ROOT)
-    except authority.BuildError as error:
-        raise ValueError(str(error)) from error
-    require(revision, 'Core bootstrap publication requires reviewed exact-main source')
-    return revision
-
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('action', choices=('install', 'wire', 'verify'))
     p.add_argument('--selected', action='store_true', required=True)
     p.add_argument('--generation-store', type=Path, help='bind this consumer to the existing generation selector')
     p.add_argument('--recover', action='store_true', help='restore prior state from an interrupted selected registration')
-    for name in ('source', 'selection', 'policy-root', 'policy-inputs', 'registration-inputs', 'hooks-root', 'workspace', 'git-repo', 'target-file', 'bootstrap-home'):
+    for name in ('source', 'selection', 'policy-root', 'policy-inputs', 'registration-inputs', 'hooks-root', 'workspace', 'git-repo', 'target-file'):
         p.add_argument('--' + name, type=Path)
     for name in ('policy-inputs-sha256', 'registration-inputs-sha256', 'identity', 'backend'):
         p.add_argument('--' + name)
@@ -403,30 +393,6 @@ def main(argv=None):
             pending = repo / pending
         require(not pending.exists(), 'interrupted registration requires installer --recover')
         definition = verify_package(bound)
-        if args.bootstrap_home is not None:
-            require(args.generation_store is None and not args.recover, 'Core authoring SDK enrollment uses a fixed verified package')
-            require(definition['adapter'] == 'siege-compatibility' and definition['settings_source'] == 'hooks/settings-snippet.json',
-                    'Core authoring bootstrap requires a verified Siege-compatibility enforcement profile')
-            authoring_source_authority()
-            bootstrap = selected.module('selected_project_bootstrap', selected.ROOT, 'project-settings-bootstrap.py')
-            require(not Path(bound['hooks_root']).is_relative_to(repo), 'Core authoring package must be installed outside the source repository')
-            require(repo == bootstrap.primary_repository(repo),
-                    'enroll or update the Core authoring profile from its primary repository; linked worktrees reuse it')
-            require(workspace == repo or not workspace.is_relative_to(repo), 'headless policy workspace must be outside the authoring repository')
-            bootstrap_bytes = (selected.ROOT / 'bin/project-settings-bootstrap.py').read_bytes()
-            if args.action in ('wire', 'verify'):
-                require(bootstrap.regular(args.bootstrap_home / bootstrap.RELATIVE) == bootstrap_bytes,
-                        'installed project bootstrap is missing or changed')
-                anchored = ep.read_json(bootstrap.anchor_path(args.bootstrap_home, bootstrap.common_directory(repo), None if workspace == repo else workspace))
-                expected_scope = {'mode': 'native-cli'} if workspace == repo else {'mode': 'headless-craft', 'workspace': str(workspace)}
-                require(anchored.get('binding') == bound and anchored.get('scope') == expected_scope, 'installed authoring profile anchor is missing or changed')
-            else:
-                bootstrap.publish(args.bootstrap_home, bootstrap_bytes)
-                bootstrap.publish_anchor(args.bootstrap_home, bound, workspace)
-            print(json.dumps({'state': 'configured', 'surface': 'core-authoring-sdk-bootstrap',
-                              'native_git_registration': 'unchanged', 'project_settings': 'unchanged',
-                              'authorization_effect': 'none', 'host_invocation': 'unobserved'}, sort_keys=True))
-            return 0
         if args.generation_store is not None:
             generation = generation_module()
             active = stack.enter_context(generation.consume(no_symlinks(args.generation_store)))

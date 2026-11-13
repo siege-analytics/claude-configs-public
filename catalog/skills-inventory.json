@@ -10685,6 +10685,7 @@
         "bin/_test/native_push_test.py",
         "bin/_test/package_generation_test.py",
         "bin/_test/progressive_mount_test.py",
+        "bin/_test/project_settings_bootstrap_test.py",
         "bin/_test/protected_policy_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",

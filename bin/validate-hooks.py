@@ -179,7 +179,10 @@ def main():
         )
 
     if package_dir is None:
-        drift = compare_source_profile(REPO_ROOT / '.claude/settings.json')
+        drift = compare_source_profile(REPO_ROOT / '.claude/settings.authoring.json')
+        active = compare_source_profile(REPO_ROOT / '.claude/settings.json')
+        if active:
+            drift += compare_settings_to_snippet(REPO_ROOT / '.claude/settings.json', REPO_ROOT / 'hooks/settings-snippet.json')
         for problem in drift:
             errors.append(f"Settings drift: {problem}")
 

@@ -3,6 +3,7 @@
 import contextlib
 import importlib.util
 import io
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -92,9 +93,11 @@ class Bootstrap(unittest.TestCase):
         settings['hooks']['PreToolUse'].append(b.profile()['hooks']['PreToolUse'][0])
         self.assertTrue(b.profile_problems(settings))
 
-    def test_source_profile_never_executes_candidate_guards(self):
-        settings = json.loads((ROOT / '.claude/settings.json').read_text())
+    def test_prepared_profile_remains_inert_before_rollout(self):
+        settings = json.loads((ROOT / '.claude/settings.authoring.json').read_text())
         self.assertEqual(settings, b.profile())
+        legacy = subprocess.check_output(['/usr/bin/git', 'show', 'bd433bdf5cc8f885ed2a879be269ba8055ba9a20:.claude/settings.json'], cwd=ROOT, timeout=20)
+        self.assertEqual((ROOT / '.claude/settings.json').read_bytes(), legacy)
 
     def test_broken_candidate_does_not_brick_owned_repair_but_real_holds_remain(self):
         result = subprocess.run(['bash', str(self.repo / 'hooks/bash/universal-mutation-gate.sh')],
@@ -151,6 +154,17 @@ class Bootstrap(unittest.TestCase):
         self.assertEqual(target.read_text(), 'operator-owned code\n')
         self.assertEqual(self.f.receipt_path.read_bytes(), receipt)
 
+    def test_shared_helper_integrity_rejects_stale_publisher_snapshot(self):
+        helper, receipt = self.home / b.RELATIVE, self.home / b.RECEIPT
+        old = (helper.read_bytes(), receipt.read_bytes())
+        replacement = old[0] + b'\n# New verified common ABI generation.\n'
+        b.publish(self.home, replacement, expected=old)
+        fresh = (helper.read_bytes(), receipt.read_bytes())
+        with self.assertRaisesRegex(ValueError, 'changed during activation'):
+            b.publish(self.home, old[0] + b'\n# Stale publisher.\n', expected=old)
+        self.assertEqual((helper.read_bytes(), receipt.read_bytes()), fresh)
+        self.assertEqual(b.verify_published(self.home)['sha256'], hashlib.sha256(replacement).hexdigest())
+
     def test_shared_dispatcher_upgrade_does_not_change_workspace_policy_binding(self):
         receipt = self.f.receipt_path.read_bytes()
         target = self.home / b.RELATIVE
@@ -197,13 +211,13 @@ class Bootstrap(unittest.TestCase):
         self.assertEqual(installed.returncode, 0, installed.stdout + installed.stderr)
         actual = json.loads(destination.read_text())
         self.assertIn(operator, actual['hooks']['PreToolUse'])
-        self.assertEqual(actual['hooks']['PreToolUse'][-1], b.profile()['hooks']['PreToolUse'][0])
-        actual['hooks']['PostToolUse'].append(actual['hooks']['PreToolUse'][-1])
-        destination.write_text(json.dumps(actual))
-        bad = destination.read_bytes()
-        refused = subprocess.run(['bash', str(ROOT / 'bin/install-hooks.sh'), '--relative', '--target-file', str(destination)], capture_output=True, text=True, timeout=20)
-        self.assertEqual(refused.returncode, 1, refused.stdout + refused.stderr)
-        self.assertEqual(destination.read_bytes(), bad)
+        self.assertTrue(any(hook.get('command') == 'hooks/bash/universal-mutation-gate.sh'
+                            for group in actual['hooks']['PreToolUse'] for hook in group['hooks']))
+        self.assertTrue(b.profile_problems(actual), 'legacy installation must not activate an uninstalled bootstrap')
+        actual = b.profile()
+        actual['hooks']['PostToolUse'].append(actual['hooks']['PreToolUse'][0])
+        with self.assertRaisesRegex(ValueError, 'conflicting event'):
+            b.retire_source(actual, managed)
         self.assertEqual(self.callback(self.payload())[0], 0)
         denied = subprocess.run(operator['hooks'][0]['command'], shell=True, timeout=10)
         self.assertEqual(denied.returncode, 2)
@@ -216,7 +230,7 @@ class Bootstrap(unittest.TestCase):
         sibling = self.f.fixture.base / 'attacker-package'
         (sibling / 'bin').mkdir(parents=True)
         marker = self.f.fixture.base / 'attacker-executed'
-        (sibling / 'bin/selected_registration.py').write_text(
+        (sibling / 'bin/core-authoring-profile.py').write_text(
             'from pathlib import Path\nPath(' + repr(str(marker)) + ').write_text("executed")\n')
         fake = {'hooks_root': str(sibling), 'git_repo': str(self.repo), 'package_sha256': '0' * 64}
         subprocess.run(['/usr/bin/git', '-C', str(self.repo), 'config', '--local', 'scaffold.registration', json.dumps(fake)],
@@ -237,86 +251,52 @@ class Bootstrap(unittest.TestCase):
                 os.chdir(original)
 
 
-class CLI(unittest.TestCase):
-    def test_independent_profile_remains_valid_but_cannot_replace_core_guards(self):
-        import selected_registration_test as selected_fixture
-        case = selected_fixture.SelectedRegistrationTest(methodName='runTest')
-        with patch.object(tempfile, 'tempdir', str(Path(tempfile.gettempdir()).resolve())):
-            case.setUp()
-        self.addCleanup(case.doCleanups)
-        case.prepare()
-        case.entry('install')
-        home = case.output.parent / 'native-home'
-        home.mkdir()
-        prior = (case.consumer / '.git/config').read_bytes()
-        refused = case.entry('install', ok=False, extra=['--bootstrap-home', str(home)])
-        self.assertNotEqual(refused.returncode, 0)
-        self.assertIn('Siege-compatibility', refused.stderr)
-        self.assertEqual((case.consumer / '.git/config').read_bytes(), prior)
-        # Simulate an old external enrollment of a real prompt-only profile.
-        # Its provenance is valid; it still does not supply Core mutation guards.
-        bound = json.loads(case.run_cmd(['git', 'config', '--get', 'scaffold.registration'], cwd=case.consumer).stdout)
-        b.publish(home, (ROOT / 'bin/project-settings-bootstrap.py').read_bytes())
-        b.publish_anchor(home, bound)
-        env = {k: v for k, v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'GIT_'))}
-        env['HOME'] = str(home)
-        raw = json.dumps({'hook_event_name': 'PreToolUse', 'tool_name': 'Edit', 'cwd': str(case.consumer),
-                          'tool_input': {'file_path': str(case.consumer / 'source.py')}})
-        result = subprocess.run(b.command_for('PreToolUse'), shell=True, input=raw, text=True, capture_output=True,
-                                cwd=case.consumer, env=env, timeout=40)
-        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
-        self.assertIn('enforcement profile', result.stderr)
-        independent = next(hook['command'] for group in json.loads(case.settings.read_text())['hooks']['UserPromptSubmit'] for hook in group['hooks'] if 'native_git.py' in hook['command'])
-        result = subprocess.run(independent, shell=True, input='{"prompt":"inspect changes"}', text=True,
-                                capture_output=True, cwd=case.consumer, env=env, timeout=40)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-
-
-
-
-class CompatibleCLI(unittest.TestCase):
+class CanonicalCLI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temporary = tempfile.TemporaryDirectory(prefix='core1286-cli-', dir=str(Path(tempfile.gettempdir()).resolve()))
+        cls.temporary = tempfile.TemporaryDirectory(prefix='core1286-canonical-', dir=str(Path(tempfile.gettempdir()).resolve()))
         cls.addClassCleanup(cls.temporary.cleanup)
         cls.base = Path(cls.temporary.name)
-        cls.output = cls.base / 'selected'
-        spec = importlib.util.spec_from_file_location('bootstrap_selected_build', ROOT / 'examples/selected-build/run.py')
-        build = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(build)
-        spec = importlib.util.spec_from_file_location('bootstrap_registration_example', ROOT / 'examples/selected-registration/run.py')
-        cls.example = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(cls.example)
-        original = build.selected.module
-        def module(name, root, filename):
-            return cls.example if name == 'registration_example' else original(name, root, filename)
-        def capture(output, selection, policy_source, policy_pin, registration_source, registration_pin, case):
-            cls.selection, cls.policy_source, cls.policy_pin = selection, policy_source, policy_pin
-            cls.registration_source, cls.registration_pin = registration_source, registration_pin
-            return {'fixture': 'build-only; normal installer is exercised by this suite'}
-        original_commit = build.commit
-        def current_runtime(source):
-            for name in ('hooks/lib/log-block.sh', 'hooks/resolver/block-classifier-guard.sh'):
-                shutil.copy2(ROOT / name, source / name)
-            return original_commit(source)
-        with patch.object(build.selected, 'module', side_effect=module), patch.object(cls.example, 'exercise', side_effect=capture), \
-             patch.object(build, 'commit', side_effect=current_runtime):
-            build.run('siege', cls.output, register=True)
-        cls.source, cls.package = cls.output / 'source', cls.output / 'package/flat'
+        cls.source, cls.package = cls.base / 'source', cls.base / 'runtime-package'
+        cls.environment = {k: v for k, v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'GIT_'))}
+        cls.environment.update(PYTHONDONTWRITEBYTECODE='1', GIT_CONFIG_GLOBAL='/dev/null', GIT_CONFIG_NOSYSTEM='1')
+        subprocess.run(['/usr/bin/git', 'clone', '--quiet', '--shared', str(ROOT), str(cls.source)],
+                       check=True, env=cls.environment, timeout=40)
         def source_git(*args):
             return subprocess.run(['/usr/bin/git', '-C', str(cls.source), *args], check=True,
-                                  capture_output=True, text=True, timeout=40)
-        source_git('add', 'selected-registration-inputs.json')
-        source_git('commit', '-qm', 'Synthetic reviewed main source for installer authority')
-        canonical = cls.base / 'canonical-source.git'
-        subprocess.run(['/usr/bin/git', 'init', '-q', '--bare', str(canonical)], check=True, timeout=20)
-        source_git('remote', 'set-url', 'origin', str(canonical))
+                                  env=cls.environment, capture_output=True, text=True, timeout=40)
+        source_git('config', 'user.name', 'Controlled Core fixture')
+        source_git('config', 'user.email', 'fixture@example.invalid')
         source_git('checkout', '-q', '-B', 'main')
+        changed = subprocess.check_output(['/usr/bin/git', 'diff', 'HEAD', '--name-only'], cwd=ROOT, timeout=20).decode().splitlines()
+        added = subprocess.check_output(['/usr/bin/git', 'ls-files', '--others', '--exclude-standard'], cwd=ROOT, timeout=20).decode().splitlines()
+        for name in sorted(set(changed + added)):
+            target = cls.source / name
+            if (ROOT / name).is_file():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / name, target)
+            elif target.exists():
+                target.unlink()
+        source_git('add', '--all')
+        source_git('commit', '-qm', 'Controlled reviewed Core source snapshot')
+        canonical = cls.base / 'canonical-source.git'
+        subprocess.run(['/usr/bin/git', 'init', '-q', '--bare', str(canonical)], check=True, env=cls.environment, timeout=20)
+        source_git('remote', 'set-url', 'origin', str(canonical))
         source_git('push', '-q', 'origin', 'HEAD:main')
-
+        cls.revision = source_git('rev-parse', 'HEAD').stdout.strip()
+        home = cls.base / 'bootstrap-build-home'
+        home.mkdir()
+        result = subprocess.run([sys.executable, '-B', str(cls.source / 'bin/core-authoring-profile.py'), 'install',
+                                 '--repo', str(cls.source), '--package', str(cls.package), '--home', str(home)],
+                                env=cls.environment, capture_output=True, text=True, timeout=240)
+        if result.returncode:
+            raise AssertionError(result.stdout + result.stderr)
 
     def setUp(self):
-        self.repo, self.remote = self.example.make_consumer(self.output, self._testMethodName)
+        self.repo = self.base / self._testMethodName
+        self.remote = self.base / (self._testMethodName + '.git')
+        subprocess.run(['/usr/bin/git', 'clone', '--quiet', '--shared', str(self.source), str(self.repo)], check=True, env=self.environment, timeout=40)
+        subprocess.run(['/usr/bin/git', 'init', '-q', '--bare', str(self.remote)], check=True, env=self.environment, timeout=20)
         self.home = self.base / (self._testMethodName + '-home')
         self.home.mkdir()
         (self.home / '.claude').mkdir()
@@ -324,8 +304,12 @@ class CompatibleCLI(unittest.TestCase):
         self.global_settings.write_text('{"operator":"preserve","hooks":{}}')
         self.env = {k: v for k, v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'GIT_'))}
         self.env.update(HOME=str(self.home), PYTHONDONTWRITEBYTECODE='1')
+        self.git(self.repo, 'config', 'user.name', 'Controlled Core fixture')
+        self.git(self.repo, 'config', 'user.email', 'fixture@example.invalid')
+        self.git(self.repo, 'checkout', '-q', '-B', 'feature')
+        self.git(self.repo, 'remote', 'set-url', 'origin', str(self.remote))
         self.settings = self.repo / '.claude/settings.json'
-        value = b.profile()
+        value = json.loads((ROOT / '.claude/settings.authoring.json').read_text())
         value['model'] = 'operator-choice'
         value['hooks']['PreToolUse'].append({'matcher': 'Read', 'hooks': [{'type': 'command', 'command': '/bin/sh -c "exit 2"'}]})
         self.settings.write_text(json.dumps(value))
@@ -343,19 +327,194 @@ class CompatibleCLI(unittest.TestCase):
         return result
 
     def arguments(self, repo):
-        return ['--selected', '--source', str(self.source), '--selection', str(self.output / 'selection.json'),
-                '--policy-root', str(self.source), '--policy-inputs', str(self.policy_source),
-                '--policy-inputs-sha256', self.policy_pin, '--registration-inputs', str(self.registration_source),
-                '--registration-inputs-sha256', self.registration_pin, '--identity', self.selection['identity'],
-                '--backend', 'claude-code-local', '--hooks-root', str(self.package), '--workspace', str(repo),
-                '--git-repo', str(repo), '--bootstrap-home', str(self.home)]
+        return ['--repo', str(repo), '--package', str(self.package), '--home', str(self.home)]
 
     def install(self, repo=None, ok=True):
-        result = subprocess.run(['bash', str(self.source / 'bin/install-hooks.sh'), *self.arguments(repo or self.repo)],
-                                capture_output=True, text=True, env=self.env, timeout=90)
+        result = subprocess.run([sys.executable, '-B', str(self.source / 'bin/core-authoring-profile.py'), 'install',
+                                 *self.arguments(repo or self.repo)], capture_output=True, text=True, env=self.env, timeout=240)
         if ok:
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return result
+
+    def test_actual_core_adoption_and_all_canonical_event_vectors(self):
+        prepared = self.settings.read_bytes()
+        legacy = json.loads((ROOT / '.claude/settings.json').read_text())
+        legacy['model'] = 'operator-choice'
+        self.settings.write_text(json.dumps(legacy))
+        before = self.settings.read_bytes()
+        installed = self.install()
+        status = json.loads(installed.stdout)
+        self.assertTrue(status['enrollment_ready'])
+        self.assertEqual(status['sdk_profile_active'], 'unobserved')
+        self.assertEqual(status['project_profile_files'][str(self.repo)]['project'], 'legacy-or-custom-file')
+        self.assertEqual(self.settings.read_bytes(), before)
+        self.settings.write_bytes(prepared)
+        checked = subprocess.run([sys.executable, '-B', str(self.source / 'bin/core-authoring-profile.py'), 'verify',
+                                  *self.arguments(self.repo)], capture_output=True, text=True, env=self.env, timeout=240)
+        self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)
+        status = json.loads(checked.stdout)
+        self.assertEqual(status['project_profile_files'][str(self.repo)]['project'], 'prepared-file')
+        self.assertEqual(status['sdk_profile_active'], 'unobserved')
+        anchor = json.loads(b.anchor_path(self.home, b.common_directory(self.repo)).read_text())
+        self.assertEqual(anchor['binding']['identity'], 'github.com/siege-analytics/claude-configs-public')
+        policy = json.loads((self.package / 'core-authoring-policy.json').read_text())
+        self.assertEqual(policy['resolved']['project'], 'claude-configs-public')
+        self.assertEqual(policy['resolved']['organization_profile'], 'strict-release')
+        canonical = json.loads((self.package / 'compatibility/hooks/settings-snippet.json').read_text())
+        canonical.pop('_comment_', None)
+        for groups in canonical['hooks'].values():
+            for group in groups:
+                for hook in group['hooks']:
+                    hook['command'] = hook['command'].replace('/path/to/claude-configs-public/', '${package}/compatibility/')
+        self.assertEqual(json.loads((self.package / 'hooks/settings-snippet.json').read_text()), canonical)
+        self.assertEqual(set(canonical['hooks']), set(b.EVENTS))
+        self.assertFalse((self.package / 'selected-registration.json').exists())
+        # Enrollment has no project-controlled identity/profile/command selector.
+        refused = subprocess.run([sys.executable, '-B', str(self.source / 'bin/core-authoring-profile.py'), 'install',
+                                  *self.arguments(self.repo), '--identity', 'foreign/repository'],
+                                 capture_output=True, text=True, env=self.env, timeout=20)
+        self.assertEqual(refused.returncode, 2)
+
+    def test_fetched_core_objects_and_subtree_history_do_not_adopt_core_identity(self):
+        foreign = self.base / 'foreign-object-and-subtree-consumer'
+        foreign.mkdir()
+        self.git(foreign, 'init', '--template=', '-q', '-b', 'feature')
+        self.git(foreign, 'config', 'user.name', 'Foreign fixture')
+        self.git(foreign, 'config', 'user.email', 'fixture@example.invalid')
+        (foreign / 'README.md').write_text('Independent client repository.\n')
+        self.git(foreign, 'add', 'README.md')
+        self.git(foreign, 'commit', '-qm', 'Independent history')
+        self.git(foreign, 'fetch', '-q', str(self.source), self.revision)
+        self.git(foreign, 'cat-file', '-e', self.revision + '^{commit}')
+        refused = self.install(foreign, ok=False)
+        self.assertEqual(refused.returncode, 2, refused.stdout + refused.stderr)
+        self.assertIn('no shared Core history', refused.stderr)
+        # A real second-parent subtree import shares history but not root identity.
+        for name in ('bin/build.py', 'hooks/settings-snippet.json', 'catalog/effective-policy.json',
+                     'bundles/siege/policy-inputs.json'):
+            destination = foreign / 'vendor/siege' / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(self.source / name, destination)
+        self.git(foreign, 'add', 'vendor')
+        tree = self.git(foreign, 'write-tree').stdout.strip()
+        parent = self.git(foreign, 'rev-parse', 'HEAD').stdout.strip()
+        imported = self.git(foreign, 'commit-tree', tree, '-p', parent, '-p', self.revision,
+                            '-m', 'Import Core below vendor prefix').stdout.strip()
+        self.git(foreign, 'update-ref', 'refs/heads/feature', imported)
+        self.git(foreign, 'merge-base', '--is-ancestor', self.revision, 'HEAD')
+        refused = self.install(foreign, ok=False)
+        self.assertEqual(refused.returncode, 2, refused.stdout + refused.stderr)
+        self.assertIn('not a Core repository root', refused.stderr)
+        self.assertFalse((self.home / b.RELATIVE).exists())
+        self.assertFalse(b.anchor_path(self.home, b.common_directory(foreign)).exists())
+
+    def test_existing_generation_health_survives_new_main_and_shared_helper(self):
+        self.install()
+        anchor = b.anchor_path(self.home, b.common_directory(self.repo))
+        anchor_a = anchor.read_bytes()
+        helper_source = self.source / 'bin/project-settings-bootstrap.py'
+        original = helper_source.read_bytes()
+        workspace = self.base / 'new-main-independent-workspace'
+        workspace.mkdir()
+        package_b = self.base / 'new-main-independent-package'
+        def verify():
+            return subprocess.run([sys.executable, '-B', str(self.source / 'bin/core-authoring-profile.py'), 'verify',
+                                   *self.arguments(self.repo)], capture_output=True, text=True, env=self.env, timeout=60)
+        def unchanged_files():
+            paths = [self.settings, self.global_settings, self.repo / '.git/config', anchor,
+                     self.home / b.RELATIVE, self.home / b.RECEIPT, self.home / b.PUBLISH_LOCK]
+            return {str(path): (path.read_bytes(), path.stat().st_mtime_ns) for path in paths}
+        try:
+            helper_source.write_bytes(original + b'\n# Compatible shared bootstrap generation.\n')
+            self.git(self.source, 'add', 'bin/project-settings-bootstrap.py')
+            self.git(self.source, 'commit', '-qm', 'Private Main advances with compatible helper')
+            revision_b = self.git(self.source, 'rev-parse', 'HEAD').stdout.strip()
+            self.git(self.source, 'push', '-q', 'origin', 'HEAD:main')
+            before = unchanged_files()
+            checked = verify()
+            self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)
+            self.assertEqual(json.loads(checked.stdout)['revision'], self.revision)
+            self.assertEqual(unchanged_files(), before, 'health verification must not republish or upgrade')
+            args = self.arguments(self.repo)
+            args[args.index('--package') + 1] = str(package_b)
+            installed = subprocess.run([sys.executable, '-B', str(self.source / 'bin/core-authoring-profile.py'), 'install',
+                                       *args, '--workspace', str(workspace)], capture_output=True, text=True,
+                                      env=self.env, timeout=240)
+            self.assertEqual(installed.returncode, 0, installed.stdout + installed.stderr)
+            self.assertEqual(json.loads(installed.stdout)['revision'], revision_b)
+            self.assertEqual(anchor.read_bytes(), anchor_a)
+            before = unchanged_files()
+            checked = verify()
+            self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)
+            status = json.loads(checked.stdout)
+            self.assertEqual(status['revision'], self.revision)
+            self.assertEqual(status['sdk_profile_active'], 'unobserved')
+            self.assertEqual(unchanged_files(), before)
+            helper = self.home / b.RELATIVE
+            valid = helper.read_bytes()
+            try:
+                helper.write_bytes(valid + b'\n# Unregistered tamper.\n')
+                before = unchanged_files()
+                checked = verify()
+                self.assertEqual(checked.returncode, 2)
+                self.assertIn('bootstrap bytes changed', checked.stderr)
+                self.assertEqual(unchanged_files(), before, 'health must not repair or bless tampered code')
+            finally:
+                helper.write_bytes(valid)
+        finally:
+            # This private fixture Main only; production Main is never mutated.
+            self.git(self.source, 'reset', '--hard', '-q', self.revision)
+            self.git(self.source, 'push', '-q', '--force', 'origin', self.revision + ':main')
+
+    def test_sdk_python_path_cannot_replace_the_enrolled_interpreter(self):
+        self.install()
+        ticket = 'example/interpreter#1286'
+        target, _, _ = self.task(self.repo, ticket)
+        raw = json.dumps({'hook_event_name': 'PreToolUse', 'session_id': 'native-one', 'cwd': str(self.repo),
+                          'tool_name': 'Edit', 'tool_input': {'file_path': str(target)}})
+        env = dict(self.env, CCP_TASK_ID=ticket, PATH='/usr/bin:/bin')
+        owned = subprocess.run(b.command_for('PreToolUse'), shell=True, input=raw, capture_output=True,
+                               text=True, cwd=self.repo, env=env, timeout=90)
+        self.assertEqual(owned.returncode, 0, owned.stdout + owned.stderr)
+        anchor = b.anchor_path(self.home, b.common_directory(self.repo))
+        original = anchor.read_bytes()
+        value = json.loads(original)
+        value['binding']['interpreter'] = str(self.home / 'missing-installed-python')
+        try:
+            anchor.write_text(json.dumps(value))
+            refused = subprocess.run(b.command_for('PreToolUse'), shell=True, input=raw, capture_output=True,
+                                     text=True, cwd=self.repo, env=env, timeout=90)
+            self.assertEqual(refused.returncode, 2)
+            self.assertIn('interpreter is unavailable', refused.stderr)
+        finally:
+            anchor.write_bytes(original)
+
+    def test_all_four_events_match_direct_canonical_guard_results(self):
+        self.install()
+        ticket = 'example/event-parity#1286'
+        target, _, _ = self.task(self.repo, ticket)
+        template = json.loads((self.package / 'hooks/settings-snippet.json').read_text())
+        combiner = b.load(self.package / 'compatibility/hooks/lib/craft-settings-router.py', 'canonical_event_parity')
+        for event in b.EVENTS:
+            tool = 'Edit' if event == 'PreToolUse' else 'mcp__session__spawn_session'
+            payload = {'hook_event_name': event, 'session_id': 'native-one', 'cwd': str(self.repo),
+                       'prompt': 'inspect owned work', 'tool_name': tool,
+                       'tool_input': {'file_path': str(target)}, 'tool_response': {'error': 'controlled failure'}}
+            raw = json.dumps(payload)
+            env = dict(self.env, CCP_TASK_ID=ticket,
+                       CCP_HOOK_STATE_DIR=str(b.state_path(self.home, b.common_directory(self.repo))))
+            outputs = []
+            for hook in b.matching(template, event, payload):
+                script = hook['command'].replace('${package}', str(self.package))
+                result = subprocess.run([script], input=raw, capture_output=True, text=True,
+                                        cwd=self.repo, env=env, timeout=40)
+                outputs.append((result.returncode, result.stdout, result.stderr))
+            self.assertTrue(outputs, 'each canonical event must execute its actual guard')
+            expected_code, expected, _ = combiner.aggregate(event, outputs)
+            actual = subprocess.run(b.command_for(event), shell=True, input=raw, capture_output=True, text=True,
+                                    cwd=self.repo, env=env, timeout=90)
+            self.assertEqual(actual.returncode, 0 if expected_code == 0 else 2, actual.stdout + actual.stderr)
+            self.assertEqual(json.loads(actual.stdout) if actual.stdout.strip() else None, expected or None)
 
     def task(self, repo, ticket):
         target = repo / 'hooks/lib/task_actions.py'
@@ -384,6 +543,14 @@ class CompatibleCLI(unittest.TestCase):
         self.git(self.repo, 'push', '-q', 'origin', 'HEAD:feature')
         worktree = self.base / 'linked-worktree'
         self.git(self.repo, 'worktree', 'add', '-q', '-b', 'linked-feature', str(worktree))
+        nested = self.arguments(self.repo)
+        nested[nested.index('--package') + 1] = str(worktree / 'mutable-policy-package')
+        refused = subprocess.run([sys.executable, '-B', str(self.source / 'bin/core-authoring-profile.py'), 'install', *nested],
+                                 capture_output=True, text=True, env=self.env, timeout=240)
+        self.assertEqual(refused.returncode, 2, refused.stdout + refused.stderr)
+        self.assertIn('outside authoring worktrees', refused.stderr)
+        self.assertFalse((worktree / 'mutable-policy-package').exists())
+        self.assertFalse((self.home / b.RELATIVE).exists())
         before_config = (self.repo / '.git/config').read_bytes()
         before_settings, before_global = self.settings.read_bytes(), self.global_settings.read_bytes()
         self.install()
@@ -434,6 +601,28 @@ class CompatibleCLI(unittest.TestCase):
         finally:
             helper.write_bytes(original)
 
+    def test_main_advance_during_export_cannot_publish_enrollment(self):
+        profile = b.load(self.source / 'bin/core-authoring-profile.py', 'main_advance_profile')
+        prepare = profile.prepared_package
+        tree = self.git(self.source, 'rev-parse', 'HEAD^{tree}').stdout.strip()
+        advanced = self.git(self.source, 'commit-tree', tree, '-p', self.revision,
+                            '-m', 'Advance private fixture Main').stdout.strip()
+        def advance(destination):
+            result = prepare(destination)
+            self.git(self.source, 'push', '-q', 'origin', advanced + ':main')
+            return result
+        try:
+            with patch.object(profile, 'prepared_package', side_effect=advance), \
+                 patch.object(sys, 'argv', ['core-authoring-profile.py', 'install', *self.arguments(self.repo)]), \
+                 patch.dict(os.environ, self.env, clear=True), contextlib.redirect_stderr(io.StringIO()) as diagnostic:
+                self.assertEqual(profile.main(), 2)
+            self.assertIn('origin/main', diagnostic.getvalue())
+            self.assertFalse((self.home / b.RELATIVE).exists())
+            self.assertFalse(b.anchor_path(self.home, b.common_directory(self.repo)).exists())
+        finally:
+            # Only this test's private bare Main; no public/protected ref effects.
+            self.git(self.source, 'push', '-q', '--force', 'origin', self.revision + ':main')
+
     def test_headless_enrollment_seals_real_session_policy_without_candidate_imports(self):
         self.install()
         cli_anchor = b.anchor_path(self.home, b.common_directory(self.repo))
@@ -448,8 +637,8 @@ class CompatibleCLI(unittest.TestCase):
         header = session / 'session.jsonl'
         header.write_text(json.dumps({'id': 'one', 'sdkSessionId': sdk}) + '\n')
         args = self.arguments(self.repo)
-        args[args.index('--workspace') + 1] = str(workspace)
-        enrolled = subprocess.run(['bash', str(self.source / 'bin/install-hooks.sh'), *args],
+        args += ['--workspace', str(workspace)]
+        enrolled = subprocess.run([sys.executable, '-B', str(self.source / 'bin/core-authoring-profile.py'), 'install', *args],
                                  capture_output=True, text=True, env=self.env, timeout=90)
         self.assertEqual(enrolled.returncode, 0, enrolled.stdout + enrolled.stderr)
         self.assertEqual(cli_anchor.read_bytes(), cli_anchor_bytes)
@@ -524,7 +713,7 @@ class CompatibleCLI(unittest.TestCase):
     def test_package_code_is_hashed_before_any_verifier_import(self):
         self.install()
         target, _, _ = self.task(self.repo, 'example/main#1286')
-        module = self.package / 'bin/selected_registration.py'
+        module = self.package / 'bin/core-authoring-profile.py'
         original = module.read_bytes()
         marker = self.base / 'modified-verifier-executed'
         try:

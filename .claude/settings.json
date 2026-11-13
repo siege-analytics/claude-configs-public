@@ -5,44 +5,294 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/bin/sh -c 'if [ -L \"$HOME/.claude\" ] || [ -L \"$HOME/.claude/hooks\" ] || [ -L \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then exit 2; fi; if [ ! -f \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then printf \"%s\\n\" \"Project policy bootstrap missing; install the reviewed stable profile.\" >&2; exit 2; fi; python3 -I -B \"$HOME/.claude/hooks/siege-project-bootstrap.py\" --event \"$1\"; status=$?; if [ \"$status\" -ne 0 ]; then exit 2; fi; exit 0' siege-project-bootstrap/v1 UserPromptSubmit",
-            "timeout": 120
+            "command": "hooks/resolver/branch-state-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/inject-resolver.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/investigate-gate-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/pipeline-state-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/pre-action-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/standing-order-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/think-gate-guard.sh",
+            "timeout": 10
           }
         ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": ".*",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "/bin/sh -c 'if [ -L \"$HOME/.claude\" ] || [ -L \"$HOME/.claude/hooks\" ] || [ -L \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then exit 2; fi; if [ ! -f \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then printf \"%s\\n\" \"Project policy bootstrap missing; install the reviewed stable profile.\" >&2; exit 2; fi; python3 -I -B \"$HOME/.claude/hooks/siege-project-bootstrap.py\" --event \"$1\"; status=$?; if [ \"$status\" -ne 0 ]; then exit 2; fi; exit 0' siege-project-bootstrap/v1 PreToolUse",
-            "timeout": 120
+            "command": "hooks/bash/coordinator-status-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "hooks/bash/destructive-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh"
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/detect-ai-fingerprints.sh",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/fix-shape-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/no-attribution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/no-broad-staging.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/no-sensitive-files.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/post-error-revision-required.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/pr-base-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/self-review.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/survey-context.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/test-tracking-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/ticket-required.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/infrastructure/catalog-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/write-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/write-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/write-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/write-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__session__send_agent_message",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/agent-comms/no-slug-form-outbound.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/agent-comms/hub-concurrency-gate.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__session__spawn_session",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/agent-comms/spawn-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "hooks/agent-comms/hub-concurrency-gate.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*github.*create_branch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/git/native-branch-source.py",
+            "timeout": 10
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": ".*",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "/bin/sh -c 'if [ -L \"$HOME/.claude\" ] || [ -L \"$HOME/.claude/hooks\" ] || [ -L \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then exit 2; fi; if [ ! -f \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then printf \"%s\\n\" \"Project policy bootstrap missing; install the reviewed stable profile.\" >&2; exit 2; fi; python3 -I -B \"$HOME/.claude/hooks/siege-project-bootstrap.py\" --event \"$1\"; status=$?; if [ \"$status\" -ne 0 ]; then exit 2; fi; exit 0' siege-project-bootstrap/v1 PostToolUse",
-            "timeout": 120
+            "command": "hooks/git/vergil-quote.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__session__spawn_session",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/agent-comms/hub-concurrency-gate.sh",
+            "timeout": 10
           }
         ]
       }
     ],
     "PostToolUseFailure": [
       {
-        "matcher": ".*",
+        "matcher": "mcp__session__spawn_session",
         "hooks": [
           {
             "type": "command",
-            "command": "/bin/sh -c 'if [ -L \"$HOME/.claude\" ] || [ -L \"$HOME/.claude/hooks\" ] || [ -L \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then exit 2; fi; if [ ! -f \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then printf \"%s\\n\" \"Project policy bootstrap missing; install the reviewed stable profile.\" >&2; exit 2; fi; python3 -I -B \"$HOME/.claude/hooks/siege-project-bootstrap.py\" --event \"$1\"; status=$?; if [ \"$status\" -ne 0 ]; then exit 2; fi; exit 0' siege-project-bootstrap/v1 PostToolUseFailure",
-            "timeout": 120
+            "command": "hooks/agent-comms/hub-concurrency-gate.sh",
+            "timeout": 10
           }
         ]
       }
