@@ -82,6 +82,14 @@ class ReadOutputs(unittest.TestCase):
             with self.subTest(output=output):
                 self.guard(GET+' > '+output,2)
 
+    def test_globs_cannot_discard_detected_remote_transitions(self):
+        read = 'gh pr view 651 -R example/target'
+        close = 'gh issue close 651 -R example/target'
+        for suffix in ('cat *.json', 'cat > blocked*.json', 'cat < blocked*.json'):
+            with self.subTest(suffix=suffix):
+                self.guard(read+' && '+close+' && '+suffix,2)
+                self.guard(suffix+'; '+read+' && '+close,2)
+
     def test_existing_bare_reader_and_descriptive_metadata_are_unchanged(self):
         self.guard(GET,0)
         self.guard("gh issue comment 651 -R example/target --body 'Status: blocked.'",0)
