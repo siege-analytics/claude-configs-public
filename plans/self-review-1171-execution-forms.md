@@ -10,7 +10,12 @@ Base: develop 77d83c20
 
 ## Assumptions
 
-- Goal source: the #1171 issue body and its comments of 2026-11-11 and 2026-11-13, plus the hub's assignment to assess the reported forms against develop source and pin or repair them.
+Goal source: siege-analytics/claude-configs-public#1171 (issue body and its comments of 2026-11-11 and 2026-11-13), plus the hub's assignment to assess the reported forms against develop source and pin or repair them.
+Working as: software engineer
+Pre-author-inventory: https://github.com/siege-analytics/claude-configs-public/issues/1171#issuecomment-6844225102
+Investigate-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1171#issuecomment-6844225102
+Pre-mortem-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1171#issuecomment-6844225102
+
 - Develop's `hooks/bash/universal-mutation-gate.sh` (lines 95-158) doesn't read the resolver's computed `tier`. Commit 7202fb69 removed the tier-based companion checks, and it's an ancestor of 77d83c20. `origin/main` 7f5e5b19 (the installed generation) still enforces them at lines 112-445.
 - No other non-test develop code reads `resolve-think-gate.py:1006` `result["tier"]` (checked with `git grep` over the tree, excluding tests).
 - So the reported tier refusal in the universal mutation gate is fixed in source by 7202fb69. This change only pins it. Separately, a bare `gh issue close` is still subject to `hooks/bash/coordinator-status-guard.sh` (close transitions need owner sign-off and rollout/N/A evidence, around lines 446-470). That is evidence-based, not tier-based, and this PR doesn't change it. The computed tier for absolute-interpreter/flagged pytest and `gh issue close` is still whole-tree C; that's a known residual and is unchanged here.
