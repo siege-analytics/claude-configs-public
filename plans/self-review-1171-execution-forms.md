@@ -18,7 +18,7 @@ Base: develop 77d83c20
 
 ## Peer review
 
-- Scope: one test file with 50 added lines. No runtime, policy, generated or settings file changes.
+- Scope: one test file with 58 added lines relative to develop. No runtime, policy, generated or settings file changes.
 - Positive test: the fixture task has no junior/senior or artifacts-posted companion (asserted first). Each reported form runs through the real source gate and must exit 0.
 - Negatives: the same commands and cwds under `designing`, under a scope that doesn't own the toplevel, and with only another session's fully-companioned Task. Each must exit 2 with its specific reason, so a refusal for an unrelated reason can't satisfy them. The foreign-session test then adds the identical Task to the current session and requires exit 0, so session ownership is the only variable.
 - The tests assert gate outcomes, not tier values, so a later narrowing of `_pytest_execution_targets` doesn't have to edit them.
@@ -26,13 +26,15 @@ Base: develop 77d83c20
 
 ## Independent review
 
-A fresh-context reviewer, with no access to the author's conclusions, statically reviewed 088cd8d4. Verdict: APPROVE-WITH-NITS. It couldn't refute the three claims: no non-test consumer turns tier into a refusal, the positive test isn't vacuous, and the inline-python refusal is the opaque-execution rule. Findings and dispositions:
+A fresh-context reviewer, briefed with the commit's claims and asked to refute them, statically reviewed 088cd8d4. Verdict: APPROVE-WITH-NITS. It couldn't refute the three claims: no non-test consumer turns tier into a refusal, the positive test isn't vacuous, and the inline-python refusal is the opaque-execution rule. Findings and dispositions:
 
 1. Medium: bare `gh issue close` is still gated by coordinator-status-guard (evidence, not tier). Fixed: the Assumptions bullet above now says so.
 2. Low: the foreign-session negative couldn't tell "foreign Task ignored" apart from "no Task". Fixed: added the own-session control that must exit 0.
 3. Low: an interpreter path containing a space would split. Fixed: `shlex.quote`.
 4. Nit: main's companion enforcement spans lines 112-445 (the refusal text is at 438). Fixed.
 5. Informational: the reviewer didn't run the tests (its sandbox refused scratch writes). The test results below are the author's.
+
+The same reviewer then re-reviewed the fix delta 088cd8d4..b9550e9d. Verdict: APPROVE-WITH-NITS. All four fixes address their findings. Its two remaining prose nits (this section's description of the reviewer's brief, and the added-line count) are fixed in the following commit, which changes only this record.
 
 ## Lead review
 
@@ -48,5 +50,5 @@ A fresh-context reviewer, with no access to the author's conclusions, statically
 
 ## Quantified claims
 
-- 1 test file changed; 4 new test methods plus 1 helper.
+- 1 test file changed (+58 lines); 4 new test methods plus 1 helper.
 - 5 reported forms pinned as allowed, plus 5 own-session control subtests; 15 refusal subtests (3 conditions × 5 forms); 1 opaque-execution assertion.
