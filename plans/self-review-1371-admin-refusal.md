@@ -45,6 +45,17 @@ These are what I actually read, and what each one established.
   - the tokenizer;
   - the other publication guards.
 
+## Test plan
+
+These are the commands actually run, with their observed results. The worktree suites ran from the session scratch harness (`run_suites.py`, which strips host-session variables and puts the PyYAML venv on PATH), with cwd at the worktree.
+
+- **Red run on the pre-fix tree** (develop `5c90061c` plus #1370; HEAD `ce4d34d9`) with the new test file copied in: `run_suites.py run red-ce4d34d9 hooks/_test/github_merge_queue.test.sh`. It exited 1. The source UMG admitted 33 spelling rows from an owned cwd.
+- **Focused suite:** `bash hooks/_test/github_merge_queue.test.sh`. Ran 27 tests, OK, on the final pre-merge code.
+- **ssh suite:** `bash hooks/_test/universal_mutation_gate_ssh.test.sh`. Summary: 179 passed, 0 failed, on the final pre-merge code.
+- **Full run on code tree `9ef84c01`** (develop `bd433bdf` merged; the later commits change only this prose record): `run_suites.py run full11 ALL`. 89 suites, 88 exited 0. ca_enforcement_runtime exited 1 with its known 12 passed / 4 failed baseline.
+- **Generators on `9ef84c01`:** `bin/build.py` with the PyYAML venv, then `--check` for build, skill-inventory, generated-source-authority, kernel-budget and review-risk-metrics. All current.
+- **Test-evidence receipt:** produced with `hooks/lib/test-evidence.py record` over the focused suite, after this record was committed.
+
 ## Peer review
 
 Shelf checks, listing only the rules actually applied, with their evidence:
