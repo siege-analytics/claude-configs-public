@@ -1,12 +1,12 @@
 {
   "characters": {
     "injected": {
-      "explicit_overflow": 8737,
-      "generic": 8656,
-      "multi_route": 9822,
-      "python_review": 8920
+      "explicit_overflow": 8640,
+      "generic": 8559,
+      "multi_route": 9725,
+      "python_review": 8823
     },
-    "kernel": 8158,
+    "kernel": 8061,
     "legacy_root_resolver": 34834,
     "legacy_rules_bundle": 375042,
     "skill_resolver": 18135

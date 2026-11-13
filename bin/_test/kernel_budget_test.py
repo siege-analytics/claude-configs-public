@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import re
 import shutil
 import sys
 import tempfile
@@ -51,6 +52,12 @@ def expect_failure(root: Path, source: Path, phrase: str, **kwargs) -> None:
 
 
 def main() -> None:
+    catalog = json.loads((ROOT / "catalog/kernel-budget.json").read_text())
+    verifier = (ROOT / "bin/verify-enforcement.sh").read_text()
+    pin = re.search(r'^EXPECTED_KERNEL_SHA256="([0-9a-f]{64})"$', verifier, re.M)
+    assert pin, "canonical Kernel verifier pin is missing"
+    assert {item["sha256"] for item in catalog["artifacts"].values()} == {pin[1]}, \
+        "canonical Kernel verifier pin differs from the generated rendered catalog"
     with tempfile.TemporaryDirectory() as td:
         root = Path(td).resolve()
         source = materialize(root, kernel())
