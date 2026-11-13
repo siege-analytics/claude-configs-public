@@ -11,3 +11,5 @@ Frozen SHA-256 values:
 - hooks/git/self-review.sh: 02dcaacd4b4b3cd26ae0a1dd5a95136e7385beb1e557f66fb221ab94ad779267
 - hooks/git/pre-push-self-review.sh: 9835ef8b60a4fd8c31db142cecd1db10ce2bf7791ec58779640b42a694253a3c
 - hooks/_test/lean_publication_review.py: 67f75d6307fc37b6dd03a4303697717d5fc4c08448301260db9f5010ae856b1c
+
+A later correction changes only the tool adapter's expansion fast-skip before this reviewed section helper; the helper and native adapter section semantics remain unchanged. The hashes above describe the original c65e1bce independent review, not the later whole-file hash. Root independently reviews the new parser/fast-skip correction, and the complete39-method publication suite passes again on that source.

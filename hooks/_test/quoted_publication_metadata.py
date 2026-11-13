@@ -69,6 +69,89 @@ class QuotedPublicationMetadata(unittest.TestCase):
             with self.subTest(reader_or_data=command):
                 self.assertEqual(self.classify(command)['kind'], 'none')
 
+    def test_dynamic_executable_positions_survive_all_known_wrappers(self):
+        wrappers = ['', 'command ', 'env ', 'env -i ', 'env --ignore-environment ',
+                    'env -u HOME ', 'command env ', 'time ', 'time -p ', 'exec ', 'timeout 20 ',
+                    'time exec ', 'timeout 20 command ']
+        for wrapper in wrappers:
+            for arguments in ('push', '"$VERB"'):
+                command = wrapper + '"$PUBLISHER" ' + arguments
+                with self.subTest(command=command):
+                    self.assertEqual(self.classify(command)['kind'], 'unknown')
+                    for hook in HOOKS:
+                        result = self.hook(hook, command)
+                        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            harmless = wrapper + '"$TOOL" --version'
+            with self.subTest(nonpublication=harmless):
+                self.assertEqual(self.classify(harmless)['kind'], 'none')
+                for hook in HOOKS:
+                    result = self.hook(hook, harmless)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(self.log.read_text(), '')
+            for metadata in ['issue create --title \"git push\" --body \"$BODY\"',
+                             'pr view 1 --json \"$FIELDS\"']:
+                command = wrapper + '\"$TOOL\" ' + metadata
+                self.assertEqual(self.classify(command)['kind'], 'none', command)
+                for hook in HOOKS:
+                    result = self.hook(hook, command)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(self.log.read_text(), '')
+        for command in ["bash -c 'exec \"$PUBLISHER\" push'",
+                        "timeout 20 bash -c 'command \"$PUBLISHER\" push'",
+                        "printf '%s' 'time \"$PUBLISHER\" push'", 'echo "exec $WORD push"']:
+            expected = 'none' if command.startswith(('printf', 'echo')) else 'unknown'
+            self.assertEqual(self.classify(command)['kind'], expected, command)
+
+    def test_unquoted_executable_globs_keep_flags_through_wrappers(self):
+        wrappers = ['', 'command ', 'env ', 'env -i ', 'env -u HOME ', 'command env ',
+                    'time ', 'time -p ', 'exec ', 'timeout 20 ', 'time exec ', 'timeout 20 command ']
+        for wrapper in wrappers:
+            for verb in ('push', 'pu*', '"$VERB"'):
+                command = wrapper + 'gi* ' + verb
+                with self.subTest(command=command):
+                    self.assertEqual(self.classify(command)['kind'], 'unknown')
+                    for hook in HOOKS:
+                        result = self.hook(hook, command)
+                        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            for program in ('gi* --version', "'gi*' push"):
+                command = wrapper + program
+                with self.subTest(nonpublication=command):
+                    self.assertEqual(self.classify(command)['kind'], 'none')
+                    for hook in HOOKS:
+                        result = self.hook(hook, command)
+                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                        self.assertEqual(self.log.read_text(), '')
+        for command in ['gi? push', '[g]it push', 'PATTERN=gi* command gi* push',
+                        "bash -c 'command gi* push'", "timeout 20 bash -c 'exec gi* push'"]:
+            self.assertEqual(self.classify(command)['kind'], 'unknown', command)
+        for command in ["PATTERN=gi* printf '%s' x", "printf '%s' 'command gi* push'",
+                        "gh issue create --title 'gi* push'", 'gh issue create --title gi*',
+                        "PATTERN=gi* command 'gi*' push"]:
+            self.assertEqual(self.classify(command)['kind'], 'none', command)
+
+    def test_option_values_do_not_hide_known_executable_expansions(self):
+        wrappers = ['exec -a label ', 'exec -alabel ', 'exec -c ', 'exec -l ', 'exec -cl ',
+                    'timeout -s TERM 20 ', 'timeout --signal=TERM --kill-after=5 20 ',
+                    'timeout --foreground --preserve-status --verbose 20 ',
+                    'command -p ', 'env --unset=HOME ']
+        for wrapper in wrappers:
+            for program in ('"$PUBLISHER"', 'gi*'):
+                command = wrapper + program + ' push'
+                with self.subTest(command=command):
+                    self.assertEqual(self.classify(command)['kind'], 'unknown')
+                    for hook in HOOKS:
+                        result = self.hook(hook, command)
+                        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            harmless = wrapper + '"$TOOL" --version'
+            self.assertEqual(self.classify(harmless)['kind'], 'none', harmless)
+        for arguments in ('--no-replace-objects push', '--no-lazy-fetch -P push', '-p push'):
+            command = 'command \"$PUBLISHER\" ' + arguments
+            self.assertEqual(self.classify(command)['kind'], 'unknown', command)
+            for hook in HOOKS:
+                result = self.hook(hook, command)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertEqual(self.classify('\"$TOOL\" --version \"$DATA\" \"$MORE\"')['kind'], 'none')
+
     def test_substitution_publication_uses_its_effective_repository(self):
         other = self.root / 'other repo'
         subprocess.run([self.git, 'clone', '-q', str(self.repo), str(other)], env=self.env,
