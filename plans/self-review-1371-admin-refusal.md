@@ -13,6 +13,7 @@ Review-Tier: C. This is enforcement runtime: `hooks/lib/task_actions.py`, `hooks
 
 Goal source: #1371, #1372 and #1207 AC3 ("any form with `--admin`" stays denied)
 Working as: software engineer (enforcement hooks)
+Project-contribution: the scaffold's merge guards refuse admin-bypass merges in every modelled gh spelling, so #1207's pinned merge queue cannot be bypassed locally
 Pre-author-inventory: https://github.com/siege-analytics/claude-configs-public/issues/1371#issuecomment-6850953261
 Investigate-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1371#issuecomment-6850953261
 Pre-mortem-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1371#issuecomment-6850953261
