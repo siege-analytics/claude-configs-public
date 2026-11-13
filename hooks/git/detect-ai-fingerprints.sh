@@ -44,6 +44,8 @@ _FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CM
 # blanks squeezed; skip only if neither matches. A command containing ANSI-C
 # $'...' (which can spell any byte) takes the full path.
 [[ "$_FAST_CMDS" == *"\$'"* ]] && _FAST_FULL=1
+# Expansions require structural argv inspection, even with no literal CLI name.
+[[ "$_FAST_CMDS" == *'$'* || "$_FAST_CMDS" == *'`'* || "$_FAST_CMDS" == *'*'* || "$_FAST_CMDS" == *'?'* || "$_FAST_CMDS" == *'['* ]] && _FAST_FULL=1
 # A quote or backslash between two letters or digits (`pr"x"`, `x\git`) joins
 # words; only the full path's quote handling decides what that runs. In the
 # JSON text a shell `"` or `\` is itself escaped, hence the leading backslash.
