@@ -26,8 +26,53 @@ class ScannerExecution(unittest.TestCase):
         self.data=self.f.ws/'sessions/one/data';self.data.mkdir(parents=True)
         self.scratch=self.data/'scanner';self.scratch.mkdir(mode=0o700)
         self.message=self.data/'message.txt';self.message.write_text('fix: own fixture #1211\n')
-        subprocess.run(['git','-C',str(self.repo),'remote','add','origin','https://github.com/example/app.git'],check=True,capture_output=True,timeout=10)
+        f.fixture_git(*['-C',str(self.repo),'remote','add','origin','https://github.com/example/app.git'],check=True,capture_output=True,timeout=10)
         value=json.loads((self.gate/'think-gate.json').read_text());value['scope_paths'].append(str(self.data));f.write(self.gate/'think-gate.json',value)
+
+    def test_fixture_git_writes_preserve_the_outer_repository(self):
+        outer=self.f.ws/'outer';outer.mkdir()
+        clean={k:v for k,v in os.environ.items() if not k.startswith('GIT_')}
+        def outer_git(*args):
+            return subprocess.run(['git','-C',str(outer),*args],env=clean,
+                                  check=True,capture_output=True,text=True,timeout=10)
+        outer_git('init','-q')
+        (outer/'original.txt').write_text('outer content must remain unchanged\n')
+        outer_git('add','original.txt')
+        outer_git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid',
+                  'commit','-qm','outer fixture')
+        def snapshot():
+            return {str(p.relative_to(outer)):(p.stat().st_mode & 0o777,
+                    hashlib.sha256(p.read_bytes()).hexdigest())
+                    for p in outer.rglob('*') if p.is_file()}
+        before=snapshot()
+        variables={'GIT_DIR':str(outer/'.git'),'GIT_WORK_TREE':str(outer),
+                   'GIT_COMMON_DIR':str(outer/'.git'),'GIT_INDEX_FILE':str(outer/'.git/index'),
+                   'GIT_OBJECT_DIRECTORY':str(outer/'.git/objects'),
+                   'GIT_ALTERNATE_OBJECT_DIRECTORIES':str(outer/'.git/objects')}
+        for inherited in ({'GIT_DIR':variables['GIT_DIR']},variables):
+            with self.subTest(inherited=sorted(inherited)),patch.dict(os.environ,inherited):
+                nested=ScannerExecution()
+                try:
+                    nested.setUp()
+                    self.assertEqual(snapshot(),before,'fixture init/remote modified outer repository')
+                    source=nested.repo/'candidate.txt';source.write_text('owned fixture change\n')
+                    poisoned={**nested.f.env,**inherited}
+                    with patch.dict(os.environ,inherited):
+                        f.fixture_git('-C',nested.repo,'remote','set-url','origin',
+                                      'https://github.com/example/owned-fixture.git',env=poisoned,check=True,timeout=10)
+                        self.assertEqual(snapshot(),before,'fixture remote modified outer config')
+                        f.fixture_git('-C',nested.repo,'add','candidate.txt',check=True,timeout=10)
+                        self.assertEqual(snapshot(),before,'fixture add modified outer index or objects')
+                        f.fixture_git('-C',nested.repo,'-c','user.name=Fixture',
+                                      '-c','user.email=fixture@example.invalid',
+                                      'commit','-qm','owned fixture',env=poisoned,check=True,capture_output=True,timeout=10)
+                    location=f.fixture_git('-C',nested.repo,'rev-parse','--show-toplevel',
+                                           check=True,capture_output=True,text=True,timeout=10)
+                    self.assertEqual(Path(location.stdout.strip()).resolve(),nested.repo.resolve())
+                    self.assertEqual(snapshot(),before,'fixture commit modified outer repository')
+                finally:
+                    nested.doCleanups()
+        self.assertEqual(snapshot(),before)
 
     def command(self,*mode):
         return shlex.join(['python3','-I','-B',str(ROOT/'hooks/lib/scanner-exec.py'),'--repo',str(self.repo),'--think-gate',str(self.gate/'think-gate.json'),'--tmp-root',str(self.scratch),*mode])
@@ -63,7 +108,7 @@ class ScannerExecution(unittest.TestCase):
         gate=self.gate/'think-gate.json';value=json.loads(gate.read_text())
         logs=self.data/'logs';logs.mkdir(mode=0o700)
         source=self.repo/'sample.py';source.write_text('value = 1\n')
-        subprocess.run(['git','-C',str(self.repo),'add','sample.py'],check=True,capture_output=True,timeout=10)
+        f.fixture_git(*['-C',str(self.repo),'add','sample.py'],check=True,capture_output=True,timeout=10)
         source.write_text('value = 2\n')
         value['scope_paths']=[str(self.repo/'sample.py'),str(self.scratch),str(self.message),str(logs)]
         f.write(gate,value)
@@ -92,7 +137,7 @@ class ScannerExecution(unittest.TestCase):
                    'scope_paths':[str(message),str(scratch),str(logs)],'status':'reviewing'}
             f.write(gate,value);f.write(session/'session.jsonl',{'id':'one','sdkSessionId':f.SDK_UUID,'sessionStatus':'in_progress'})
             env={**self.f.env,'CRAFT_SESSION_DIR':str(session),'CRAFT_AGENT_WORKSPACE':str(workspace)}
-            outside=subprocess.run(['git','-C',str(repo),'rev-parse','--show-toplevel'],env=env,capture_output=True,text=True,timeout=10)
+            outside=f.fixture_git(*['-C',str(repo),'rev-parse','--show-toplevel'],env=env,capture_output=True,text=True,timeout=10)
             self.assertNotEqual(outside.returncode,0,'fixture must be outside Git')
             def command(*mode):
                 return shlex.join(['python3','-I','-B',str(ROOT/'hooks/lib/scanner-exec.py'),'--repo',str(repo),
@@ -142,7 +187,7 @@ class ScannerExecution(unittest.TestCase):
         self.assertEqual(inline.returncode,1,inline.stdout+inline.stderr)
         self.message.write_text('fix: fixture #1211\n\nThis is explicitly useful.\n')
         findings=self.run_scanner('--message-file',str(self.message));self.assertEqual(findings.returncode,1,findings.stdout+findings.stderr)
-        git=lambda *args:subprocess.run(['git','-C',str(self.repo),*args],env=self.f.env,check=True,capture_output=True,text=True,timeout=10)
+        git=lambda *args:f.fixture_git(*['-C',str(self.repo),*args],env=self.f.env,check=True,capture_output=True,text=True,timeout=10)
         git('config','user.name','Fixture');git('config','user.email','fixture@example.invalid')
         source=self.repo/'sample.py';source.write_text('raise RuntimeError("selected code is data")\n')
         git('add','sample.py');before=git('write-tree').stdout.strip()
@@ -200,21 +245,21 @@ class ScannerExecution(unittest.TestCase):
         self.assertEqual(list(foreign.iterdir()),[])
 
     def test_private_index_is_explicit_and_default_index_is_preserved(self):
-        def git(*args,env=None):
-            return subprocess.run(['git','-C',str(self.repo),*args],env=env or self.f.env,check=True,capture_output=True,text=True,timeout=10)
+        def git(*args,index_file=None):
+            return f.fixture_git(*['-C',str(self.repo),*args],env=self.f.env,index_file=index_file,check=True,capture_output=True,text=True,timeout=10)
         git('config','user.name','Fixture');git('config','user.email','fixture@example.invalid')
         (self.repo/'sample.py').write_text('value = 1\n');git('add','sample.py')
         normal=git('write-tree').stdout.strip()
         index=self.data/'private-index';shutil.copyfile(self.repo/'.git/index',index)
         (self.repo/'note.txt').write_text('This is explicitly useful.\n')
-        indexed={**self.f.env,'GIT_INDEX_FILE':str(index)};git('add','note.txt',env=indexed)
-        selected=git('write-tree',env=indexed).stdout.strip();self.assertNotEqual(normal,selected)
+        indexed={**self.f.env,'GIT_INDEX_FILE':str(index)};git('add','note.txt',index_file=index)
+        selected=git('write-tree',index_file=index).stdout.strip();self.assertNotEqual(normal,selected)
         command=self.command('--staged')+' --index-file '+shlex.quote(str(index))
         self.f.assertGate(0,command)
         result=subprocess.run(shlex.split(command),env=self.f.env,capture_output=True,text=True,timeout=60)
         self.assertEqual(result.returncode,1,result.stdout+result.stderr)
         self.assertEqual(git('write-tree').stdout.strip(),normal)
-        self.assertEqual(git('write-tree',env=indexed).stdout.strip(),selected)
+        self.assertEqual(git('write-tree',index_file=index).stdout.strip(),selected)
         self.f.assertGate(2,self.command('--staged'),env=indexed)
         self.f.assertGate(2,self.command('--working')+' --index-file '+shlex.quote(str(index)))
 
@@ -261,7 +306,7 @@ class ScannerExecution(unittest.TestCase):
         self.assertEqual(result.returncode,2,result.stdout+result.stderr)
         self.f.assertGate(2,command)
         (self.repo/'sample.md').write_text('ordinary source line\n'*300)
-        subprocess.run(['git','-C',str(self.repo),'add','sample.md'],env=self.f.env,check=True,capture_output=True,timeout=10)
+        f.fixture_git(*['-C',str(self.repo),'add','sample.md'],env=self.f.env,check=True,capture_output=True,timeout=10)
         self.f.assertGate(0,self.command('--staged'))
         process=subprocess.Popen(shlex.split(self.command('--staged')),env=self.f.env,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
         self.addCleanup(lambda:process.kill() if process.poll() is None else None)
@@ -292,14 +337,14 @@ except KeyboardInterrupt:
 
     def test_actual_pr_mode_fetches_exact_objects_without_moving_target_refs(self):
         def git(repo,*args,check=True):
-            return subprocess.run(['git','-C',str(repo),*args],env=self.f.env,check=check,capture_output=True,text=True,timeout=15)
+            return f.fixture_git(*['-C',str(repo),*args],env=self.f.env,check=check,capture_output=True,text=True,timeout=15)
         git(self.repo,'config','user.name','Fixture');git(self.repo,'config','user.email','fixture@example.invalid')
         (self.repo/'sample.py').write_text('value = 1\n');git(self.repo,'add','sample.py');git(self.repo,'commit','-qm','fixture base')
         base=git(self.repo,'rev-parse','HEAD').stdout.strip()
-        remote=self.f.ws/'remote.git';subprocess.run(['git','clone','--bare',str(self.repo),str(remote)],env=self.f.env,check=True,capture_output=True,timeout=15)
+        remote=self.f.ws/'remote.git';f.fixture_git(*['clone','--bare',str(self.repo),str(remote)],env=self.f.env,check=True,capture_output=True,timeout=15)
         git(self.repo,'remote','set-url','origin',str(remote))
         gate=self.gate/'think-gate.json';value=json.loads(gate.read_text());value['scope_paths']=[str(self.repo/'sample.py'),str(self.scratch),str(self.message),str(remote)];f.write(gate,value)
-        author=self.f.ws/'source';subprocess.run(['git','clone',str(remote),str(author)],env=self.f.env,check=True,capture_output=True,timeout=15)
+        author=self.f.ws/'source';f.fixture_git(*['clone',str(remote),str(author)],env=self.f.env,check=True,capture_output=True,timeout=15)
         git(author,'config','user.name','Fixture');git(author,'config','user.email','fixture@example.invalid')
         git(author,'checkout','-qb','review-source');(author/'sample.py').write_text('value = 2\n')
         git(author,'add','sample.py');git(author,'commit','-qm','fixture source');git(author,'push','origin','HEAD')
@@ -320,19 +365,19 @@ except KeyboardInterrupt:
     def test_repository_git_helpers_never_execute_as_scanner_input(self):
         marker=self.data/'repository-code-executed';helper=self.data/'fsmonitor'
         helper.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\nprintf "token\\000"\n');helper.chmod(0o700)
-        subprocess.run(['git','-C',str(self.repo),'config','core.fsmonitor',str(helper)],check=True,timeout=10)
+        f.fixture_git(*['-C',str(self.repo),'config','core.fsmonitor',str(helper)],check=True,timeout=10)
         result=self.run_scanner('--staged')
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         self.assertFalse(marker.exists())
         for key in ['core.sshCommand','remote.origin.uploadpack','credential.helper','url.file:///foreign/.insteadOf']:
             with self.subTest(key=key):
-                subprocess.run(['git','-C',str(self.repo),'config',key,str(helper)],check=True,timeout=10)
+                f.fixture_git(*['-C',str(self.repo),'config',key,str(helper)],check=True,timeout=10)
                 self.f.assertGate(2,self.command('--pr','1805'))
                 result=self.run_scanner('--pr','1805')
                 self.assertEqual(result.returncode,2,result.stdout+result.stderr)
                 self.assertIn('transport/helper',result.stderr)
                 self.assertFalse(marker.exists())
-                subprocess.run(['git','-C',str(self.repo),'config','--unset',key],check=True,timeout=10)
+                f.fixture_git(*['-C',str(self.repo),'config','--unset',key],check=True,timeout=10)
 
     def test_closure_mutation_and_startup_injection(self):
         from scanner_capability import validate_files,parse_arguments,ScannerError,CLOSURE
