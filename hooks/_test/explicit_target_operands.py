@@ -7,7 +7,9 @@ target. Every other shape keeps the generic model, where the cwd stays a
 target. A target in the current session's own data/ with no tracked files
 floors at Tier A; tracked content and clones keep normal classification.
 The value of a gh -R/--repo repository selector is never a local target;
-the cwd stays the target of those unmodelled gh writes (#1347).
+the cwd stays the target of those unmodelled gh writes (#1347). Neither is
+the value of a known free-text option of gh issue close|reopen, pr
+close|reopen|merge or release create (#1355).
 """
 import json
 import os
@@ -491,7 +493,10 @@ class ExplicitTargets(unittest.TestCase):
             'gh run download 9 -D -Ro/r': ['/r'],
             'gh issue close 5 -R -R o/r': [str(self.payload)],
             'gh pr close 5 -c -R o/r -R c/d': [str(self.payload)],
-            'gh pr merge 5 --squash -Ro/r': ['/r'],
+            # #1355: `--squash` is a known zero-arity flag, so `--squash -Ro/r`
+            # now drops the selector (test_gh_zero_arity_flag_lets_a_selector_drop);
+            # an unknown flag still keeps it.
+            'gh pr merge 5 --foo -Ro/r': ['/r'],
             'gh -R -R o/r issue close 5': [str(self.payload)],
         }
         for command, expected in cases.items():
@@ -653,7 +658,12 @@ class ExplicitTargets(unittest.TestCase):
         clone = self.f.repo
         cases = {
             # An unknown flag may own the next token, whatever it looks like.
+            # "Opaque" means kept as a path-scan target, never dropped.
             "gh pr merge 5 --foo 'a/b'": [clone / 'a/b'],
+            'gh pr close 5 --unknown-flag a/b': [clone / 'a/b'],
+            'gh release create v1 --foo a/b --notes x': [clone / 'a/b'],
+            'gh pr merge 5 -z a/b': [clone / 'a/b'],
+            'gh issue close 5 --foo ../escape -c x': [self.ws / 'escape'],
             'gh pr merge 5 --foo -tfix/x': ['/x'],
             'gh pr merge 5 --foo --subject a/b': [clone / 'a/b'],
             'gh pr merge 5 -ztfix/x': ['/x'],
@@ -670,6 +680,12 @@ class ExplicitTargets(unittest.TestCase):
                 self.assertIn(str(clone), paths)
                 for path in expected:
                     self.assertIn(str(path), paths)
+        # An out-of-scope value after an unknown flag still refuses.
+        self.task(clone, repo_root=clone, identity='gh1355')
+        for command in ('gh issue close 5 --foo ../escape -c x', 'gh pr merge 5 --foo -tfix/x',
+                        'gh pr merge 5 --foo ' + q(str(self.payload / 'x')) + ' --squash'):
+            with self.subTest(gate=command):
+                self.f.assertGate(2, command, cwd=clone)
 
     def test_gh_unmodelled_subcommands_and_executables_are_unchanged(self):
         clone = self.f.repo
@@ -706,6 +722,12 @@ class ExplicitTargets(unittest.TestCase):
     def test_gh_text_values_keep_expansion_and_substitution_checks(self):
         clone = self.f.repo
         commands = ('gh pr close 5 --comment "see $(touch x)/b"',
+                    # Substitution inside a text flag whose value is dropped.
+                    'gh pr close 5 --comment "$(touch x)"',
+                    'gh pr merge 5 --subject "`touch x`"',
+                    'gh pr merge 5 --squash -b "$(id)"',
+                    'gh release create v1 --notes=$(id)',
+                    'gh issue close 5 -c`id`',
                     'gh pr close 5 -c "a/`id`"',
                     'gh pr close 5 -c "$HOME/x"',
                     'gh pr merge 5 -t"$(id)"/x',
@@ -737,6 +759,101 @@ class ExplicitTargets(unittest.TestCase):
                 result = self.f.assertGate(2, command, cwd=other)
                 self.assertIn('Unowned target: ' + str(other), result.stderr)
         self.f.assertGate(2, 'gh pr merge 5 --body-file ' + q(str(other / 'b.md')), cwd=owned)
+
+    def test_gh_zero_arity_flag_lets_a_selector_drop(self):
+        # #1356 P3-1: a selector right after a KNOWN zero-arity flag of a
+        # modelled subcommand is a selector, not that flag's value. Unknown
+        # flags, clusters ending in R and bare -R values stay conservative.
+        clone = self.f.repo
+        dropped = ('gh pr merge 5 --squash -Ro/r', 'gh pr merge 5 -s -Ro/r', 'gh pr merge 5 --delete-branch -R o/r',
+                   'gh pr merge 5 -d=true -Ro/r', 'gh pr merge 5 -tx -Ro/r', 'gh pr close 5 -d -Ro/r',
+                   'gh release create v1 --draft -R o/r', 'gh release create v1 --latest -R o/r',
+                   'gh release create v1 --latest=false -Ro/r')
+        kept = {'gh pr merge 5 -sRo/r': '/r', 'gh pr merge 5 --foo -Ro/r': '/r',
+                'gh pr merge 5 -R -s -Ro/r': '/r', 'gh issue close 5 -dRo/r': '/r'}
+        for command in dropped:
+            with self.subTest(command=command):
+                self.assertEqual(self.paths(command, cwd=clone), [str(clone)])
+        for command, path in kept.items():
+            with self.subTest(command=command):
+                self.assertIn(path, self.paths(command, cwd=clone))
+        self.task(clone, repo_root=clone, identity='gh1355')
+        for command in dropped:
+            with self.subTest(gate=command):
+                self.f.assertGate(0, command, cwd=clone)
+        for command in kept:
+            with self.subTest(gate=command):
+                self.f.assertGate(2, command, cwd=clone)
+
+    def test_gh_flag_kinds_are_per_subcommand_and_bools_take_no_value(self):
+        # A 'bool' entry must not swallow the next positional, and a letter's
+        # kind is per subcommand: -r is a text --reason for issue close but the
+        # bool --rebase for pr merge. `-`, a path flag and --help keep their
+        # conservative or pflag readings.
+        clone = self.f.repo
+        cases = {
+            'gh pr merge --auto feature/x': [clone / 'feature/x'],
+            'gh pr merge -r feature/x': [clone / 'feature/x'],
+            'gh pr merge -s --delete-branch feature/x': [clone / 'feature/x'],
+            'gh pr close - -c a/b': [clone / 'a/b'],
+            'gh pr merge 5 -F -Ro/r': ['/r'],
+            'gh pr close 5 -h a/b': [clone / 'a/b'],
+        }
+        for command, expected in cases.items():
+            with self.subTest(command=command):
+                paths = self.paths(command, cwd=clone)
+                for path in expected:
+                    self.assertIn(str(path), paths)
+        for command in ('gh issue close 5 -r a/b', 'gh issue close 5 --reason=a/b',
+                        'gh pr close 5 --help -c a/b', 'gh pr close 5 --help=false -ca/b'):
+            with self.subTest(command=command):
+                self.assertEqual(self.paths(command, cwd=clone), [str(clone)])
+
+    def test_gh_release_assets_survive_bool_and_swallowed_flags(self):
+        # A wrong table entry or pending state would drop a real upload asset.
+        clone = self.f.repo
+        asset = str(self.payload / 'a')
+        commands = ['gh release create v1 ' + flag + ' ' + q(asset)
+                    for flag in ('--latest', '-d', '-p', '--draft', '--prerelease', '--generate-notes',
+                                 '--verify-tag', '--notes-from-tag', '--fail-on-no-commits', '-dp')]
+        # pflag: a path flag swallows a text flag name (and vice versa), so the
+        # following token is still an asset.
+        commands += ['gh release create v1 -F -t ' + q(asset), 'gh release create v1 --notes-file -n ' + q(asset),
+                     'gh release create v1 -t -F ' + q(asset), 'gh release create v1 --notes x ' + q(asset)]
+        for command in commands:
+            with self.subTest(command=command):
+                self.assertIn(asset, self.paths(command, cwd=clone))
+        self.task(clone, repo_root=clone, identity='gh1355')
+        for command in commands:
+            with self.subTest(gate=command):
+                self.f.assertGate(2, command, cwd=clone)
+
+    def test_gh_admin_merge_keeps_the_1347_model(self):
+        # No new allowance for --admin: the pinned merge-queue route refuses it
+        # only in the literal `gh pr merge` form, so every other form keeps
+        # exactly the #1347 model (the same words under an unmodelled subcommand).
+        clone = self.f.repo
+        cases = {
+            'gh pr -Ro/r merge 5 --admin -tfix/x': ['/x'],
+            'gh -R o/r pr merge 5 --admin -tfix/x': ['/x'],
+            "gh -R o/r pr merge 5 --admin --comment 'a/b'": [clone / 'a/b'],
+            "gh pr -R o/r merge 5 --admin=true --subject 'a/b'": [clone / 'a/b'],
+            # Over-trigger, pinned on purpose: --admin anywhere disables modelling.
+            'gh pr -Ro/r merge 5 --subject --admin -tfix/x': ['/x'],
+            'gh pr -Ro/r merge 5 -tfix/x -- --admin': ['/x'],
+        }
+        for command, expected in cases.items():
+            with self.subTest(command=command):
+                paths = self.paths(command, cwd=clone)
+                self.assertEqual(paths, self.paths(command.replace(' merge ', ' unmodelled-sub ', 1), cwd=clone))
+                for path in expected:
+                    self.assertIn(str(path), paths)
+        self.task(clone, repo_root=clone, identity='gh1355')
+        for command in ('gh pr -Ro/r merge 5 --admin -tfix/x', 'gh -R o/r pr merge 5 --admin -tfix/x'):
+            with self.subTest(gate=command):
+                self.f.assertGate(2, command, cwd=clone)
+        result = self.f.assertGate(2, 'gh pr merge 5 --admin -tfix/x', cwd=clone)
+        self.assertIn('Pinned merge denied', result.stderr)
 
 
 if __name__ == '__main__':

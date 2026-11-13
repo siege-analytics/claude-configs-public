@@ -1886,14 +1886,90 @@ def _gh_repo_selector_width(args: list[str], i: int) -> int:
     return 0
 
 
-def _gh_without_repo_selectors(args: list[str]) -> list[str]:
-    """Drop gh -R/--repo selector values before local path scanning (#1347).
+# Flag kinds for the gh subcommands whose complete flag set was read from
+# cli/cli v2.104.0 pkg/cmd/<group>/<subcommand>/<subcommand>.go (#1355).
+# 'text': a string gh sends to the API or keeps in memory, never a local file.
+# 'path': a local file gh reads; it stays a target. 'bool': takes no value
+# (pflag NoOptDefVal, including cmdutil.NilBoolFlag). Every other flag, every
+# other subcommand and aliases such as `release new` are unknown and keep the
+# conservative #1347 model. The table is pinned to that release: a flag added
+# later is unknown (conservative), but a later change of a 'bool' flag to one
+# that takes a value would need this table updated.
+_GH_FLAG_KINDS = {
+    ('issue', 'close'): {'-c': 'text', '--comment': 'text', '-r': 'text', '--reason': 'text',
+                         '--duplicate-of': 'text'},
+    ('issue', 'reopen'): {'-c': 'text', '--comment': 'text'},
+    ('pr', 'close'): {'-c': 'text', '--comment': 'text', '-d': 'bool', '--delete-branch': 'bool'},
+    ('pr', 'reopen'): {'-c': 'text', '--comment': 'text'},
+    # '--admin' is listed for completeness against upstream only: any command
+    # carrying it is never modelled (see _gh_path_scan_args).
+    ('pr', 'merge'): {'--admin': 'bool', '-d': 'bool', '--delete-branch': 'bool', '-b': 'text', '--body': 'text',
+                      '-F': 'path', '--body-file': 'path', '-t': 'text', '--subject': 'text',
+                      '-m': 'bool', '--merge': 'bool', '-r': 'bool', '--rebase': 'bool', '-s': 'bool',
+                      '--squash': 'bool', '--auto': 'bool', '--disable-auto': 'bool',
+                      '--match-head-commit': 'text', '-A': 'text', '--author-email': 'text'},
+    ('release', 'create'): {'-d': 'bool', '--draft': 'bool', '-p': 'bool', '--prerelease': 'bool',
+                            '--target': 'text', '-t': 'text', '--title': 'text', '-n': 'text', '--notes': 'text',
+                            '-F': 'path', '--notes-file': 'path', '--discussion-category': 'text',
+                            '--generate-notes': 'bool', '--notes-start-tag': 'text', '--latest': 'bool',
+                            '--verify-tag': 'bool', '--notes-from-tag': 'bool', '--fail-on-no-commits': 'bool'},
+}
+# gh's root command registers a persistent bool --help with no shorthand, so
+# it never takes a value. A bare -h stays unknown (conservative).
+_GH_HELP_FLAGS = {'--help': 'bool'}
 
-    The group may follow leading selectors (`gh -R o/r issue close 5`); any
-    other leading token keeps the generic model. Only grammar-valid values are
-    dropped, only before `--`, and never directly after a bare option that
-    could own them; anything else stays a conservative path target. The cwd
-    fallback is unchanged, so this never grants authority.
+
+def _gh_bare_option(arg: str) -> bool:
+    """An option token that may take the next token as its value."""
+    return arg.startswith('-') and '=' not in arg
+
+
+def _gh_option_effect(flags: dict, arg: str):
+    """(keep the token, pending state for the next token) under pflag rules.
+
+    pending: None, 'text' (drop the next token), 'keep' (keep it) or
+    'unknown' (keep it; it may itself be a bare option).
+    """
+    if arg == '-' or not arg.startswith('-'):
+        return True, ('unknown' if arg == '-' else None)
+    if arg.startswith('--'):
+        kind = flags.get(arg.split('=', 1)[0])
+        if kind == 'text':
+            return (True, 'text') if '=' not in arg else (False, None)
+        if kind == 'path':
+            return True, ('keep' if '=' not in arg else None)
+        if kind == 'bool':
+            return True, None
+        return True, ('unknown' if _gh_bare_option(arg) else None)
+    for k in range(1, len(arg)):
+        kind = flags.get('-' + arg[k])
+        if kind == 'bool':
+            continue
+        rest = arg[k + 1:]
+        if kind == 'text':
+            # The rest of the token (after one optional '=') is the value.
+            return (False, None) if rest else (True, 'text')
+        if kind == 'path':
+            return True, (None if rest else 'keep')
+        # Unknown letter, or R inside a cluster: conservative.
+        return True, ('unknown' if _gh_bare_option(arg) else None)
+    return True, None  # all-bool cluster
+
+
+def _gh_path_scan_args(args: list[str]) -> list[str]:
+    """Drop gh values that are never local paths before path scanning (#1347, #1355).
+
+    #1347: grammar-valid -R/--repo selector values in the repo-override
+    groups; the group may follow leading selectors (`gh -R o/r issue close
+    5`), and any other leading token keeps the generic model. #1355: for the
+    subcommands in _GH_FLAG_KINDS, the values of 'text' flags, and a
+    selector right after a known zero-arity flag. Any unknown flag may own
+    the next token, so that token is kept (fail closed). Scanning stops at
+    `--`. A command with an `--admin` token anywhere (including option
+    values and after `--`) is never modelled: the pinned merge-queue route
+    refuses an admin merge only in its literal `gh pr merge` form, so no
+    target may be removed from the other forms. The cwd fallback is
+    unchanged, so this never grants authority.
     """
     if not args or args[0] != 'gh':
         return args
@@ -1912,18 +1988,41 @@ def _gh_without_repo_selectors(args: list[str]) -> list[str]:
         i, after_selector = i + width, True
     if i >= len(args) or args[i] not in _GH_REPO_OVERRIDE_GROUPS:
         return args
-    kept = ['gh', args[i]]
-    i, after_selector = i + 1, False
+    group = args[i]
+    kept = ['gh', group]
+    i += 1
+    # The subcommand follows the group, optionally after grammar-valid selectors.
+    j, after_selector = i, False
+    while j < len(args) and (width := width_at(j, after_selector)):
+        j, after_selector = j + width, True
+    modelled = _GH_FLAG_KINDS.get((group, args[j])) if j < len(args) else None
+    if any(a == '--admin' or a.startswith('--admin=') for a in args):
+        modelled = None  # admin bypass is never modelled (pinned merge-queue policy)
+    flags = {**_GH_HELP_FLAGS, **modelled} if modelled else {}
+    # With no modelled flags every option is unknown, which reproduces the
+    # #1347 rule: never drop a selector directly after a bare option.
+    pending = None
     while i < len(args):
-        if args[i] == '--':
+        arg = args[i]
+        if arg == '--':
             kept.extend(args[i:])
             break
-        width = width_at(i, after_selector)
-        if width:
-            i, after_selector = i + width, True
+        if pending == 'text':
+            pending = None  # pflag hands this token to the text flag
+        elif pending == 'keep':
+            kept.append(arg)
+            pending = None
+        elif pending == 'unknown':
+            kept.append(arg)
+            pending = 'unknown' if _gh_bare_option(arg) else None
+        elif width := _gh_repo_selector_width(args, i):
+            i += width
+            continue
         else:
-            kept.append(args[i])
-            i, after_selector = i + 1, False
+            keep, pending = _gh_option_effect(flags, arg)
+            if keep:
+                kept.append(arg)
+        i += 1
     return kept
 
 
@@ -2302,9 +2401,10 @@ def _action(command: str, cwd: str) -> dict:
             if args[0] in {'eval', 'exec', 'bash', 'sh', 'zsh', 'dash', 'ksh'} or args[0] in {'python', 'python3'} and any(x == '-c' or x.startswith('-c') for x in args[1:]):
                 raise UnknownShape('opaque inline execution has unbounded mutation targets')
             local = effective
-            # gh -R/--repo selector values are not local paths (#1347); the
-            # glob/tilde checks below still see every original operand.
-            scanned = _gh_without_repo_selectors(args)
+            # gh -R/--repo selector values (#1347) and modelled free-text
+            # option values (#1355) are not local paths; the glob/tilde checks
+            # below still see every original operand.
+            scanned = _gh_path_scan_args(args)
             operands = [x.split('=', 1)[-1] if '=' in x else x for x in args[1:]]
             # Unquoted glob positions were rejected above. Retain that lexical
             # proof for known literal operands; do not reinterpret quoted data.
