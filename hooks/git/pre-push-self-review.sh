@@ -77,7 +77,7 @@ validate_committed_artifact() {
     local findings unresolved findings_heading_re='^##[[:blank:]]+findings([^[:alnum:]_]|$)'
     findings=$(awk -v heading="$findings_heading_re" '/^##[[:blank:]]+/ {active=(tolower($0) ~ heading);next} active {print}' <<<"$content")
     unresolved=$(
-        printf '%s\n' "$findings" | awk '/^\|/ {
+        printf '%s\n' "$findings" | awk '/^[ ]?[ ]?[ ]?\|/ {
             delete cells
             count=1
             for (i=1; i<=length($0); i++) {
@@ -98,7 +98,23 @@ validate_committed_artifact() {
                     tolower(resolution) != "fixed") print
             }
         }'
-        printf '%s\n' "$findings" | grep -Ei '^[[:space:]]*([-*][[:space:]]+)?P1[[:space:]]*:' | grep -viE '(^|;)[[:space:]]*resolution[[:space:]]*:[[:space:]]*fixed[[:space:]]*(;|$)' || true
+        printf '%s\n' "$findings" | awk '
+            tolower($0) ~ /^[[:space:]]*([-*][[:space:]]+)?p1[[:space:]]*:/ {
+                count=split($0, fields, ";")
+                resolutions=0
+                fixed=0
+                for (i=1; i<=count; i++) {
+                    value=fields[i]
+                    sub(/^[[:space:]]+/, "", value)
+                    if (tolower(value) ~ /^resolution[[:space:]]*:/) {
+                        resolutions++
+                        sub(/^[^:]*:/, "", value)
+                        gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+                        if (tolower(value) == "fixed") fixed++
+                    }
+                }
+                if (resolutions != 1 || fixed != 1) print
+            }'
     )
     [[ -z "$unresolved" ]]
 }
