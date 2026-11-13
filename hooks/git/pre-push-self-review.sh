@@ -70,12 +70,19 @@ validate_committed_artifact() {
     if [[ "$tier" == "B" ]]; then
         for section in "## Assumptions" "## Test plan"; do grep -qF "$section" <<<"$content" || return 1; done
     else
-        if grep -qxF '## Peer review' <<<"$content" && grep -qxF '## Lead review' <<<"$content" && grep -qxF '## Quantified claims' <<<"$content"; then
+        if grep -Eq '^## Peer review[[:space:]]*$' <<<"$content" && grep -Eq '^## Lead review[[:space:]]*$' <<<"$content" && grep -Eq '^## Quantified claims[[:space:]]*$' <<<"$content"; then
             for section in "## Assumptions" "## Peer review" "## Lead review" "## Quantified claims"; do grep -qF "$section" <<<"$content" || return 1; done
         else
             for section in "## Assumptions" "## Test plan" "## Findings" "## Independent review"; do grep -qF "$section" <<<"$content" || return 1; done
         fi
     fi
+    local findings unresolved
+    findings=$(awk '/^## Findings[[:space:]]*$/ {active=1;next} /^## / {active=0} active {print}' <<<"$content")
+    unresolved=$(
+        printf '%s\n' "$findings" | grep -E '^\|[^|]*\|[[:space:]]*P1[[:space:]]*\|' | grep -viE '\|[[:space:]]*fixed' || true
+        printf '%s\n' "$findings" | grep -Ei '^[[:space:]]*([-*][[:space:]]+)?P1[[:space:]]*:' | grep -viE '(^|;)[[:space:]]*resolution[[:space:]]*:[[:space:]]*fixed[[:space:]]*(;|$)' || true
+    )
+    [[ -z "$unresolved" ]]
 }
 
 while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA EXTRA || [[ -n "$LOCAL_REF$LOCAL_SHA$REMOTE_REF$REMOTE_SHA$EXTRA" ]]; do
@@ -158,7 +165,7 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA EXTRA || [[ -n "$LOCAL_R
             fi
             if [[ "$TIER" == "C" && "$HOSTILE_COUNT" -ne 1 ]]; then
                 REASONS+=("Hostile-Review: <URL, #ticket, or committed file with the independent hostile review>  (Tier C requires exactly one Hostile-Review)")
-            elif [[ "$TIER" == "C" && ! "$HOSTILE_VALUE" =~ ^(https?://|#[0-9]+$) ]] && { ! git cat-file -e "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || [[ $(git cat-file -s "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || echo 0) -eq 0 ]]; }; then
+            elif [[ "$TIER" == "C" && ! "$HOSTILE_VALUE" =~ ^(https?://|#[0-9]+$) ]] && { [[ ! "$(git --literal-pathspecs ls-tree --full-tree "$COMMIT" -- "${HOSTILE_VALUE#./}" 2>/dev/null | awk '{print $1}')" =~ ^100(644|755)$ ]] || [[ "$(git cat-file -t "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null)" != blob ]] || [[ $(git cat-file -s "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || echo 0) -eq 0 ]]; }; then
                 REASONS+=("Hostile-Review is not a URL, ticket, or non-empty file in the commit")
             fi
 
