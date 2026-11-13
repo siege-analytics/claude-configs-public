@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Actual scanner hook/producer controls; selected project code is never executed."""
 import hashlib
+import builtins
 import importlib.util
 import json
 import os
 import select
+import signal
 import shutil
 import sys
 import tempfile
@@ -290,6 +292,33 @@ class ScannerExecution(unittest.TestCase):
         with self.assertRaises(module.ScannerError):module.wait_scanner(process,budget=0.01,interval=0.05)
         self.assertIsNotNone(process.poll())
 
+    def test_startup_diagnostic_failure_cleans_the_owned_process(self):
+        spec=importlib.util.spec_from_file_location('scanner_startup_runtime',ROOT/'hooks/lib/scanner-exec.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        real_popen=subprocess.Popen
+        for failure in (OSError('startup stderr unavailable'),KeyboardInterrupt('startup signal')):
+            with self.subTest(failure=type(failure).__name__):
+                children=[]
+                def owned_child(*args,**kwargs):
+                    self.assertEqual(args[0][0],'/bin/bash')
+                    child=real_popen([sys.executable,'-I','-c','import time; time.sleep(30)'],start_new_session=True)
+                    children.append(child)
+                    return child
+                def diagnostic(*args,**kwargs):
+                    if str(args[0]).startswith('scanner owned process group:'):
+                        raise failure
+                    return builtins.print(*args,**kwargs)
+                try:
+                    with patch.dict(os.environ,self.f.env,clear=True),patch.object(sys,'argv',shlex.split(self.command('--message','fix: own fixture #1361'))[3:]),patch.object(module.subprocess,'Popen',side_effect=owned_child),patch.object(module,'print',side_effect=diagnostic,create=True):
+                        self.assertEqual(module.main(),2)
+                    self.assertEqual(len(children),1)
+                    self.assertIsNotNone(children[0].poll(),'adapter left its owned child alive after startup failure')
+                finally:
+                    for child in children:
+                        if child.poll() is None:
+                            os.killpg(child.pid,signal.SIGKILL)
+                        child.wait(timeout=5)
+
     def test_late_ownership_io_failure_and_symlink_loop_fail_closed(self):
         import task_actions
         payload=f.craft_payload(tool_name='Bash',cwd=str(self.f.ws),tool_input={'command':self.command('--staged')})
@@ -375,6 +404,31 @@ except KeyboardInterrupt:
         self.assertEqual(git(self.repo,'status','--porcelain').stdout,'')
         self.assertEqual(git(self.repo,'for-each-ref','--format=%(refname) %(objectname)').stdout,refs)
         self.assertEqual(list(self.scratch.iterdir()),[])
+
+    def test_inherited_git_config_cannot_mask_repository_helper_audit(self):
+        marker=self.data/'masked-helper-executed'
+        helper=self.data/'masked-helper'
+        helper.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\n');helper.chmod(0o700)
+        f.fixture_git('-C',self.repo,'config','core.sshCommand',str(helper),check=True,timeout=10)
+        env={**self.f.env,'GIT_CONFIG':'/dev/null'}
+        self.f.assertGate(2,self.command('--pr','1805'),env=env)
+        result=self.run_scanner('--pr','1805',env=env)
+        self.assertEqual(result.returncode,2,result.stdout+result.stderr)
+        self.assertFalse(marker.exists())
+        # Pure text scanning does not inspect or use repository Git settings.
+        result=self.run_scanner('--message','fix: own text #1361',env=env)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertFalse(marker.exists())
+
+    def test_pr_alternate_refs_helper_is_denied(self):
+        marker=self.data/'alternate-refs-helper-executed'
+        helper=self.data/'alternate-refs-helper'
+        helper.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\n');helper.chmod(0o700)
+        f.fixture_git('-C',self.repo,'config','core.alternateRefsCommand',str(helper),check=True,timeout=10)
+        self.f.assertGate(2,self.command('--pr','1805'))
+        result=self.run_scanner('--pr','1805')
+        self.assertEqual(result.returncode,2,result.stdout+result.stderr)
+        self.assertFalse(marker.exists())
 
     def test_repository_git_helpers_never_execute_as_scanner_input(self):
         marker=self.data/'repository-code-executed';helper=self.data/'fsmonitor'
