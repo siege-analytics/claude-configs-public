@@ -15,7 +15,7 @@ import types
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # Verified before execution, rather than importing mutable sibling code.
-CAPABILITY_SHA256 = '6b7bcbe18d1816e37f3abb6e8ae9917c0224635a2e5a48ac59119306ff06e9bf'
+CAPABILITY_SHA256 = '5253c787ce6365b760330c8337e8e81d53966a0864b4e66ea91e9216a8182dad'
 def capability():
     path = Path(__file__).with_name('scanner_capability.py')
     if os.path.realpath(path) != str(path):
@@ -35,6 +35,20 @@ def capability():
 class ScannerError(ValueError):
     pass
 
+def stop_scanner(process):
+    if process.poll() is None:
+        os.killpg(process.pid,signal.SIGTERM)
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid,signal.SIGKILL)
+            process.wait(timeout=5)
+        # The shell may exit before a descendant that ignored SIGTERM.
+        try:
+            os.killpg(process.pid,signal.SIGKILL)
+        except ProcessLookupError:
+            pass  # The owned process group is already gone.
+
 def wait_scanner(process, budget=1800, interval=30):
     started = time.monotonic()
     try:
@@ -47,18 +61,7 @@ def wait_scanner(process, budget=1800, interval=30):
                 if elapsed >= budget:
                     raise ScannerError(f'scanner exceeded{budget:g}s; incomplete, no clean verdict')
     finally:
-        if process.poll() is None:
-            os.killpg(process.pid,signal.SIGTERM)
-            try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                os.killpg(process.pid,signal.SIGKILL)
-                process.wait(timeout=5)
-            # The shell may exit before a descendant that ignored SIGTERM.
-            try:
-                os.killpg(process.pid,signal.SIGKILL)
-            except ProcessLookupError:
-                pass  # The owned process group is already gone.
+        stop_scanner(process)
 
 def main():
     try:
@@ -118,9 +121,14 @@ def main():
                     stderr=outputs.enter_context((logs/'stderr.log').open('xb'))
                     (logs/'stdout.log').chmod(0o600);(logs/'stderr.log').chmod(0o600)
                     print(f'scanner raw logs: {logs}',file=sys.stderr,flush=True)
-                process = subprocess.Popen(command,cwd=plan['repo'],env=env,start_new_session=True,stdout=stdout,stderr=stderr)
-                print(f'scanner owned process group: {process.pid}',file=sys.stderr,flush=True)
-                code = wait_scanner(process)
+                process = None
+                try:
+                    process = subprocess.Popen(command,cwd=plan['repo'],env=env,start_new_session=True,stdout=stdout,stderr=stderr)
+                    print(f'scanner owned process group: {process.pid}',file=sys.stderr,flush=True)
+                    code = wait_scanner(process)
+                finally:
+                    if process is not None:
+                        stop_scanner(process)
                 result = code
                 if plan['mode'] in ('staged','working','pr'):
                     if selection.is_file():
