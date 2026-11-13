@@ -148,6 +148,29 @@ class PublicationReview(unittest.TestCase):
         self.commit(COMPACT.replace('## Findings', '## Findings (round 2)'))
         self.assert_publication(2)
 
+    def test_fenced_headings_cannot_end_findings_before_unresolved_p1(self):
+        for tier, template in (('B', COMPACT), ('C', COMPACT), ('C', HISTORICAL)):
+            for fence in ('```', '~~~~', '   ```python'):
+                with self.subTest(tier=tier, fence=fence):
+                    closing = '```' if '`' in fence else '~~~~'
+                    section = '\n## Findings\n'+fence+'\n## Reproduction\nexample\n'+closing+'\n| F1 | P1 | Real unresolved behavior | unresolved |\n'
+                    self.commit(template+section,tier=tier)
+                    self.assert_publication(2)
+
+    def test_indented_findings_headings_cannot_hide_real_unresolved_p1(self):
+        for tier, template in (('B', COMPACT), ('C', COMPACT), ('C', HISTORICAL)):
+            with self.subTest(tier=tier, template=template):
+                self.commit(template+'\nFixture review tier: '+tier+'\n   ## Findings\n| F1 | P1 | Real unresolved behavior | unresolved |\n',tier=tier)
+                self.assert_publication(2)
+
+    def test_invalid_backtick_info_cannot_hide_real_unresolved_p1(self):
+        self.commit(COMPACT+'\n## Findings\n```invalid`info\n| F1 | P1 | Real unresolved behavior | unresolved |\n')
+        self.assert_publication(2)
+
+    def test_fenced_example_findings_do_not_become_real_findings(self):
+        self.commit(COMPACT+'\n## Findings\n````markdown\n## Reproduction\n```\n| sample | P1 | Example only | unresolved |\n````\n| F1 | P1 | Corrected behavior | fixed |\n')
+        self.assert_publication(0)
+
     def test_compact_prose_unresolved_p1_blocks_both_publishers(self):
         self.commit(COMPACT.replace('None.', 'P1: incorrect behavior; resolution: unresolved'))
         self.assert_publication(2)

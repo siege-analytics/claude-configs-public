@@ -500,9 +500,24 @@ fi
 # fixed resolution, block publication. P2 and P3 are not
 # hook-enforced — P2 ticket-existence is agent discipline, P3 is
 # documentation-only.
-FINDINGS_HEADING_RE='^##[[:blank:]]+findings([^[:alnum:]_]|$)'
+FINDINGS_HEADING_RE='^[ ]?[ ]?[ ]?##[[:blank:]]+findings([^[:alnum:]_]|$)'
 if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qiE "$FINDINGS_HEADING_RE" "$SOURCE_PATH"; then
-    FINDINGS_BLOCK=$(awk -v heading="$FINDINGS_HEADING_RE" '/^##[[:blank:]]+/ {active=(tolower($0) ~ heading);next} active {print}' "$SOURCE_PATH")
+    FINDINGS_BLOCK=$(awk -v heading="$FINDINGS_HEADING_RE" '{
+        line=$0
+        sub(/\r$/, "", line)
+        sub(/^[ ]?[ ]?[ ]?/, "", line)
+        first=substr(line,1,1)
+        if (first == "`" || first == "~") {
+            count=0
+            while (substr(line,count+1,1) == first) count++
+            rest=substr(line,count+1)
+            if (!fence && count >= 3 && (first == "~" || rest !~ /`/)) {fence=first; width=count; next}
+            if (fence == first && count >= width && rest ~ /^[[:blank:]]*$/) {fence=""; next}
+        }
+        if (fence) next
+        if (line ~ /^##[[:blank:]]+/) {active=(tolower($0) ~ heading); next}
+        if (active) print
+    }' "$SOURCE_PATH")
     UNRESOLVED_P1=$(
         printf '%s\n' "$FINDINGS_BLOCK" | awk '/^[ ]?[ ]?[ ]?\|/ {
             delete cells
