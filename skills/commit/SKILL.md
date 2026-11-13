@@ -41,7 +41,7 @@ allowed-tools: Read Grep Glob Bash
    1. Reference the existing task or user request; create a ticket only when useful or required by the project policy
    2. Do not require a routine user override merely because an authorized task has no issue
 6. Write the commit message (see Message structure below)
-7. **Verify ticket reference is in the footer**
+7. **Verify the footer references the motivating ticket, or the authorized task/request and applicable `[no-ticket]` marker when no issue exists.**
 8. Verify after committing
    1. Run `git log -1` to confirm the message looks correct
    2. Run `git status` to confirm nothing was missed or accidentally included
@@ -362,7 +362,7 @@ If it was already committed, remove it from history and rotate the credential im
 
 # Checklist
 
-- [ ] **[rule:verify-before-execute] block emitted** -- Standards, Intent, and (for fixes) same-turn Evidence
+- [ ] Intended target, diff and existing authority checked; refresh evidence where relevant context may have changed, without a per-command template
 - [ ] **Not on a protected branch** (main, develop, etc.) -- or user explicitly overrode with `[direct-commit]`
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`

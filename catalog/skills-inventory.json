@@ -9160,10 +9160,10 @@
     },
     {
       "canonical_source": "skills/commit/SKILL.md",
-      "characters": 22284,
-      "content_sha256": "743e9685d177b036d9f54ec811b6838eb8ac17dca48881157c6e3d8c9f6abe9f",
+      "characters": 22423,
+      "content_sha256": "49fd323faf4114c504a5e12afd008e151a369a7fa7d95c4c303bcbd53656324a",
       "description": "Create coherent reviewed commits that explain the change and reference the motivating task.",
-      "estimated_tokens": 5571,
+      "estimated_tokens": 5606,
       "frontmatter_name": "commit",
       "generated_outputs": [
         "dist/nested/skills/commit",
@@ -9403,10 +9403,10 @@
     },
     {
       "canonical_source": "skills/create-pr/SKILL.md",
-      "characters": 15066,
-      "content_sha256": "33876560d2e44f3b2e9ef21ba5668e3d1fbe1f8e9f18a7f8ef1568222260d6f2",
+      "characters": 15405,
+      "content_sha256": "003c4b7645419c86257e7829d248028a3be98fbce1ca8d528e37d6e7c2cf4ee4",
       "description": "Create a pull request with structured description, linked tickets, and commit narrative. Enforces bidirectional linking.",
-      "estimated_tokens": 3767,
+      "estimated_tokens": 3852,
       "frontmatter_name": "create-pr",
       "generated_outputs": [
         "dist/nested/skills/create-pr",
@@ -12903,9 +12903,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2477026,
+    "characters": 2477504,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 619334,
+    "estimated_tokens": 619454,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -12926,7 +12926,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1080632
+      "unclassified": 1081110
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12938,7 +12938,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 270200
+      "unclassified": 270320
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
