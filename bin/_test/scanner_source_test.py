@@ -264,6 +264,25 @@ class ScannerSourceTest(unittest.TestCase):
         self.expect(self.scan(), 2, 'AST scanner failed (exit 23)')
         self.assertEqual(marker.read_text(), 'ast')
 
+    def test_source_git_minimum_does_not_apply_to_non_git_message_modes(self):
+        marker = self.base / 'unexpected-source-git'
+        git = self.base / 'commands/git'
+        git.write_text('#!/bin/sh\nif [ "$1" = "--version" ]; then printf "git version 2.44.0\\n"; exit 0; fi\nprintf unexpected > ' + shlex.quote(str(marker)) + '; exit 81\n')
+        git.chmod(0o755)
+        for mode in ('staged', 'working', 'pr'):
+            with self.subTest(mode=mode):
+                args = ['--mode', mode, '--output', str(self.base / ('snapshot-' + mode))]
+                if mode == 'pr': args += ['--pr', '17']
+                result = subprocess.run([sys.executable, str(SKILL / 'scan_snapshot.py'), *args],
+                    cwd=self.root, env=self.env, text=True, capture_output=True, timeout=30)
+                self.expect(result, 2, 'source scans require Git 2.45 or newer')
+                self.assertFalse(marker.exists())
+        outside = self.base / 'non-git'; outside.mkdir()
+        message = outside / 'message.txt'; message.write_text('fix: preserve exact scanner input\n')
+        self.expect(self.scan('--message-file', str(message), cwd=outside), 0)
+        self.expect(self.scan('--message', 'fix: crucially preserve input', cwd=outside), 1)
+        self.assertFalse(marker.exists())
+
     def test_snapshot_missing_git_is_an_explicit_source_error(self):
         env = {**self.env, 'PATH': str(self.base / 'empty-path')}
         result = subprocess.run([sys.executable, str(SKILL / 'scan_snapshot.py'), '--mode', 'staged', '--output', str(self.base / 'snapshot')], cwd=self.root, env=env, text=True, capture_output=True, timeout=30)

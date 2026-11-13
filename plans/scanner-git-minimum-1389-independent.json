@@ -1,0 +1,9 @@
+{
+  "decision": "Root scoped source/pin and43finding review ACCEPT",
+  "rawSha256": "dd089a2cacb561c4bd0f33aa9819b5deb37ac2ee4e7f3b32121a2769327e51a4",
+  "normalized42ExactlyPriorAccepted": true,
+  "extraFinding": "Intentional scanner input crucially in oldGit/nonGitmessage regression; expectedfindings1. Not explanatoryprose.",
+  "sourceScope": "4line source-onlyGitminimumprobe;properTierBfixtures;regression;4pins;minimumdocs",
+  "independentPinChecks": "3closurefiles+adaptercapability+actioncapability/adapter actualhashes match",
+  "limitations": "Author28/39/30/risk producer not independentlyrerun; no clean scan/runtimeinstallationclaim"
+}
