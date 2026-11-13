@@ -79,7 +79,11 @@ validate_committed_artifact() {
     local findings unresolved
     findings=$(awk '/^## Findings[[:space:]]*$/ {active=1;next} /^## / {active=0} active {print}' <<<"$content")
     unresolved=$(
-        printf '%s\n' "$findings" | grep -E '^\|[^|]*\|[[:space:]]*P1[[:space:]]*\|' | grep -viE '\|[[:space:]]*fixed' || true
+        printf '%s\n' "$findings" | awk -F '|' '/^\|/ && $3 ~ /^[[:space:]]*P1[[:space:]]*$/ {
+            resolution=$5
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", resolution)
+            if (NF != 6 || tolower(resolution) != "fixed") print
+        }'
         printf '%s\n' "$findings" | grep -Ei '^[[:space:]]*([-*][[:space:]]+)?P1[[:space:]]*:' | grep -viE '(^|;)[[:space:]]*resolution[[:space:]]*:[[:space:]]*fixed[[:space:]]*(;|$)' || true
     )
     [[ -z "$unresolved" ]]

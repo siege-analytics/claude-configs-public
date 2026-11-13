@@ -103,6 +103,25 @@ class PublicationReview(unittest.TestCase):
         self.commit(COMPACT.replace('None.', 'P1: incorrect behavior; Resolution: fixed\nVerified the boundary and retained the actual regression evidence.'))
         self.assert_publication(0)
 
+    def test_table_finding_text_cannot_resolve_a_p1(self):
+        self.commit(COMPACT.replace('None.', '| 1 | P1 | fixed-width parsing crashes | unresolved |'))
+        self.assert_publication(2)
+
+    def test_table_resolution_must_be_the_complete_cell(self):
+        self.commit(COMPACT.replace('None.', '| 1 | P1 | Incorrect behavior | fixed later |'))
+        self.assert_publication(2)
+
+    def test_table_fixed_resolution_is_publishable(self):
+        self.commit(COMPACT.replace('None.', '| 1 | P1 | fixed-width parsing crashes | FIXED |'))
+        self.assert_publication(0)
+
+    def test_documented_compact_resolution_is_publishable(self):
+        contract = (ROOT/'skills/self-review/artifact-contract.md').read_text()
+        example = next(line.split('one line: ', 1)[1] for line in contract.splitlines()
+                       if 'For an actual P1 finding use one line: ' in line)
+        self.commit(COMPACT.replace('None.', example.replace('<finding>', 'Incorrect behavior').replace('fixed|unresolved', 'fixed')))
+        self.assert_publication(0)
+
     def test_hostile_review_directory_is_not_review_evidence(self):
         self.commit(review_path='plans')
         self.assert_publication(2)

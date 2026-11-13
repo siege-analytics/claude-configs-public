@@ -503,7 +503,11 @@ fi
 if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qF '## Findings' "$SOURCE_PATH"; then
     FINDINGS_BLOCK=$(awk '/^## Findings[[:space:]]*$/ {active=1;next} /^## / {active=0} active {print}' "$SOURCE_PATH")
     UNRESOLVED_P1=$(
-        printf '%s\n' "$FINDINGS_BLOCK" | grep -E '^\|[^|]*\|[[:space:]]*P1[[:space:]]*\|' | grep -viE '\|[[:space:]]*fixed' || true
+        printf '%s\n' "$FINDINGS_BLOCK" | awk -F '|' '/^\|/ && $3 ~ /^[[:space:]]*P1[[:space:]]*$/ {
+            resolution=$5
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", resolution)
+            if (NF != 6 || tolower(resolution) != "fixed") print
+        }'
         printf '%s\n' "$FINDINGS_BLOCK" | grep -Ei '^[[:space:]]*([-*][[:space:]]+)?P1[[:space:]]*:' | grep -viE '(^|;)[[:space:]]*resolution[[:space:]]*:[[:space:]]*fixed[[:space:]]*(;|$)' || true
     )
     if [[ -n "$UNRESOLVED_P1" ]]; then

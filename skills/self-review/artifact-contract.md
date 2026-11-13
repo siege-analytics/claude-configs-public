@@ -14,7 +14,7 @@ Goal source: <original request, task or design reference>
 
 ## Findings
 <Material findings and resolutions, or a supported statement that none were found.
-For an actual P1 finding use one line: P1: <finding>; Resolution: fixed|unresolved.
+For an actual P1 finding use one line: P1: <finding>; Resolution: fixed|unresolved
 P1 findings without an explicit fixed resolution block publication. Context and explanations may remain prose.>
 
 ## Independent review
