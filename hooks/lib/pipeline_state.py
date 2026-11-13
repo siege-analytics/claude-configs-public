@@ -13,5 +13,5 @@ except (OSError, ValueError, IndexError) as error:
 
 status = data.get('status', '')
 if status not in ('disposed', 'done-awaiting-pr'):
-    task = data.get('ticket') or data.get('task_id') or data.get('task', 'unknown')
+    task = data.get('task_id') or data.get('ticket') or data.get('task', 'unknown')
     print(f'Task {json.dumps(task)}: status={status or "unknown"}. Ownership and physical scope are checked per action; review evidence is checked at publication.')

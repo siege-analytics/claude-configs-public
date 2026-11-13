@@ -450,8 +450,8 @@ def _artifact_matches_strict_scope(loaded: dict, repo_root: str, session_id: str
 
 
 def task_identity(data: dict) -> str:
-    """Full ticket refs or explicit task ids; never compare #N substrings."""
-    return str(data.get("ticket") or data.get("task_id") or data.get("task") or "").strip()
+    """Select an exact Task independently of its referenced issue; retain legacy ids."""
+    return str(data.get("task_id") or data.get("ticket") or data.get("task") or "").strip()
 
 
 def task_slug(identity: str) -> str:
@@ -564,9 +564,13 @@ def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
                 identity = task_identity(loaded["data"])
                 key = canonical(path)
                 if key not in seen:
-                    canonical_ids.add(identity)
+                    # Ticket-only legacy aliases stay retired after canonical
+                    # migration; this does not collapse distinct canonical Tasks.
+                    aliases = {identity, str(loaded["data"].get("ticket") or identity).strip()}
+                    canonical_ids.update(aliases)
                     try:
-                        _remember_canonical(sd, sid, identity, workspace)
+                        for alias in aliases:
+                            _remember_canonical(sd, sid, alias, workspace)
                     except (OSError, ValueError) as exc:
                         print(f'Canonical retirement record unavailable for {identity}: {exc}', file=sys.stderr)
                     result.append(loaded)
@@ -1071,7 +1075,8 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
                 verified_scope = True
                 slug = repository(root)
                 if slug: allowed.add(slug)
-        ticket = re.fullmatch(r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*)', identity)
+        ticket = re.fullmatch(r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*)',
+                              str(data.get('ticket') or identity))
         matched = True
         for target in shape['metadata_posts']:
             actual = target['repository'] or implicit_repository(target['cwd'])
