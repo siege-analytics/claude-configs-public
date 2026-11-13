@@ -330,6 +330,179 @@ else: sys.exit(99)
                 self.assertNotEqual(predicate.returncode,0)
         self.assertFalse(self.audit.exists())
 
+    # #1207 AC3, #1371, #1372: one row per spelling class. Classification only;
+    # the fixture gh never merges and these rows never reach it.
+    ADMIN_SPELLINGS = [
+        'gh pr merge 5 --admin',                      # literal form
+        'gh pr merge 5 --admin -R o/r',
+        'gh -R o/r pr merge 5 --admin',               # #1371: selector before the group
+        'gh --repo=o/r pr merge 5 --admin',
+        'gh --repo o/r pr merge 5 --admin',
+        'gh pr -R o/r merge 5 --admin',               # #1371: selector before the subcommand
+        'gh pr -Ro/r merge 5 --admin',
+        'gh pr --repo=o/r merge 5 --admin',
+        'gh -Ro/r pr -R o/r merge 5 --admin',
+        'gh pr merge 5 -sb -t --admin',               # #1372: cluster-final value letter
+        'gh pr merge 5 -sA -t --admin',
+        'gh pr merge 5 -dt -b --admin',
+        'gh pr merge 5 -mF -t --admin',
+        'gh pr merge 5 -sb x --admin',
+        'gh pr merge 5 --admin=true',                 # attached value
+        'gh pr merge 5 --body -- --admin',            # a value flag takes the -- itself
+        'gh pr merge 5 -- --admin',                   # after -- (fail closed)
+        'gh pr merge 5 --unknown --admin',            # unknown options never consume
+        'gh pr merge 5 -x --admin',
+        "gh pr merge 5 --ad'min'",                    # quote removal
+        'GH pr merge 5 --admin',                      # case-insensitive filesystem
+        '/opt/homebrew/bin/gh pr merge 5 --admin',
+        'GH_REPO=o/r gh pr merge 5 --admin',
+        'gh --admin=true pr merge 5',                 # leaf flag before the group
+        'gh pr --admin=true merge 5',
+        'gh --foo pr merge 5',                        # unrecognised shapes around pr/merge
+        'gh pr -d merge 5',
+        'gh -R ../x pr merge 5',
+        'gh pr m 5 --admin',                          # unmodelled subcommand / group
+        'gh m 5 --admin',
+        "gh alias set m 'pr merge'",                  # alias indirection
+        'gh alias import aliases.yml',
+        'env gh pr merge 5 --admin',                  # wrapped invocations
+        'timeout 5 gh -R o/r pr merge 5 --admin',
+        'echo 5 | xargs gh pr merge',
+        './g pr merge 5 --admin',                     # gh under another name
+        'gh pr merge 5 --adm?n',                      # globs bash may expand
+        'gh pr merge 5 *',
+        'true && gh -R o/r pr merge 5 --admin',       # composition
+        'true & gh pr -R o/r merge 5 --admin',
+        'echo y | gh pr merge 5 --admin',
+        'true\ngh pr -Ro/r merge 5 --admin',
+        'gh pr merge 5 -b\r --admin',                 # whitespace bash does not split on
+        'gh pr merge 5 -b\v --admin',
+        'gh pr merge 5 -b  --admin',
+        'gh pr merge 5 $(printf -- --admin)',         # substitution
+        r'''gh pr merge 5 "$(printf '\055\055admin')"''',
+        'gh pr merge 5 --{admin,squash}',             # brace expansion
+        "echo 'pr merge 5 --admin' | xargs gh",       # arguments supplied at run time
+        "printf 'pr mer%s 5 --ad%s' ge min | xargs gh",
+        """echo 5 | xargs sh -c 'gh "$@"' _""",
+        'find . -exec gh pr merge 5 --admin \\;',
+        'command gh pr merge 5 --admin',
+        "bash -c 'gh pr merge 5 --admin'",            # shell scripts and eval
+        "sh -lc 'gh -R o/r pr merge 5 --admin'",
+        'eval gh pr merge 5 --admin',
+        "printf 'gh pr merge 5 --admin' | bash",
+        "printf 'gh pr mer''ge 5 --admin' | timeout 9 bash",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | bash",
+        "timeout 9 bash -c -- 'gh pr mer''ge 5 --admin'",
+        "bash <<'EOF'\ngh pr merge 5 --admin\nEOF",
+        "ssh host 'gh pr merge 5 --admin'",
+        """perl -e 'system("gh pr merge 5 --admin")'""",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | timeout 9 bash /dev/stdin",
+        "printf 'gh pr merge 5 --admin' | gtimeout 9 bash -s x",
+        "printf 'gh pr merge 5 --admin' | ssh host bash",
+        """awk 'BEGIN{system("gh pr mer" "ge 5 --ad" "min")}'""",
+        """python3.12 -c 'import os; os.system("gh pr merge 5 --admin")'""",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | bash -e",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | bash -o posix",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | bash --rcfile x.sh",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' |& bash",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | bash /dev//stdin",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | ssh host 'bash -s'",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | bash -s -- -c",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | python3 - -c",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | python3 -E",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | python3 -m code",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | ruby -rjson",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | node -r x",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | bash -C",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | sh -xC",
+        r"printf 'gh pr m\145rge 5 --\141dmin\n' | ruby -E UTF-8",
+        "alias p='gh pr merge 5 --admin'",            # shell alias definition
+        CLI + ' --admin',
+    ]
+    # gh reads these --admin words as option data, or the command is no admin merge.
+    ADMIN_DATA = [CLI + ' --body "--admin"', CLI + ' -b --admin', CLI + ' -sb --admin', CLI + ' --subject=--admin',
+                  CLI + ' -t --admin', CLI + ' && echo --admin', CLI + ' && printf %s "gh pr merge 2 --admin"',
+                  'gh -R o/r pr merge 1794 --squash', 'gh pr -R o/r merge 1794']
+    ORDINARY = ['pwd', 'git merge main', 'gh pr view 5', 'gh issue view 1347 -R o/r', 'gh pr list --search merge',
+                'git commit -m "refuse --admin"', 'grep -e gh -e --admin hooks', 'gh issue comment 5 --body --admin',
+                'find . -name gh', 'command -v gh', 'git -C ../gh merge main', 'gh search issues alias set',
+                'bash hooks/_test/github_merge_queue.test.sh', 'time gh pr view 5', 'echo 5 | xargs gh issue view',
+                "gh alias list", "alias ll='ls -l'", 'alias high=ls', 'gh pr view 5 --json mergeable && bash run.sh',
+                'timeout 10 gh auth status', 'watch gh status', 'sudo gh secret list', 'python3 -B -m py_compile x.py',
+                'git diff | python3 -c "print(1)"', 'python3 -c "from django.contrib import admin; print(1)"',
+                """node -e "require('./admin')" """, 'cat notes.txt | python3 parse.py',
+                "cat notes.txt | awk '{print $1}'", 'ls | python3 -m json.tool', "git log | perl -ne 'print'",
+                'cat notes.txt | bash scripts/check.sh', 'ssh cyberpower bash -s < README.md',
+                'ls /tmp/wt-admin-refusal/hooks | grep "test.sh$"']
+
+    def merge_refusal(self, command):
+        return subprocess.run([sys.executable, str(self.install/'hooks/lib/github-merge-queue.py'), '--merge-refusal', command],
+                              env=self.env, capture_output=True, text=True, timeout=5)
+
+    def guard(self, command, env=None):
+        payload = fixture.craft_payload(tool_name='Bash', cwd=str(self.f.repo), tool_input={'command': command})
+        return subprocess.run(['bash', str(self.install/'hooks/bash/destructive-guard.sh')], input=json.dumps(payload),
+                              env=env or self.env, cwd=self.f.repo, text=True, capture_output=True, timeout=12)
+
+    def test_admin_merge_is_refused_in_every_spelling(self):
+        self.f.task('own-local', self.f.repo)  # An owned cwd must not admit any of these.
+        waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
+        for command in self.ADMIN_SPELLINGS:
+            with self.subTest(command=command):
+                result = self.hook(command, 2)
+                # A piped program may be refused by action()'s own, more
+                # specific reason first; every other row names the predicate.
+                # Piped and untokenisable rows may report the ordinary path's
+                # own (also refusing) reason first.
+                if not any(c in command for c in '|<$`{(\r\v '):
+                    self.assertIn('Pinned merge denied: pinned merge queue:', result.stderr)
+                self.assertEqual(self.merge_refusal(command).returncode, 3)
+                predicate = subprocess.run([sys.executable, str(self.install/'hooks/lib/github-merge-queue.py'),
+                                            '--queue-required', command, str(self.f.repo)], env=self.env,
+                                           capture_output=True, timeout=5)
+                self.assertNotEqual(predicate.returncode, 0)
+                for env in (None, waived):  # No destructive-guard waiver applies.
+                    run = self.guard(command + ' # [destructive-ok: Reason: r; Evidence: e; Falsification: f]', env)
+                    self.assertEqual(run.returncode, 2, (command, run.stderr))
+                    self.assertIn('every gh spelling', run.stderr)
+        self.assertFalse(self.calls.exists())
+        self.assertFalse(self.audit.exists())
+
+    def test_queue_forms_admin_data_and_ordinary_commands_still_pass(self):
+        literal = 'mutation{enqueuePullRequest(input:{pullRequestId:"PR_test",expectedHeadOid:"'+SHA+'"}){mergeQueueEntry{position state}}}'
+        for command in [CLI, CLI+' --repo siege-analytics/siege_utilities', CLI+' -R siege-analytics/siege_utilities',
+                        GQL, "gh api graphql -f query='"+literal+"'"]:
+            with self.subTest(queue=command):
+                self.hook(command)
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+                self.assertEqual(self.guard(command).returncode, 0)
+        self.assertEqual(len(self.audit.read_text().splitlines()), 5)
+        self.mode.write_text('noqueue')
+        self.f.task('own-local', self.f.repo)
+        for command in self.ADMIN_DATA:
+            with self.subTest(data=command):
+                self.hook(command)  # Ordinary owned-task path, never a queue exemption.
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+        for command in self.ORDINARY:
+            with self.subTest(ordinary=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+        self.assertEqual(len(self.audit.read_text().splitlines()), 5)
+
+    def test_guard_refusal_survives_a_missing_or_broken_helper(self):
+        helper = self.install/'hooks/lib/github-merge-queue.py'
+        for content in [None, 'def broken(:\n', 'raise ImportError("fixture")\n', 'import sys\nsys.exit(1)\n',
+                        'import sys\nsys.exit(4)\n']:
+            if content is None:
+                helper.unlink()
+            else:
+                helper.write_text(content)
+            with self.subTest(helper=content):
+                self.assertEqual(self.guard('pwd').returncode, 0)  # never blocks every command
+                for command in ['gh -R o/r pr merge 5 --admin', "gh pr merge 5 --ad'min'", 'gh pr merge 5 --{admin,squash}']:
+                    run = self.guard(command)
+                    self.assertEqual(run.returncode, 2, run.stderr)
+                    self.assertIn('every gh spelling', run.stderr)
+
     def test_bad_graphql_forms(self):
         bad=[GQL.replace('enqueuePullRequest','dequeuePullRequest'),GQL.replace(',expectedHeadOid:$oid',''),GQL.replace(SHA,'abc'),GQL+' -f oid='+SHA,GQL.replace('position state','position state}} deleteIssue(input:{id:$id}){clientMutationId'),GQL+' && touch x',GQL.replace('-f query=', '--input '),GQL.replace('graphql','/graphql'),GQL.replace("'mutation(", '"mutation(').replace("}}}'", '}}}"')]
         for command in bad:

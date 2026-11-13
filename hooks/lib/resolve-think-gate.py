@@ -40,7 +40,8 @@ import sys
 import glob
 import stat
 import subprocess
-from task_actions import action, canonical, github_ticket_reference
+from task_actions import (action, canonical, github_ticket_reference, gh_merge_refusal, unparseable_merge_refusal,
+                          STDIN_PROGRAM_REFUSAL, UNPARSEABLE_MERGE_REFUSAL)
 from session_anchor import correct_environ as _correct_session_environ
 
 # A mis-tagged CRAFT_SESSION_DIR must not decide whose gates apply (#1099). Fix
@@ -892,7 +893,38 @@ def own_session_path(workspace: str, path: str, directory: bool = False, removal
     return len(parts) >= 3 and not os.path.isdir(target) and bool(re.fullmatch(r'[A-Za-z0-9_.-]+-gate\.json', parts[-1]))
 
 
+def _admits(result: dict) -> bool:
+    """Whether universal-mutation-gate.sh would allow this resolution (its lines 99-108).
+
+    Like the shell, an `error` does not cancel read_only, an early-allow flag
+    or a gate: only admitting results matter here.
+    """
+    early = ((result.get('metadata_only') or result.get('remote_contact_only') or result.get('investigation'))
+             and not result.get('metadata_posts'))
+    return bool(result.get('read_only') or early or result.get('self_management') or result.get('remote_only_authorized')
+                or result.get('scanner_execution_authorized') or result.get('gate'))
+
+
 def resolve_action(workspace: str, payload: dict) -> dict:
+    """An admin merge is refused in every gh spelling before any route, task or
+    queue proof can admit it (#1207 AC3, #1371, #1372)."""
+    command = (payload.get("tool_input") or {}).get("command", "")
+    refusal = ''
+    if isinstance(command, str) and command:
+        try:
+            refusal = gh_merge_refusal(command) or ''
+        except Exception:  # A predicate fault fails closed for merge/admin text only.
+            refusal = unparseable_merge_refusal(command) or ''
+    denied = {'read_only': False, 'paths': [], 'gate': None, 'error': 'Pinned merge denied: pinned merge queue: ' + refusal}
+    if refusal and refusal not in (STDIN_PROGRAM_REFUSAL, UNPARSEABLE_MERGE_REFUSAL):
+        return denied
+    result = _resolve_action(workspace, payload)
+    # A piped program or untokenisable text keeps any more specific refusal of
+    # the ordinary path (which refuses shell expansion itself); never admitted.
+    return denied if refusal and _admits(result) else result
+
+
+def _resolve_action(workspace: str, payload: dict) -> dict:
     ti = payload.get("tool_input") or {}
     command = ti.get("command", "")
     cwd = payload.get("cwd") or os.getcwd()
