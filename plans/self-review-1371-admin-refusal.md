@@ -46,12 +46,23 @@ These are what I actually read, and what each one established.
 
 ## Peer review
 
-Shelf checks:
+Shelf checks, listing only the rules actually applied, with their evidence:
 
-- **writing-tests (red before green, negatives pinned):**
+- **writing-tests:1 (tests fail if production behaviour breaks):** the new spelling test was run against the pre-fix tree, and the source UMG admitted 33 of its rows. Log: `run_suites.py run red-ce4d34d9 hooks/_test/github_merge_queue.test.sh` in the session scratch harness, then `grep -E "^(FAIL|ERROR)"` on that log. The same test is green with the fix. The tests run the real hook files, not copies of their logic.
+- **writing-tests:6 (behavioural bugs need behaviour tests):** each row drives `universal-mutation-gate.sh`, `destructive-guard.sh` and `github-merge-queue.py --merge-refusal` as subprocesses with real hook payloads. No assertion inspects source text.
+- **writing-tests:8 (shared-function changes are caller-covered):** `resolve_action` and `shell_tokens`-based routing are shared by every gate. The full `hooks/_test` run covered their callers. It caught the allowlisted-ssh stdin-script regression in `universal_mutation_gate_ssh`, which was fixed and re-run (179 passed, 0 failed).
+- **writing-claims:8 (counts cite their command):**
+  - 85 spelling rows: `sed -n 336,422p hooks/_test/github_merge_queue.py | grep -c -v -E "^\s*#|^\s*\]\s*$|^\s*$"` on the final file (one row per line, between the list's opening and closing brackets).
+  - 33 admitted: the red-run log above.
+  - 88 of 89 suites: `grep -c "exit=0"` on the run output.
+- **writing-claims:10 (runtime-loaded code took effect):** this worktree's hooks are the live gate for the authoring session, by repo-relative registration. The predicate was observed refusing real commands in that session, including the over-refusal that led to the round-8 fix.
+
+Detail:
+
+- **Red before green, negatives pinned:**
   - The new `test_admin_merge_is_refused_in_every_spelling` was run against the pre-fix tree (develop `5c90061c` plus #1370; HEAD `ce4d34d9`). The source UMG admitted 33 of the rows from an owned cwd. These included every #1371 selector form, every #1372 cluster form, pipe and newline composition, and binary-name and whitespace variants.
   - With the fix, all 85 rows are refused by the UMG (exit 2), by the helper (exit 3) and by destructive-guard, even when a waiver marker or the waiver environment is present.
-  - Rows without a pipe or heredoc also name the predicate in the UMG message ("Pinned merge denied: pinned merge queue: …"). Piped rows may first report the UMG's own, more specific refusal.
+  - Rows without a pipe or heredoc also name the predicate in the UMG message ("Pinned merge denied: pinned merge queue: ..."). Piped rows may first report the UMG's own, more specific refusal.
   - Allow rows (`test_queue_forms_admin_data_and_ordinary_commands_still_pass`): the canonical CLI with and without a selector, and both GraphQL forms, still pass the UMG and destructive-guard and write their audit rows. Data and ordinary rows stay clear.
   - Failure protocol (`test_guard_refusal_survives_a_missing_or_broken_helper`): with a missing, syntax-broken, import-failing or faulting helper, `pwd` still passes and admin forms are still refused.
 - **Contracts:** all 24 pre-existing tests in `github_merge_queue.py` pass unchanged, including the `--body "--admin"` and echo contract.
