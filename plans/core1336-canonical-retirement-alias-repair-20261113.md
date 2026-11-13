@@ -12,7 +12,7 @@ The new real universal-mutation-gate regression creates a canonical Task id plus
 
 ## Findings
 
-The explicitly requested cohort base is used in a separate feature worktree; canonical prepare-task-branch.py only supports develop selection, so git worktree add selected the authorized exact cohort without changing existing worktrees. No runtime files, worker indexes or remote refs were changed.
+The requested cohort base is used in a separate feature worktree; canonical prepare-task-branch.py only supports develop selection, so git worktree add selected the authorized exact cohort without changing existing worktrees. No runtime files, worker indexes or remote refs were changed.
 
 ## Independent review
 
