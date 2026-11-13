@@ -73,6 +73,20 @@ Every finding below was resolved before publication; plans/hostile-review-1371-a
 - **Dogfooding and round 8 (APPROVE):** the text fallback over-refused reads that merely mention a path containing "admin". It was narrowed and deferred to the ordinary path.
 - **Open, accepted limitations and residuals:** stated in the PR body, for example untokenisable reads that mention both "admin" and "merge" are refused. They are not defects of this change's stated scope.
 
+## Independent review
+
+- **Reviewers:** independent Claude subagents with no authorship of the change.
+  - One design reviewer.
+  - One code reviewer across eight rounds.
+  - Each was given the code and the diff, not the author's conclusions, and asked to refute.
+- **Limitation:** both are the same model family. Cross-family review was unavailable: the cross-review source failed its connection test and ChatGPT connections were expired. This is a disclosed limitation, not equivalent to a cross-family approval.
+- **Method:** the reviewers' live probes were blocked by the session's gates, so their findings come from tracing the code. Every adopted finding was verified by a test row through the real hooks.
+- **Verdicts:**
+  - Design: ACCEPT WITH CHANGES.
+  - Code rounds 1-7: REQUEST CHANGES, all fixed.
+  - Round 8: APPROVE, no P1/P2 outside the stated residual classes.
+- **Record:** plans/hostile-review-1371-admin-refusal.md.
+
 ## Peer review
 
 Shelf checks, listing only the rules actually applied, with their evidence:
