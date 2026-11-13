@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 COMPACT = '''## Assumptions
@@ -33,7 +34,7 @@ class PublicationReview(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory(prefix='compact-publication-')
         self.addCleanup(self.directory.cleanup)
         self.repo = Path(self.directory.name)
-        self.env = {k:v for k,v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_'))}
+        self.env = {k:v for k,v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'GIT_'))}
         self.env.update(GIT_AUTHOR_NAME='Fixture',GIT_AUTHOR_EMAIL='fixture@example.invalid',
                         GIT_COMMITTER_NAME='Fixture',GIT_COMMITTER_EMAIL='fixture@example.invalid')
         self.git('init','-q')
@@ -46,21 +47,69 @@ class PublicationReview(unittest.TestCase):
     def git(self,*args):
         return subprocess.run(['git','-C',str(self.repo),*args],env=self.env,text=True,capture_output=True,check=True,timeout=20)
 
-    def commit(self,artifact=COMPACT,review=True):
+    def commit(self,artifact=COMPACT,review=True,review_path='plans/independent.md'):
         (self.repo/'plans/review.md').write_text(artifact)
         self.git('add','.')
         message='fix: assigned fixture #1\n\nReview-Tier: C\nSelf-Review: actual focused checks\nSelf-Review-Source: plans/review.md\n'
-        if review: message+='Hostile-Review: plans/independent.md\n'
+        if review: message+='Hostile-Review: '+review_path+'\n'
         self.git('commit','-q','-m',message)
 
     def hook(self):
         return subprocess.run(['bash',str(ROOT/'hooks/git/self-review.sh')],input=json.dumps({'cwd':str(self.repo),'tool_input':{'command':'git push'}}),
             env=self.env,text=True,capture_output=True,timeout=20)
 
+    def native_hook(self):
+        commit = self.git('rev-parse', 'HEAD').stdout.strip()
+        return subprocess.run(['bash',str(ROOT/'hooks/git/pre-push-self-review.sh')],
+            input=f'refs/heads/feature {commit} refs/heads/feature {"0" * 40}\n',
+            cwd=self.repo,env=self.env,text=True,capture_output=True,timeout=20)
+
+    def assert_publication(self, expected):
+        for invoke in (self.hook, self.native_hook):
+            result = invoke()
+            code = 1 if invoke.__name__ == 'native_hook' and expected else expected
+            self.assertEqual(result.returncode, code, invoke.__name__ + result.stdout + result.stderr)
+
+    def test_fixture_git_locations_cannot_stage_or_commit_in_the_caller(self):
+        before = self.git('status','--porcelain').stdout
+        index = self.repo/'.git/index'
+        self.assertFalse(index.exists())
+        other = PublicationReview()
+        self.addCleanup(other.doCleanups)
+        with patch.dict(os.environ, {
+            'GIT_DIR':str(self.repo/'.git'), 'GIT_WORK_TREE':str(self.repo),
+            'GIT_INDEX_FILE':str(index), 'GIT_COMMON_DIR':str(self.repo/'.git'),
+            'GIT_OBJECT_DIRECTORY':str(self.repo/'.git/objects')}):
+            other.setUp()
+            other.commit()
+        self.assertEqual(Path(other.git('rev-parse','--show-toplevel').stdout.strip()).resolve(), other.repo.resolve())
+        self.assertFalse(index.exists())
+        self.assertEqual(self.git('status','--porcelain').stdout, before)
+
+    def test_historical_trailing_whitespace_and_crlf_remain_publishable(self):
+        artifact = HISTORICAL.replace('## Peer review','## Peer review \t').replace('\n','\r\n')
+        self.commit(artifact)
+        self.assert_publication(0)
+
+    def test_compact_prose_unresolved_p1_blocks_both_publishers(self):
+        self.commit(COMPACT.replace('None.', 'P1: incorrect behavior; resolution: unresolved'))
+        self.assert_publication(2)
+
+    def test_compact_p1_without_resolution_blocks_both_publishers(self):
+        self.commit(COMPACT.replace('None.', '- P1: incorrect behavior'))
+        self.assert_publication(2)
+
+    def test_compact_fixed_p1_with_prose_context_is_publishable(self):
+        self.commit(COMPACT.replace('None.', 'P1: incorrect behavior; Resolution: fixed\nVerified the boundary and retained the actual regression evidence.'))
+        self.assert_publication(0)
+
+    def test_hostile_review_directory_is_not_review_evidence(self):
+        self.commit(review_path='plans')
+        self.assert_publication(2)
+
     def test_compact_high_risk_review_needs_no_rank_premortem_or_runtime_deploy_stamp(self):
         self.commit()
-        result=self.hook()
-        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assert_publication(0)
         self.assertFalse((self.repo/'deploy-stamp.json').exists())
 
     def test_actual_independent_review_is_still_required(self):
@@ -73,10 +122,11 @@ class PublicationReview(unittest.TestCase):
         self.commit(artifact)
         result=self.hook();self.assertEqual(result.returncode,2,result.stdout+result.stderr)
         self.assertIn('unresolved P1',result.stdout+result.stderr)
+        self.assertEqual(self.native_hook().returncode,1)
 
     def test_historical_valid_record_remains_publishable(self):
         self.commit(HISTORICAL)
-        result=self.hook();self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assert_publication(0)
 
     def test_historical_minimal_tier_b_record_needs_no_new_field(self):
         source = self.repo/'src'; source.mkdir()
@@ -84,7 +134,7 @@ class PublicationReview(unittest.TestCase):
         (self.repo/'plans/review.md').write_text('## Assumptions\nExisting assigned Task scope.\n## Test plan\nActual fixture checks.\n')
         self.git('add','.')
         self.git('commit','-q','-m','fix: assigned fixture #1\n\nReview-Tier: B\nSelf-Review: focused checks\nSelf-Review-Source: plans/review.md')
-        result=self.hook();self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assert_publication(0)
 
 if __name__=='__main__':
     unittest.main()

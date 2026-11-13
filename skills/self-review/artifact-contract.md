@@ -13,7 +13,9 @@ Goal source: <original request, task or design reference>
 <Actual commands and results, regression/failure cases, and remaining limitations. Clearly distinguish planned checks from executed checks.>
 
 ## Findings
-<Material findings and resolutions, or a supported statement that none were found.>
+<Material findings and resolutions, or a supported statement that none were found.
+For each severity-labelled finding use one line: P1: <finding>; Resolution: fixed|unresolved.
+P1 findings without an explicit fixed resolution block publication. Context and explanations may remain prose.>
 
 ## Independent review
 <Tier C: actual reviewer, reviewed revision/scope, evidence link and finding resolutions.>
