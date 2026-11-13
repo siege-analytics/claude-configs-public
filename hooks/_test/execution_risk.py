@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import sys
@@ -179,7 +180,7 @@ class ExecutionRisk(unittest.TestCase):
 
     def reported_1171_forms(self):
         """Forms reported in #1171 that the bounded pytest risk view does not model."""
-        interpreter = os.path.realpath(sys.executable)
+        interpreter = shlex.quote(os.path.realpath(sys.executable))
         cd = "cd " + str(self.repo) + " && "
         flagged = 'python3 -m pytest -o addopts="" -p no:cacheprovider -q -W ignore tests/test_app.py'
         return [
@@ -216,10 +217,17 @@ class ExecutionRisk(unittest.TestCase):
         shutil.rmtree(self.gate)
         self.f.task("example/app#1171", self.repo, sid="two")
         for command, cwd in self.reported_1171_forms():
-            with self.subTest(command=command):
+            with self.subTest(owner="two", command=command):
                 result = self.f.hook(command, cwd=cwd)
                 self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
                 self.assertIn("Unscoped mutation", result.stderr)
+        # Control: the identical Task in the current session does authorize, so
+        # session ownership is the only difference behind the refusal above.
+        self.f.task("example/app#1171", self.repo, sid="one")
+        for command, cwd in self.reported_1171_forms():
+            with self.subTest(owner="one", command=command):
+                result = self.f.hook(command, cwd=cwd)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_inline_python_import_remains_opaque_execution(self):
         # Reported with #1171, but refused by the inline-execution boundary, not by risk tier.
