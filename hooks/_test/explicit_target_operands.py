@@ -829,9 +829,10 @@ class ExplicitTargets(unittest.TestCase):
                 self.f.assertGate(2, command, cwd=clone)
 
     def test_gh_admin_merge_keeps_the_1347_model(self):
-        # No new allowance for --admin: the pinned merge-queue route refuses it
-        # only in the literal `gh pr merge` form, so every other form keeps
-        # exactly the #1347 model (the same words under an unmodelled subcommand).
+        # No new allowance for --admin: action() keeps exactly the #1347 model
+        # for these forms (the same words under an unmodelled subcommand), and
+        # resolve_action's gh_merge_refusal refuses them first in every
+        # spelling (#1371, #1372; see hooks/_test/github_merge_queue.py).
         clone = self.f.repo
         cases = {
             'gh pr -Ro/r merge 5 --admin -tfix/x': ['/x'],

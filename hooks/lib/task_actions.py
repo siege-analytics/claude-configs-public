@@ -1966,9 +1966,9 @@ def _gh_path_scan_args(args: list[str]) -> list[str]:
     selector right after a known zero-arity flag. Any unknown flag may own
     the next token, so that token is kept (fail closed). Scanning stops at
     `--`. A command with an `--admin` token anywhere (including option
-    values and after `--`) is never modelled: the pinned merge-queue route
-    refuses an admin merge only in its literal `gh pr merge` form, so no
-    target may be removed from the other forms. The cwd fallback is
+    values and after `--`) is never modelled: gh_merge_refusal owns the
+    admin-merge refusal in every spelling (#1371), and no target may be
+    removed from a form it does not refuse. The cwd fallback is
     unchanged, so this never grants authority.
     """
     if not args or args[0] != 'gh':
@@ -2024,6 +2024,265 @@ def _gh_path_scan_args(args: list[str]) -> list[str]:
                 kept.append(arg)
         i += 1
     return kept
+
+
+# An admin merge is refused in every gh spelling (#1207 AC3, #1371, #1372).
+# pflag sets the long-only --admin flag only from a token that it does not hand
+# to another flag as a value, so `pr merge` options are walked with the #1355
+# flag table above. Built-in groups that never run `pr merge`: gh refuses
+# aliases and extensions that would shadow a built-in name.
+_GH_NON_MERGE_GROUPS = frozenset({'api', 'attestation', 'auth', 'browse', 'cache', 'codespace', 'completion', 'config',
+                                  'gist', 'gpg-key', 'issue', 'label', 'org', 'project', 'release', 'repo', 'ruleset',
+                                  'run', 'search', 'secret', 'ssh-key', 'status', 'variable', 'workflow'})
+# cli/cli v2.104.0 `gh pr` subcommands other than merge.
+_GH_PR_NON_MERGE = frozenset({'checkout', 'checks', 'close', 'comment', 'create', 'diff', 'edit', 'list', 'lock',
+                              'ready', 'reopen', 'revert', 'review', 'status', 'unlock', 'update-branch', 'view'})
+_GH_ADMIN = '--admin'
+# Callers that already refuse such shapes for their own reason may report that
+# reason first (resolve_action does); the refusal itself never relaxes.
+STDIN_PROGRAM_REFUSAL = 'a program read from a pipe or heredoc is not supported'
+UNPARSEABLE_MERGE_REFUSAL = 'unparseable command that may run a gh admin merge'
+# Redirection operators as shell_tokens emits them; the next token is a file.
+_SHELL_REDIRECT = re.compile(r'[0-9]*(?:<<|>>|>&|<&|>\||>|<)|&>>|&>')
+_ENV_ASSIGNMENT = re.compile(r'[A-Za-z_][A-Za-z0-9_]*=.*', re.S)
+# Command words that run their arguments as another command. The argument
+# suppliers also append words the guard never sees (stdin, file names).
+_COMMAND_WRAPPERS = frozenset({'env', 'command', 'exec', 'nohup', 'time', 'timeout', 'nice', 'ionice', 'sudo', 'doas',
+                               'stdbuf', 'watch', 'caffeinate', 'script', 'unbuffer', 'chronic', 'flock', 'setsid',
+                               'arch', 'ssh', 'xargs', 'parallel'}) | frozenset(_WRAPPER_VALUES)
+_ARGUMENT_SUPPLIERS = frozenset({'xargs', 'parallel', 'find'})
+# Programs that run text as commands: their later words are inspected as
+# commands, and reading the program from a pipe or redirect is refused.
+# The list cannot be complete: the server-side ruleset is the real guarantee.
+_SCRIPT_RUNNER = re.compile(r'(?:sh|bash|zsh|dash|ksh|mksh|fish|csh|tcsh|eval|ssh|perl[0-9.]*|ruby[0-9.]*|node|deno|bun'
+                            r'|php[0-9.]*|(?:python|pypy)[0-9.]*|osascript|pwsh|powershell|rscript|lua[0-9.]*|tclsh[0-9.]*'
+                            r'|[gmn]?awk|busybox)')
+_GH_WORD = re.compile(r'(?<![A-Za-z0-9_.-])gh(?![A-Za-z0-9_-])')
+
+
+def _gh_admin_token(word: str, globs: tuple) -> bool:
+    """A token pflag could read as --admin, including an unquoted glob that
+    bash may expand to a file named --admin (fail closed)."""
+    if word == _GH_ADMIN or word.startswith(_GH_ADMIN + '='):
+        return True
+    if globs:
+        prefix = word[:globs[0]]
+        return (_GH_ADMIN + '=').startswith(prefix) or prefix.startswith(_GH_ADMIN + '=')
+    return False
+
+
+def _gh_invocation_refusal(words: list[str], globs: list[tuple], role: str):
+    """Why the gh word at words[0] may run an admin or unmodelled merge, else None.
+
+    role: 'command' (the segment's command word), 'wrapped' (run by a command
+    wrapper such as xargs or sudo) or 'argument' (an ordinary operand).
+    """
+    admin = [_gh_admin_token(word, positions) for word, positions in zip(words, globs)]
+    admin_text = any(admin[1:]) or any(_GH_ADMIN in word for word in words[1:])
+
+    def after_selectors(i: int) -> int:
+        while i < len(words) and not globs[i] and (width := _gh_repo_selector_width(words, i)):
+            i += width
+        return i
+
+    # cobra lets leaf flags precede the group or the subcommand; only
+    # grammar-valid -R/--repo selectors are modelled there (#1347).
+    i = after_selectors(1)
+    group = words[i] if i < len(words) and not globs[i] else ''
+    if role == 'argument':
+        # Not executed by this segment; refuse only an admin merge shape.
+        return 'admin bypass is not supported' if any(admin[1:]) and ('pr' in words or 'merge' in words) else None
+    if role == 'wrapped':
+        # A wrapper may append words the guard never sees: allow only a
+        # visibly non-merge built-in group or pr subcommand.
+        j = after_selectors(i + 1)
+        if group in _GH_NON_MERGE_GROUPS or group == 'pr' and j < len(words) and words[j] in _GH_PR_NON_MERGE:
+            return None
+        return 'a gh invocation run through another command is not supported'
+    if group == 'alias' and i + 1 < len(words) and words[i + 1] in ('set', 'import'):
+        return 'gh alias definitions are not supported (they can hide an admin merge)'
+    if not admin_text and 'merge' not in words[1:]:
+        return None
+    if not group or group.startswith('-'):
+        return 'unrecognised gh option before the command group'
+    if words[i] != 'pr':
+        if words[i] in _GH_NON_MERGE_GROUPS:
+            return None
+        return 'unmodelled gh command carrying --admin' if any(admin[i + 1:]) else None
+    j = after_selectors(i + 1)
+    if j >= len(words) or words[j].startswith('-') or globs[j]:
+        return 'unrecognised gh option between pr and its subcommand'
+    if words[j] in _GH_PR_NON_MERGE:
+        return None
+    if words[j] != 'merge':
+        return 'unmodelled gh pr subcommand carrying --admin' if any(admin[j + 1:]) else None
+    flags = {**_GH_HELP_FLAGS, **_GH_FLAG_KINDS[('pr', 'merge')]}
+    pending = None
+    for k in range(j + 1, len(words)):
+        if pending in ('text', 'keep') and not globs[k]:
+            pending = None  # pflag hands this token to the preceding value flag
+            continue
+        if admin[k]:
+            return 'admin bypass is not supported'
+        if words[k] == '--':
+            return 'admin bypass is not supported' if any(admin[k + 1:]) else None
+        _keep, pending = _gh_option_effect(flags, words[k])
+    return None
+
+
+_SHELL_RUNNER = re.compile(r'(?:sh|bash|zsh|dash|ksh|mksh|fish|csh|tcsh|busybox)')
+# Options whose next word is a value, not the program operand.
+_RUNNER_VALUE_OPTIONS = frozenset({'-o', '+o', '-O', '+O', '--rcfile', '--init-file', '-W', '-X', '-I', '-r', '--require'})
+_SCRIPT_FILE = re.compile(r'.+\.(?:sh|bash|zsh|py|pl|pm|rb|js|mjs|cjs|ts|php|lua|tcl|r|awk|ps1)', re.I)
+
+
+# Per runner: the option that carries the program text on the command line.
+_INLINE_PROGRAM = [
+    (_SHELL_RUNNER, r'-[A-Za-z]*c[A-Za-z]*'),
+    (re.compile(r'(?:python|pypy)[0-9.]*'), r'-[A-Za-z]*c'),
+    (re.compile(r'perl[0-9.]*'), r'-[A-Za-z]*[eE]'),
+    (re.compile(r'(?:ruby|lua)[0-9.]*|osascript|rscript'), r'-[A-Za-z]*e'),
+    (re.compile(r'node|deno|bun'), r'-e|--eval|-p|--print'),
+    (re.compile(r'php[0-9.]*'), r'-r'),
+    (re.compile(r'pwsh|powershell'), r'-[cC]|-[cC]ommand'),
+]
+_PYTHON_SAFE_MODULES = frozenset({'json.tool', 'py_compile', 'compileall', 'pytest', 'unittest'})
+
+
+def _program_from_stdin(name: str, later: list[str]) -> bool:
+    """Whether a runner fed by a pipe or redirect may read its program from it.
+
+    Fail closed: only options before the first operand count; the program must
+    be inline (that runner's own flag, or an allow-listed python -m module) or
+    a script-file operand. awk's first operand is always its program.
+    """
+    if name == 'ssh':  # The remote command, possibly one quoted word, may be a stdin shell.
+        operands = [word for word in later if not word.startswith('-')]
+        return any(_SCRIPT_RUNNER.fullmatch(os.path.basename(part).casefold())
+                   for word in operands[1:] for part in word.split())
+    if re.fullmatch(r'[gmn]?awk', name):
+        return '-f' in later or all(word.startswith('-') for word in later)
+    inline = next((flag for pattern, flag in _INLINE_PROGRAM if pattern.fullmatch(name)), None)
+    python = re.fullmatch(r'(?:python|pypy)[0-9.]*', name)
+    i = 0
+    while i < len(later) and later[i] not in ('--', '-', '-s') and later[i].startswith(('-', '+')):
+        word = later[i]
+        if inline and re.fullmatch(inline, word):  # Case matters: -C, -E are not inline code.
+            return False
+        if python and word == '-m':
+            return i + 1 >= len(later) or later[i + 1] not in _PYTHON_SAFE_MODULES
+        i += 2 if word in _RUNNER_VALUE_OPTIONS else 1
+    if i < len(later) and later[i] in ('-', '-s'):
+        return True
+    if i < len(later) and later[i] == '--':
+        i += 1
+    if i >= len(later):
+        return True
+    program = os.path.normpath(later[i])
+    return program in ('-', '/dev/stdin', '/dev/fd/0', '/proc/self/fd/0') or not _SCRIPT_FILE.fullmatch(program)
+
+
+def unparseable_merge_refusal(command: str, program_text: bool = False):
+    """Conservative refusal for text the guard cannot tokenise like bash.
+
+    Quote, escape, expansion and grouping characters are removed so split or
+    brace-expanded spellings still show; the UMG separately refuses every
+    untokenisable mutation, so this mainly binds destructive-guard. Inline
+    program text (a runner's argument) also needs a gh word: ordinary code
+    may mention an admin module.
+    """
+    gh = _GH_WORD.search(re.sub(r'[\'"\\$`{}(),;]', ' ', command))  # system("gh ...") keeps gh a word
+    if program_text and not gh:
+        return None
+    compact = re.sub(r'[\'"\\$`{}(),\s]', '', command)  # Split pieces such as "--ad" "min".
+    admin, merge = 'admin' in compact, 'merge' in compact
+    # Admin text alone is ordinary (a path such as .../x-admin-y/...).
+    if admin and (gh or merge) or merge and gh:
+        return UNPARSEABLE_MERGE_REFUSAL
+    return None
+
+
+def gh_merge_refusal(command: str, _depth: int = 0):
+    """Why a command may run a gh admin merge or an unmodelled gh merge shape, else None.
+
+    Shared by the universal mutation gate, the pinned merge-queue route and
+    destructive-guard (#1207 AC3, #1371, #1372). Every control segment is
+    inspected. A gh command word is walked pflag-faithfully; a gh run by a
+    wrapper must be visibly not a merge; the words of a shell, interpreter,
+    eval or ssh are inspected recursively as commands, and such a program read
+    from a pipe or redirect is refused; shell alias definitions naming gh/merge/admin and
+    a merge carrying --admin outside a literal gh are refused. Text that
+    cannot be tokenised like bash (including whitespace bash does not split
+    on) takes unparseable_merge_refusal. Heredoc bodies are inspected as
+    commands (fail closed); use a body file for prose that quotes these forms.
+    Not covered: scripts in files, gh aliases already in the config and
+    commands assembled at runtime; the UMG refuses the expansion shapes.
+    """
+    if _depth > 3 or any(c.isspace() and c not in ' \t\n' for c in command):
+        return unparseable_merge_refusal(command, _depth > 0)  # Nesting bound keeps the hook fast.
+    try:
+        tokens = shell_tokens(command)
+    except UnknownShape:
+        return unparseable_merge_refusal(command, _depth > 0)
+    segments, words, globs, redirected, fed, last_operator = [], [], [], False, False, ''
+    for word, operator, positions in tokens:
+        if redirected:
+            redirected = False  # A redirection operand is a file, not an argument.
+        elif operator and _SHELL_REDIRECT.fullmatch(word):
+            redirected = True
+            # Heredoc and here-string text feed the program; a plain `<` file
+            # is a script in a file (accepted residual, #1171 D2a shapes).
+            fed = fed or '<<' in word
+        elif operator:
+            # `|&` arrives as `|` then `&`: the command after it is still fed.
+            piped = word == '|' or word == '&' and last_operator == '|' and not words
+            segments.append((words, globs, fed))
+            words, globs, fed = [], [], piped
+            last_operator = word
+            continue
+        else:
+            words.append(word)
+            globs.append(positions)
+        last_operator = ''
+    segments.append((words, globs, fed))
+    for words, globs, fed in segments:
+        command_index = next((n for n, word in enumerate(words) if not _ENV_ASSIGNMENT.fullmatch(word)), None)
+        if command_index is None:
+            continue
+        names = [os.path.basename(word).casefold() for word in words]
+        if names[command_index] == 'alias' and any(re.search(r'merge|admin', word) or _GH_WORD.search(word)
+                                                   for word in words[command_index + 1:]):
+            return 'shell alias definitions that can run gh are not supported'
+        wrapper = None
+        for n in range(command_index, len(words)):
+            name = names[n]
+            if _SCRIPT_RUNNER.fullmatch(name) and (n == command_index or wrapper):
+                # Any later word may be the program text (-c, -e, --, a remote
+                # ssh command), and so may all of them together (eval, ssh).
+                for script in [' '.join(words[n + 1:])] + ([] if name == 'eval' else words[n + 1:]):
+                    reason = gh_merge_refusal(script, _depth + 1)  # strictly shorter text
+                    if reason:
+                        return reason
+                    if wrapper in _ARGUMENT_SUPPLIERS and _GH_WORD.search(script):
+                        return 'a gh invocation run through another command is not supported'
+                if fed and name != 'eval' and _program_from_stdin(name, words[n + 1:]):
+                    # Its program text could come from the pipe or redirect.
+                    return STDIN_PROGRAM_REFUSAL
+                break  # The runner owns the rest of this segment.
+            if name == 'gh':
+                role = 'command' if n == command_index else 'wrapped' if wrapper else 'argument'
+                reason = _gh_invocation_refusal(words[n:], globs[n:], role)
+                if reason:
+                    return reason
+            if n == command_index and name == 'command' and words[n + 1:n + 2] in (['-v'], ['-V']):
+                break  # `command -v gh` looks a name up; it runs nothing.
+            if name in _COMMAND_WRAPPERS and (n == command_index or wrapper):
+                wrapper = name
+            elif names[command_index] == 'find' and words[n] in ('-exec', '-execdir', '-ok', '-okdir'):
+                wrapper = 'find'
+        if names[command_index] != 'gh' and 'merge' in words and any(map(_gh_admin_token, words, globs)):
+            return 'a merge carrying --admin outside a literal gh command is not supported'
+    return None
 
 
 # Bounded write destinations (#1152). A shape modelled here writes only under
