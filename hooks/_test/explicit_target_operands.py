@@ -6,6 +6,8 @@ explicit destination, so that destination replaces the cwd as the mutation
 target. Every other shape keeps the generic model, where the cwd stays a
 target. A target in the current session's own data/ with no tracked files
 floors at Tier A; tracked content and clones keep normal classification.
+The value of a gh -R/--repo repository selector is never a local target;
+the cwd stays the target of those unmodelled gh writes (#1347).
 """
 import json
 import os
@@ -304,6 +306,219 @@ class ExplicitTargets(unittest.TestCase):
         self.task(target, tier='A', artifacts=False)
         tier = self.tier(f'cd {q(str(target))} && tar -xzf src.tar.gz')
         self.assertEqual(tier['floor'], 'B', tier)
+
+    # --- gh -R/--repo repository selector (#1347) ----------------------------
+
+    # cli/cli cmdutil.EnableRepoOverride: these groups take -R/--repo as a
+    # [HOST/]OWNER/REPO selector, never a local path. The cwd stays the target.
+    GH_SELECTOR_FORMS = (
+        'gh issue close 5 -R example/target',
+        'gh issue close 5 --repo example/target',
+        'gh issue close 5 --repo=example/target',
+        'gh issue close 5 -Rexample/target',
+        'gh issue close 5 -R=example/target',
+        'gh issue -R example/target close 5',
+        'gh pr close 5 --repo example/target --delete-branch',
+        'gh pr merge 5 -R github.example.com/example/target',
+        'gh release delete v1 -R example/.github --yes',
+        'gh run cancel 9 -R example/target',
+        'gh workflow disable ci.yml -R example/target',
+        'gh label delete bug -R example/target --yes',
+        'gh secret delete TOKEN -R example/target',
+        'gh variable delete NAME -R example/target',
+        'gh cache delete 7 -R example/target',
+        'gh ruleset view 1 -R example/target',
+        # Global position: cobra finds the group after stripping flags.
+        'gh -R example/target issue close 5',
+        'gh --repo example/target pr close 5',
+        'gh --repo=example/target issue close 5',
+        'gh -Rexample/target issue close 5',
+        'gh -R=example/target run cancel 9',
+        'gh -R example/target -R other/repo pr close 5',
+        'gh issue close 5 -R example/target --repo other/repo',
+    )
+
+    def nonrepo_dir(self):
+        path = Path(os.path.realpath(tempfile.mkdtemp(prefix='gh1347-')))
+        self.addCleanup(shutil.rmtree, path, True)
+        return path
+
+    def test_gh_repo_selector_is_not_a_path_target(self):
+        clone = self.f.repo
+        for cwd in (self.nonrepo_dir(), self.scope, clone):
+            for command in self.GH_SELECTOR_FORMS:
+                with self.subTest(cwd=str(cwd), command=command):
+                    self.assertEqual(self.paths(command, cwd=cwd), [str(cwd)])
+
+    def test_gh_repo_selector_passes_from_an_owned_cwd(self):
+        clone = self.f.repo
+        self.task(clone, repo_root=clone, identity='gh1347')
+        for command in self.GH_SELECTOR_FORMS:
+            with self.subTest(command=command):
+                self.f.assertGate(0, command, cwd=clone)
+
+    def test_gh_repo_selector_keeps_the_owned_cwd_requirement(self):
+        # A cwd no task owns still refuses, and the denial names only the cwd.
+        self.task(self.scope)
+        for cwd in (self.nonrepo_dir(), self.f.repo):
+            for command in self.GH_SELECTOR_FORMS[:6]:
+                with self.subTest(cwd=str(cwd), command=command):
+                    result = self.f.assertGate(2, command, cwd=cwd)
+                    self.assertIn('Unowned target: ' + str(cwd), result.stderr)
+                    self.assertNotIn(str(cwd / 'example'), result.stderr)
+                    self.assertNotIn('Unowned target: /target', result.stderr)
+
+    def test_gh_genuine_paths_and_unproven_selectors_stay_targets(self):
+        clone = self.f.repo
+        cases = {
+            # Genuine path operands beside a selector are still counted.
+            'gh release create v1 ./dist/x.tgz -R example/target': [clone / 'dist/x.tgz'],
+            'gh issue close 5 -R example/target sub/dir': [clone / 'sub/dir'],
+            'gh release upload v1 ' + q(str(self.payload / 'x.tgz')) + ' -R example/target': [self.payload / 'x.tgz'],
+            # Values outside the [HOST/]OWNER/REPO grammar keep the old model.
+            'gh issue close 5 -R ./example/target': [clone / 'example/target'],
+            'gh issue close 5 -R ../escape': [self.ws / 'escape'],
+            'gh issue close 5 -R a/b/c/d': [clone / 'a/b/c/d'],
+            'gh issue close 5 --repo=example/../../escape': [self.ws / 'escape'],
+            'gh issue close 5 -R' + str(self.payload / 'x'): [self.payload / 'x'],
+            # After `--` a token is an operand, not an option.
+            'gh issue close 5 -- -R example/target': [clone / 'example/target'],
+            # Groups without the repo override, extensions and root flags.
+            'gh repo clone example/target dest/dir': [clone / 'example/target', clone / 'dest/dir'],
+            'gh myext -R example/target': [clone / 'example/target'],
+            'gh -R example/target repo delete x': [clone / 'example/target'],
+            'gh -R example/target myext': [clone / 'example/target'],
+            # Any other leading token keeps the generic model.
+            'gh --foo -R example/target issue close 5': [clone / 'example/target'],
+            'gh -R ./example/target issue close 5': [clone / 'example/target'],
+            # A genuine path next to a global selector is still counted.
+            'gh -R example/target issue close 5 ' + q(str(self.payload / 'x')): [self.payload / 'x'],
+            # An absolute gh path is not modelled.
+            '/usr/local/bin/gh issue close 5 -Rexample/target': ['/target'],
+        }
+        for command, expected in cases.items():
+            with self.subTest(command=command):
+                paths = self.paths(command, cwd=clone)
+                for path in expected:
+                    self.assertIn(str(path), paths)
+                self.assertIn(str(clone), paths)
+
+    def unmodelled_paths(self, command, cwd):
+        # Oracle for "unchanged": the same words under an unmodelled gh name.
+        return self.paths(command.replace('gh issue ', 'gh unmodelled-ext ', 1), cwd=cwd)
+
+    def test_gh_selector_grammar_negatives_keep_the_generic_model(self):
+        clone = self.f.repo
+        cases = {
+            'gh issue close 5 -R /a/b': ['/a/b'],
+            'gh issue close 5 -R ./a/b': [clone / 'a/b'],
+            'gh issue close 5 -R ../a': [self.ws / 'a'],
+            'gh issue close 5 -R a/../b': [clone / 'b'],
+            'gh issue close 5 --repo a/b/': [clone / 'a/b'],
+            'gh issue close 5 --repo=a/b/c/d': [clone / 'a/b/c/d'],
+            'gh issue close 5 -R -a/b': [],
+            "gh issue close 5 -R ''": [],
+            'gh issue close 5 --repo=': [],
+            'gh issue close 5 -R': [],
+            'gh issue close 5 --repo': [],
+            # Look-alike flags are not the selector (pflag has no abbreviations).
+            'gh issue close 5 --repository o/r': [clone / 'o/r'],
+            'gh issue close 5 --repo-x=o/r': [clone / 'o/r'],
+            'gh issue close 5 -dRo/r': ['/r'],
+        }
+        for command, expected in cases.items():
+            with self.subTest(command=command):
+                paths = self.paths(command, cwd=clone)
+                self.assertEqual(paths, self.unmodelled_paths(command, clone))
+                self.assertIn(str(clone), paths)
+                for path in expected:
+                    self.assertIn(str(path), paths)
+        # A tilde value still fails closed as an expanded target.
+        for command in ('gh issue close 5 -R ~/a', 'gh issue close 5 --repo=~/a'):
+            with self.subTest(command=command):
+                self.assertTrue(fixture.r.action(command, str(clone)).get('error'))
+        self.task(clone, repo_root=clone, identity='gh1347')
+        for command in ('gh issue close 5 -R /a/b', 'gh issue close 5 -R ../a', 'gh issue close 5 -R ~/a'):
+            with self.subTest(command=command):
+                self.f.assertGate(2, command, cwd=clone)
+        nonrepo = self.nonrepo_dir()
+        for command in ('gh issue close 5 -R', 'gh issue close 5 --repo'):
+            with self.subTest(command=command):
+                self.f.assertGate(2, command, cwd=nonrepo)
+                self.f.assertGate(0, command, cwd=clone)
+
+    def test_gh_selector_positive_grammar(self):
+        clone = self.f.repo
+        for value in ('github.com/o/r', 'o/r', 'o-1/r_2.x', 'o/.github', 'ghe.example.com/o/r', 'o_emu/r'):
+            for form in ('-R {}', '--repo {}', '--repo={}', '-R{}', '-R={}'):
+                command = 'gh issue close 5 ' + form.format(value)
+                with self.subTest(command=command):
+                    self.assertEqual(self.paths(command, cwd=clone), [str(clone)])
+
+    def test_gh_selector_naming_an_existing_local_directory_is_still_dropped(self):
+        # gh never reads -R/--repo as a path: it parses [HOST/]OWNER/REPO, so a
+        # same-named directory (or a symlink out of scope) under the cwd is not touched.
+        clone = self.f.repo
+        (clone / 'example/target').mkdir(parents=True)
+        (clone / 'o').mkdir()
+        os.symlink(self.payload, clone / 'o/r')
+        for command in ('gh issue close 5 -R example/target', 'gh pr close 5 --repo=o/r'):
+            with self.subTest(command=command):
+                self.assertEqual(self.paths(command, cwd=clone), [str(clone)])
+        self.task(clone, repo_root=clone, identity='gh1347')
+        self.f.assertGate(0, 'gh pr close 5 --repo=o/r', cwd=clone)
+
+    def test_gh_groups_without_repo_override_are_unchanged(self):
+        clone = self.f.repo
+        for command in ('gh repo edit --repo o/r --description x', 'gh repo delete o/r --yes',
+                        'gh unmodelled-ext -R o/r', 'gh unmodelled-ext --repo=o/r', 'gh gist create o/r'):
+            with self.subTest(command=command):
+                self.assertIn(str(clone / 'o/r'), self.paths(command, cwd=clone))
+        # Search is a released reader; it never reaches the mutation branch.
+        for command in ('gh search issues --repo o/r bug', 'gh search prs -R o/r'):
+            with self.subTest(command=command):
+                self.assertTrue(fixture.r.action(command, str(clone)).get('read_only'))
+
+    def test_gh_selector_after_a_bare_option_may_be_its_value(self):
+        # pflag gives a value-taking flag the next token even when it starts
+        # with '-': `--title -R o/r` makes o/r an upload asset, `-D -Ro/r`
+        # downloads into ./-Ro/r. Such a selector is kept (fail closed).
+        clone = self.f.repo
+        (clone / 'o').mkdir()
+        os.symlink(self.payload, clone / 'o/r')
+        cases = {
+            'gh release create v1 --title -R o/r': [str(self.payload)],
+            'gh run download 9 -D -Ro/r': ['/r'],
+            'gh issue close 5 -R -R o/r': [str(self.payload)],
+            'gh pr close 5 -c -R o/r -R c/d': [str(self.payload)],
+            'gh pr merge 5 --squash -Ro/r': ['/r'],
+            'gh -R -R o/r issue close 5': [str(self.payload)],
+        }
+        for command, expected in cases.items():
+            with self.subTest(command=command):
+                paths = self.paths(command, cwd=clone)
+                self.assertIn(str(clone), paths)
+                for path in expected:
+                    self.assertIn(path, paths)
+        self.task(clone, repo_root=clone, identity='gh1347')
+        for command in cases:
+            with self.subTest(gate=command):
+                self.f.assertGate(2, command, cwd=clone)
+        # After an attached value or a dropped selector, a selector is dropped.
+        for command in ('gh pr close 5 --comment=x -R o/r', 'gh pr close 5 -R c/d -R o/r', 'gh pr close 5 -Rc/d -Ro/r'):
+            with self.subTest(command=command):
+                self.assertEqual(self.paths(command, cwd=clone), [str(clone)])
+                self.f.assertGate(0, command, cwd=clone)
+
+    def test_gh_unowned_genuine_target_still_refuses(self):
+        clone = self.f.repo
+        self.task(clone, repo_root=clone, identity='gh1347')
+        for command in ('gh release upload v1 ' + q(str(self.payload / 'x.tgz')) + ' -R example/target',
+                        'gh issue close 5 -R ../escape',
+                        'gh issue close 5 -R' + str(self.payload / 'x'),
+                        'gh myext -R ' + q(str(self.payload / 'x'))):
+            with self.subTest(command=command):
+                self.f.assertGate(2, command, cwd=clone)
 
     # --- denial text -------------------------------------------------------
 
