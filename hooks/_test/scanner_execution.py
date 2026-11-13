@@ -119,6 +119,52 @@ class ScannerExecution(unittest.TestCase):
                                      hashlib.sha256(source.read_bytes()).hexdigest())
                     git('config','--unset','filter.'+driver+'.'+operation)
 
+    def test_replacement_refs_cannot_substitute_selected_blob_bytes(self):
+        source=self.repo/'sample.py'
+        bad='import subprocess\nsubprocess.run(["echo", "owned"])\n'
+        source.write_text(bad)
+        def git(*args,**kwargs):
+            return f.fixture_git('-C',self.repo,*args,check=True,capture_output=True,
+                                 text=True,timeout=10,**kwargs)
+        git('add','sample.py');original=git('rev-parse',':sample.py').stdout.strip()
+        benign=git('hash-object','-w','--stdin',input='value = 1\n').stdout.strip()
+        git('replace',original,benign)
+        refs=git('for-each-ref','refs/replace','--format=%(refname) %(objectname)').stdout
+        result=self.run_scanner('--staged')
+        self.assertEqual(result.returncode,1,result.stdout+result.stderr)
+        self.assertIn('writing-code-15',result.stdout)
+        identity=json.loads(result.stderr.split('scanner input identity: ')[-1])
+        self.assertEqual(identity['selection']['files_sha256']['sample.py'],
+                         hashlib.sha256(bad.encode()).hexdigest())
+        self.assertEqual(git('for-each-ref','refs/replace','--format=%(refname) %(objectname)').stdout,refs)
+
+    def test_legacy_grafts_cannot_hide_the_actual_pr_diff(self):
+        def git(*args):
+            return f.fixture_git('-C',self.repo,*args,check=True,capture_output=True,
+                                 text=True,timeout=10)
+        source=self.repo/'sample.py';source.write_text('value = 1\n')
+        git('add','sample.py');git('-c','user.name=Fixture','-c','user.email=f@example.invalid','commit','-qm','base')
+        base=git('rev-parse','HEAD').stdout.strip()
+        bad='import subprocess\nsubprocess.run(["echo", "owned"])\n'
+        source.write_text(bad);git('add','sample.py')
+        git('-c','user.name=Fixture','-c','user.email=f@example.invalid','commit','-qm','head')
+        head=git('rev-parse','HEAD').stdout.strip()
+        graft=self.repo/'.git/info/grafts';graft.parent.mkdir(exist_ok=True)
+        content=base+' '+head+'\n'+head+'\n'
+        graft.write_text(content)
+        tools=self.data/'tools';tools.mkdir();gh=tools/'gh'
+        gh.write_text('#!'+sys.executable+'\nprint('+repr(json.dumps({'baseRefOid':base,'headRefOid':head}))+')\n')
+        gh.chmod(0o700)
+        refs=git('for-each-ref','--format=%(refname) %(objectname)').stdout
+        result=self.run_scanner('--pr','1805',env={**self.f.env,'PATH':str(tools)+os.pathsep+self.f.env['PATH']})
+        self.assertEqual(result.returncode,1,result.stdout+result.stderr)
+        self.assertIn('writing-code-15',result.stdout)
+        identity=json.loads(result.stderr.split('scanner input identity: ')[-1])['selection']
+        self.assertEqual(identity['merge_base'],base)
+        self.assertEqual(identity['files_sha256']['sample.py'],hashlib.sha256(bad.encode()).hexdigest())
+        self.assertEqual(graft.read_text(),content)
+        self.assertEqual(git('for-each-ref','--format=%(refname) %(objectname)').stdout,refs)
+
     def test_missing_promisor_objects_never_trigger_implicit_transport(self):
         for mode in ('staged','working'):
             with self.subTest(mode=mode):
@@ -482,6 +528,26 @@ except KeyboardInterrupt:
         self.assertNotEqual(git(self.repo,'cat-file','-e',head,check=False).returncode,0)
         tools=self.data/'tools';tools.mkdir();gh=tools/'gh'
         gh.write_text('#!'+sys.executable+'\nimport json,sys\nassert sys.argv[1:]==["pr","view","1805","--json","baseRefOid,headRefOid"]\nprint('+repr(json.dumps({'baseRefOid':base,'headRefOid':head}))+')\n');gh.chmod(0o700)
+        git(self.repo,'branch','release',base)
+        git(self.repo,'config','remote.origin.fetch','+'+head+':refs/heads/release')
+        git(self.repo,'tag','local-only',base)
+        git(self.repo,'update-ref','refs/remotes/origin/stale',base)
+        for prefix in ('fetch','remote.origin'):
+            git(self.repo,'config',prefix+'.prune','true')
+            git(self.repo,'config',prefix+'.pruneTags','true')
+        git(self.repo,'config','fetch.writeCommitGraph','true')
+        git(self.repo,'config','gc.auto','1')
+        marker=self.data/'pre-auto-gc-ran'
+        hook=self.repo/'.git/hooks/pre-auto-gc'
+        hook.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\n');hook.chmod(0o700)
+        trace=self.data/'git-trace.jsonl';binary=shutil.which('git');self.assertIsNotNone(binary)
+        wrapper=tools/'git'
+        wrapper.write_text('#!'+sys.executable+'\nimport os,sys\n'
+            'os.environ.pop("GIT_TRACE2_ENV_VARS",None)\n'
+            'os.environ.pop("GIT_TRACE2_CONFIG_PARAMS",None)\n'
+            'os.environ["GIT_TRACE2_EVENT"]='+repr(str(trace))+'\n'
+            'os.execv('+repr(binary)+',['+repr(binary)+',*sys.argv[1:]])\n')
+        wrapper.chmod(0o700)
         refs=git(self.repo,'for-each-ref','--format=%(refname) %(objectname)').stdout
         self.f.assertGate(0,self.command('--pr','1805'))
         result=self.run_scanner('--pr','1805',env={**self.f.env,'PATH':str(tools)+os.pathsep+self.f.env['PATH']})
@@ -491,6 +557,11 @@ except KeyboardInterrupt:
         self.assertEqual(git(self.repo,'status','--porcelain').stdout,'')
         self.assertEqual(git(self.repo,'for-each-ref','--format=%(refname) %(objectname)').stdout,refs)
         self.assertEqual(list(self.scratch.iterdir()),[])
+        events=[json.loads(line) for line in trace.read_text().splitlines()]
+        self.assertFalse([event for event in events if event.get('event')=='child_start'
+                          and 'maintenance' in event.get('argv',[])])
+        self.assertFalse(marker.exists())
+        self.assertFalse((self.repo/'.git/objects/info/commit-graphs').exists())
 
     def test_inherited_git_config_cannot_mask_repository_helper_audit(self):
         marker=self.data/'masked-helper-executed'
@@ -506,6 +577,28 @@ except KeyboardInterrupt:
         result=self.run_scanner('--message','fix: own text #1361',env=env)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         self.assertFalse(marker.exists())
+
+    def test_pr_repository_askpass_is_denied_before_authentication(self):
+        marker=self.data/'askpass-executed';helper=self.data/'askpass'
+        helper.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\nprintf "fixture-only\\n"\n')
+        helper.chmod(0o700)
+        f.fixture_git('-C',self.repo,'config','core.askPass',str(helper),check=True,timeout=10)
+        self.f.assertGate(2,self.command('--pr','1805'))
+        result=self.run_scanner('--pr','1805')
+        self.assertEqual(result.returncode,2,result.stdout+result.stderr)
+        self.assertFalse(marker.exists())
+        result=self.run_scanner('--message','fix: own text #1367')
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertFalse(marker.exists())
+        # Git's local credential protocol proves why terminal prompting alone
+        # is insufficient. This owned helper returns fixture text, no secrets.
+        env={k:v for k,v in os.environ.items() if not k.startswith('GIT_')}
+        env.update(GIT_TERMINAL_PROMPT='0',GIT_CONFIG_NOSYSTEM='1',GIT_CONFIG_GLOBAL=os.devnull)
+        result=subprocess.run(['git','-C',str(self.repo),'-c','credential.helper=',
+            'credential','fill'],input='protocol=https\nhost=fixture.invalid\n\n',
+            env=env,capture_output=True,text=True,timeout=10)
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertTrue(marker.exists())
 
     def test_pr_alternate_refs_helper_is_denied(self):
         marker=self.data/'alternate-refs-helper-executed'

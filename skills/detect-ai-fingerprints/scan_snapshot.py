@@ -20,14 +20,15 @@ def command(args, *, cwd, input=None, env=None):
 
 
 def git(root, *args, input=None):
-    env = {**os.environ, 'CCP_SCANNER_FILTER_EMPTY': '', 'CCP_SCANNER_FILTER_OPTIONAL': 'false'}
-    return command(['git', '--no-lazy-fetch', '-c', 'core.quotepath=false', *args], cwd=root, input=input, env=env)
+    env = {**os.environ, 'CCP_SCANNER_FILTER_EMPTY': '', 'CCP_SCANNER_FILTER_OPTIONAL': 'false',
+           'GIT_GRAFT_FILE': os.devnull}
+    return command(['git', '--no-lazy-fetch', '--no-replace-objects', '-c', 'core.quotepath=false', *args], cwd=root, input=input, env=env)
 
 
 
 def working_filter_options(root):
     # Enumerate names, never values: selected configuration is data, not code.
-    result = subprocess.run(['git', '--no-lazy-fetch', 'config', '--null',
+    result = subprocess.run(['git', '--no-lazy-fetch', '--no-replace-objects', 'config', '--null',
         '--name-only', '--get-regexp', r'^filter\..*\.(clean|process|required)$'],
         cwd=root, capture_output=True, timeout=60)
     require(result.returncode in (0, 1), 'cannot enumerate working filter drivers')
@@ -87,11 +88,11 @@ def tree_files(root, tree):
 
 
 def head_or_empty(root):
-    head = subprocess.run(['git', '--no-lazy-fetch', 'rev-parse', '--verify', 'HEAD'], cwd=root, capture_output=True, timeout=60)
+    head = subprocess.run(['git', '--no-lazy-fetch', '--no-replace-objects', 'rev-parse', '--verify', 'HEAD'], cwd=root, capture_output=True, timeout=60)
     if head.returncode == 0:
         return head.stdout.decode().strip()
     branch = git(root, 'symbolic-ref', '--quiet', 'HEAD').decode().strip()
-    exists = subprocess.run(['git', '--no-lazy-fetch', 'show-ref', '--verify', '--quiet', branch], cwd=root, capture_output=True, timeout=60)
+    exists = subprocess.run(['git', '--no-lazy-fetch', '--no-replace-objects', 'show-ref', '--verify', '--quiet', branch], cwd=root, capture_output=True, timeout=60)
     require(exists.returncode == 1, 'cannot establish unborn repository baseline')
     return git(root, 'hash-object', '-w', '-t', 'tree', '--stdin', input=b'').decode().strip()
 
@@ -116,9 +117,9 @@ def snapshot(mode, destination, *, pr=None, cwd=None):
         refs = [metadata.get('baseRefOid'), metadata.get('headRefOid')]
         require(all(isinstance(ref, str) and re.fullmatch(r'[0-9a-f]{40}', ref) for ref in refs), 'PR metadata lacks exact base/head')
         for ref in refs:
-            present = subprocess.run(['git', '--no-lazy-fetch', 'cat-file', '-e', ref + '^{commit}'], cwd=root, capture_output=True, timeout=60)
+            present = subprocess.run(['git', '--no-lazy-fetch', '--no-replace-objects', 'cat-file', '-e', ref + '^{commit}'], cwd=root, capture_output=True, timeout=60)
             if present.returncode:
-                git(root, 'fetch', '--no-tags', '--no-recurse-submodules', 'origin', ref)
+                git(root, 'fetch', '--no-tags', '--no-recurse-submodules', '--refmap=', '--no-auto-maintenance', '--no-write-commit-graph', 'origin', ref)
             require(git(root, 'rev-parse', ref + '^{commit}').decode().strip() == ref, 'PR ref is not an exact commit')
         base, selected = refs
         merge_base = git(root, 'merge-base', base, selected).decode().strip()
