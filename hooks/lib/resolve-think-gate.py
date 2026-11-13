@@ -535,6 +535,11 @@ def _remember_canonical(sd: str, sid: str, identity: str, workspace: str) -> Non
             os.unlink(temp)
 
 
+def _canonical_retirement_aliases(data: dict) -> set[str]:
+    identity = task_identity(data)
+    return {identity, str(data.get('ticket') or identity).strip()}
+
+
 def _remember_managed_paths(workspace: str, paths: list[str]) -> None:
     sid = session_id_from_env()
     for sd in session_dirs(workspace, sid):
@@ -544,7 +549,8 @@ def _remember_managed_paths(workspace: str, paths: list[str]) -> None:
                 continue
             loaded = _load(think)
             if loaded and _gate_matches_session(loaded, sid) and task_identity(loaded['data']):
-                _remember_canonical(sd, sid, task_identity(loaded['data']), workspace)
+                for alias in _canonical_retirement_aliases(loaded['data']):
+                    _remember_canonical(sd, sid, alias, workspace)
 
 
 def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
@@ -566,7 +572,7 @@ def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
                 if key not in seen:
                     # Ticket-only legacy aliases stay retired after canonical
                     # migration; this does not collapse distinct canonical Tasks.
-                    aliases = {identity, str(loaded["data"].get("ticket") or identity).strip()}
+                    aliases = _canonical_retirement_aliases(loaded["data"])
                     canonical_ids.update(aliases)
                     try:
                         for alias in aliases:
@@ -956,10 +962,27 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     binding = shape.get("binding") or task_binding()
     if shape.get("binding") and task_binding() and shape["binding"] != task_binding():
         return {**shape, "gate": None, "error": "Conflicting explicit task bindings."}
-    selected = post_selected or select_task(workspace, shape["paths"], binding)
+    if shape.get('scanner_execution'):
+        # This named diagnostic selects data through exact repo_root binding;
+        # its bounded Git metadata effects are not repository-wide edit grants.
+        requested = shape['scanner_execution']['gate']
+        candidates = [gate for gate in _session_thinks(workspace)
+                      if canonical(gate['path']) == requested
+                      and (not binding or task_identity(gate['data']) == binding)]
+        selected = {'gate': candidates[0], 'error': ''} if len(candidates) == 1 else {
+            'gate': None, 'error': 'Scanner requires its exact existing own-session Task and binding.'}
+    else:
+        selected = post_selected or select_task(workspace, shape['paths'], binding)
     result = {**shape, **selected}
     if result["gate"]:
         tg = result["gate"]
+        if shape.get('scanner_execution'):
+            from task_actions import scanner_owned_plan
+            try:
+                scanner_owned_plan(shape['scanner_execution'],tg['path'],tg['data'],own_session_directory(workspace))
+            except (OSError,ValueError) as error:
+                return {**result,'gate':None,'error':'Scanner authority denied: '+str(error)}
+            result['scanner_execution_authorized'] = True
         if shape.get("test_receipt_output"):
             expected_gate = canonical(tg["path"])
             requested_gate = shape["test_receipt_gate"]

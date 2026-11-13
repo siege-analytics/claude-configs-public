@@ -784,6 +784,23 @@ class Gates(unittest.TestCase):
         (directory / 'think-gate.json').unlink()
         self.assertEqual(r._session_thinks(str(self.ws)), [])
 
+    def test_direct_own_lifecycle_delete_retires_ticket_alias_before_enumeration(self):
+        directory = self.task('o/r#3133', self.a, slug='canonical')
+        gate = directory / 'think-gate.json'
+        legacy = directory.parent.parent / 'think-gate.json'
+        write(legacy, json.loads(gate.read_text()))
+        data = json.loads(gate.read_text())
+        data['task_id'] = 'exact-task-id'
+        write(gate, data)
+        # The real lifecycle hook must remember both denial identities before
+        # the host removes the gate, without any prior Task enumeration.
+        claims = directory.parent / '.canonical'
+        self.assertFalse(claims.exists())
+        self.assertGate(0, 'rm ' + shlex.quote(str(gate)))
+        gate.unlink()
+        self.assertEqual(r._session_thinks(str(self.ws)), [])
+        self.assertGate(2, 'touch file', cwd=self.a)
+
     def test_selected_task_non_git_roots_do_not_expand_physical_scope(self):
         # The default fixture is inside this source checkout: use a genuine
         # outside-Git workspace so a parent repository cannot supply identity.

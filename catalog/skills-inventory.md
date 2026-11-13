@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **199**
-- Characters: **2,477,504**
-- Estimated tokens: **619,454** (character/4 estimate)
+- Characters: **2,482,421**
+- Estimated tokens: **620,682** (character/4 estimate)
 - Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 111 | 1,081,110 | 270,320 |
+| unclassified | 111 | 1,086,027 | 271,548 |
 
 ## Largest source items
 
@@ -43,7 +43,7 @@ This report describes committed source evidence. Missing references or tests do 
 |---|---|---:|---:|---|
 | `writing-code` | rule | 51,195 | 12,799 | `skills/_writing-code-rules.md` |
 | `shelves--top-design` | reference-shelf | 38,675 | 9,669 | `skills/shelves/design/top-design/SKILL.md` |
-| `session-coordination` | rule | 34,106 | 8,527 | `skills/_session-coordination-rules.md` |
+| `session-coordination` | rule | 34,936 | 8,734 | `skills/_session-coordination-rules.md` |
 | `writing-claims` | rule | 31,339 | 7,835 | `skills/_writing-claims-rules.md` |
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
 | `shelves--one-page-marketing` | reference-shelf | 30,696 | 7,674 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
@@ -53,6 +53,7 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
 | `writing-tests` | rule | 27,373 | 6,844 | `skills/_writing-tests-rules.md` |
 | `engagement-post-mortem` | skill | 26,695 | 6,674 | `skills/engagement-post-mortem/SKILL.md` |
+| `detect-ai-fingerprints` | skill | 26,484 | 6,621 | `skills/detect-ai-fingerprints/SKILL.md` |
 | `siege-utilities--hostile-review` | project-skill | 25,909 | 6,478 | `projects/siege-utilities/skills/hostile-review/SKILL.md` |
 | `shelves--high-performance-django` | reference-shelf | 25,890 | 6,473 | `skills/shelves/django/high-performance-django/SKILL.md` |
 | `shelves--contagious` | reference-shelf | 25,741 | 6,436 | `skills/shelves/marketing/contagious/SKILL.md` |
@@ -63,7 +64,6 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--37signals-way` | reference-shelf | 24,449 | 6,113 | `skills/shelves/team/37signals-way/SKILL.md` |
 | `shelves--data-intensive` | reference-shelf | 23,688 | 5,922 | `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
 | `hostile-review` | skill | 23,345 | 5,837 | `skills/hostile-review/SKILL.md` |
-| `detect-ai-fingerprints` | skill | 22,893 | 5,724 | `skills/detect-ai-fingerprints/SKILL.md` |
 | `shelves--cro-methodology` | reference-shelf | 22,720 | 5,680 | `skills/shelves/marketing/cro-methodology/SKILL.md` |
 | `commit` | skill | 22,423 | 5,606 | `skills/commit/SKILL.md` |
 
