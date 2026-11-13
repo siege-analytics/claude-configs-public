@@ -119,6 +119,30 @@ class ScannerExecution(unittest.TestCase):
                                      hashlib.sha256(source.read_bytes()).hexdigest())
                     git('config','--unset','filter.'+driver+'.'+operation)
 
+    def test_inline_submodule_diffs_cannot_execute_child_only_filters(self):
+        def git(repo, *args):
+            return f.fixture_git('-C', repo, *args, check=True, capture_output=True, text=True, timeout=20)
+        child = self.data / 'child-source'; child.mkdir()
+        git(child, 'init', '-q')
+        (child / 'sample.py').write_text('value = 1\n')
+        (child / '.gitattributes').write_text('*.py filter=child\n')
+        git(child, 'add', '.')
+        git(child, '-c', 'user.name=Fixture', '-c', 'user.email=f@example.invalid', 'commit', '-qm', 'child')
+        git(self.repo, '-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', str(child), 'child')
+        git(self.repo, 'add', '.')
+        git(self.repo, '-c', 'user.name=Fixture', '-c', 'user.email=f@example.invalid', 'commit', '-qm', 'parent')
+        git(self.repo, 'config', 'diff.submodule', 'diff')
+        nested = self.repo / 'child'
+        marker = self.data / 'child-filter-executed'; helper = self.data / 'child-filter-helper'
+        helper.write_text('#!/bin/sh\ntouch ' + shlex.quote(str(marker)) + '\ncat\n'); helper.chmod(0o700)
+        git(nested, 'config', 'filter.child.clean', str(helper))
+        (nested / 'sample.py').write_text('value = 22222\n')
+        result = self.run_scanner('--working')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse(marker.exists(), 'inline submodule diff executed a child-only filter')
+        self.assertEqual(git(self.repo, 'config', 'diff.submodule').stdout.strip(), 'diff')
+        self.assertEqual((nested / 'sample.py').read_text(), 'value = 22222\n')
+
     def test_replacement_refs_cannot_substitute_selected_blob_bytes(self):
         source=self.repo/'sample.py'
         bad='import subprocess\nsubprocess.run(["echo", "owned"])\n'

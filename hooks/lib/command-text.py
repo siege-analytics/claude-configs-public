@@ -385,29 +385,38 @@ def publication_effects(command, cwd, depth=0, state=None):
     from git_command import literal_prefix, prefix, directory_target
     if depth > 4:
         raise UnknownShape("publication wrapper exceeds inspection limit")
-    command, expansion_effects = _publication_mask(command, cwd, depth)
+    command, substitutions = _publication_mask(command, cwd, depth)
     parsed = shell_tokens(command, inspection_comments=True)
-    groups, words, redirected = [], [], False
+    groups, words, expansion_words, redirected = [], [], [], False
     for word, operator, globs in parsed:
         if redirected:
             if operator:
                 raise UnknownShape("unresolved publication redirect")
+            expansion_words.append(word)
             redirected = False
             continue
         if operator:
             if re.fullmatch(r"[0-9]*(?:>>|>&|<&|>\||>|<)|&>>|&>", word):
                 redirected = True
             elif word in {";", "&&", "||", "|", "&"}:
-                groups.append(words); words = []
+                groups.append((words, expansion_words)); words, expansion_words = [], []
             else:
                 raise UnknownShape("unsupported publication shell operator")
         else:
             words.append((word, globs))
+            expansion_words.append(word)
     if redirected:
         raise UnknownShape("missing publication redirect target")
-    groups.append(words)
-    effects = list(expansion_effects)
-    for group in groups:
+    groups.append((words, expansion_words))
+    effects = []
+    for group, expansion_words in groups:
+        for marker, program in substitutions:
+            if any(marker in word for word in expansion_words):
+                nested = publication_trigger(program, cwd, depth + 1)
+                if nested['kind'] == 'unknown':
+                    effects.append({'kind': 'git', 'cwd': cwd, 'scope': ''})
+                else:
+                    effects.extend(nested.get('effects', []))
         if not group:
             continue
         args = [word for word, _ in group]
@@ -417,10 +426,24 @@ def publication_effects(command, cwd, depth=0, state=None):
         args, _environment = literal_prefix(args, strict=True)
         if not args:
             continue
+        if _PUBLICATION_DYNAMIC in args[0]:
+            if any(word in {'push', 'pr', 'mr'} or _PUBLICATION_DYNAMIC in word for word in args[1:]):
+                effects.append({'kind': 'git', 'cwd': cwd, 'scope': ''})
+            continue
         name = os.path.basename(args[0])
+        if name == 'time':
+            wrapped = args[1:]
+            if wrapped[:1] == ['-p']:
+                wrapped = wrapped[1:]
+            if wrapped and not wrapped[0].startswith('-'):
+                nested_state = {}
+                effects.extend(publication_effects(shlex.join(wrapped), cwd, depth + 1, nested_state))
+                cwd = nested_state['cwd']
+                continue
+            raise UnknownShape('unresolved time dispatch')
         if name == "cd":
             target = directory_target(original)
-            if any(operator and word != "&&" for word, operator, _ in parsed):
+            if any(operator and word in {';', '||', '|', '&'} for word, operator, _ in parsed):
                 raise UnknownShape("unresolved publication directory control flow")
             cwd = target
             continue
@@ -474,9 +497,19 @@ def _publication_mask(command, cwd, depth):
     positions remain unresolved; ordinary data operands do not become code.
     """
     from task_actions import UnknownShape
-    output, effects, quote, index = [], [], '', 0
+    output, effects, quote, index, comment = [], [], '', 0, False
     while index < len(command):
         char = command[index]
+        if comment:
+            output.append(char)
+            comment = char != '\n'
+            index += 1
+            continue
+        if char == '#' and not quote and (index == 0 or command[index - 1].isspace() or command[index - 1] in ';&|()'):
+            comment = True
+            output.append(char)
+            index += 1
+            continue
         if char == "\\" and quote != "'" and index + 1 < len(command):
             output.extend(command[index:index + 2]); index += 2
             continue
@@ -489,11 +522,9 @@ def _publication_mask(command, cwd, depth):
             end = command.find(')' if char == '$' else '`', start)
             if end < 0 or '(' in command[start:end]:
                 raise UnknownShape("unresolved nested publication substitution")
-            nested = publication_trigger(command[start:end], cwd, depth + 1)
-            if nested['kind'] == 'unknown':
-                raise UnknownShape("unresolved publication substitution")
-            effects.extend(nested.get('effects', []))
-            output.append(_PUBLICATION_DYNAMIC); index = end + 1
+            marker = _PUBLICATION_DYNAMIC + '_sub_' + str(len(effects))
+            effects.append((marker, command[start:end]))
+            output.append(marker); index = end + 1
             continue
         elif quote != "'" and char == '$':
             match = re.match(r'\$(?:[A-Za-z_][A-Za-z0-9_]*|[0-9@*#?$!-]|\{[^{}]*\})', command[index:])
@@ -509,6 +540,7 @@ def _publication_mask(command, cwd, depth):
 def publication_trigger(command, cwd, depth=0):
     """A resolved effect, proven non-trigger, or plausible unresolved trigger."""
     from task_actions import UnknownShape
+    command = _publication_continuations(command)
     try:
         effects = publication_effects(command, os.path.realpath(cwd or os.getcwd()), depth)
         targets = set(item['cwd'] for item in effects)
@@ -528,6 +560,35 @@ def publication_trigger(command, cwd, depth=0):
         plausible = re.search(r"(?:^|[^A-Za-z0-9_])(?:git(?:\s+[^;|&]*?\bpush)|(?:gh|glab)\s+[^;|&]*?\b(?:pr|mr)\s+[^;|&]*?\b(?:create|merge))\b", normalized)
         dynamic = re.search(r"(?:^|[;&|]\s*)[^\s]*[$`*?\[][^\s]*\s+(?:push|pr|mr)\b", normalized) or re.search(r"\b(?:git|gh(?:\s+pr)?|glab(?:\s+mr)?)\s+[^\s]*[$`*?\[]", normalized)
         return {'kind': 'unknown', 'error': str(exc)} if plausible or dynamic or 'Git alias' in str(exc) else {'kind': 'none'}
+
+
+def _publication_continuations(command):
+    """Shell backslash-newline joins code, except inside single-quoted data."""
+    output, quote, index, comment = [], '', 0, False
+    while index < len(command):
+        char = command[index]
+        if comment:
+            output.append(char)
+            comment = char != '\n'
+            index += 1
+            continue
+        if char == '#' and not quote and (index == 0 or command[index - 1].isspace() or command[index - 1] in ';&|()'):
+            comment = True
+            output.append(char)
+            index += 1
+            continue
+        if char == '\\' and quote != "'" and index + 1 < len(command):
+            if command[index + 1] != '\n':
+                output.extend(command[index:index + 2])
+            index += 2
+            continue
+        if char == "'" and quote != '"':
+            quote = '' if quote == "'" else "'"
+        elif char == '"' and quote != "'":
+            quote = '' if quote == '"' else '"'
+        output.append(char)
+        index += 1
+    return ''.join(output)
 
 
 def main():
