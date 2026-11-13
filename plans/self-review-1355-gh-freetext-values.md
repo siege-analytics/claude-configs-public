@@ -119,3 +119,8 @@ Standards applied by the enforcement-hooks role:
 - **After the code review:** comment fixes and one new test (P3-1 to P3-4).
 - **Timestamp corrections:** times in the design note and one hub message were corrected after `date` checks.
 - **Inventory:** `catalog/skills-inventory.json` regenerated for the new test text (two test-path entries).
+- **Hub-directed redaction recompose, before the first push.** Nothing had been pushed. At the coordinating hub's direction, the local fix commit was recomposed:
+  - to apply this disclosure redaction to the review records: [Withheld: a second, separate gap in the pinned merge-queue admin refusal was found during review and reported privately to the Siege Claude Hub; not in scope for #1355.];
+  - to replace a countable Full-Suite wording with the observed counts, plus a `Verified-by:` trailer quoting the suite output.
+
+  The shelf-citation commit and the develop `3154162a` merge were then re-applied. The resulting tree is identical to the pre-recompose tree with the redaction. The runtime blob (`task_actions.py` `030bcb9b`) and the test blob (`252bef34`) are unchanged, and no verdict, finding or disposition changed.
