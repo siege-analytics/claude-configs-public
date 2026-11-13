@@ -278,7 +278,7 @@ if [[ "$REVIEW_TIER" == "C" ]]; then
     HOSTILE_VALUE=$(echo "$TRAILERS" | grep -E '^Hostile-Review:[[:space:]]+' | sed -E 's/^[^:]*:[[:space:]]+//')
     if [[ ! "$HOSTILE_VALUE" =~ ^https?:// && ! "$HOSTILE_VALUE" =~ ^#[0-9]+$ ]]; then
         case "$HOSTILE_VALUE" in /*) REVIEW_PATH="$HOSTILE_VALUE" ;; *) REVIEW_PATH="$EFFECTIVE_CWD/$HOSTILE_VALUE" ;; esac
-        [[ -f "$REVIEW_PATH" && -s "$REVIEW_PATH" ]] || { echo "BLOCKED: actual independent review evidence is unavailable" >&2; exit 2; }
+        [[ -f "$REVIEW_PATH" && ! -L "$REVIEW_PATH" && -s "$REVIEW_PATH" ]] || { echo "BLOCKED: actual independent review evidence is unavailable" >&2; exit 2; }
     fi
 fi
 

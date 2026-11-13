@@ -107,6 +107,18 @@ class PublicationReview(unittest.TestCase):
         self.commit(review_path='plans')
         self.assert_publication(2)
 
+    def test_tracked_review_symlinks_do_not_count_as_independent_evidence(self):
+        for target in ('.', 'missing.md', 'independent.md'):
+            with self.subTest(target=target):
+                f = PublicationReview()
+                f.setUp()
+                try:
+                    (f.repo/'plans/linked-review').symlink_to(target)
+                    f.commit(review_path='plans/linked-review')
+                    f.assert_publication(2)
+                finally:
+                    f.doCleanups()
+
     def test_compact_high_risk_review_needs_no_rank_premortem_or_runtime_deploy_stamp(self):
         self.commit()
         self.assert_publication(0)

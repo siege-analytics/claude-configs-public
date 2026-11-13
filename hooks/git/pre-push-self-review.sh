@@ -165,7 +165,7 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA EXTRA || [[ -n "$LOCAL_R
             fi
             if [[ "$TIER" == "C" && "$HOSTILE_COUNT" -ne 1 ]]; then
                 REASONS+=("Hostile-Review: <URL, #ticket, or committed file with the independent hostile review>  (Tier C requires exactly one Hostile-Review)")
-            elif [[ "$TIER" == "C" && ! "$HOSTILE_VALUE" =~ ^(https?://|#[0-9]+$) ]] && { [[ "$(git cat-file -t "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null)" != blob ]] || [[ $(git cat-file -s "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || echo 0) -eq 0 ]]; }; then
+            elif [[ "$TIER" == "C" && ! "$HOSTILE_VALUE" =~ ^(https?://|#[0-9]+$) ]] && { [[ ! "$(git --literal-pathspecs ls-tree --full-tree "$COMMIT" -- "${HOSTILE_VALUE#./}" 2>/dev/null | awk '{print $1}')" =~ ^100(644|755)$ ]] || [[ "$(git cat-file -t "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null)" != blob ]] || [[ $(git cat-file -s "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || echo 0) -eq 0 ]]; }; then
                 REASONS+=("Hostile-Review is not a URL, ticket, or non-empty file in the commit")
             fi
 
