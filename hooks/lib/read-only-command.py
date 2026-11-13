@@ -339,14 +339,15 @@ def gh_api_rest_read(args):
     Field/input flags remain outside this proof even when GET is requested.
     https://cli.github.com/manual/gh_api
     """
-    endpoint, method, i = None, None, 0
+    endpoint, method, i, help_requested = None, None, 0, False
     values = {"--method", "--header", "--hostname", "--jq", "--template", "--preview", "--cache"}
-    flags = {"--include", "--paginate", "--silent", "--slurp", "--verbose"}
+    flags = {"--include", "--paginate", "--silent", "--slurp", "--verbose", "--help"}
     while i < len(args):
         arg = args[i]
         if arg.startswith("--"):
             name, equal, value = arg.partition("=")
             if name in flags and not equal:
+                help_requested |= name == "--help"
                 i += 1
                 continue
             if name not in values:
@@ -366,7 +367,8 @@ def gh_api_rest_read(args):
                 return False
             while cluster:
                 flag, cluster = cluster[0], cluster[1:]
-                if flag in "is":
+                if flag in "ish":
+                    help_requested |= flag == "h"
                     continue
                 if flag not in "XHqtp":
                     return False
@@ -389,7 +391,7 @@ def gh_api_rest_read(args):
             endpoint = arg
         i += 1
     if not endpoint:
-        return False
+        return help_requested
     try:
         path = urlsplit(endpoint).path.strip("/")
     except ValueError:

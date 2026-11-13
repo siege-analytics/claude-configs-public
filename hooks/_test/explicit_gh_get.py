@@ -18,6 +18,16 @@ class ExplicitGet(Gates):
                 self.assertTrue(task_actions.reader(shlex.split(command)))
                 self.assertGate(0, command)
 
+    def test_help_is_documentation_not_an_option_value_escape(self):
+        import task_actions
+        for command in ('gh api --help', 'gh api -h', 'gh api repos/example/target --help'):
+            self.assertGate(0, command)
+            self.assertTrue(task_actions.reader(shlex.split(command)))
+        for value_flag in ('-H', '--header', '-q', '--jq', '-t', '--template', '-X', '--method'):
+            self.assertGate(2, 'gh api repos/example/target ' + value_flag + ' --help -XPOST')
+        self.assertGate(2, 'gh api --help repos/example/target --method POST')
+        self.assertGate(2, 'gh api -h repos/example/target -f body=x')
+
     def test_graphql_endpoint_is_not_a_rest_resource_name(self):
         for endpoint in ('repos/owner/graphql', 'repos/owner/repo/branches/graphql'):
             self.assertGate(0, 'gh api --method GET ' + shlex.quote(endpoint))
