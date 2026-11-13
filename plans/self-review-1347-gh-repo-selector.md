@@ -135,9 +135,19 @@ Details are in `plans/hostile-review-1347-gh-repo-selector.md`.
 
 ### Tree identity
 
-The local commits were recomposed before the first push (hub-approved) so that every commit carries the installed pre-push trailers. The recomposed head has the same tree as the pre-recomposition backup branch, and `git diff <backup> HEAD` is empty.
+The local commits were recomposed before the first push (hub-approved) so that every commit carries the installed pre-push trailers.
 
-This file is part of that tree, so it cannot contain its own tree hash. The reviewed runtime is pinned instead by the blob hash above, and the tree hash is reported in the PR body.
+- **Backup:** the local ref `refs/backups/1347-pre-recompose` at `78414e69`, tree `efcbca31`. The branch guard refuses branches that do not start from develop, so the backup is a ref rather than a branch.
+- **Code is identical:** `git diff refs/backups/1347-pre-recompose HEAD -- hooks catalog` is empty. The runtime blob `744184707755621789b5a1da56e67e842eb75ac4` and the test blob `eaa9dc11cc3634fa0cd8dcaa42ce5725c50ab933` are the same as in the backup.
+- **The only difference is this record, and the tree is therefore not identical:**
+  - While recomposing, the Peer review list was corrected, because `test_gh_repo_selector_keeps_the_owned_cwd_requirement` is red on unfixed source for its denial-text assertion.
+  - This section was then corrected as well.
+  - Both are prose only.
+- **Review coverage:**
+  - The code-level review covered the runtime blob as published.
+  - Its test-file coverage predates the P3-2 look-alike cases only.
+
+This file is part of the tree, so it cannot contain the final tree hash. That hash is reported in the PR body.
 
 ## Process disclosure
 
