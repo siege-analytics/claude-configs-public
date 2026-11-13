@@ -785,20 +785,30 @@ class Gates(unittest.TestCase):
         self.assertEqual(r._session_thinks(str(self.ws)), [])
 
     def test_selected_task_non_git_roots_do_not_expand_physical_scope(self):
-        private = self.ws / 'sessions/one/data/capture'
-        private.mkdir(parents=True)
-        directory = self.task('o/r#3133', private, slug='private-capture', artifacts=False)
-        path = directory / 'think-gate.json'
-        data = json.loads(path.read_text())
-        data['task_id'] = 'four-cycle-capture'
-        os.environ['CCP_TASK_ID'] = 'four-cycle-capture'
-        for root in (str(private), ''):
-            data['repo_root'] = root
-            write(path, data)
-            self.assertEqual(r.select_task(str(self.ws), [str(private / 'body.csv')])['gate']['path'], str(path))
-            self.assertIsNone(r.select_task(str(self.ws), [str(private.parent / 'foreign.csv')])['gate'])
-        data['sessionId'] = 'two'; write(path, data)
-        self.assertIsNone(r.find_session_gate(str(self.ws)))
+        # The default fixture is inside this source checkout: use a genuine
+        # outside-Git workspace so a parent repository cannot supply identity.
+        with tempfile.TemporaryDirectory() as outside:
+            f = Gates()
+            with patch.dict(globals(), ROOT=Path(outside)):
+                f.setUp()
+            try:
+                private = f.ws / 'sessions/one/data/capture'
+                private.mkdir(parents=True)
+                self.assertFalse(r._target_repo(str(private)))
+                directory = f.task('o/r#3133', private, slug='private-capture', artifacts=False)
+                path = directory / 'think-gate.json'
+                data = json.loads(path.read_text())
+                data['task_id'] = 'four-cycle-capture'
+                os.environ['CCP_TASK_ID'] = 'four-cycle-capture'
+                for root in (str(private), ''):
+                    data['repo_root'] = root
+                    write(path, data)
+                    self.assertEqual(r.select_task(str(f.ws), [str(private / 'body.csv')])['gate']['path'], str(path))
+                    self.assertIsNone(r.select_task(str(f.ws), [str(private.parent / 'foreign.csv')])['gate'])
+                data['sessionId'] = 'two'; write(path, data)
+                self.assertIsNone(r.find_session_gate(str(f.ws)))
+            finally:
+                f.tearDown()
 
     def test_ticketless_pipeline_does_not_borrow_other_task_plans(self):
         gate = self.task('design-task', self.a, status='designing', artifacts=False) / 'think-gate.json'
