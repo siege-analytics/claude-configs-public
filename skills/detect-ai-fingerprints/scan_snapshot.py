@@ -102,7 +102,7 @@ def snapshot(mode, destination, *, pr=None, cwd=None):
     root = Path(git(cwd, 'rev-parse', '--show-toplevel').decode().strip())
     require(not destination.exists(), 'snapshot destination already exists')
     identity = {'mode': mode}
-    diff_options = ['--no-ext-diff', '--no-textconv', '--no-renames']
+    diff_options = ['--no-ext-diff', '--no-textconv', '--no-renames', '--submodule=short']
     if mode == 'staged':
         # write-tree names the index contents once. Both diff and AST use this
         # object; subsequent index/worktree edits cannot change the selection.
