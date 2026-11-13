@@ -26,6 +26,26 @@ The scanner runs as a sub-routine of three callers:
 
 The scanner lives at `<this-skill-dir>/scan.sh`.
 
+### Scoped native execution
+
+When the native mutation gate is active, use the installed typed entry rather than changing a refused Bash/script invocation's spelling:
+
+```text
+python3 -I -B <policy-root>/hooks/lib/scanner-exec.py --repo <physical-git-root> --think-gate <own-task>/think-gate.json --tmp-root <own-session>/data/scanner --staged
+```
+
+The existing own Task must name the exact target directory in `repo_root` and scope the existing private0700 temporary directory. It may retain a single-file implementation scope: repository-bound scanner data selection and its declared Git-object effects do not require or grant repository-wide write authority. Status may be implementing, reviewing or verifying; diagnostic authority does not grant implementation or waive an owner hold. The actual host callback selects that Task. A copied producer, changed helper closure, symlinked input, foreign Task or unsupported argument gets no scanner grant. Selected project code and scanner config are data, never imported as execution.
+
+Pure message modes use that directory binding without requiring Git; staged, working and PR modes require its exact Git toplevel.
+
+Choose exactly one mode: `--staged`, `--working`, `--pr <positive-number>`, `--message <bounded-literal-text>`, `--message-file <physical-file>` or `--commit-message-file <physical-file>`. Message input must be within that same Task's scope. Staged scans may add Git tree objects; PR scans read metadata and may fetch exact missing objects into the target repository. `--index-file <physical-file>` is an optional scoped input for staged mode only. Inherited Git target overrides are rejected, not silently redirected. Do not pass `--ignore`, arbitrary shell options, wrappers or additional mutations to this entry.
+
+Optional `--log-dir <own-private-directory>` preserves complete raw stdout/stderr and descriptive `selection.json` in a fresh private result directory, with actual exit status and paths reported; the same Task must scope this own-session data directory. The identity names the actual selected Git objects, diff and source-file hashes, or message input hash; message files are scanned from bounded private byte snapshots. This avoids transcript truncation without shell redirection. Selection metadata is not a test-success receipt or a completion verdict.
+
+The producer runs the pinned scanner with isolated Python helpers and a cleaned startup environment, preserves raw stdout/stderr and exits0(clean),1(findings),2(incomplete). It reports progress every30seconds and has an1800second process budget; the host tool must allow that runtime. Timeout/interruption is not a scan result. The adapter reports its owned process group and cleans it on handled timeout/signals; an uncatchable host kill still requires checking that specific handle, not declaring global inactivity. It creates and removes only its own temporary child directory. Keep actual selected HEAD/index/message identities and raw findings for review; this lane creates no test-success receipt and is not a read-only certificate.
+
+The direct Bash examples below describe standalone/operator invocation; they do not bypass native gating. Existing authorized operator fallback remains separate from installed native acceptance.
+
 ```bash
 # Scan staged diff (default)
 bash <this-skill-dir>/scan.sh
@@ -243,3 +263,5 @@ Lexical diff checks inspect added lines (`+` prefix), not removed or context lin
 ## Attribution
 
 Defers to `[rule:output]`. No AI / agent attribution in scanner output, in commits that follow it, or anywhere else.
+
+The typed adapter disables repository fsmonitor and hooks during scanner Git operations. PR mode rejects repository/worktree transport, credential, URL rewrite and protocol overrides; normal trusted host authentication remains available. Unknown helpers do not gain execution authority from this scanner capability.

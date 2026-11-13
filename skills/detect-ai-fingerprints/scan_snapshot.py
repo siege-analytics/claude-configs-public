@@ -146,6 +146,7 @@ def snapshot(mode, destination, *, pr=None, cwd=None):
         output.write_bytes(content)
     (destination / 'diff').write_bytes(diff)
     (destination / 'python-paths').write_bytes(b''.join(path.encode() + b'\0' for path in python_paths))
+    identity['diff_sha256'] = hashlib.sha256(diff).hexdigest()
     identity['files_sha256'] = {path: hashlib.sha256(content).hexdigest() for path, content in sorted(files.items())}
     (destination / 'selection.json').write_text(json.dumps(identity, sort_keys=True, indent=2) + '\n')
     return identity
