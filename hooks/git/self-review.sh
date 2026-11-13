@@ -504,7 +504,7 @@ FINDINGS_HEADING_RE='^##[[:blank:]]+findings([^[:alnum:]_]|$)'
 if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qiE "$FINDINGS_HEADING_RE" "$SOURCE_PATH"; then
     FINDINGS_BLOCK=$(awk -v heading="$FINDINGS_HEADING_RE" '/^##[[:blank:]]+/ {active=(tolower($0) ~ heading);next} active {print}' "$SOURCE_PATH")
     UNRESOLVED_P1=$(
-        printf '%s\n' "$FINDINGS_BLOCK" | awk '/^\|/ {
+        printf '%s\n' "$FINDINGS_BLOCK" | awk '/^[ ]?[ ]?[ ]?\|/ {
             delete cells
             count=1
             for (i=1; i<=length($0); i++) {
@@ -525,7 +525,23 @@ if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qiE "$FIN
                     tolower(resolution) != "fixed") print
             }
         }'
-        printf '%s\n' "$FINDINGS_BLOCK" | grep -Ei '^[[:space:]]*([-*][[:space:]]+)?P1[[:space:]]*:' | grep -viE '(^|;)[[:space:]]*resolution[[:space:]]*:[[:space:]]*fixed[[:space:]]*(;|$)' || true
+        printf '%s\n' "$FINDINGS_BLOCK" | awk '
+            tolower($0) ~ /^[[:space:]]*([-*][[:space:]]+)?p1[[:space:]]*:/ {
+                count=split($0, fields, ";")
+                resolutions=0
+                fixed=0
+                for (i=1; i<=count; i++) {
+                    value=fields[i]
+                    sub(/^[[:space:]]+/, "", value)
+                    if (tolower(value) ~ /^resolution[[:space:]]*:/) {
+                        resolutions++
+                        sub(/^[^:]*:/, "", value)
+                        gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+                        if (tolower(value) == "fixed") fixed++
+                    }
+                }
+                if (resolutions != 1 || fixed != 1) print
+            }'
     )
     if [[ -n "$UNRESOLVED_P1" ]]; then
         cat >&2 <<HOOKEOF

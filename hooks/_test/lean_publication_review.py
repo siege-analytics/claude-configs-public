@@ -160,6 +160,30 @@ class PublicationReview(unittest.TestCase):
         self.commit(COMPACT.replace('None.', 'P1: incorrect behavior; Resolution: fixed\nVerified the boundary and retained the actual regression evidence.'))
         self.assert_publication(0)
 
+    def test_indented_unresolved_table_rows_block_both_publishers(self):
+        for spaces in (1, 2, 3):
+            with self.subTest(spaces=spaces):
+                fixture = self._new_tier_fixture('C')
+                fixture.commit(COMPACT.replace('None.', ' '*spaces+'| 1 | P1 | Incorrect behavior | unresolved |'))
+                fixture.assert_publication(2)
+
+    def test_indented_fixed_table_rows_remain_publishable(self):
+        self.commit(COMPACT.replace('None.', '   | 1 | P1 | Corrected behavior | fixed |'))
+        self.assert_publication(0)
+
+    def test_compact_resolution_must_be_unique_and_fixed(self):
+        for resolutions in ('Resolution: fixed; Resolution: unresolved',
+                            'Resolution: unresolved; Resolution: fixed',
+                            'Resolution: fixed; Resolution: fixed'):
+            with self.subTest(resolutions=resolutions):
+                fixture = self._new_tier_fixture('C')
+                fixture.commit(COMPACT.replace('None.', 'P1: Incorrect behavior; '+resolutions))
+                fixture.assert_publication(2)
+
+    def test_compact_fixed_resolution_allows_other_context_fields(self):
+        self.commit(COMPACT.replace('None.', 'P1: Corrected behavior; Resolution: FIXED; Evidence: actual regression'))
+        self.assert_publication(0)
+
     def test_table_finding_text_cannot_resolve_a_p1(self):
         self.commit(COMPACT.replace('None.', '| 1 | P1 | fixed-width parsing crashes | unresolved |'))
         self.assert_publication(2)
