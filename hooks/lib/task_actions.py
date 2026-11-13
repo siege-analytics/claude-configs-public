@@ -1488,8 +1488,8 @@ def action(command: str, cwd: str) -> dict:
     return result
 
 
-SCANNER_CAPABILITY_SHA256 = '134ffb2401b28d7228acb599c54e963f00f7040ef524a5abbbbf31bfb7e10552'
-SCANNER_ADAPTER_SHA256 = '47604275fbced333f4fb8f5ea3415e87481398ee701d0d4a1adbfddbd7984295'
+SCANNER_CAPABILITY_SHA256 = '9bdf925a5cb36d13ba4c0f68b9006404b9109e0cb91ce0d15539510fef164e21'
+SCANNER_ADAPTER_SHA256 = '32d26de75046945f35fcd5ccc60e15847dde82a5d5d6806673dcd3a9a2087776'
 
 def _scanner_code(path, expected):
     import hashlib
