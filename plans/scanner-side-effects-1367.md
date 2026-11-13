@@ -13,3 +13,6 @@ The complete staged scanner result is NONCLEAN with 42 diagnostics. The normaliz
 
 ## Independent review
 Root independently read the complete source and tests, recalculated all content pins, and passed the three new methods in 2.852 seconds. Root also ran a separate clean-filter tripwire/raw-content positive. Root verified the exact 42-row normalized multiset and unchanged exception-handler ASTs, accepting their individual dispositions without claiming a clean scan: https://github.com/siege-analytics/claude-configs-public/issues/1367#issuecomment-6849764442 . Durable independent evidence is E/core1367-Root-scanner-independent-review-20261113.md.
+
+## Cohort composition
+The scanner source commit cd85bf46 is combined by an ordinary merge with the reviewed guard/publication commit 81dd497e. The components touch separate files. Official full build, inventory, risk metrics, language/data measurements and source-authority generation/checks pass. The sole tracked generated change refreshes the scanner source tree and four packaged consumer tree hashes; no rule or budget changes. Combined source tests are recorded through the existing unbound producer, without invented host identity. The existing protected CI remains required before integration and Main promotion.
