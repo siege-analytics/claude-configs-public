@@ -103,17 +103,21 @@ class ScannerExecution(unittest.TestCase):
         marker=self.data/'filter-executed';helper=self.data/'filter-helper'
         helper.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\nexit 97\n');helper.chmod(0o700)
         source.write_text('value = 22222\n')
-        for operation in ('clean','process'):
-            with self.subTest(operation=operation):
-                git('config','filter.owned.'+operation,str(helper))
-                git('config','filter.owned.required','true')
-                result=self.run_scanner('--working')
-                self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-                self.assertFalse(marker.exists(),'working filter executed selected repository code')
-                identity=json.loads(result.stderr.split('scanner input identity: ')[-1])
-                self.assertEqual(identity['selection']['files_sha256']['sample.py'],
-                                 hashlib.sha256(source.read_bytes()).hexdigest())
-                git('config','--unset','filter.owned.'+operation)
+        for driver in ('owned','owned=driver'):
+            (self.repo/'.gitattributes').write_text('*.py filter='+driver+'\n')
+            for operation in ('clean','process'):
+                with self.subTest(driver=driver, operation=operation):
+                    git('config','filter.'+driver+'.'+operation,str(helper))
+                    git('config','filter.'+driver+'.required','true')
+                    env={**self.f.env,'CCP_SCANNER_FILTER_EMPTY':str(helper),
+                         'CCP_SCANNER_FILTER_OPTIONAL':'true'}
+                    result=self.run_scanner('--working',env=env)
+                    self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+                    self.assertFalse(marker.exists(),'working filter executed selected repository code')
+                    identity=json.loads(result.stderr.split('scanner input identity: ')[-1])
+                    self.assertEqual(identity['selection']['files_sha256']['sample.py'],
+                                     hashlib.sha256(source.read_bytes()).hexdigest())
+                    git('config','--unset','filter.'+driver+'.'+operation)
 
     def test_missing_promisor_objects_never_trigger_implicit_transport(self):
         for mode in ('staged','working'):

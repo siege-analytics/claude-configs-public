@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
@@ -14,12 +15,13 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def command(args, *, cwd, input=None):
-    return subprocess.check_output(args, cwd=cwd, input=input, stderr=subprocess.PIPE, timeout=60)
+def command(args, *, cwd, input=None, env=None):
+    return subprocess.check_output(args, cwd=cwd, input=input, env=env, stderr=subprocess.PIPE, timeout=60)
 
 
 def git(root, *args, input=None):
-    return command(['git', '--no-lazy-fetch', '-c', 'core.quotepath=false', *args], cwd=root, input=input)
+    env = {**os.environ, 'CCP_SCANNER_FILTER_EMPTY': '', 'CCP_SCANNER_FILTER_OPTIONAL': 'false'}
+    return command(['git', '--no-lazy-fetch', '-c', 'core.quotepath=false', *args], cwd=root, input=input, env=env)
 
 
 
@@ -36,9 +38,11 @@ def working_filter_options(root):
             require(re.fullmatch(r'filter\..+\.(?:clean|process|required)', key),
                     'unsupported working filter key')
             drivers.add(key.rsplit('.', 1)[0])
-    return [argument for driver in sorted(drivers)
-            for key, value in (('clean', ''), ('process', ''), ('required', 'false'))
-            for argument in ('-c', driver + '.' + key + '=' + value)]
+    return ['--config-env=' + driver + '.' + key + '=' + variable
+            for driver in sorted(drivers)
+            for key, variable in (('clean', 'CCP_SCANNER_FILTER_EMPTY'),
+                                  ('process', 'CCP_SCANNER_FILTER_EMPTY'),
+                                  ('required', 'CCP_SCANNER_FILTER_OPTIONAL'))]
 
 
 def relevant(path):
