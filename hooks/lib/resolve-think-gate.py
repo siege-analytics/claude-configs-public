@@ -956,10 +956,27 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     binding = shape.get("binding") or task_binding()
     if shape.get("binding") and task_binding() and shape["binding"] != task_binding():
         return {**shape, "gate": None, "error": "Conflicting explicit task bindings."}
-    selected = post_selected or select_task(workspace, shape["paths"], binding)
+    if shape.get('scanner_execution'):
+        # This named diagnostic selects data through exact repo_root binding;
+        # its bounded Git metadata effects are not repository-wide edit grants.
+        requested = shape['scanner_execution']['gate']
+        candidates = [gate for gate in _session_thinks(workspace)
+                      if canonical(gate['path']) == requested
+                      and (not binding or task_identity(gate['data']) == binding)]
+        selected = {'gate': candidates[0], 'error': ''} if len(candidates) == 1 else {
+            'gate': None, 'error': 'Scanner requires its exact existing own-session Task and binding.'}
+    else:
+        selected = post_selected or select_task(workspace, shape['paths'], binding)
     result = {**shape, **selected}
     if result["gate"]:
         tg = result["gate"]
+        if shape.get('scanner_execution'):
+            from task_actions import scanner_owned_plan
+            try:
+                scanner_owned_plan(shape['scanner_execution'],tg['path'],tg['data'],own_session_directory(workspace))
+            except (OSError,ValueError) as error:
+                return {**result,'gate':None,'error':'Scanner authority denied: '+str(error)}
+            result['scanner_execution_authorized'] = True
         if shape.get("test_receipt_output"):
             expected_gate = canonical(tg["path"])
             requested_gate = shape["test_receipt_gate"]

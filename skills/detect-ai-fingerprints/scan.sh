@@ -404,9 +404,12 @@ case "$mode" in
         snapshot_tmp=$(mktemp -d) || exit 2
         trap 'rm -rf "$snapshot_tmp"' EXIT
         snapshot="$snapshot_tmp/selection"
-        if ! python3 "$SCRIPT_DIR/scan_snapshot.py" --mode "$mode" --pr "$arg" --output "$snapshot"; then
+        if ! python3 -I -B "$SCRIPT_DIR/scan_snapshot.py" --mode "$mode" --pr "$arg" --output "$snapshot"; then
             echo "scan incomplete: source selection failed" >&2
             exit 2
+        fi
+        if [[ -n "${SCANNER_SELECTION_OUTPUT:-}" ]]; then
+            cp "$snapshot/selection.json" "$SCANNER_SELECTION_OUTPUT" || exit 2
         fi
         scan_diff_stdin < "$snapshot/diff" || exit 2
         : > "$snapshot/selected-python-paths"
@@ -417,10 +420,10 @@ case "$mode" in
         # Related tests and scanner config share the selected source tree. Only
         # the trusted scanner is executed; selected Python is parsed as data.
         if [[ -f "$snapshot/source/.claude/scanner-config.toml" ]]; then
-            ast_out=$(cd "$snapshot/source" && python3 "$SCRIPT_DIR/scan_ast.py" --config .claude/scanner-config.toml --files-from "$snapshot/selected-python-paths" 2>&1)
+            ast_out=$(cd "$snapshot/source" && python3 -I -B "$SCRIPT_DIR/scan_ast.py" --config .claude/scanner-config.toml --files-from "$snapshot/selected-python-paths" 2>&1)
             ast_status=$?
         else
-            ast_out=$(cd "$snapshot/source" && python3 "$SCRIPT_DIR/scan_ast.py" --files-from "$snapshot/selected-python-paths" 2>&1)
+            ast_out=$(cd "$snapshot/source" && python3 -I -B "$SCRIPT_DIR/scan_ast.py" --files-from "$snapshot/selected-python-paths" 2>&1)
             ast_status=$?
         fi
         [[ -n "$ast_out" ]] && printf '%s\n' "$ast_out"
