@@ -175,7 +175,13 @@ def headless_process(proc=Path('/proc'), pid=None):
             raise ValueError('headless parent process cycle')
         seen.add(pid)
         process = proc / str(pid)
-        if os.readlink(process / 'exe') == '/app/vendor/bun/bun':
+        try:
+            executable = os.readlink(process / 'exe')
+        except PermissionError:
+            if pid == 1:
+                return False
+            raise
+        if executable == '/app/vendor/bun/bun':
             with (process / 'cmdline').open('rb') as stream:
                 raw = stream.read(65537)
             if len(raw) > 65536:

@@ -77,12 +77,21 @@ class Bootstrap(unittest.TestCase):
         (process / 'cmdline').write_bytes(('\0'.join(argv) + '\0').encode())
         with patch.object(b.sys, 'platform', 'linux'):
             self.assertTrue(b.headless_process(proc, 42))
+            (proc / '1').symlink_to(process, target_is_directory=True)
+            self.assertTrue(b.headless_process(proc, 1))
             (process / 'cmdline').write_bytes(b'/app/vendor/bun/bun\0run\0other.ts\0')
             self.assertFalse(b.headless_process(proc, 42))
             (process / 'exe').unlink()
             (process / 'exe').symlink_to('/usr/bin/bun')
             (process / 'cmdline').write_bytes(('\0'.join(argv) + '\0').encode())
             self.assertFalse(b.headless_process(proc, 42))
+
+    def test_headless_ancestry_handles_inaccessible_init_without_hiding_other_errors(self):
+        with patch.object(b.sys, 'platform', 'linux'), patch.object(b.os, 'readlink', side_effect=PermissionError('init metadata unavailable')) as readlink:
+            self.assertFalse(b.headless_process(pid=1))
+            readlink.assert_called_once()
+            with self.assertRaises(PermissionError):
+                b.headless_process(pid=42)
 
     def test_managed_profile_preserves_operator_policy_and_rejects_duplicates(self):
         settings = b.profile()
@@ -278,7 +287,7 @@ class CanonicalCLI(unittest.TestCase):
             elif target.exists():
                 target.unlink()
         source_git('add', '--all')
-        source_git('commit', '-qm', 'Controlled reviewed Core source snapshot')
+        source_git('commit', '--allow-empty', '-qm', 'Controlled reviewed Core source snapshot')
         canonical = cls.base / 'canonical-source.git'
         subprocess.run(['/usr/bin/git', 'init', '-q', '--bare', str(canonical)], check=True, env=cls.environment, timeout=20)
         source_git('remote', 'set-url', 'origin', str(canonical))
