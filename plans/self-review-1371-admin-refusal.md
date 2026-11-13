@@ -56,6 +56,23 @@ These are the commands actually run, with their observed results. The worktree s
 - **Generators on `9ef84c01`:** `bin/build.py` with the PyYAML venv, then `--check` for build, skill-inventory, generated-source-authority, kernel-budget and review-risk-metrics. All current.
 - **Test-evidence receipt:** produced with `hooks/lib/test-evidence.py record` over the focused suite, after this record was committed.
 
+## Findings
+
+Every finding below was resolved before publication; plans/hostile-review-1371-admin-refusal.md has the round-by-round record.
+
+- **Design review (ACCEPT WITH CHANGES):** tokenizer whitespace, wrapped gh, the destructive-guard helper's exit protocol, gh under another name, aliases. All adopted before implementation.
+- **Code review rounds 1-6:**
+  - argument-supplying wrappers;
+  - shell, interpreter, eval and ssh program text;
+  - shell aliases;
+  - untokenisable text;
+  - stdin-fed program runners, including option values, `|&`, per-runner inline flags and option-letter case.
+  - Each was fixed, with a negative test row.
+- **Full-suite regression:** allowlisted-ssh stdin-script shapes were refused. Fixed by not treating a plain `<` file as feeding a program, and by applying the piped-program refusal only when the gate would otherwise admit. Re-run: 179 passed, 0 failed.
+- **Code review round 7:** the admission mirror must not let `error` cancel admission. Fixed.
+- **Dogfooding and round 8 (APPROVE):** the text fallback over-refused reads that merely mention a path containing "admin". It was narrowed and deferred to the ordinary path.
+- **Open, accepted limitations and residuals:** stated in the PR body, for example untokenisable reads that mention both "admin" and "merge" are refused. They are not defects of this change's stated scope.
+
 ## Peer review
 
 Shelf checks, listing only the rules actually applied, with their evidence:
