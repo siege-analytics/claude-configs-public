@@ -148,6 +148,44 @@ class PublicationReview(unittest.TestCase):
         self.commit(COMPACT.replace('## Findings', '## Findings (round 2)'))
         self.assert_publication(2)
 
+    def test_fenced_templates_are_not_actual_review_sections(self):
+        for tier, template in (('B', COMPACT), ('C', COMPACT), ('C', HISTORICAL)):
+            for opening, closing in (('```markdown', '```'), ('   ~~~~', '   ~~~~')):
+                with self.subTest(tier=tier, historical=template == HISTORICAL, fence=opening):
+                    fixture = self._new_tier_fixture(tier)
+                    fixture.commit(opening+'\n'+template+closing+'\n', tier=tier)
+                    fixture.assert_publication(2)
+
+    def test_real_sections_may_use_fenced_command_and_result_evidence(self):
+        for tier, template in (('B', COMPACT), ('C', COMPACT), ('C', HISTORICAL)):
+            sections = ['## Assumptions', '## Test plan'] if tier == 'B' else [
+                line for line in template.splitlines() if line.startswith('## ')]
+            for section in sections:
+                with self.subTest(tier=tier, section=section, historical=template == HISTORICAL):
+                    lines = template.splitlines()
+                    start = lines.index(section) + 1
+                    end = next((i for i in range(start, len(lines)) if lines[i].startswith('## ')), len(lines))
+                    lines[start:end] = ['```text', *lines[start:end], '```']
+                    fixture = self._new_tier_fixture(tier)
+                    fixture.commit('\n'.join(lines)+'\n', tier=tier)
+                    fixture.assert_publication(0)
+
+    def test_empty_fences_do_not_supply_a_real_section_body(self):
+        artifact = COMPACT.replace('Focused positive and negative hook fixtures passed.', '```text\n   \n```')
+        self.commit(artifact)
+        self.assert_publication(2)
+
+    def test_fenced_duplicate_cannot_supply_an_empty_actual_section(self):
+        artifact = '```markdown\n'+COMPACT+'```\n'+COMPACT.replace(
+            'Goal source: assigned fixture behavior\nRead hooks/git/self-review.sh and the affected guard; scope is the isolated fixture.\n', '')
+        self.commit(artifact)
+        self.assert_publication(2)
+
+    def test_fenced_legacy_headings_cannot_replace_actual_compact_sections(self):
+        artifact = COMPACT.split('## Independent review', 1)[0]+'\n```markdown\n'+HISTORICAL+'```\n'
+        self.commit(artifact)
+        self.assert_publication(2)
+
     def test_fenced_headings_cannot_end_findings_before_unresolved_p1(self):
         for tier, template in (('B', COMPACT), ('C', COMPACT), ('C', HISTORICAL)):
             for fence in ('```', '~~~~', '   ```python'):

@@ -61,21 +61,10 @@ elif [[ "$#" -ne 0 ]]; then
 fi
 # A direct no-argument fixture has no remote baseline and checks the full graph.
 
-validate_committed_artifact() {
-    local commit="$1" value="$2" tier="$3" content section
-    [[ "$value" =~ ^https?:// || "$value" =~ ^#[0-9]+$ ]] && return 0
-    content=$(git show "$commit:${value#./}" 2>/dev/null) || return 1
-    if [[ "$tier" == "B" ]]; then
-        for section in "## Assumptions" "## Test plan"; do grep -qE "^${section}[[:space:]]*$" <<<"$content" || return 1; done
-    else
-        if grep -Eq '^## Peer review[[:space:]]*$' <<<"$content" && grep -Eq '^## Lead review[[:space:]]*$' <<<"$content" && grep -Eq '^## Quantified claims[[:space:]]*$' <<<"$content"; then
-            for section in "## Assumptions" "## Peer review" "## Lead review" "## Quantified claims"; do grep -qE "^${section}[[:space:]]*$" <<<"$content" || return 1; done
-        else
-            for section in "## Assumptions" "## Test plan" "## Findings" "## Independent review"; do grep -qE "^${section}[[:space:]]*$" <<<"$content" || return 1; done
-        fi
-    fi
-    local findings unresolved findings_heading_re='^[ ]?[ ]?[ ]?##[[:blank:]]+findings([^[:alnum:]_]|$)'
-    findings=$(awk -v heading="$findings_heading_re" '{
+# Markdown examples cannot supply section headings or Findings. A real
+# section may still contain meaningful fenced command/results evidence.
+review_artifact_text() {
+    awk -v heading="${1:-}" '{
         line=$0
         sub(/\r$/, "", line)
         sub(/^[ ]?[ ]?[ ]?/, "", line)
@@ -87,7 +76,41 @@ validate_committed_artifact() {
             if (!fence && count >= 3 && (first == "~" || rest !~ /`/)) {fence=first; width=count; next}
             if (fence == first && count >= width && rest ~ /^[[:blank:]]*$/) {fence=""; next}
         }
-        if (fence) next
+        if (!fence) {
+            if (!heading) {print; next}
+            normalized=$0
+            sub(/[[:space:]]+$/, "", normalized)
+            if (normalized == heading) {active=1; next}
+            if (line ~ /^##[[:blank:]]+/) active=0
+        }
+        if (heading && active && /[^[:space:]]/) {print; exit}
+    }'
+}
+
+validate_committed_artifact() {
+    local commit="$1" value="$2" tier="$3" content section raw_content
+    [[ "$value" =~ ^https?:// || "$value" =~ ^#[0-9]+$ ]] && return 0
+    content=$(git show "$commit:${value#./}" 2>/dev/null) || return 1
+    raw_content="$content"
+    content=$(review_artifact_text <<<"$raw_content")
+    local required_sections=("## Assumptions" "## Test plan") body
+    if [[ "$tier" != "B" ]]; then
+        if grep -Eq '^## Peer review[[:space:]]*$' <<<"$content" && grep -Eq '^## Lead review[[:space:]]*$' <<<"$content" && grep -Eq '^## Quantified claims[[:space:]]*$' <<<"$content"; then
+            required_sections=("## Assumptions" "## Peer review" "## Lead review" "## Quantified claims")
+        else
+            required_sections+=("## Findings" "## Independent review")
+        fi
+    fi
+    for section in "${required_sections[@]}"; do
+        grep -qE "^${section}[[:space:]]*$" <<<"$content" || return 1
+        body=$(review_artifact_text "$section" <<<"$raw_content")
+        [[ -n "$body" ]] || return 1
+    done
+    local findings unresolved findings_heading_re='^[ ]?[ ]?[ ]?##[[:blank:]]+findings([^[:alnum:]_]|$)'
+    findings=$(awk -v heading="$findings_heading_re" '{
+        line=$0
+        sub(/\r$/, "", line)
+        sub(/^[ ]?[ ]?[ ]?/, "", line)
         if (line ~ /^##[[:blank:]]+/) {active=(tolower($0) ~ heading); next}
         if (active) print
     }' <<<"$content")
