@@ -503,7 +503,27 @@ fi
 if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qF '## Findings' "$SOURCE_PATH"; then
     FINDINGS_BLOCK=$(awk '/^## Findings[[:space:]]*$/ {active=1;next} /^## / {active=0} active {print}' "$SOURCE_PATH")
     UNRESOLVED_P1=$(
-        printf '%s\n' "$FINDINGS_BLOCK" | grep -E '^\|[^|]*\|[[:space:]]*P1[[:space:]]*\|' | grep -viE '\|[[:space:]]*fixed' || true
+        printf '%s\n' "$FINDINGS_BLOCK" | awk '/^\|/ {
+            delete cells
+            count=1
+            for (i=1; i<=length($0); i++) {
+                char=substr($0, i, 1)
+                if (char == "\\" && i<length($0)) {
+                    cells[count]=cells[count] char substr($0, ++i, 1)
+                } else if (char == "|") {
+                    count++
+                } else {
+                    cells[count]=cells[count] char
+                }
+            }
+            if (cells[3] ~ /^[[:space:]]*P1[[:space:]]*$/) {
+                resolution=cells[5]
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", resolution)
+                if ((count != 5 && count != 6) ||
+                    (count == 6 && cells[6] !~ /^[[:space:]]*$/) ||
+                    tolower(resolution) != "fixed") print
+            }
+        }'
         printf '%s\n' "$FINDINGS_BLOCK" | grep -Ei '^[[:space:]]*([-*][[:space:]]+)?P1[[:space:]]*:' | grep -viE '(^|;)[[:space:]]*resolution[[:space:]]*:[[:space:]]*fixed[[:space:]]*(;|$)' || true
     )
     if [[ -n "$UNRESOLVED_P1" ]]; then
@@ -513,10 +533,9 @@ BLOCKED: Self-review artifact has unresolved P1 findings:
 $UNRESOLVED_P1
 
 P1 findings must be resolved (Resolution: fixed) before push.
-P2 findings must have a ticket number (ticket #NNN).
-P3 findings are noted — no action required.
+This check blocks P1 findings without a complete fixed resolution.
 
-See skills/self-review/SKILL.md Phase C: Findings triage.
+See skills/self-review/artifact-contract.md for the accepted finding formats.
 Ref: #419
 HOOKEOF
         exit 2
