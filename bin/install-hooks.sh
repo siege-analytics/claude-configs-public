@@ -12,6 +12,7 @@ exec python3 - "$REPO_ROOT" "$@" <<'PY'
 import argparse
 import copy
 import json
+import importlib.util
 import os
 from pathlib import Path
 import shlex
@@ -134,6 +135,8 @@ try:
     if args.relative and (args.workspace or args.hooks_root):
         raise ValueError('--relative is incompatible with --hooks-root and --workspace')
     hooks_root = (args.hooks_root or root).resolve(strict=True)
+    if args.workspace and args.workspace.resolve(strict=True) == root and hooks_root == root and (root / 'bin/project-settings-bootstrap.py').is_file():
+        raise ValueError('Core source authoring requires the external bootstrap; use a separate verified policy workspace')
     target = args.target_file or (args.workspace / '.claude/settings.json' if args.workspace else root / ('.claude/settings.json' if args.relative else '.claude/settings.local.json'))
     target = target.absolute()
     if target.is_symlink():
@@ -152,7 +155,25 @@ try:
                 if not script.is_file() or not os.access(script, os.X_OK):
                     raise ValueError(f'hook missing or not executable: {script}')
                 hook['command'] = shlex.quote(relative if args.relative else str(script))
+    legacy_relative = copy.deepcopy(snippet)
+    for groups in legacy_relative['hooks'].values():
+        for group in groups:
+            for hook in group['hooks']:
+                tokens = shlex.split(hook['command'])
+                candidate = Path(tokens[0])
+                hook['command'] = shlex.quote(candidate.relative_to(hooks_root).as_posix() if candidate.is_absolute() else str(candidate))
+    bootstrap = None
+    profile_source = root / 'bin/project-settings-bootstrap.py'
+    source_profile = root / '.claude/settings.json'
+    if profile_source.is_file() and (args.relative or source_profile.is_file() and hooks_root == root and args.workspace is None):
+        spec = importlib.util.spec_from_file_location('source_project_bootstrap', profile_source)
+        bootstrap = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bootstrap)
+        if args.relative or not bootstrap.profile_problems(json.loads(source_profile.read_text())):
+            snippet = bootstrap.profile()
     existing = json.loads(target.read_text()) if target.exists() else {}
+    if bootstrap is not None and snippet == bootstrap.profile():
+        existing = bootstrap.retire_source(existing, legacy_relative)
     merged, retired = merge_settings(existing, snippet, hooks_root)
     repo = args.git_repo or (root if not sys.argv[2:] else None)
     hooks_value = None

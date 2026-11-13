@@ -139,3 +139,31 @@ unchanged refs on denial in `consumer-native-arguments.json`. Siege also compare
 the retained compatibility installation. Its denied release push contains invalid
 unpublished history; the independent adapter denies the release target itself.
 These preserve the two adapters' existing policy decisions.
+
+## Authoring Core enforcement
+
+The Core checkout's project settings invoke a stable external bootstrap instead
+of executing mutable worktree guards. From a clean, verified exact-main installer,
+use the existing full registration arguments above and add
+`--bootstrap-home /absolute/physical/home` to `bin/install-hooks.sh --selected`.
+Core authoring requires the verified Siege compatibility profile; the independent
+prompt-only profile remains supported for its own consumers and cannot replace
+Core's mutation guards. The installer publishes its reviewed shared bootstrap and
+an external package-hash anchor before any selected package code can execute.
+Missing enrollment, changed package bytes and bootstrap execution errors block.
+
+Enroll once from the primary repository. Actual Git-linked worktrees reuse that
+repository's external anchor. This SDK-only enrollment does not change native Git
+registration, project settings, unrelated operator hooks or global CLI settings. Separate anchored host/workspace selections coexist in one home.
+A CLI enrollment uses `--workspace` equal to the primary repository. Mac Craft
+continues using its separately verified workspace/router installation.
+
+An explicit headless enrollment instead supplies its physical policy workspace
+outside the authoring repository. It applies only to the qualified Linux Bun
+server ancestry and that exact workspace, then requires the verified Core SDK
+UUID/header and physical session witness before sealing child identity. Workspace
+or session environment values alone grant no authority. Prompt context can load
+before a session header persists, without granting Task mutation authority. This
+source contract and controlled fixtures are not a deployment or generic provider
+parity claim. Candidate guards remain explicit test inputs; no failure-time
+fallback, restoration or provider settings-source suppression occurs.

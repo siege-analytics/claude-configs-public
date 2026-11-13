@@ -24,6 +24,7 @@ import uuid
 ROOT = Path(__file__).resolve().parents[1]
 ROUTER_SOURCE = "hooks/lib/craft-settings-router.py"
 ANCHOR_SOURCE = "hooks/lib/session_anchor.py"
+PROJECT_SOURCE = "bin/project-settings-bootstrap.py"
 
 
 def load(relative, name):
@@ -36,6 +37,7 @@ def load(relative, name):
 
 trust = load("bin/craft-workspace-trust.py", "craft_router_install_primitives")
 router = load(ROUTER_SOURCE, "craft_router_registration_protocol")
+project = load(PROJECT_SOURCE, "craft_project_bootstrap")
 
 
 def saved(path: Path):
@@ -197,16 +199,22 @@ def install(workspace: Path, home: Path, *, apply=False):
     snapshots = {"global-settings.json": (global_path, saved(global_path)),
                  "legacy-project.json": (legacy_path, saved(legacy_path)),
                  "router.py": (target, saved(target)),
+                 "project-bootstrap.py": (home / project.RELATIVE, saved(home / project.RELATIVE)),
                  "registration.json": (receipt_path, saved(receipt_path))}
     old_router = snapshots["router.py"][1]["raw"]
     if old_router is not None and b"# Managed bootstrap: siege-craft-settings-router/v1\n" not in old_router.splitlines(keepends=True)[:3]:
         raise ValueError("router destination is operator-owned; refusing to overwrite it")
+    project_target = home / project.RELATIVE
+    old_project = snapshots["project-bootstrap.py"][1]
+    if old_project["raw"] is not None and b"# Managed bootstrap: siege-project-settings/v1\n" not in old_project["raw"].splitlines(keepends=True)[:3]:
+        raise ValueError("project bootstrap destination is operator-owned")
     merged = merge_global(trust.document(snapshots["global-settings.json"][1]), target, workspace, policy=policy)
     router.verify_global(merged, target, workspace, policy=policy)
     legacy_original = trust.document(snapshots["legacy-project.json"][1])
     legacy = retire_project(legacy_original, owned)
     router_bytes = source_bytes(revision, ROUTER_SOURCE, apply=apply)
     anchor_bytes = source_bytes(revision, ANCHOR_SOURCE, apply=apply)
+    project_bytes = source_bytes(revision, PROJECT_SOURCE, apply=apply)
     read_bytes = source_bytes(revision, "hooks/lib/read-only-command.py", apply=apply)
     if saved(workspace / "hooks/lib/read-only-command.py")["raw"] != read_bytes:
         raise ValueError("installed read classifier differs from accepted source")
@@ -244,7 +252,8 @@ def install(workspace: Path, home: Path, *, apply=False):
     except (ValueError, TypeError):
         old_receipt = None  # Reserved owned metadata is repairable after main/profile verification.
     changed = (merged != trust.document(snapshots["global-settings.json"][1]) or legacy != legacy_original
-               or old_router != router_bytes or old_receipt != receipt)
+               or old_router != router_bytes or old_receipt != receipt
+               or snapshots["project-bootstrap.py"][1]["raw"] != project_bytes)
     summary["changed"] = changed
     if not apply or not changed:
         if apply:
@@ -265,6 +274,7 @@ def install(workspace: Path, home: Path, *, apply=False):
         staging_receipt = saved(receipt_path)
         # Policy exists and is locally verified before global discovery points
         # at the router. Missing/incomplete enrollment fails closed in Craft.
+        publish(project_target, old_project, project_bytes)
         publish(target, snapshots["router.py"][1], router_bytes)
         publish(global_path, snapshots["global-settings.json"][1], json_bytes(merged))
         if legacy != legacy_original:

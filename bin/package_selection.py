@@ -35,7 +35,7 @@ SCAFFOLD_FILES = (
     'bin/procedure_composition.py', 'bin/resolve-load-set.py', 'bin/prepare-task-branch.py',
     'bin/source_snapshot.py', 'catalog/gate-contract-schema.json',
     'bin/selected_registration.py', 'bin/native_git.py', 'bin/install-hooks.sh',
-    'bin/wire-enforcement.py', 'bin/verify-enforcement.sh',
+    'bin/wire-enforcement.py', 'bin/verify-enforcement.sh', 'bin/project-settings-bootstrap.py',
 )
 
 

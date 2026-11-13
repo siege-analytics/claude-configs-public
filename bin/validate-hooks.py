@@ -14,8 +14,8 @@ Checks:
     3. Lib helpers referenced by hooks exist
     4. Hook scripts on disk but not in settings JSON are reported as warnings
     5. Minimum hook count assertion (catches silent truncation)
-    6. This repo's .claude/settings.json wires the same (event, matcher, path)
-       triples as the snippet (catches drift; see #703)
+    6. The source authoring profile uses exact external bootstrap registrations.
+       Installed consumer snippets retain their full hook/path validation.
 
 Check 5 is a truncation floor, not a drift check. It passed at 24 wired hooks
 while 5 were missing. Check 6 is the drift check, and it keys on triples rather
@@ -24,6 +24,7 @@ written belonged to hooks that were wired on their other matchers.
 """
 
 import json
+import importlib.util
 import os
 import subprocess
 import sys
@@ -152,6 +153,15 @@ def find_hook_scripts(base: Path) -> set[Path]:
     return scripts
 
 
+def compare_source_profile(settings_path: Path) -> list[str]:
+    source = REPO_ROOT / 'bin/project-settings-bootstrap.py'
+    spec = importlib.util.spec_from_file_location('validate_project_bootstrap', source)
+    bootstrap = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bootstrap)
+    value = json.loads(settings_path.read_text())
+    return bootstrap.profile_problems(value)
+
+
 def main():
     package_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else None
     settings, base = load_settings(package_dir)
@@ -169,10 +179,7 @@ def main():
         )
 
     if package_dir is None:
-        drift = compare_settings_to_snippet(
-            REPO_ROOT / ".claude" / "settings.json",
-            REPO_ROOT / "hooks" / "settings-snippet.json",
-        )
+        drift = compare_source_profile(REPO_ROOT / '.claude/settings.json')
         for problem in drift:
             errors.append(f"Settings drift: {problem}")
 

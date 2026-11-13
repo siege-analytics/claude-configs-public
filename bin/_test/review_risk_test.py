@@ -93,6 +93,8 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/github-merge-queue.py",
  "hooks/lib/test-evidence.py",
  "hooks/lib/craft-settings-router.py",
+ "bin/project-settings-bootstrap.py",
+ "bin/_test/project_settings_bootstrap_test.py",
  "bin/install-craft-hook-router.py",
  "bin/craft-workspace-trust.py",
  "bin/_test/craft_hook_router_test.py",
@@ -173,6 +175,13 @@ REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "27e4c17f9a5b68f2ad4f25ae8c887b19f21b8697
 REQUIRED_MANIFEST_REGISTRATIONS_SHA256 = "868ca27fe41ca9d2e6f9335e2ddaf05d7cb992617b42f24cbc3ff2794099414b"
 REQUIRED_GENERATED_SETTINGS_REGISTRATIONS_SHA256 = "19a972d9471da0d66c46568c0efb8a16c356ed66f620702b7f06b8251bc809f0"
 CI_INVOCATION_SITES = [
+ (".github/workflows/build-and-publish.yml","bin/_test/project_settings_bootstrap_test.py","run: python3 bin/_test/project_settings_bootstrap_test.py",1),
+ ("bin/install-craft-hook-router.py","bin/project-settings-bootstrap.py",'project = load(PROJECT_SOURCE, "craft_project_bootstrap")',1),
+ ("bin/selected_registration.py","bin/project-settings-bootstrap.py","bootstrap = selected.module('selected_project_bootstrap', selected.ROOT, 'project-settings-bootstrap.py')",1),
+ ("bin/selected_registration.py","bin/build.py","authority = selected.module('core_authoring_source_authority', selected.ROOT, 'build.py')",1),
+ ("bin/project-settings-bootstrap.py","hooks/lib/session_anchor.py","anchor = load(package / 'compatibility/hooks/lib/session_anchor.py', 'project_headless_session_anchor')",1),
+ ("bin/project-settings-bootstrap.py","bin/selected_registration.py","registration = load(package / 'bin/selected_registration.py', 'selected_registration')",1),
+ ("bin/project-settings-bootstrap.py","hooks/lib/craft-settings-router.py","adapter = load(package / 'compatibility/hooks/lib/craft-settings-router.py', 'project_cli_sdk_combiner')",1),
  (".github/workflows/build-and-publish.yml","bin/_test/local_validation_test.py","run: python3 bin/_test/local_validation_test.py",1),
  (".github/workflows/build-and-publish.yml","bin/_test/resident_delivery_test.py","python3 bin/_test/resident_delivery_test.py",1),
  (".github/workflows/build-and-publish.yml","bin/_test/provider_event_test.py","run: python3 bin/_test/provider_event_test.py",1),

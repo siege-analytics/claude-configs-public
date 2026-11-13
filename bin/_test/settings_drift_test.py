@@ -48,14 +48,18 @@ def main():
     snippet_path = REPO_ROOT / "hooks" / "settings-snippet.json"
     settings_path = REPO_ROOT / ".claude" / "settings.json"
     snippet = json.loads(snippet_path.read_text())
-    settings = json.loads(settings_path.read_text())
+    settings = copy.deepcopy(snippet)
+    for groups in settings['hooks'].values():
+        for group in groups:
+            for hook in group['hooks']:
+                hook['command'] = hook['command'].replace('/path/to/claude-configs-public/', '')
 
     # The live tree must agree, or every fixture below is comparing against a
     # baseline that is already broken.
     check(
         "live settings and snippet agree",
-        compare(settings_path, snippet_path) == [],
-        compare(settings_path, snippet_path),
+        validate_hooks.compare_source_profile(settings_path) == [],
+        validate_hooks.compare_source_profile(settings_path),
     )
 
     # The set size is asserted over triples and not over hooks, so an empty-set
