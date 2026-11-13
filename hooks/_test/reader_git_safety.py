@@ -31,6 +31,53 @@ class Safety(unittest.TestCase):
         self.git("commit", "-q", "--allow-empty", "-m", "seed")
         self.git("remote", "add", "origin", "https://github.com/siege-analytics/synthetic.git")
 
+    def test_ref_name_validation_does_not_require_a_mutation_task(self):
+        name = 'feat/ref-validation'
+        target = shlex.quote(str(self.repo))
+        commands = [
+            'git check-ref-format --branch '+name,
+            'git check-ref-format --normalize refs//heads/'+name,
+            'git check-ref-format --allow-onelevel main',
+            'git check-ref-format --refspec-pattern "refs/heads/*"',
+            'git -C '+target+' branch --list '+name+'; git -C '+target+' check-ref-format --branch '+name,
+        ]
+        before = (self.git('for-each-ref', '--format=%(refname) %(objectname)'),
+                  (self.repo/'.git/config').read_bytes())
+        for command in commands:
+            with self.subTest(command=command):
+                self.g.assertGate(0, command, env=self.env)
+                subprocess.run(command, shell=True, cwd=self.repo, env=self.env,
+                               check=True, capture_output=True, timeout=15)
+        invalid = 'git check-ref-format --branch invalid..name'
+        self.g.assertGate(0, invalid, env=self.env)
+        result = subprocess.run(invalid, shell=True, cwd=self.repo, env=self.env,
+                                capture_output=True, timeout=15)
+        self.assertNotEqual(result.returncode, 0, 'Git, not task authorization, validates the name')
+        sentinel = self.repo/'ref-validation-effect'
+        for command in ('git branch '+name, 'git update-ref refs/heads/'+name+' HEAD',
+                        commands[0]+' && touch '+shlex.quote(str(sentinel))):
+            self.g.assertGate(2, command, env=self.env)
+        self.assertFalse(sentinel.exists())
+        self.assertEqual((self.git('for-each-ref', '--format=%(refname) %(objectname)'),
+                          (self.repo/'.git/config').read_bytes()), before)
+
+    def test_symbolic_ref_inspection_is_read_only_but_ref_edits_are_not(self):
+        before = self.git('symbolic-ref', 'HEAD')
+        for flags in ('', '--short', '-q --short', '--quiet --short', '--'):
+            command = 'git symbolic-ref '+flags+' HEAD'
+            with self.subTest(command=command):
+                self.g.assertGate(0, command, env=self.env)
+                result = subprocess.run(command, shell=True, cwd=self.repo, env=self.env,
+                                        check=True, capture_output=True, timeout=15)
+                self.assertTrue(result.stdout.strip())
+        for tail in ('HEAD refs/heads/other', '--short HEAD refs/heads/other', '-d HEAD',
+                     '--delete HEAD', '-m reason HEAD refs/heads/other', '--unknown HEAD', ''):
+            self.g.assertGate(2, 'git symbolic-ref '+tail, env=self.env)
+        sentinel = self.repo/'symbolic-ref-effect'
+        self.g.assertGate(2, 'git symbolic-ref --short HEAD && touch '+shlex.quote(str(sentinel)), env=self.env)
+        self.assertFalse(sentinel.exists())
+        self.assertEqual(self.git('symbolic-ref', 'HEAD'), before)
+
     def test_bundle_inspection_reads_are_not_bundle_mutations(self):
         bundle = self.g.ws / 'preserved.bundle'
         self.git('bundle', 'create', str(bundle), 'HEAD')
