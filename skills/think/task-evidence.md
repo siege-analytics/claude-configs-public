@@ -64,7 +64,7 @@ specific Task's status rather than borrowing another Task's authority.
 higher tier when needed; it cannot lower the target-path risk floor or replace
 the actual own-Task scope and status. Preparation companions are not universal
 pre-edit prerequisites. Review risk determines proportionate validation and
-publication review under [self-review](../self-review/SKILL.md); see
+publication review under [skill:self-review]; see
 [before an edit versus before a commit](SKILL.md#before-an-edit-versus-before-a-commit).
 
 For turn-start companion derivation, an existing `CCP_TASK_ID` in the hook's

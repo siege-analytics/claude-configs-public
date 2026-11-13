@@ -739,9 +739,9 @@ class Gates(unittest.TestCase):
                 artifact = directory / (name + '-gate.json')
                 self.assertFalse(artifact.exists(), label + result.stdout + result.stderr)
                 if expect:
-                    self.assertIn('o/r#1292', result.stdout)
+                    self.assertIn('legacy-local-task-id', result.stdout)
                 else:
-                    self.assertNotIn('Task \"o/r#1292\"', result.stdout)
+                    self.assertNotIn('Task \"legacy-local-task-id\"', result.stdout)
             if other_directory:
                 self.assertEqual((other_directory / 'think-gate.json').read_bytes(), other_before)
                 for name in ('junior-senior', 'artifacts-posted'):
@@ -750,33 +750,121 @@ class Gates(unittest.TestCase):
             if expect and cwd != sibling:
                 # A new tool event must carry the selected Task; a prompt
                 # selector is not a persistent mutation of the host environment.
-                self.assertGate(2, 'touch unauthorized', cwd=cwd, env={**env, 'CCP_TASK_ID': 'o/r#1292'})
+                self.assertGate(2, 'touch unauthorized', cwd=cwd, env={**env, 'CCP_TASK_ID': 'legacy-local-task-id'})
 
         check('sibling', self.repo)
         check('nongit', self.ws)
         check('same', sibling)
         check('foreign', self.repo, foreign=True, expect=False)
         check('ambiguous', self.repo, extra=True, expect=False)
-        check('bound', self.repo, extra=True, binding='o/r#1292')
-        check('typed-turn', self.repo, extra=True, request={'task_id': 'o/r#1292'})
-        check('environment-priority', self.repo, extra=True, binding='o/r#1292', request={'task_id': 'o/r#1293'})
-        check('environment-prompt-priority', self.repo, extra=True, binding='o/r#1292', request={'prompt': 'CCP_TASK_ID=o/r#1293'})
-        check('environment-conflict-priority', self.repo, extra=True, binding='o/r#1292', request={'task_id': 'o/r#1293', 'prompt': 'CCP_TASK_ID=o/r#1292'})
-        check('prompt-turn', self.repo, extra=True, request={'prompt': 'Continue the assigned task.\nCCP_TASK_ID=o/r#1292\nPreserve the other task.'})
-        check('long-prompt-turn', self.repo, extra=True, request={'prompt': 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1292'})
-        check('long-conflict-turn', self.repo, extra=True, expect=False, request={'prompt': 'CCP_TASK_ID=o/r#1292\n' + 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1293'})
-        check('nested-turn', self.repo, extra=True, request={'metadata': {'task_id': 'o/r#1292'}})
-        check('conflicting-turn', self.repo, extra=True, expect=False, request={'task_id': 'o/r#1292', 'prompt': 'CCP_TASK_ID=o/r#1293'})
+        check('bound', self.repo, extra=True, binding='legacy-local-task-id')
+        check('typed-turn', self.repo, extra=True, request={'task_id': 'legacy-local-task-id'})
+        check('environment-priority', self.repo, extra=True, binding='legacy-local-task-id', request={'task_id': 'o/r#1293'})
+        check('environment-prompt-priority', self.repo, extra=True, binding='legacy-local-task-id', request={'prompt': 'CCP_TASK_ID=o/r#1293'})
+        check('environment-conflict-priority', self.repo, extra=True, binding='legacy-local-task-id', request={'task_id': 'o/r#1293', 'prompt': 'CCP_TASK_ID=legacy-local-task-id'})
+        check('prompt-turn', self.repo, extra=True, request={'prompt': 'Continue the assigned task.\nCCP_TASK_ID=legacy-local-task-id\nPreserve the other task.'})
+        check('long-prompt-turn', self.repo, extra=True, request={'prompt': 'context ' * 1000 + '\nCCP_TASK_ID=legacy-local-task-id'})
+        check('long-conflict-turn', self.repo, extra=True, expect=False, request={'prompt': 'CCP_TASK_ID=legacy-local-task-id\n' + 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1293'})
+        check('nested-turn', self.repo, extra=True, request={'metadata': {'task_id': 'legacy-local-task-id'}})
+        check('conflicting-turn', self.repo, extra=True, expect=False, request={'task_id': 'legacy-local-task-id', 'prompt': 'CCP_TASK_ID=o/r#1293'})
         check('unknown-turn', self.repo, extra=True, expect=False, request={'task_id': 'o/r#9999'})
-        check('noncanonical-turn', self.repo, extra=True, expect=False, request={'task_id': 'legacy-local-task-id'})
-        check('quoted-turn', self.repo, extra=True, expect=False, request={'prompt': '> CCP_TASK_ID=o/r#1292'})
-        check('fenced-turn', self.repo, extra=True, expect=False, request={'prompt': '```text\nCCP_TASK_ID=o/r#1292\n```'})
+        check('operational-id-turn', self.repo, extra=True, request={'task_id': 'legacy-local-task-id'})
+        check('issue-reference-is-not-selector', self.repo, extra=True, expect=False, request={'task_id': 'o/r#1292'})
+        check('quoted-turn', self.repo, extra=True, expect=False, request={'prompt': '> CCP_TASK_ID=legacy-local-task-id'})
+        check('fenced-turn', self.repo, extra=True, expect=False, request={'prompt': '```text\nCCP_TASK_ID=legacy-local-task-id\n```'})
         check('quote-fence-blank-turn', self.repo, extra=True, expect=False, request={'prompt': '> Example task:\n```text\n\nCCP_TASK_ID=o/r#1293\n```'})
         check('invalid-turn', self.repo, extra=True, expect=False, request={'task_id': '../invalid task'})
-        check('foreign-typed', self.repo, extra=True, foreign=True, expect=False, request={'task_id': 'o/r#1292'})
+        check('foreign-typed', self.repo, extra=True, foreign=True, expect=False, request={'task_id': 'legacy-local-task-id'})
         check('unknown-binding', self.repo, binding='o/r#9999', expect=False)
         check('foreign-override', self.repo, override=str(self.ws / 'foreign.json'), expect=False)
 
+
+    def test_same_issue_distinct_task_selectors_preserve_scope_and_artifacts(self):
+        first = self.task('o/r#3133', self.a, slug='inspector')
+        second = self.task('o/r#3133', self.b, slug='capture')
+        for directory, identity in ((first, 'inspector-task'), (second, 'capture-task')):
+            for path in directory.glob('*-gate.json'):
+                data = json.loads(path.read_text())
+                data['task_id'] = identity
+                write(path, data)
+        for directory, identity, owned, foreign in ((first, 'inspector-task', self.a, self.b),
+                                                    (second, 'capture-task', self.b, self.a)):
+            os.environ['CCP_TASK_ID'] = identity
+            self.assertEqual(r.find_session_gate(str(self.ws))['path'], str(directory / 'think-gate.json'))
+            self.assertEqual(r.find_session_gate(str(self.ws), 'investigate-gate')['path'], str(directory / 'investigate-gate.json'))
+            self.assertEqual(r.select_task(str(self.ws), [str(owned)])['gate']['path'], str(directory / 'think-gate.json'))
+            self.assertIsNone(r.select_task(str(self.ws), [str(foreign)])['gate'])
+            self.assertGate(0, tool='Write', path=owned / 'new.txt', env={**self.env, 'CCP_TASK_ID': identity})
+            self.assertGate(2, tool='Write', path=foreign / 'new.txt', env={**self.env, 'CCP_TASK_ID': identity})
+        for binding in ('', 'unknown-task', 'o/r#3133'):
+            with self.subTest(binding=binding):
+                if binding: os.environ['CCP_TASK_ID'] = binding
+                else: os.environ.pop('CCP_TASK_ID', None)
+                self.assertIsNone(r.find_session_gate(str(self.ws)))
+        # Same issue reference does not let the other Task's artifact satisfy it.
+        artifact = second / 'investigate-gate.json'
+        data = json.loads(artifact.read_text()); data['task_id'] = 'inspector-task'
+        write(artifact, data)
+        os.environ['CCP_TASK_ID'] = 'capture-task'
+        self.assertIsNone(r.find_session_gate(str(self.ws), 'investigate-gate'))
+        # A duplicate explicit id is still ambiguous, never directory-order selected.
+        data = json.loads((second / 'think-gate.json').read_text())
+        data['task_id'] = 'inspector-task'; write(second / 'think-gate.json', data)
+        os.environ['CCP_TASK_ID'] = 'inspector-task'
+        self.assertIsNone(r.find_session_gate(str(self.ws)))
+
+    def test_explicit_task_id_canonical_retirement_keeps_ticket_only_legacy_closed(self):
+        directory = self.task('o/r#3133', self.a, slug='canonical')
+        legacy = directory.parent.parent / 'think-gate.json'
+        write(legacy, json.loads((directory / 'think-gate.json').read_text()))
+        data = json.loads((directory / 'think-gate.json').read_text())
+        data['task_id'] = 'exact-task-id'; write(directory / 'think-gate.json', data)
+        self.assertEqual(len(r._session_thinks(str(self.ws))), 1)
+        (directory / 'think-gate.json').unlink()
+        self.assertEqual(r._session_thinks(str(self.ws)), [])
+
+    def test_direct_own_lifecycle_delete_retires_ticket_alias_before_enumeration(self):
+        directory = self.task('o/r#3133', self.a, slug='canonical')
+        gate = directory / 'think-gate.json'
+        legacy = directory.parent.parent / 'think-gate.json'
+        write(legacy, json.loads(gate.read_text()))
+        data = json.loads(gate.read_text())
+        data['task_id'] = 'exact-task-id'
+        write(gate, data)
+        # The real lifecycle hook must remember both denial identities before
+        # the host removes the gate, without any prior Task enumeration.
+        claims = directory.parent / '.canonical'
+        self.assertFalse(claims.exists())
+        self.assertGate(0, 'rm ' + shlex.quote(str(gate)))
+        gate.unlink()
+        self.assertEqual(r._session_thinks(str(self.ws)), [])
+        self.assertGate(2, 'touch file', cwd=self.a)
+
+    def test_selected_task_non_git_roots_do_not_expand_physical_scope(self):
+        # The default fixture is inside this source checkout: use a genuine
+        # outside-Git workspace so a parent repository cannot supply identity.
+        with tempfile.TemporaryDirectory() as outside:
+            f = Gates()
+            with patch.dict(globals(), ROOT=Path(outside)):
+                f.setUp()
+            try:
+                private = f.ws / 'sessions/one/data/capture'
+                private.mkdir(parents=True)
+                self.assertFalse(r._target_repo(str(private)))
+                directory = f.task('o/r#3133', private, slug='private-capture', artifacts=False)
+                path = directory / 'think-gate.json'
+                data = json.loads(path.read_text())
+                data['task_id'] = 'four-cycle-capture'
+                os.environ['CCP_TASK_ID'] = 'four-cycle-capture'
+                for root in (str(private), ''):
+                    data['repo_root'] = root
+                    write(path, data)
+                    self.assertEqual(r.select_task(str(f.ws), [str(private / 'body.csv')])['gate']['path'], str(path))
+                    self.assertIsNone(r.select_task(str(f.ws), [str(private.parent / 'foreign.csv')])['gate'])
+                data['sessionId'] = 'two'; write(path, data)
+                self.assertIsNone(r.find_session_gate(str(f.ws)))
+            finally:
+                f.tearDown()
 
     def test_ticketless_pipeline_does_not_borrow_other_task_plans(self):
         gate = self.task('design-task', self.a, status='designing', artifacts=False) / 'think-gate.json'

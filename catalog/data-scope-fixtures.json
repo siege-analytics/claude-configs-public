@@ -1066,18 +1066,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 143771,
-          "estimated_tokens": 35946,
+          "characters": 144249,
+          "estimated_tokens": 36066,
           "items": 13
         },
         "claude-code": {
-          "characters": 146249,
-          "estimated_tokens": 36567,
+          "characters": 146694,
+          "estimated_tokens": 36678,
           "items": 13
         },
         "craft-agent": {
-          "characters": 146249,
-          "estimated_tokens": 36567,
+          "characters": 146694,
+          "estimated_tokens": 36678,
           "items": 13
         }
       },

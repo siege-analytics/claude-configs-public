@@ -263,13 +263,13 @@ class GitBootstrap(unittest.TestCase):
                 self.assertNotEqual(response.get('decision'), 'block', response)
                 specific = response.get('hookSpecificOutput', {})
                 if isinstance(specific, dict):
-                    self.assertNotEqual(specific.get('permissionDecision'), 'deny', response)
+                    self.assertNotIn(specific.get('permissionDecision'), ('deny', 'ask', 'defer'), response)
 
     def test_machine_output_parser_checks_complete_pretty_controls(self):
         self.assert_hook_output_allows('ordinary advisory text')
         self.assert_hook_output_allows(json.dumps({'continue': True}, indent=2))
         for response in ({'continue': False}, {'decision': 'block'},
-                         {'hookSpecificOutput': {'permissionDecision': 'deny'}}):
+                         *({'hookSpecificOutput': {'permissionDecision': decision}} for decision in ('deny', 'ask', 'defer'))):
             with self.subTest(response=response), self.assertRaises(AssertionError):
                 self.assert_hook_output_allows(json.dumps(response, indent=2))
         with self.assertRaises(json.JSONDecodeError):
