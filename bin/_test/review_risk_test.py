@@ -214,6 +214,8 @@ hooks/bash/coordinator-status-guard.sh|hooks/lib/hook_payload.py
 hooks/git/detect-ai-fingerprints.sh|hooks/lib/github-merge-queue.py
 hooks/git/fix-shape-guard.sh|hooks/lib/github-merge-queue.py
 hooks/git/self-review.sh|hooks/lib/github-merge-queue.py
+hooks/git/self-review.sh|hooks/lib/command-text.py
+hooks/git/detect-ai-fingerprints.sh|hooks/lib/command-text.py
 hooks/git/survey-context.sh|hooks/lib/github-merge-queue.py
 hooks/git/test-guard.sh|hooks/lib/github-merge-queue.py
 hooks/git/test-tracking-guard.sh|hooks/lib/github-merge-queue.py
@@ -310,8 +312,8 @@ hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
 hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "e219f469593464d6bf79b47cf05d86e623e6bed72cc52b2af2c2bebaefdf3604"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "30172ea93510731018bac4fc6e7003ee70e91a12111aa0493de912478a517e2d"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "405c7de22d57f3710ffd82304432579c8c9fb73c021bdaf954da1035e2cd961a"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "bfcc0d437678bdfb8ff1842d464a8dec28f702b6f7638ab43d756a3b0677f606"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
@@ -322,14 +324,14 @@ hooks/bash/destructive-guard.sh|hooks/lib/extract-json.py|2
 hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py|3
 hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/branch-guard.sh|hooks/lib/extract-json.py|2
-hooks/git/detect-ai-fingerprints.sh|hooks/lib/extract-json.py|2
+hooks/git/detect-ai-fingerprints.sh|hooks/lib/extract-json.py|5
 hooks/git/fix-shape-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/no-attribution.sh|hooks/lib/extract-json.py|2
 hooks/git/no-broad-staging.sh|hooks/lib/extract-json.py|2
 hooks/git/no-sensitive-files.sh|hooks/lib/extract-json.py|2
 hooks/git/post-error-revision-required.sh|hooks/lib/extract-json.py|1
 hooks/git/pr-base-guard.sh|hooks/lib/extract-json.py|3
-hooks/git/self-review.sh|hooks/lib/extract-json.py|2
+hooks/git/self-review.sh|hooks/lib/extract-json.py|4
 hooks/git/self-review.sh|hooks/lib/read-only-command.py|1
 hooks/git/survey-context.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/extract-json.py|2

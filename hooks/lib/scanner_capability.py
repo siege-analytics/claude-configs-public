@@ -11,7 +11,7 @@ import subprocess
 # scanner/adapter changes in the same reviewed source change, never at runtime.
 CLOSURE = {
     'skills/detect-ai-fingerprints/scan.sh':'a69df093ed7a84a0a0864250927857d8294df21cffc6e50c9d8a1de663616fb8',
-    'skills/detect-ai-fingerprints/scan_snapshot.py':'567f740d50358551bd4d1ba7a53b92e12c51cf76c4a3f7ae6ceb47c8b1ac4a1c',
+    'skills/detect-ai-fingerprints/scan_snapshot.py':'a047ec75454836023cabebd62b114f9bd66eb8fd66fa23d3803ad498ceebf6b0',
     'skills/detect-ai-fingerprints/scan_ast.py':'27e0960e2ee767ff8573d4c02ed0d72e7f92fc37382a63b325fbe11971ae7b44',
 }
 
@@ -106,7 +106,7 @@ def validate_files(plan, producer):
             raise ScannerError('scanner repo must be the exact Git toplevel')
     if plan['mode'] == 'pr':
         config = subprocess.run(['git','config','--show-scope','--name-only','--get-regexp',
-            r'^(core\.(sshcommand|gitproxy|alternaterefscommand)|remote\..*\.(uploadpack|proxy|vcs)|credential\.|url\.|http\.|protocol\.|ssh\.)'],
+            r'^(core\.(sshcommand|gitproxy|alternaterefscommand|askpass)|remote\..*\.(uploadpack|proxy|vcs)|credential\.|url\.|http\.|protocol\.|ssh\.)'],
             cwd=repo,capture_output=True,text=True,timeout=5)
         if config.returncode not in (0,1):
             raise ScannerError('scanner cannot establish Git transport configuration')
