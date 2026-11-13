@@ -30,10 +30,11 @@ cp "$ROOT/.githooks/commit-msg" "$R/.githooks/"
 cp "$ROOT/bin/review-risk.py" "$R/bin/"
 cp "$ROOT/catalog/review-risk-policy.json" "$R/catalog/"
 cp "$ROOT/hooks/git/pre-push-self-review.sh" "$R/hooks/git/"
+cp -R "$ROOT/hooks/lib" "$R/hooks/lib"
 git -C "$R" init -q; git -C "$R" config user.email test@example.com; git -C "$R" config user.name Test
 git -C "$R" remote add origin git@github.com:siege-analytics/test-repo.git
 printf 'docs\n' > "$R/README.md"; git -C "$R" add README.md
-git -C "$R" commit --no-verify -q -m 'docs: base [no-ticket]' -m $'Review-Tier: A\nSelf-Review: fixture base'
+git -C "$R" commit --no-verify -q -m 'docs: base [task: authorized fixture]' -m $'Review-Tier: A\nSelf-Review: fixture base'
 run_msg(){ (cd "$R" && bash .githooks/commit-msg "$1" 2>&1); }
 
 # A Tier C change (hooks/git/ is a high-risk path).
@@ -45,7 +46,7 @@ out=$(run_msg "$TMP/none.msg"); rc=$?
 [[ $rc -ne 0 ]] && ok "commit-msg: trailerless Tier C commit rejected" || bad "commit-msg accepted trailerless Tier C commit"
 one_rejection "commit-msg: one rejection, not a silent exit" "$out" '^BLOCKED:'
 expect_all "AC1 commit-msg: lists every Tier C trailer" "$out" "${TIER_C_ALL[@]}"
-expect_all "commit-msg: lists the absent ticket reference too" "$out" "ticket reference"
+expect_all "commit-msg: lists the absent task reference too" "$out" "task reference"
 printf '%s\n' "$out" | grep -q 'Review-Tier: C' && ok "commit-msg: computed tier names the example value" || bad "commit-msg: no computed Review-Tier example :: $out"
 
 cat > "$TMP/partial.msg" <<'EOF'
@@ -58,7 +59,7 @@ EOF
 out=$(run_msg "$TMP/partial.msg"); rc=$?
 [[ $rc -ne 0 ]] && ok "commit-msg: partial Tier C trailers rejected" || bad "commit-msg accepted partial Tier C trailers"
 expect_all "AC2 commit-msg: lists the absent trailers" "$out" Hostile-Review
-expect_none "AC2 commit-msg: omits trailers already present" "$out" Review-Tier Self-Review Self-Review-Source "ticket reference"
+expect_none "AC2 commit-msg: omits trailers already present" "$out" Review-Tier Self-Review Self-Review-Source "task reference"
 sed 's@https://example.com/review@plans/nonexistent.md@' "$TMP/partial.msg" > "$TMP/missing-source.msg"
 out=$(run_msg "$TMP/missing-source.msg"); rc=$?
 [[ $rc -eq 1 ]] && ok "commit-msg: missing path with other absent trailers is rejected" || bad "commit-msg: missing path expected exit 1, got $rc"
@@ -100,7 +101,7 @@ git -C "$R" reset -q hooks/git/x.sh
 mkdir -p "$R/skills/x"; printf 'behavior\n' > "$R/skills/x/SKILL.md"; git -C "$R" add skills/x/SKILL.md
 printf 'feat: skill\n\nReview-Tier: B\n' > "$TMP/b.msg"
 out=$(run_msg "$TMP/b.msg")
-expect_all "commit-msg Tier B: lists Self-Review, source and ticket" "$out" Self-Review Self-Review-Source "ticket reference"
+expect_all "commit-msg Tier B: lists Self-Review, source and ticket" "$out" Self-Review Self-Review-Source "task reference"
 expect_none "commit-msg Tier B: does not demand Tier C trailers" "$out" Review-Tier Hostile-Review
 git -C "$R" reset -q skills/x/SKILL.md
 
@@ -112,7 +113,7 @@ git -C "$R" commit --no-verify -q -F "$TMP/none.msg"
 out=$(push_hook); rc=$?
 [[ $rc -ne 0 ]] && ok "pre-push: trailerless Tier C commit rejected" || bad "pre-push accepted trailerless Tier C commit"
 expect_all "AC1 pre-push: lists every Tier C trailer" "$out" "${TIER_C_ALL[@]}"
-expect_all "pre-push: lists the absent ticket reference too" "$out" "ticket reference"
+expect_all "pre-push: lists the absent task reference too" "$out" "task reference"
 git -C "$R" commit --amend --no-verify -q -F "$TMP/partial.msg"
 out=$(push_hook)
 expect_all "AC2 pre-push: lists the absent trailers" "$out" Hostile-Review
@@ -141,12 +142,12 @@ out=$(sr_hook); rc=$?
 [[ $rc -eq 2 ]] && ok "self-review: trailerless Tier C commit rejected" || bad "self-review: expected exit 2, got $rc :: ${out:0:300}"
 one_rejection "self-review: one rejection" "$out" '^BLOCKED:'
 expect_all "AC1 self-review: lists every Tier C trailer" "$out" "${TIER_C_ALL[@]}"
-expect_all "self-review: lists the absent ticket reference too" "$out" "ticket reference"
+expect_all "self-review: lists the absent task reference too" "$out" "task reference"
 git -C "$R" commit --amend --no-verify -q -F "$TMP/partial.msg"
 out=$(sr_hook); rc=$?
 [[ $rc -eq 2 ]] && ok "self-review: partial Tier C trailers rejected" || bad "self-review: partial expected exit 2, got $rc"
 expect_all "AC2 self-review: lists the absent trailers" "$out" Hostile-Review
-expect_none "AC2 self-review: omits trailers already present" "$out" Review-Tier Self-Review Self-Review-Source "ticket reference"
+expect_none "AC2 self-review: omits trailers already present" "$out" Review-Tier Self-Review Self-Review-Source "task reference"
 git -C "$R" commit --amend --no-verify -q -F "$TMP/missing-source.msg"
 out=$(sr_hook); rc=$?
 [[ $rc -eq 2 ]] && ok "self-review: missing path with absent trailers is rejected" || bad "self-review: missing path expected exit 2, got $rc"

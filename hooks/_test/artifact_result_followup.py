@@ -81,6 +81,7 @@ class EmptyTrailers(unittest.TestCase):
             p = self.repo / relative
             p.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / relative, p)
+        shutil.copytree(ROOT/'hooks/lib', self.repo/'hooks/lib')
         self.git('init', '-q')
         source = self.repo / 'hooks/git/x.sh'
         source.parent.mkdir(parents=True)
@@ -125,8 +126,8 @@ class EmptyTrailers(unittest.TestCase):
         p = self.repo / 'README.md'
         p.write_text('fixture\n')
         self.git('add', 'README.md')
-        self.assertEqual(self.message('docs [no-ticket] [no-review]\n\nReview-Tier: A\n').returncode, 0)
-        self.assertEqual(self.message('docs [no-ticket]\n\nReview-Tier: A\nSelf-Review:\n').returncode, 1)
+        self.assertEqual(self.message('docs [task: authorized fixture] [no-review]\n\nReview-Tier: A\n').returncode, 0)
+        self.assertEqual(self.message('docs [task: authorized fixture]\n\nReview-Tier: A\nSelf-Review:\n').returncode, 1)
 
 
 if __name__ == '__main__':

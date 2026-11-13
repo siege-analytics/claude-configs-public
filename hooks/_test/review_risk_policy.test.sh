@@ -8,11 +8,12 @@ cp "$ROOT/.githooks/commit-msg" "$R/.githooks/"
 cp "$ROOT/bin/review-risk.py" "$R/bin/"
 cp "$ROOT/catalog/review-risk-policy.json" "$R/catalog/"
 cp "$ROOT/hooks/git/pre-push-self-review.sh" "$R/hooks/git/"
+cp -R "$ROOT/hooks/lib" "$R/hooks/lib"
 git -C "$R" init -q; git -C "$R" config user.email test@example.com; git -C "$R" config user.name Test
 run_msg(){ (cd "$R" && bash .githooks/commit-msg "$1"); }
 printf 'docs\n' > "$R/README.md"; git -C "$R" add README.md
 cat > "$TMP/a.msg" <<'EOF'
-docs: clarify [no-ticket]
+docs: clarify [task: authorized fixture]
 
 Review-Tier: A
 Self-Review: focused diff checked
@@ -28,7 +29,7 @@ Self-Review: checked
 EOF
 if run_msg "$TMP/low.msg" >/dev/null 2>&1; then bad "Tier B downgrade accepted"; else ok "Tier B downgrade rejected"; fi
 cat > "$TMP/b-missing.msg" <<'EOF'
-feat: skill [no-ticket]
+feat: skill [task: authorized fixture]
 
 Review-Tier: B
 Self-Review: focused review
@@ -44,7 +45,7 @@ focused fixture
 EOF
 git -C "$R" add plans/review.md
 cat > "$TMP/b.msg" <<'EOF'
-feat: skill [no-ticket]
+feat: skill [task: authorized fixture]
 
 Review-Tier: B
 Self-Review: focused review
@@ -62,7 +63,7 @@ Self-Review-Source: plans/review.md
 EOF
 if run_msg "$TMP/c-low.msg" >/dev/null 2>&1; then bad "Tier C downgrade accepted"; else ok "Tier C downgrade rejected"; fi
 cat > "$TMP/c-incomplete.msg" <<'EOF'
-fix: gate [no-ticket]
+fix: gate [task: authorized fixture]
 
 Review-Tier: C
 Self-Review: incomplete
@@ -71,7 +72,7 @@ Hostile-Review: plans/hostile.md
 EOF
 if run_msg "$TMP/c-incomplete.msg" >/dev/null 2>&1; then bad "Tier C incomplete evidence accepted"; else ok "Tier C incomplete evidence rejected"; fi
 cat > "$TMP/duplicate.msg" <<'EOF'
-fix: duplicate tier [no-ticket]
+fix: duplicate tier [task: authorized fixture]
 
 Review-Tier: C
 Review-Tier: A
@@ -91,7 +92,7 @@ Separate reviewer findings: plans/hostile.md
 EOF
 git -C "$R" add plans/full.md plans/pre.md plans/hostile.md
 cat > "$TMP/c.msg" <<'EOF'
-fix: gate [no-ticket]
+fix: gate [task: authorized fixture]
 
 Review-Tier: C
 Self-Review: full review
@@ -122,7 +123,7 @@ printf 'refs/heads/test %s refs/heads/test %s\n' "$(git -C "$R" rev-parse HEAD)"
 : > "$R/plans/full.md"; git -C "$R" add plans/full.md; git -C "$R" commit --amend --no-verify -q -F "$TMP/c.msg"
 if printf 'refs/heads/test %s refs/heads/test %s\n' "$(git -C "$R" rev-parse HEAD)" "$ZERO" | (cd "$R" && bash hooks/git/pre-push-self-review.sh) >/dev/null 2>&1; then bad "pre-push accepted empty review artifact"; else ok "pre-push rejects empty review artifact"; fi
 cat > "$TMP/bad-pointer.msg" <<'EOF'
-fix: bad pointer [no-ticket]
+fix: bad pointer [task: authorized fixture]
 
 Review-Tier: C
 Self-Review: invalid pointer
@@ -135,7 +136,7 @@ EOF
 git -C "$R" commit --amend --no-verify -q -F "$TMP/bad-pointer.msg"
 if printf 'refs/heads/test %s refs/heads/test %s\n' "$(git -C "$R" rev-parse HEAD)" "$ZERO" | (cd "$R" && bash hooks/git/pre-push-self-review.sh) >/dev/null 2>&1; then bad "pre-push accepted missing evidence pointers"; else ok "pre-push rejects missing evidence pointers"; fi
 cat > "$TMP/tierless.msg" <<'EOF'
-fix: tierless bypass [no-ticket]
+fix: tierless bypass [task: authorized fixture]
 
 Self-Review: attempted bypass
 Self-Review-Source: plans/full.md

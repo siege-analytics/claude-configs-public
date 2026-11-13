@@ -1491,29 +1491,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/commit",
           "file_count": 1,
-          "tree_sha256": "120c66fa36111c105edaa94d3733dffd281683790096593908178fc577b570ce"
+          "tree_sha256": "8e90fe862cae7858e76eba3551ca9c20709f7ff18b0f863a889e68a6bae17749"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/commit",
           "file_count": 1,
-          "tree_sha256": "120c66fa36111c105edaa94d3733dffd281683790096593908178fc577b570ce"
+          "tree_sha256": "8e90fe862cae7858e76eba3551ca9c20709f7ff18b0f863a889e68a6bae17749"
         },
         "flat": {
           "destination": "dist/flat/skills/commit",
           "file_count": 1,
-          "tree_sha256": "120c66fa36111c105edaa94d3733dffd281683790096593908178fc577b570ce"
+          "tree_sha256": "8e90fe862cae7858e76eba3551ca9c20709f7ff18b0f863a889e68a6bae17749"
         },
         "nested": {
           "destination": "dist/nested/skills/commit",
           "file_count": 1,
-          "tree_sha256": "120c66fa36111c105edaa94d3733dffd281683790096593908178fc577b570ce"
+          "tree_sha256": "8e90fe862cae7858e76eba3551ca9c20709f7ff18b0f863a889e68a6bae17749"
         }
       },
       "canonical_source": "skills/commit/SKILL.md",
       "kind": "skill",
       "slug": "commit",
       "source_file_count": 1,
-      "source_tree_sha256": "6af2e4defe8c81728f30ce15615fbc1e32d32246a689e1422967fd326035c3e6"
+      "source_tree_sha256": "2c4961479c4dc8163b767421d6e21602415f8b417fb39cb14d09c4c6e38489a4"
     },
     {
       "artifacts": {
