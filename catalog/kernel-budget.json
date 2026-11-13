@@ -1,24 +1,24 @@
 {
   "artifacts": {
     "claude-code": {
-      "characters": 8379,
-      "estimated_tokens": 2095,
-      "sha256": "9588c93f6156f97e11848b232e720d37662dde1d6f1363e1d068dd734a9457a1"
+      "characters": 8462,
+      "estimated_tokens": 2116,
+      "sha256": "e1e4a22ddc842de1dd09532992cf940e7377621ed2b0f6552930e2de3f918397"
     },
     "craft-agent": {
-      "characters": 8379,
-      "estimated_tokens": 2095,
-      "sha256": "9588c93f6156f97e11848b232e720d37662dde1d6f1363e1d068dd734a9457a1"
+      "characters": 8462,
+      "estimated_tokens": 2116,
+      "sha256": "e1e4a22ddc842de1dd09532992cf940e7377621ed2b0f6552930e2de3f918397"
     },
     "flat": {
-      "characters": 8379,
-      "estimated_tokens": 2095,
-      "sha256": "9588c93f6156f97e11848b232e720d37662dde1d6f1363e1d068dd734a9457a1"
+      "characters": 8462,
+      "estimated_tokens": 2116,
+      "sha256": "e1e4a22ddc842de1dd09532992cf940e7377621ed2b0f6552930e2de3f918397"
     },
     "nested": {
-      "characters": 8379,
-      "estimated_tokens": 2095,
-      "sha256": "9588c93f6156f97e11848b232e720d37662dde1d6f1363e1d068dd734a9457a1"
+      "characters": 8462,
+      "estimated_tokens": 2116,
+      "sha256": "e1e4a22ddc842de1dd09532992cf940e7377621ed2b0f6552930e2de3f918397"
     }
   },
   "limits": {
@@ -42,9 +42,9 @@
   "schema_version": 1,
   "shelf_isolation_validation": "heuristic text guard; deterministic resolver enforcement belongs to progressive loading",
   "source": {
-    "characters": 8075,
-    "estimated_tokens": 2019,
+    "characters": 8158,
+    "estimated_tokens": 2040,
     "path": "skills/KERNEL.md",
-    "sha256": "4d0da35d7f4eed3689c42182530b2d482e4e82172cdbd1462461e9675975be74"
+    "sha256": "774b3ee9ceea2d192cb788ab00f3121c11528d738ac77b25d731dbe91c7fa680"
   }
 }

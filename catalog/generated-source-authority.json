@@ -5795,27 +5795,27 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/KERNEL.md",
           "file_count": 1,
-          "tree_sha256": "b885190d367411efab7625e62a4d2bde7592f5edfd0da38230d8a65285e5906e"
+          "tree_sha256": "0fc97a26e5b184faa9e0142b5493c63fad3eccde42752bde5000661281bc497f"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/KERNEL.md",
           "file_count": 1,
-          "tree_sha256": "b885190d367411efab7625e62a4d2bde7592f5edfd0da38230d8a65285e5906e"
+          "tree_sha256": "0fc97a26e5b184faa9e0142b5493c63fad3eccde42752bde5000661281bc497f"
         },
         "flat": {
           "destination": "dist/flat/skills/KERNEL.md",
           "file_count": 1,
-          "tree_sha256": "b885190d367411efab7625e62a4d2bde7592f5edfd0da38230d8a65285e5906e"
+          "tree_sha256": "0fc97a26e5b184faa9e0142b5493c63fad3eccde42752bde5000661281bc497f"
         },
         "nested": {
           "destination": "dist/nested/skills/KERNEL.md",
           "file_count": 1,
-          "tree_sha256": "b885190d367411efab7625e62a4d2bde7592f5edfd0da38230d8a65285e5906e"
+          "tree_sha256": "0fc97a26e5b184faa9e0142b5493c63fad3eccde42752bde5000661281bc497f"
         }
       },
       "canonical_source": "skills/KERNEL.md",
       "source_file_count": 1,
-      "source_tree_sha256": "136e1e9450c7b9d806653b36a2b82a4f258085e73a2485fef8d45dbe2d51493b"
+      "source_tree_sha256": "e2979ef56db1ac16b2f8390eb5874d54c8b6dd7eeddc4564f8dfd0351746bd92"
     },
     {
       "artifacts": {
