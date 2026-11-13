@@ -500,8 +500,9 @@ fi
 # fixed resolution, block publication. P2 and P3 are not
 # hook-enforced — P2 ticket-existence is agent discipline, P3 is
 # documentation-only.
-if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qF '## Findings' "$SOURCE_PATH"; then
-    FINDINGS_BLOCK=$(awk '/^## Findings[[:space:]]*$/ {active=1;next} /^## / {active=0} active {print}' "$SOURCE_PATH")
+FINDINGS_HEADING_RE='^##[[:blank:]]+findings([^[:alnum:]_]|$)'
+if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qiE "$FINDINGS_HEADING_RE" "$SOURCE_PATH"; then
+    FINDINGS_BLOCK=$(awk -v heading="$FINDINGS_HEADING_RE" '/^##[[:blank:]]+/ {active=(tolower($0) ~ heading);next} active {print}' "$SOURCE_PATH")
     UNRESOLVED_P1=$(
         printf '%s\n' "$FINDINGS_BLOCK" | awk '/^\|/ {
             delete cells

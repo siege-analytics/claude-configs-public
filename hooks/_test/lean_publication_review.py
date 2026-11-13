@@ -47,10 +47,10 @@ class PublicationReview(unittest.TestCase):
     def git(self,*args):
         return subprocess.run(['git','-C',str(self.repo),*args],env=self.env,text=True,capture_output=True,check=True,timeout=20)
 
-    def commit(self,artifact=COMPACT,review=True,review_path='plans/independent.md',reference='#1'):
+    def commit(self,artifact=COMPACT,review=True,review_path='plans/independent.md',reference='#1',tier='C'):
         (self.repo/'plans/review.md').write_text(artifact)
         self.git('add','.')
-        message=f'fix: assigned fixture {reference}\n\nReview-Tier: C\nSelf-Review: actual focused checks\nSelf-Review-Source: plans/review.md\n'
+        message=f'fix: assigned fixture {reference}\n\nReview-Tier: {tier}\nSelf-Review: actual focused checks\nSelf-Review-Source: plans/review.md\n'
         if review: message+='Hostile-Review: '+review_path+'\n'
         self.git('commit','-q','-m',message)
 
@@ -114,6 +114,39 @@ class PublicationReview(unittest.TestCase):
         artifact = HISTORICAL.replace('## Peer review','## Peer review \t').replace('\n','\r\n')
         self.commit(artifact)
         self.assert_publication(0)
+
+    def _new_tier_fixture(self, tier):
+        fixture = PublicationReview()
+        self.addCleanup(fixture.doCleanups)
+        fixture.setUp()
+        if tier == 'B':
+            (fixture.repo/'hooks/bash/example.sh').unlink()
+            source = fixture.repo/'skills/example/SKILL.md'
+            source.parent.mkdir(parents=True)
+            source.write_text('Fixture skill behavior.\n')
+        return fixture
+
+    def test_annotated_findings_cannot_hide_unresolved_p1(self):
+        for tier, template in (('B', COMPACT), ('C', COMPACT), ('C', HISTORICAL)):
+            for heading in ('## Findings (round 2)', '## Findings and resolutions',
+                            '## FINDINGS (round 2)', '##\tFindings (round 2)'):
+                with self.subTest(tier=tier, historical=template == HISTORICAL, heading=heading):
+                    fixture = self._new_tier_fixture(tier)
+                    artifact = template+'\n'+heading+'\n| 1 | P1 | Incorrect behavior | unresolved |\n## Following section\nNo further findings.\n'
+                    fixture.commit(artifact, tier=tier)
+                    fixture.assert_publication(2)
+
+    def test_fixed_annotated_findings_remain_publishable(self):
+        for tier, template in (('B', COMPACT), ('C', COMPACT), ('C', HISTORICAL)):
+            with self.subTest(tier=tier, historical=template == HISTORICAL):
+                fixture = self._new_tier_fixture(tier)
+                artifact = template+'\n## Findings and resolutions\n| 1 | P1 | Corrected behavior | fixed |\n'
+                fixture.commit(artifact, tier=tier)
+                fixture.assert_publication(0)
+
+    def test_compact_tier_c_requires_the_canonical_findings_heading(self):
+        self.commit(COMPACT.replace('## Findings', '## Findings (round 2)'))
+        self.assert_publication(2)
 
     def test_compact_prose_unresolved_p1_blocks_both_publishers(self):
         self.commit(COMPACT.replace('None.', 'P1: incorrect behavior; resolution: unresolved'))
