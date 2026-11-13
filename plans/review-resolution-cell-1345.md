@@ -10,3 +10,8 @@ The resolution predicate and documentation defects are fixed. No unrelated Task,
 
 ## Independent review
 Root inspected the four source files and independently executed the four new publication regressions: all passed in 3.408 seconds. This record does not substitute for the direct exact-head PR review or required CI.
+
+## Develop integration
+Integrated protected develop 77d83c20e3ca9a50f3a697bfa6fe8b593ec38f7d through an ordinary merge after #1344 landed. The accepted publication changes are byte-identical to their source commit. The actual producer rerun passed 16 publication tests in 13.896 seconds; all five official freshness checks passed.
+
+The complete merge-selected scan returned 1 with 63 findings, not a clean result. Raw SHA256: 04392aaace0d9befaf53be3dc2214f33d284211aeb9c3837e032d4dac977ef27. Raw output and the per-finding author map are retained in external evidence core1345-publication-fix-20261113/core1345-merge-scan.txt and core1345-merge-scan-dispositions.json. Root independently verified the exact row multiset, owning-function hashes, handler sources and protected resolver bytes: 62 rows retain the prior individual #1344 dispositions; the remaining protected scanner-authority handler returns an explicit structured denial rather than silently granting authority. Existing inherited coverage debt remains tracked by #1329. Independent acceptance is retained in the same evidence directory as merge-scan-root-independent-acceptance.json. No resolver behavior was edited by this fix.
