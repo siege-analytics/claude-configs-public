@@ -980,7 +980,8 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         if shape.get('scanner_execution'):
             from task_actions import scanner_owned_plan
             try:
-                scanner_owned_plan(shape['scanner_execution'],tg['path'],tg['data'],own_session_directory(workspace))
+                scanner_owned_plan(shape['scanner_execution'], canonical(tg['path']), tg['data'],
+                                   canonical(own_session_directory(workspace)))
             except (OSError,ValueError) as error:
                 return {**result,'gate':None,'error':'Scanner authority denied: '+str(error)}
             result['scanner_execution_authorized'] = True
