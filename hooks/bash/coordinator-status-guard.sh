@@ -145,30 +145,42 @@ def reader_chain_with_outputs(text):
             except ValueError:
                 return
 
+    # Collect effects independently of reader-proof syntax. A later glob or
+    # unsupported output cannot erase a real GitHub transition already seen.
+    i = 0
+    while i < len(parts):
+        value, operator, _ = parts[i]
+        if operator and re.fullmatch(r"[0-9]*(?:>>|>&|<&|>\||>|<)|&>>|&>", value):
+            i += 2
+            continue
+        if operator:
+            finish_reader()
+            words = []
+        else:
+            words.append(value)
+        i += 1
+    finish_reader()
+
     i = 0
     while i < len(parts):
         value, operator, globs = parts[i]
         if globs:
-            return False, []
+            return False, github_reads
         if operator and re.fullmatch(r"[0-9]*(?:>>|>&|<&|>\||>|<)|&>>|&>", value):
             i += 1
             if i >= len(parts) or parts[i][1] or parts[i][2] or parts[i][0].startswith('~'):
-                return False, []
+                return False, github_reads
             target = parts[i][0]
             if value in {'>', '>>', '1>', '1>>', '2>', '2>>'}:
                 target = '/dev/null'
             proof.extend((value, shlex.quote(target)))
         elif operator:
             if value not in {'&&', '||', ';', '|'}:
-                return False, []
-            finish_reader()
-            words = []
+                return False, github_reads
             proof.append(value)
         else:
-            words.append(value)
             proof.append(shlex.quote(value))
         i += 1
-    finish_reader()
     return task_actions.released_read_verdict(' '.join(proof)) == 0, github_reads
 
 reader_chain, github_reads = reader_chain_with_outputs(command)

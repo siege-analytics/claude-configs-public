@@ -74,8 +74,23 @@ validate_committed_artifact() {
             for section in "## Assumptions" "## Test plan" "## Findings" "## Independent review"; do grep -qE "^${section}[[:space:]]*$" <<<"$content" || return 1; done
         fi
     fi
-    local findings unresolved findings_heading_re='^##[[:blank:]]+findings([^[:alnum:]_]|$)'
-    findings=$(awk -v heading="$findings_heading_re" '/^##[[:blank:]]+/ {active=(tolower($0) ~ heading);next} active {print}' <<<"$content")
+    local findings unresolved findings_heading_re='^[ ]?[ ]?[ ]?##[[:blank:]]+findings([^[:alnum:]_]|$)'
+    findings=$(awk -v heading="$findings_heading_re" '{
+        line=$0
+        sub(/\r$/, "", line)
+        sub(/^[ ]?[ ]?[ ]?/, "", line)
+        first=substr(line,1,1)
+        if (first == "`" || first == "~") {
+            count=0
+            while (substr(line,count+1,1) == first) count++
+            rest=substr(line,count+1)
+            if (!fence && count >= 3 && (first == "~" || rest !~ /`/)) {fence=first; width=count; next}
+            if (fence == first && count >= width && rest ~ /^[[:blank:]]*$/) {fence=""; next}
+        }
+        if (fence) next
+        if (line ~ /^##[[:blank:]]+/) {active=(tolower($0) ~ heading); next}
+        if (active) print
+    }' <<<"$content")
     unresolved=$(
         printf '%s\n' "$findings" | awk '/^[ ]?[ ]?[ ]?\|/ {
             delete cells
