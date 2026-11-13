@@ -610,6 +610,45 @@ class Gates(unittest.TestCase):
             self.assertGate(0, tool=tool, path=self.b / 'x')
             self.assertGate(2, tool=tool, path=self.a / 'x')
 
+    def test_parked_task_yields_selection_and_resumes_without_losing_state(self):
+        parked = self.task('o/r#parked', self.a, slug='parked')
+        active = self.task('o/r#active', self.a, slug='active')
+        parked_gate = parked / 'think-gate.json'
+        active_gate = active / 'think-gate.json'
+        original = json.loads(parked_gate.read_text())
+        # A stale legacy copy must not reappear when its canonical Task pauses.
+        write(parked.parent.parent / 'think-gate.json', original)
+        for status in ('parked', 'paused', 'on-hold'):
+            with self.subTest(status=status):
+                write(parked_gate, {**original, 'status': status})
+                self.assertGate(0, 'touch current', cwd=self.a)
+                self.assertGate(0, tool='Write', path=self.a / 'current')
+                self.assertGate(0, "CCP_TASK_ID='o/r#active' touch bound", cwd=self.a)
+                selected = r.select_task(str(self.ws), [str(self.a / 'current')])
+                self.assertEqual(selected['gate']['path'], str(active_gate))
+                self.assertGate(2, "CCP_TASK_ID='o/r#parked' touch paused", cwd=self.a)
+                self.assertTrue(r._canonical_seen(str(parked.parent.parent), 'one', 'o/r#parked', str(self.ws)))
+                # Resume the original gate in place; no disposal or recreation.
+                active_data = json.loads(active_gate.read_text())
+                write(active_gate, {**active_data, 'status': 'parked'})
+                self.assertGate(2, 'touch no-active-task', cwd=self.a)
+                write(parked_gate, original)
+                self.assertGate(0, "CCP_TASK_ID='o/r#parked' touch resumed", cwd=self.a)
+                self.assertEqual(r.select_task(str(self.ws), [str(self.a / 'resumed')])['gate']['path'], str(parked_gate))
+                self.assertGate(2, "CCP_TASK_ID='o/r#parked' touch foreign", cwd=self.b)
+                self.assertEqual(json.loads(parked_gate.read_text()), original)
+                self.assertTrue((parked / 'investigate-gate.json').exists())
+                write(active_gate, active_data)
+
+    def test_unknown_task_status_still_fails_closed(self):
+        unknown = self.task('o/r#unknown', self.a, status='implementng')
+        self.assertGate(2, 'touch typo', cwd=self.a)
+        self.assertGate(2, "CCP_TASK_ID='o/r#unknown' touch typo", cwd=self.a)
+        self.task('o/r#active', self.a)
+        self.assertGate(2, 'touch ambiguous', cwd=self.a)
+        self.assertGate(0, "CCP_TASK_ID='o/r#active' touch bound", cwd=self.a)
+        self.assertTrue((unknown / 'think-gate.json').exists())
+
     def test_session_legacy_read(self):
         identity = 'o/r#2'
         directory = self.task(identity, self.b)

@@ -11,9 +11,10 @@ The `think-gate.json` signal records current task identity, lifecycle and scope 
 Where the host requires a task signal, write it to
 `$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json`, or
 `<workspace>/sessions/<session-id>/tasks/<task-slug>/think-gate.json`.
-Task identity is the **full ticket reference**, or an explicit `task_id` for
-untracked work. Choose a stable unique non-hidden directory slug; the resolver reads each
-task directory's identity, not its spelling. The helper's `task_slug(identity)`
+Task binding identity is the explicit `task_id` when present, otherwise the
+full ticket reference. A `ticket` remains the GitHub metadata reference; multiple
+Tasks may reference the same ticket without sharing binding identity.
+Choose a stable unique non-hidden directory slug; the resolver reads each task directory's identity, not its spelling. The helper's `task_slug(identity)`
 provides a collision-safe default for writers migrating a legacy session file.
 Never derive a path from an unset session variable or write to the workspace root.
 
@@ -22,14 +23,14 @@ One session can have multiple tasks in the same repo. Declare absolute
 subdirectories/extra paths are supported). `repo_root` alone is the legacy
 scope default. Canonical path-component containment, including symlinks,
 selects the most-specific task; equal scopes fail closed with task names.
-Use a leading in-command marker, `CCP_TASK_ID='owner/repo#NNN' command ...`,
+Use a leading in-command marker, `CCP_TASK_ID='<task-identity>' command ...`,
 to disambiguate a Bash tie. Agent-shell exports do not reach the Craft hook
 process; Write/Edit/MultiEdit/NotebookEdit require unambiguous path ownership
 and have no in-command binding channel. Binding never expands scope. Git
 mutations belong to the repository toplevel's owner, not a nested path's task.
 Split actions spanning multiple tasks; prefer isolated worktrees for independent
-Git activity. Terminal disposed/complete/done-awaiting-pr gates are excluded
-from active ownership. Preserve reserved tasks/.canonical/ per-task claims:
+Git activity. Paused and terminal gates are excluded from active ownership;
+see the status vocabulary next to the schema below. Preserve reserved tasks/.canonical/ per-task claims:
 individual gate cleanup cannot resurrect that task's stale legacy copy, and
 unrelated legacy tasks remain independent.
 
@@ -46,14 +47,33 @@ unrelated legacy tasks remain independent.
 }
 ```
 
-**Tier (optional, #1086).** The task lifecycle uses the [canonical pre-edit tier contract](SKILL.md#before-an-edit-versus-before-a-commit). Declare a higher tier when needed; this field cannot lower the target-path floor. That entrypoint owns the evidence table, classification failure behavior and separation from commit review.
+**Status.** Use `designing` while preparing and `implementing` for authorized
+mutations. Use `reviewing` and `verifying` for their supported scoped review and
+verification routes; these states do not grant general implementation authority.
+Use `parked` for unfinished work paused while another Task proceeds; `paused`
+and `on-hold` are accepted pause spellings. Paused Tasks are excluded from active
+selection, including explicit bindings, but their gate, identity, scope, evidence
+and canonical retirement claims remain. Resume the same gate by restoring the
+appropriate active status within its existing grant. Do not mark unfinished work
+`disposed` or complete merely to pause it. Terminal spellings are `disposed`,
+`complete`, `completed`, `done` and `done-awaiting-pr`. Unknown status values do
+not grant mutations or silently disappear from ambiguous selection; correct the
+specific Task's status rather than borrowing another Task's authority.
+
+**Tier (optional, #1086).** Retain this risk metadata when useful and declare a
+higher tier when needed; it cannot lower the target-path risk floor or replace
+the actual own-Task scope and status. Preparation companions are not universal
+pre-edit prerequisites. Review risk determines proportionate validation and
+publication review under [skill:self-review]; see
+[before an edit versus before a commit](SKILL.md#before-an-edit-versus-before-a-commit).
 
 For turn-start companion derivation, an existing `CCP_TASK_ID` in the hook's
 host environment takes precedence. When it is absent, use the host's
 `task_id` metadata or one unfenced, unquoted standalone prompt line
-`CCP_TASK_ID=owner/repo#NNN` within the hook's 1 MiB input bound. Separate a directive from preceding quoted material with a blank line; lazy quote continuations are not directives. Long prompt text is not exported to the hook environment. Use the full ticket when the Task has a `ticket`;
-its separate `task_id` does not replace that identity. This selects only an
-existing current-session Task for that turn's evidence derivation. It does not
+`CCP_TASK_ID=task-identity` within the hook's 1 MiB input bound. Separate a directive from preceding quoted material with a blank line; lazy quote continuations are not directives. Long prompt text is not exported to the hook environment. Use the explicit `task_id` as the binding identity when present. The `ticket`
+remains the GitHub metadata reference; use its full reference as the binding
+identity only when no explicit `task_id` exists. Preserve existing Task records
+and their actual identities rather than fabricating a migration. This selects only an existing current-session Task for that turn's evidence derivation. It does not
 bind later Write/Edit calls, expand scope or make a companion count as earned.
 Without a host environment binding, conflicting metadata/prompt bindings or an
 unknown selected Task derive no companions. An existing host binding selects
@@ -164,7 +184,9 @@ Update `lastUpdated` when the task's status changes or when resuming
 work after a significant pause. The hook warns at 4h (stale) and 24h
 (expired) without an update.
 
-Status transitions: `designing` then `implementing` then `done-awaiting-pr`
+Status transitions: `designing` then `implementing` then `done-awaiting-pr`.
+Pause unfinished work with `parked`; resume the same Task at the appropriate
+active status when its existing grant permits.
 
 ### Archiving after completion
 
