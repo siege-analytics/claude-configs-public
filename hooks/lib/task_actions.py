@@ -1866,6 +1866,67 @@ def _literal_operand_family(args: list[str]) -> bool:
     return python and args[1:3] == ['-m', 'pytest']
 
 
+# gh command groups that call cli/cli cmdutil.EnableRepoOverride: there -R/--repo
+# is a persistent `[HOST/]OWNER/REPO` repository selector, never a local path
+# (#1347). gh never reads it as a path, so a same-named local directory is
+# irrelevant. Extensions, other groups and absolute gh paths keep the generic model.
+_GH_REPO_OVERRIDE_GROUPS = frozenset({'issue', 'pr', 'release', 'run', 'workflow', 'label',
+                                      'secret', 'variable', 'cache', 'ruleset'})
+_GH_REPO_SELECTOR = re.compile(r'(?:' + _SSH_HOST.pattern + r'/)?[A-Za-z0-9][A-Za-z0-9_-]*/(?!\.\.?$)[A-Za-z0-9_.-]+')
+
+
+def _gh_repo_selector_width(args: list[str], i: int) -> int:
+    """Tokens taken by a grammar-valid -R/--repo selector at args[i], else 0."""
+    arg = args[i]
+    if arg in ('-R', '--repo'):
+        return 2 if i + 1 < len(args) and _GH_REPO_SELECTOR.fullmatch(args[i + 1]) else 0
+    for prefix in ('--repo=', '-R=', '-R'):
+        if arg.startswith(prefix):
+            return 1 if _GH_REPO_SELECTOR.fullmatch(arg[len(prefix):]) else 0
+    return 0
+
+
+def _gh_without_repo_selectors(args: list[str]) -> list[str]:
+    """Drop gh -R/--repo selector values before local path scanning (#1347).
+
+    The group may follow leading selectors (`gh -R o/r issue close 5`); any
+    other leading token keeps the generic model. Only grammar-valid values are
+    dropped, only before `--`, and never directly after a bare option that
+    could own them; anything else stays a conservative path target. The cwd
+    fallback is unchanged, so this never grants authority.
+    """
+    if not args or args[0] != 'gh':
+        return args
+
+    def width_at(i: int, after_selector: bool) -> int:
+        # pflag gives a value-taking flag the next token even when it starts
+        # with '-', so a selector right after a bare option may be that
+        # option's value (`-D -Ro/r` writes to ./-Ro/r). Keep it: fail closed.
+        prev = args[i - 1]
+        if not after_selector and prev.startswith('-') and prev != '--' and '=' not in prev:
+            return 0
+        return _gh_repo_selector_width(args, i)
+
+    i, after_selector = 1, False
+    while i < len(args) and (width := width_at(i, after_selector)):
+        i, after_selector = i + width, True
+    if i >= len(args) or args[i] not in _GH_REPO_OVERRIDE_GROUPS:
+        return args
+    kept = ['gh', args[i]]
+    i, after_selector = i + 1, False
+    while i < len(args):
+        if args[i] == '--':
+            kept.extend(args[i:])
+            break
+        width = width_at(i, after_selector)
+        if width:
+            i, after_selector = i + width, True
+        else:
+            kept.append(args[i])
+            i, after_selector = i + 1, False
+    return kept
+
+
 # Bounded write destinations (#1152). A shape modelled here writes only under
 # its explicit destination operand, so that operand replaces the cwd as the
 # mutation target. Any option or form not listed returns None, and the caller
@@ -2241,6 +2302,9 @@ def _action(command: str, cwd: str) -> dict:
             if args[0] in {'eval', 'exec', 'bash', 'sh', 'zsh', 'dash', 'ksh'} or args[0] in {'python', 'python3'} and any(x == '-c' or x.startswith('-c') for x in args[1:]):
                 raise UnknownShape('opaque inline execution has unbounded mutation targets')
             local = effective
+            # gh -R/--repo selector values are not local paths (#1347); the
+            # glob/tilde checks below still see every original operand.
+            scanned = _gh_without_repo_selectors(args)
             operands = [x.split('=', 1)[-1] if '=' in x else x for x in args[1:]]
             # Unquoted glob positions were rejected above. Retain that lexical
             # proof for known literal operands; do not reinterpret quoted data.
@@ -2249,7 +2313,8 @@ def _action(command: str, cwd: str) -> dict:
                     and any(any(c in x for c in '*?[') for x in operands)):
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             if args[0] not in {'touch', 'mkdir', 'rm', 'rmdir', 'cp', 'mv', 'tee', 'chmod', 'chown', 'git'}:
-                paths.extend(canonical(x, effective) for x in operands if '/' in x and '://' not in x and not x.startswith('-'))
+                path_operands = [x.split('=', 1)[-1] if '=' in x else x for x in scanned[1:]]
+                paths.extend(canonical(x, effective) for x in path_operands if '/' in x and '://' not in x and not x.startswith('-'))
             if os.path.basename(args[0]) == "git" or args[0] in {"env", "command"}:
                 # The operation-policy guards use this same literal boundary.
                 # A valid task does not turn an unresolved alias into authority.
@@ -2416,10 +2481,10 @@ def _action(command: str, cwd: str) -> dict:
             else:
                 paths.append(local); fallback_paths.append(local)
                 # Explicit paths cannot escape a task by borrowing CWD scope.
-                paths.extend(canonical(x, effective) for x in args[1:] if x.startswith(("/", "./", "../")))
+                paths.extend(canonical(x, effective) for x in scanned[1:] if x.startswith(("/", "./", "../")))
                 # Paths attached to options (`-o/abs`, `--out=/abs`) cannot
                 # escape either.
-                for x in args[1:]:
+                for x in scanned[1:]:
                     if x.startswith('-') and '/' in x:
                         value = x.split('=', 1)[1] if x.startswith('--') and '=' in x else x[x.index('/'):]
                         if value.startswith(("/", "./", "../")):
