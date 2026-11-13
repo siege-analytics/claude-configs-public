@@ -6508,10 +6508,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 6334,
-      "content_sha256": "87d02b23d9858f560a520d5b1cd672671cebee25e3ec73e0d38e7fd3964bf8c9",
+      "characters": 7077,
+      "content_sha256": "e7433d148f6f7e4d14afaec41352a1afbda7bcf9d9d86741abf00564e9ec2e3a",
       "description": "Always-on. Mission-first doctrine for hubs and workers. Skills exist to help agents accomplish strategic goals by deriving and advancing tactical goals with bounded initiative. Agents should keep moving when tactical ordering is safe and non-critical, and should ask for guidance when the choice affects strategy, authorization, risk, or operator control.",
-      "estimated_tokens": 1584,
+      "estimated_tokens": 1770,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -6532,7 +6532,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 36,
+      "lines": 38,
       "owner": [
         "unknown"
       ],
@@ -12988,9 +12988,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2482421,
+    "characters": 2483164,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 620682,
+    "estimated_tokens": 620868,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13011,7 +13011,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1086027
+      "unclassified": 1086770
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13023,7 +13023,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 271548
+      "unclassified": 271734
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
