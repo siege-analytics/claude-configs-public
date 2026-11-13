@@ -11,9 +11,11 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -310,6 +312,216 @@ class ExplicitTargets(unittest.TestCase):
         result = self.f.assertGate(2, f'tar -xzf {q(str(self.scope / "src.tar.gz"))} -C {q(str(self.outside))}', cwd=self.payload)
         self.assertIn('Unscoped mutation:', result.stderr)
         self.assertIn('Unowned target: ' + str(self.outside), result.stderr)
+
+    # --- gh free-text option values (#1355) ---------------------------------
+
+    # cli/cli v2.104.0: in these subcommands the values below are free text or
+    # other API strings that gh never reads as a local file, so the cwd stays
+    # the only target. These are action-classification checks: they call
+    # action() and the source gate; no real close, merge or release runs.
+    GH_TEXT_FORMS = (
+        # The issue's reproduction table.
+        "gh pr close 5 --comment 'see a/b'",
+        "gh pr close 5 --comment='see a/b'",
+        "gh pr merge 5 --squash --subject 'fix: a/b handling'",
+        "gh release create v1 --notes 'covers a/b'",
+        "gh issue close 5 -c 'dup of other/repo#3'",
+        'gh pr merge 5 -tfix/x',
+        # Other spellings pflag accepts for the same values.
+        'gh pr merge 5 -t=fix/x',
+        'gh pr merge 5 -t fix/x',
+        'gh pr merge 5 -dtfix/x',
+        'gh pr merge 5 -sdt fix/x',
+        "gh pr merge 5 --body '../../etc/x' -b /abs/y",
+        'gh pr merge 5 -b/abs/y --subject=/abs/z',
+        'gh pr close 5 -c ../outside/x --delete-branch',
+        'gh pr close 5 -dc/abs/x',
+        "gh issue close 5 --comment /etc/x --reason 'not planned'",
+        'gh issue close 5 -r completed --duplicate-of other/repo#3',
+        "gh issue reopen 5 -c 'see a/b'",
+        'gh issue reopen 5 --comment=/abs/x',
+        "gh pr reopen 5 -c '../x'",
+        'gh pr merge 5 --author-email a/b@example.com -A c/d@example.com',
+        "gh release create v1 --title 'v1/beta' --target release/1.x --notes-start-tag v0/x --discussion-category a/b",
+        'gh release create v1 -tv1/x -n/abs/notes -dp --latest --generate-notes',
+        # pflag hands a text flag the next token even when it starts with '-'.
+        'gh pr close 5 -c -Ro/r',
+        "gh pr merge 5 --body '-x a/b'",
+        # Combined with #1347 repository selectors, in every position.
+        "gh -R example/target pr close 5 -c 'a/b'",
+        "gh pr -R example/target merge 5 -tfix/x",
+        "gh issue close 5 -c 'a/b' -R example/target",
+        "gh release create v1 --notes=a/b --repo=example/target",
+    )
+
+    def plain_dir(self):
+        path = Path(os.path.realpath(tempfile.mkdtemp(prefix='gh1355-')))
+        self.addCleanup(shutil.rmtree, path, True)
+        return path
+
+    def test_gh_text_values_are_not_path_targets(self):
+        clone = self.f.repo
+        for cwd in (self.plain_dir(), self.scope, clone):
+            for command in self.GH_TEXT_FORMS:
+                with self.subTest(cwd=str(cwd), command=command):
+                    self.assertEqual(self.paths(command, cwd=cwd), [str(cwd)])
+
+    def test_gh_text_values_pass_from_an_owned_cwd(self):
+        clone = self.f.repo
+        self.task(clone, repo_root=clone, identity='gh1355')
+        for command in self.GH_TEXT_FORMS:
+            with self.subTest(command=command):
+                self.f.assertGate(0, command, cwd=clone)
+
+    def test_gh_text_values_keep_the_owned_cwd_requirement(self):
+        # A cwd no task owns still refuses, and the denial names only the cwd.
+        self.task(self.scope)
+        for cwd in (self.plain_dir(), self.f.repo):
+            for command in self.GH_TEXT_FORMS[:6]:
+                with self.subTest(cwd=str(cwd), command=command):
+                    result = self.f.assertGate(2, command, cwd=cwd)
+                    self.assertIn('Unowned target: ' + str(cwd), result.stderr)
+                    self.assertNotIn('Unowned target: /x', result.stderr)
+                    self.assertNotIn(str(cwd / 'see a'), result.stderr)
+
+    def test_gh_path_values_and_operands_stay_targets(self):
+        clone = self.f.repo
+        outside = self.payload / 'x'
+        cases = {
+            # Path-valued flags of the modelled subcommands.
+            'gh pr merge 5 --body-file notes/b.md': [clone / 'notes/b.md'],
+            'gh pr merge 5 -F ' + q(str(outside)): [outside],
+            'gh pr merge 5 --body-file=' + q(str(outside)): [outside],
+            'gh pr merge 5 -s -F' + q(str(outside)): [outside],
+            'gh release create v1 --notes-file ./n/x.md': [clone / 'n/x.md'],
+            'gh release create v1 -F ../escape': [self.ws / 'escape'],
+            # Release asset files are positional paths.
+            "gh release create v1 dist/x.tgz --notes 'a/b'": [clone / 'dist/x.tgz'],
+            "gh release create v1 --notes 'a/b' " + q(str(outside)): [outside],
+            'gh release create v1 -n x ' + q(str(outside)) + '#label': [str(outside) + '#label'],
+            # Download destinations of unmodelled subcommands.
+            'gh release download v1 -D out/dir': [clone / 'out/dir'],
+            'gh release download v1 --dir=out/dir': [clone / 'out/dir'],
+            'gh release download v1 -O ' + q(str(outside)): [outside],
+            'gh run download 9 -D out/dir': [clone / 'out/dir'],
+            # Positionals are unchanged, including after a swallowed value.
+            'gh pr merge feature/x --squash': [clone / 'feature/x'],
+            'gh pr merge 5 --subject -R o/r': [clone / 'o/r'],
+            'gh release create v1 --title -R o/r': [clone / 'o/r'],
+        }
+        for command, expected in cases.items():
+            with self.subTest(command=command):
+                paths = self.paths(command, cwd=clone)
+                for path in expected:
+                    self.assertIn(str(path), paths)
+                self.assertIn(str(clone), paths)
+
+    def test_gh_unowned_genuine_text_command_target_still_refuses(self):
+        clone = self.f.repo
+        outside = self.payload / 'x'
+        self.task(clone, repo_root=clone, identity='gh1355')
+        for command in ('gh pr merge 5 --squash --body-file ' + q(str(outside)) + " --subject 'a/b'",
+                        "gh release create v1 --notes 'a/b' " + q(str(outside)),
+                        "gh pr close 5 -c 'a/b' -- " + q(str(outside)),
+                        'gh pr merge 5 --foo ' + q(str(outside)) + ' -tfix/x'):
+            with self.subTest(command=command):
+                self.f.assertGate(2, command, cwd=clone)
+
+    @staticmethod
+    def unmodelled(command):
+        # Oracle for "unchanged": the same words under an unmodelled gh name.
+        for group in ('gh pr ', 'gh issue ', 'gh release '):
+            command = command.replace(group, 'gh unmodelled-ext ', 1)
+        return command
+
+    def test_gh_unknown_flags_and_shapes_keep_the_generic_model(self):
+        clone = self.f.repo
+        cases = {
+            # An unknown flag may own the next token, whatever it looks like.
+            "gh pr merge 5 --foo 'a/b'": [clone / 'a/b'],
+            'gh pr merge 5 --foo -tfix/x': ['/x'],
+            'gh pr merge 5 --foo --subject a/b': [clone / 'a/b'],
+            'gh pr merge 5 -ztfix/x': ['/x'],
+            'gh pr close 5 -zc a/b': [clone / 'a/b'],
+            # After `--` every token is an operand.
+            "gh pr close 5 -- --comment 'a/b'": [clone / 'a/b'],
+            "gh pr close 5 --comment -- 'a/b'": [clone / 'a/b'],
+            'gh pr close 5 -c x -- -c/abs/x': ['/abs/x'],
+        }
+        for command, expected in cases.items():
+            with self.subTest(command=command):
+                paths = self.paths(command, cwd=clone)
+                self.assertEqual(paths, self.paths(self.unmodelled(command), cwd=clone))
+                self.assertIn(str(clone), paths)
+                for path in expected:
+                    self.assertIn(str(path), paths)
+
+    def test_gh_unmodelled_subcommands_and_executables_are_unchanged(self):
+        clone = self.f.repo
+        cases = {
+            "gh pr create --title 'a/b'": [clone / 'a/b'],
+            "gh release edit v1 --notes 'a/b'": [clone / 'a/b'],
+            'gh pr ready 5 --comment a/b': [clone / 'a/b'],
+            'gh unmodelled-ext close 5 --comment a/b': [clone / 'a/b'],
+            '/usr/local/bin/gh pr close 5 -ctext/x': ['/x'],
+            '/usr/local/bin/gh pr close 5 --comment a/b': [clone / 'a/b'],
+        }
+        for command, expected in cases.items():
+            with self.subTest(command=command):
+                paths = self.paths(command, cwd=clone)
+                self.assertIn(str(clone), paths)
+                for path in expected:
+                    self.assertIn(str(path), paths)
+
+    def test_gh_pinned_merge_policy_is_unchanged(self):
+        # A head pin routes `gh pr merge` through the pinned merge-queue policy
+        # before action() is consulted; dropping a text value changes nothing there.
+        clone = self.f.repo
+        commands = ('gh pr merge 5 --match-head-commit abc/def -tfix/x',
+                    "gh pr merge 5 --squash --match-head-commit abc/def --subject 'a/b'")
+        for command in commands:
+            with self.subTest(command=command):
+                self.assertEqual(self.paths(command, cwd=clone), [str(clone)])
+        self.task(clone, repo_root=clone, identity='gh1355')
+        for command in commands:
+            with self.subTest(gate=command):
+                result = self.f.assertGate(2, command, cwd=clone)
+                self.assertIn('Pinned merge denied', result.stderr)
+
+    def test_gh_text_values_keep_expansion_and_substitution_checks(self):
+        clone = self.f.repo
+        commands = ('gh pr close 5 --comment "see $(touch x)/b"',
+                    'gh pr close 5 -c "a/`id`"',
+                    'gh pr close 5 -c "$HOME/x"',
+                    'gh pr merge 5 -t"$(id)"/x',
+                    "gh pr close 5 -c '~/x'",
+                    'gh issue close 5 --comment=~/x',
+                    "gh pr close 5 -c 'a/b?'",
+                    "gh release create v1 --notes 'a/*'")
+        for command in commands:
+            with self.subTest(command=command):
+                self.assertTrue(fixture.r.action(command, str(clone)).get('error'))
+        self.task(clone, repo_root=clone, identity='gh1355')
+        for command in commands:
+            with self.subTest(gate=command):
+                self.f.assertGate(2, command, cwd=clone)
+
+    def test_gh_text_values_never_authorize_another_repository(self):
+        # Text that names an owned path is not a target, so it cannot lend that
+        # path's ownership to an unowned cwd; genuine path flags still count.
+        owned = self.f.repo
+        other = self.plain_dir() / 'other'
+        self.git('init', '-q', str(other))
+        self.task(owned, repo_root=owned, identity='gh1355')
+        for command in ('gh pr close 5 -c ' + q(str(owned / 'x')),
+                        'gh pr merge 5 --squash --subject=' + q(str(owned)),
+                        'gh pr merge 5 -t' + q(str(owned)),
+                        "gh release create v1 --notes 'see " + str(owned) + "'"):
+            with self.subTest(command=command):
+                self.assertEqual(self.paths(command, cwd=other), [str(other)])
+                result = self.f.assertGate(2, command, cwd=other)
+                self.assertIn('Unowned target: ' + str(other), result.stderr)
+        self.f.assertGate(2, 'gh pr merge 5 --body-file ' + q(str(other / 'b.md')), cwd=owned)
 
 
 if __name__ == '__main__':
