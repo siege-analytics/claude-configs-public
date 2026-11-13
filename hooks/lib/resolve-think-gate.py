@@ -588,7 +588,8 @@ def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
     # Per-task canonical claims survive individual gate cleanup. Other legacy
     # tasks remain independent; no session-wide namespace switch is used.
     return [g for g in result if str(g['data'].get('status', '')).lower() not in
-            {'disposed', 'complete', 'completed', 'done', 'done-awaiting-pr'}]
+            {'disposed', 'complete', 'completed', 'done', 'done-awaiting-pr',
+             'parked', 'paused', 'on-hold'}]
 
 
 def _gate_matches_session(loaded: dict, session_id: str) -> bool:

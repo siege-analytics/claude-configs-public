@@ -28,8 +28,8 @@ process; Write/Edit/MultiEdit/NotebookEdit require unambiguous path ownership
 and have no in-command binding channel. Binding never expands scope. Git
 mutations belong to the repository toplevel's owner, not a nested path's task.
 Split actions spanning multiple tasks; prefer isolated worktrees for independent
-Git activity. Terminal disposed/complete/done-awaiting-pr gates are excluded
-from active ownership. Preserve reserved tasks/.canonical/ per-task claims:
+Git activity. Paused and terminal gates are excluded from active ownership;
+see the status vocabulary next to the schema below. Preserve reserved tasks/.canonical/ per-task claims:
 individual gate cleanup cannot resurrect that task's stale legacy copy, and
 unrelated legacy tasks remain independent.
 
@@ -45,6 +45,19 @@ unrelated legacy tasks remain independent.
   "tier": "B"
 }
 ```
+
+**Status.** Use `designing` while preparing and `implementing` for authorized
+mutations. Use `reviewing` and `verifying` for their supported scoped review and
+verification routes; these states do not grant general implementation authority.
+Use `parked` for unfinished work paused while another Task proceeds; `paused`
+and `on-hold` are accepted pause spellings. Paused Tasks are excluded from active
+selection, including explicit bindings, but their gate, identity, scope, evidence
+and canonical retirement claims remain. Resume the same gate by restoring the
+appropriate active status within its existing grant. Do not mark unfinished work
+`disposed` or complete merely to pause it. Terminal spellings are `disposed`,
+`complete`, `completed`, `done` and `done-awaiting-pr`. Unknown status values do
+not grant mutations or silently disappear from ambiguous selection; correct the
+specific Task's status rather than borrowing another Task's authority.
 
 **Tier (optional, #1086).** The task lifecycle uses the [canonical pre-edit tier contract](SKILL.md#before-an-edit-versus-before-a-commit). Declare a higher tier when needed; this field cannot lower the target-path floor. That entrypoint owns the evidence table, classification failure behavior and separation from commit review.
 
@@ -164,7 +177,9 @@ Update `lastUpdated` when the task's status changes or when resuming
 work after a significant pause. The hook warns at 4h (stale) and 24h
 (expired) without an update.
 
-Status transitions: `designing` then `implementing` then `done-awaiting-pr`
+Status transitions: `designing` then `implementing` then `done-awaiting-pr`.
+Pause unfinished work with `parked`; resume the same Task at the appropriate
+active status when its existing grant permits.
 
 ### Archiving after completion
 
