@@ -6,8 +6,6 @@
 # Install: symlink or copy to .git/hooks/pre-push in target repos
 #   ln -sf /path/to/claude-configs-public/hooks/git/pre-push-self-review.sh .git/hooks/pre-push
 #
-# Bypass: git push --no-verify (standard git escape hatch)
-#
 # This hook fires for ALL push sources: sub-agents, Craft Agent, Claude
 # Code, humans, CI. It validates that every non-merge commit in the push
 # range has Self-Review: and Self-Review-Source: trailers.
@@ -79,7 +77,27 @@ validate_committed_artifact() {
     local findings unresolved
     findings=$(awk '/^## Findings[[:space:]]*$/ {active=1;next} /^## / {active=0} active {print}' <<<"$content")
     unresolved=$(
-        printf '%s\n' "$findings" | grep -E '^\|[^|]*\|[[:space:]]*P1[[:space:]]*\|' | grep -viE '\|[[:space:]]*fixed' || true
+        printf '%s\n' "$findings" | awk '/^\|/ {
+            delete cells
+            count=1
+            for (i=1; i<=length($0); i++) {
+                char=substr($0, i, 1)
+                if (char == "\\" && i<length($0)) {
+                    cells[count]=cells[count] char substr($0, ++i, 1)
+                } else if (char == "|") {
+                    count++
+                } else {
+                    cells[count]=cells[count] char
+                }
+            }
+            if (cells[3] ~ /^[[:space:]]*P1[[:space:]]*$/) {
+                resolution=cells[5]
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", resolution)
+                if ((count != 5 && count != 6) ||
+                    (count == 6 && cells[6] !~ /^[[:space:]]*$/) ||
+                    tolower(resolution) != "fixed") print
+            }
+        }'
         printf '%s\n' "$findings" | grep -Ei '^[[:space:]]*([-*][[:space:]]+)?P1[[:space:]]*:' | grep -viE '(^|;)[[:space:]]*resolution[[:space:]]*:[[:space:]]*fixed[[:space:]]*(;|$)' || true
     )
     [[ -z "$unresolved" ]]
@@ -196,9 +214,6 @@ The declared tier may escalate but cannot be lower than the machine-computed tie
 
 To add trailers, amend the commit:
   git commit --amend  (then add trailers to the message)
-
-To bypass (emergencies only):
-  git push --no-verify
 
 See skills/self-review/SKILL.md for the full artifact format.
 
