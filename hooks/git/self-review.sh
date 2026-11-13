@@ -34,8 +34,18 @@ _FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CM
 _FAST_BUILT="${_FAST_CMDS//[\"\'\\]/}"
 while [[ "$_FAST_BUILT" == *"  "* ]]; do _FAST_BUILT="${_FAST_BUILT//  / }"; done
 _FAST_FIRST='"tool_input"[[:space:]]*:[[:space:]]*[{][[:space:]]*"command"[[:space:]]*:[[:space:]]*"[^"]'
-_FAST_RE='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|glab[[:space:]]+mr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
-if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE || "$_FAST_BUILT" =~ $_FAST_RE ]]; then exit 0; fi
+_FAST_RE='(^|[^[:alnum:]])(git|gh|glab|push)([^[:alnum:]]|$)'
+# Preserve #1083's zero-Python path for literal Git reader verbs. Remove
+# only adjacent known verbs from candidate text; globals, aliases, dynamic
+# dispatch and every publication word still take structural inspection.
+_FAST_CANDIDATE="$_FAST_BUILT"
+_FAST_GIT_READ='(^|[^[:alnum:]_])git[[:space:]]+(status|log|diff|show|rev-parse|ls-files|ls-tree|cat-file)([^[:alnum:]_$`]|$)'
+if [[ "$_FAST_CANDIDATE" != *'$'* && "$_FAST_CANDIDATE" != *'`'* ]]; then
+    while [[ "$_FAST_CANDIDATE" =~ $_FAST_GIT_READ ]]; do
+        _FAST_CANDIDATE="${_FAST_CANDIDATE/"${BASH_REMATCH[0]}"/ }"
+    done
+fi
+if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CANDIDATE" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
@@ -65,56 +75,32 @@ if [[ -z "$COMMAND" ]]; then
     fi
 fi
 
-# Trigger on git push, gh pr create / merge (GitHub), or glab mr create / merge
-# (GitLab). Word boundaries via portable character-class form (not
-# BSD-incompatible `\b`); see issue #106. CCP#201 added the GitLab forms.
-TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|glab[[:space:]]+mr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
-if ! echo "$COMMAND" | grep -qE "$TRIGGERS"; then
-    exit 0
-fi
+# Trigger selection uses executable argv, not quoted titles/bodies (#1368).
+# No candidate command runs; this grants no Task or publication authority.
+PUBLICATION=$(printf '%s' "$COMMAND" | python3 "$HOOK_DIR/../lib/command-text.py" --publication "$CWD") || {
+    echo "BLOCKED: publication trigger could not be inspected safely" >&2; exit 2;
+}
+PUBLICATION_KIND=$(printf '%s' "$PUBLICATION" | python3 "$EXTRACT" kind 2>/dev/null || true)
+case "$PUBLICATION_KIND" in
+    none) exit 0 ;;
+    publication) ;;
+    *) echo "BLOCKED: unresolved direct publication command; use a literal invocation and separate different repository targets into separate calls" >&2; exit 2 ;;
+esac
+EFFECTIVE_CWD=$(printf '%s' "$PUBLICATION" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+[[ -n "$EFFECTIVE_CWD" ]] || { echo "BLOCKED: publication repository is unresolved" >&2; exit 2; }
 
 # Content-scope check (#699). Skip out-of-scope repositories.
 if [[ -f "$HOOK_DIR/../lib/scope-check.sh" ]]; then
     source "$HOOK_DIR/../lib/scope-check.sh"
-    if ! _scope_in_scope "$COMMAND" "${CWD:-$PWD}"; then
-        exit 0
-    fi
+    SCOPED_PUBLICATION=false
+    while IFS= read -r SCOPE_COMMAND; do
+        if _scope_in_scope "$SCOPE_COMMAND" "$EFFECTIVE_CWD"; then
+            SCOPED_PUBLICATION=true
+        fi
+    done < <(printf '%s' "$PUBLICATION" | python3 -c 'import json,sys; print("\n".join(x["scope"] for x in json.load(sys.stdin)["effects"]))')
+    [[ "$SCOPED_PUBLICATION" == true ]] || exit 0
 fi
 
-# Multi-statement-with-cd yield (mirrors branch-guard.sh discipline, issue #101).
-# Portable word boundary (leading), same reason as TRIGGERS above.
-#
-# Statement-separator detection uses a shell-builtin `case` rather than grep so
-# the test is unambiguously portable across BSD (macOS) and GNU greps. The
-# earlier single-regex form ($'\n|;|\\|\\|') triggered BSD grep's "empty
-# (sub)expression" error on macOS because BSD ERE treats `\|` as just `|`,
-# which then parses as adjacent empty alternations. The case approach also
-# avoids the `echo "$cmd" | grep -qF $'\n'` false-positive from echo's trailing
-# newline.
-CD_COUNT=$(echo "$COMMAND" | { grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null || true; } | wc -l | tr -d ' ')
-if [[ "$CD_COUNT" -gt 0 ]]; then
-    case "$COMMAND" in
-        *$'\n'*|*';'*|*'||'*) exit 0 ;;
-    esac
-    if [[ "$CD_COUNT" -gt 1 ]]; then
-        exit 0
-    fi
-fi
-
-# Resolve effective repo dir (follow leading-cd pattern from branch-guard).
-EFFECTIVE_CWD="$CWD"
-if [[ "$COMMAND" =~ ^[[:space:]]*cd[[:space:]]+([^[:space:];&]+) ]]; then
-    CD_TARGET="${BASH_REMATCH[1]}"
-    CD_TARGET="${CD_TARGET%\"}"; CD_TARGET="${CD_TARGET#\"}"
-    CD_TARGET="${CD_TARGET%\'}"; CD_TARGET="${CD_TARGET#\'}"
-    case "$CD_TARGET" in
-        /*) ;;
-        *) CD_TARGET="$CWD/$CD_TARGET" ;;
-    esac
-    if [[ -d "$CD_TARGET" ]]; then
-        EFFECTIVE_CWD="$CD_TARGET"
-    fi
-fi
 
 if [[ -z "$EFFECTIVE_CWD" ]] || ! git -C "$EFFECTIVE_CWD" rev-parse --git-dir >/dev/null 2>&1; then
     # Not a git repo (e.g. gh pr merge invoked with -R from anywhere); allow.
