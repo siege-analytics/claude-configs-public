@@ -15,7 +15,7 @@ import types
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # Verified before execution, rather than importing mutable sibling code.
-CAPABILITY_SHA256 = '489888db51876971fbfc3d4308e51fc06bf643cdaab1ba3c6e2a5b1ee510acf0'
+CAPABILITY_SHA256 = '9bb8dc531de99a465b21badcb2faa5ed9f5b7647f0a785bfcd5edf44a7ad1dcd'
 def capability():
     path = Path(__file__).with_name('scanner_capability.py')
     if os.path.realpath(path) != str(path):
