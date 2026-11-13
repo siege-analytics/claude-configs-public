@@ -162,7 +162,7 @@ The executable contract is `catalog/resolver-manifest.json`: operational action 
 | Pick a storage engine, replication scheme, or partitioning strategy | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
 | Python utility in the exact `github.com/siege-analytics/siege_utilities` repository | `projects/siege-utilities/_rules.md` (project overlay only; compatibility `skills/_siege-utilities-rules.md` is not a global mandate) |
 | Perform geospatial analysis or implement a spatial join | `skills/spatial/SKILL.md` (trust/CRS router); named engine signals add `skills/{postgis,geopandas,sedona,duckdb-spatial}/SKILL.md` with SQL/Spark companions where applicable |
-| Fix a bug or issue identified by code review / audit / static analysis | `skills/thinking/think/SKILL.md` Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per `evaluate-ticket` criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
+| Fix a bug or issue identified by code review / audit / static analysis | [skill:think]: verify the finding against current code, inspect related failure patterns and add a meaningful regression where practical. |
 | Audit a repo for over-engineering, find bloat, identify what to delete or simplify | `skills/over-engineering-audit/SKILL.md` — one-shot ranked report. Five tags: delete, stdlib, platform, yagni, shrink. Lists findings, applies nothing. Complexity only — correctness and security go to normal review. |
 
 ### Design & planning
@@ -200,7 +200,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 | Update a ticket (progress comment, field change) | `skills/planning/update-ticket/SKILL.md` |
 | Close a ticket | `skills/planning/close-ticket/SKILL.md` |
 | Start work on a ticket (first commit, mark In Progress, assign to self) | `skills/planning/pre-work-check/SKILL.md` |
-| Execute >=2 tickets in one session (epic work, audit remediation, batch fixes) | `skills/thinking/think/SKILL.md` per ticket (not per epic). Each ticket is a discrete action: own design note, own branch, own self-review. Universal check #10 (batch-execution-is-not-one-action) is the enforcement. The `think` gate fires N times, not once. |
+| Execute >=2 tickets in one session (epic work, audit remediation, batch fixes) | [skill:think]: reuse valid shared investigation, design and review evidence for related tickets. Keep each outcome and scope clear; use separate branches or records when ownership, behavior or delivery boundaries require them. |
 
 ### Documentation
 

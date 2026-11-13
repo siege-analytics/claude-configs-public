@@ -8,6 +8,7 @@ Only bounded pure-reader/pytest grammars admit pathname globs, with a literal
 non-option prefix or a genuine -- terminator; quoted patterns do not expand.
 """
 from __future__ import annotations
+from pathlib import Path
 
 import ast
 import json
@@ -1487,6 +1488,76 @@ def action(command: str, cwd: str) -> dict:
     return result
 
 
+SCANNER_CAPABILITY_SHA256 = '6b7bcbe18d1816e37f3abb6e8ae9917c0224635a2e5a48ac59119306ff06e9bf'
+SCANNER_ADAPTER_SHA256 = 'a38a18c2cdc0a3273995c04806f373396809b0fd9c740a0293cbeee65ee4c7ff'
+
+def _scanner_code(path, expected):
+    import hashlib
+    if not path.is_absolute() or os.path.realpath(path) != str(path):
+        raise ValueError('scanner code cannot use symlink aliases')
+    fd = os.open(path,os.O_RDONLY|os.O_NONBLOCK|getattr(os,'O_NOFOLLOW',0))
+    with os.fdopen(fd,'rb') as source:
+        info=os.fstat(source.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size > 1024*1024:
+            raise ValueError('scanner code must be bounded and singly linked')
+        raw=source.read(1024*1024+1)
+    if hashlib.sha256(raw).hexdigest() != expected:
+        raise ValueError('installed scanner code differs: '+str(path))
+    return raw
+
+def _scanner_module(root):
+    import types
+    path = root/'hooks/lib/scanner_capability.py'
+    raw = _scanner_code(path,SCANNER_CAPABILITY_SHA256)
+    module=types.ModuleType('verified_scanner_capability');module.__file__=str(path)
+    exec(compile(raw,str(path),'exec'),module.__dict__)
+    return module
+
+def scanner_owned_plan(plan, gate_path, gate_data, session):
+    return _scanner_module(Path(plan['scanner_root'])).owned_plan(plan,gate_path,gate_data,session)
+
+def _scanner_execution(tokens, cwd: str):
+    words = [word for word, _, _ in tokens]
+    invocation = list(words)
+    while invocation and invocation[0].startswith('CCP_TASK_ID='):
+        invocation.pop(0)
+    script = 1
+    while script < len(invocation) and invocation[script] in {'-I','-B'}:
+        script += 1
+    candidate = bool(invocation) and (os.path.basename(invocation[0]) == 'scanner-exec.py' or
+                os.path.basename(invocation[0]) in {'python','python3'} and script < len(invocation)
+                and os.path.basename(invocation[script]) == 'scanner-exec.py')
+    if not candidate:
+        return None
+    if any(operator or glob for _, operator, glob in tokens):
+        raise UnknownShape('scanner requires one literal argv command')
+    binding = ''
+    while words and words[0].startswith('CCP_TASK_ID='):
+        value = words.pop(0).split('=',1)[1]
+        if binding and binding != value: raise UnknownShape('conflicting scanner Task bindings')
+        binding = value
+    if len(words) < 4 or words[0] != 'python3' or words[1:3] != ['-I','-B']:
+        raise UnknownShape('scanner requires python3 -I -B and the installed entry')
+    try:
+        root = Path(__file__).resolve().parents[2]
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('scanner_registration',str(Path(__file__).with_name('craft-settings-router.py')))
+        router = importlib.util.module_from_spec(spec); spec.loader.exec_module(router)
+        payload = json.loads(os.environ.get('CCP_HOOK_INPUT_JSON') or '{}')
+        provider = router.registered_test_provider(os.environ,payload)
+        if provider is not None: root = Path(provider).parents[2]
+        producer = root/'hooks/lib/scanner-exec.py'
+        if words[3] != str(producer): raise ValueError('scanner requires the exact selected installed entry')
+        _scanner_code(producer,SCANNER_ADAPTER_SHA256)
+        policy = _scanner_module(root)
+        plan = policy.validate_files(policy.parse_arguments(words[4:]),producer)
+        return {'read_only':False,'investigation':False,'self_managed_shape':False,
+                'paths':[plan['repo'],plan['tmp'],*([plan['message']] if plan['message'] else []),*([plan['index']] if plan.get('index') else []),*([plan['log_dir']] if plan.get('log_dir') else [])],
+                'binding':binding,'scanner_execution':plan}
+    except (OSError,ValueError,subprocess.SubprocessError) as error:
+        raise UnknownShape('scanner execution denied: '+str(error)) from error
+
+
 def _test_receipt_record(tokens, cwd: str):
     """Typed execution lane, never a reader or own-scratch exemption.
 
@@ -2018,6 +2089,9 @@ def _project_execution_wrapper(args: list[str]):
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
+        scanner = _scanner_execution(tokens, cwd)
+        if scanner is not None:
+            return scanner
         receipt = _test_receipt_record(tokens, cwd)
         if receipt is not None:
             return receipt

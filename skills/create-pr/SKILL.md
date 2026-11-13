@@ -94,7 +94,7 @@ Status: In Review
 
 ## Bidirectional verification
 
-After creating the PR and updating tickets, verify both directions and the lifecycle transition:
+When tickets exist, verify both directions and the lifecycle transition after creating the PR and updating those tickets. Run the ticket-specific examples below only for actual referenced tickets. Without a ticket, verify the cited authorized task/request; do not require issue comments or a ticket-reference grep.
 
 ```bash
 # Verify PR has ticket references
@@ -332,10 +332,10 @@ If a PR is large, explain in the description why it can't be split and suggest a
 
 # Author identity
 
-Before creating any commits on the branch, check session labels and apply
-the identity mapping from `_output-rules.md` §Author Identity. Default is
-`Craft Agent <agents-noreply@craft.do>` unless the session has a `dheeraj`
-or `steve` label.
+In CraftAgents, check actual session labels and apply `_output-rules.md`
+§Author Identity. Outside CraftAgents, preserve the configured Git identity
+unless the operator supplied a different author. Do not invent session labels
+or request labels from a host that does not provide them.
 
 # Attribution policy
 
@@ -368,17 +368,17 @@ The structural requirements (commit-table, ticket-references, Testing section, b
 # Checklist
 
 - [ ] All commits pushed to remote
-- [ ] All commits reference tickets (flagged any that don't)
+- [ ] Commits reference their motivating ticket or authorized task/request, preserving project-specific tracking policy
 - [ ] Tests pass on the branch
 - [ ] No merge conflicts with base branch
 - [ ] Title: type prefix, imperative mood, under 72 chars, specific
 - [ ] Summary answers: what was the problem, what does this PR do, why this approach
-- [ ] **Tickets section present** with at least one ticket reference (Fixes, Refs, Part-of)
+- [ ] Existing tickets linked when applicable; otherwise the authorized task/request is cited
 - [ ] Changes section organised by concern, not by file
 - [ ] All commits listed in the commit table
 - [ ] Testing section describes concrete verification
 - [ ] Reviewers assigned
 - [ ] PR added to project board
-- [ ] **Each referenced ticket updated with a comment linking back to the PR** (bidirectional)
+- [ ] Each existing referenced ticket links back to the PR; ticketless work verifies its task/request citation
 - [ ] No AI/agent attribution anywhere in the PR
 - [ ] Cross-platform sync: mirror platform updated if dual-tracked

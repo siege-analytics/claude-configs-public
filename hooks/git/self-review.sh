@@ -258,7 +258,7 @@ if [[ ! "$SOURCE_VALUE" =~ ^https?:// && ! "$SOURCE_VALUE" =~ ^#[0-9]+$ ]]; then
     [[ -f "$SOURCE_PATH" ]] || { echo "BLOCKED: review artifact is unavailable: $SOURCE_VALUE" >&2; exit 2; }
     REQUIRED_SECTIONS=("## Assumptions" "## Test plan")
     if [[ "$REVIEW_TIER" == "C" ]]; then
-        if grep -qxF '## Peer review' "$SOURCE_PATH" && grep -qxF '## Lead review' "$SOURCE_PATH" && grep -qxF '## Quantified claims' "$SOURCE_PATH"; then
+        if grep -Eq '^## Peer review[[:space:]]*$' "$SOURCE_PATH" && grep -Eq '^## Lead review[[:space:]]*$' "$SOURCE_PATH" && grep -Eq '^## Quantified claims[[:space:]]*$' "$SOURCE_PATH"; then
             # Previously valid records remain publishable without history edits.
             REQUIRED_SECTIONS=("## Assumptions" "## Peer review" "## Lead review" "## Quantified claims")
         else
@@ -266,10 +266,10 @@ if [[ ! "$SOURCE_VALUE" =~ ^https?:// && ! "$SOURCE_VALUE" =~ ^#[0-9]+$ ]]; then
         fi
     fi
     for section in "${REQUIRED_SECTIONS[@]}"; do
-        if ! grep -qxF "$section" "$SOURCE_PATH"; then
+        if ! grep -Eq "^${section}[[:space:]]*$" "$SOURCE_PATH"; then
             echo "BLOCKED: review artifact requires $section" >&2; exit 2
         fi
-        content=$(awk -v heading="$section" '$0==heading {active=1;next} /^## / {active=0} active && /[^[:space:]]/ {print;exit}' "$SOURCE_PATH")
+        content=$(awk -v heading="$section" '{line=$0;sub(/[[:space:]]+$/,"",line)} line==heading {active=1;next} /^## / {active=0} active && /[^[:space:]]/ {print;exit}' "$SOURCE_PATH")
         [[ -n "$content" ]] || { echo "BLOCKED: review artifact has empty $section" >&2; exit 2; }
     done
 
@@ -278,7 +278,7 @@ if [[ "$REVIEW_TIER" == "C" ]]; then
     HOSTILE_VALUE=$(echo "$TRAILERS" | grep -E '^Hostile-Review:[[:space:]]+' | sed -E 's/^[^:]*:[[:space:]]+//')
     if [[ ! "$HOSTILE_VALUE" =~ ^https?:// && ! "$HOSTILE_VALUE" =~ ^#[0-9]+$ ]]; then
         case "$HOSTILE_VALUE" in /*) REVIEW_PATH="$HOSTILE_VALUE" ;; *) REVIEW_PATH="$EFFECTIVE_CWD/$HOSTILE_VALUE" ;; esac
-        [[ -s "$REVIEW_PATH" ]] || { echo "BLOCKED: actual independent review evidence is unavailable" >&2; exit 2; }
+        [[ -f "$REVIEW_PATH" && ! -L "$REVIEW_PATH" && -s "$REVIEW_PATH" ]] || { echo "BLOCKED: actual independent review evidence is unavailable" >&2; exit 2; }
     fi
 fi
 
@@ -496,13 +496,16 @@ HOOKEOF
 fi
 
 # v1.10: P1 findings block (#419, compound engineering adoption).
-# If ## Findings section exists in the artifact and contains P1 rows
-# where Resolution is NOT "fixed", block the push. P2 and P3 are not
+# If ## Findings contains table or compact P1 findings without an explicit
+# fixed resolution, block publication. P2 and P3 are not
 # hook-enforced — P2 ticket-existence is agent discipline, P3 is
 # documentation-only.
 if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qF '## Findings' "$SOURCE_PATH"; then
-    FINDINGS_BLOCK=$(sed -n '/^## Findings$/,/^## /{ /^## Findings$/d; /^## /d; p; }' "$SOURCE_PATH")
-    UNRESOLVED_P1=$(echo "$FINDINGS_BLOCK" | grep -E '^\|[^|]*\|[[:space:]]*P1[[:space:]]*\|' | grep -viE '\|[[:space:]]*fixed' || true)
+    FINDINGS_BLOCK=$(awk '/^## Findings[[:space:]]*$/ {active=1;next} /^## / {active=0} active {print}' "$SOURCE_PATH")
+    UNRESOLVED_P1=$(
+        printf '%s\n' "$FINDINGS_BLOCK" | grep -E '^\|[^|]*\|[[:space:]]*P1[[:space:]]*\|' | grep -viE '\|[[:space:]]*fixed' || true
+        printf '%s\n' "$FINDINGS_BLOCK" | grep -Ei '^[[:space:]]*([-*][[:space:]]+)?P1[[:space:]]*:' | grep -viE '(^|;)[[:space:]]*resolution[[:space:]]*:[[:space:]]*fixed[[:space:]]*(;|$)' || true
+    )
     if [[ -n "$UNRESOLVED_P1" ]]; then
         cat >&2 <<HOOKEOF
 BLOCKED: Self-review artifact has unresolved P1 findings:
