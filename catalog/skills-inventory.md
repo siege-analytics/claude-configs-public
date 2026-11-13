@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **199**
-- Characters: **2,483,164**
-- Estimated tokens: **620,868** (character/4 estimate)
+- Characters: **2,483,393**
+- Estimated tokens: **620,925** (character/4 estimate)
 - Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 111 | 1,086,770 | 271,734 |
+| unclassified | 111 | 1,086,999 | 271,791 |
 
 ## Largest source items
 
@@ -65,7 +65,7 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--data-intensive` | reference-shelf | 23,688 | 5,922 | `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
 | `hostile-review` | skill | 23,345 | 5,837 | `skills/hostile-review/SKILL.md` |
 | `shelves--cro-methodology` | reference-shelf | 22,720 | 5,680 | `skills/shelves/marketing/cro-methodology/SKILL.md` |
-| `commit` | skill | 22,423 | 5,606 | `skills/commit/SKILL.md` |
+| `commit` | skill | 22,652 | 5,663 | `skills/commit/SKILL.md` |
 
 ## Evidence gaps
 

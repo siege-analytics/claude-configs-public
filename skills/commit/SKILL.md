@@ -41,7 +41,7 @@ allowed-tools: Read Grep Glob Bash
    1. Reference the existing task or user request; create a ticket only when useful or required by the project policy
    2. Do not require a routine user override merely because an authorized task has no issue
 6. Write the commit message (see Message structure below)
-7. **Verify the footer references the motivating ticket, or the authorized task/request and applicable `[no-ticket]` marker when no issue exists.**
+7. **Verify the footer references the motivating ticket, or `[task: meaningful authorized task or request]` when no issue exists.**
 8. Verify after committing
    1. Run `git log -1` to confirm the message looks correct
    2. Run `git status` to confirm nothing was missed or accidentally included
@@ -156,7 +156,7 @@ Using `[run-skip]` more than once per session is a smell. The threshold is wrong
 
 # Task references
 
-Link existing relevant tickets in the commit footer. If no ticket exists, identify the authorized task or request in the message; do not stop to ask for routine permission or create an issue solely to satisfy a universal ceremony. Preserve any explicit project-specific ticket requirement and repair missing tracking within that grant. Where the installed native adapter requires a ticket token, its existing `[no-ticket]` marker may identify an authorized request without an issue; this does not require a fresh operator waiver.
+Link existing relevant tickets in the commit footer. If no ticket exists, identify the authorized task or request in the message; do not stop to ask for routine permission or create an issue solely to satisfy a universal ceremony. Preserve any explicit project-specific ticket requirement and repair missing tracking within that grant. Use `[task: meaningful authorized task or request]` when there is no issue; the commit and publication guards accept this reference without a fresh operator waiver. They also accept project ticket identifiers and issue/task URLs. Bare `[no-ticket]` is invalid. The legacy structured `[no-ticket: Reason: <reason>; Evidence: <observation>; Falsification: <disproof>]` remains supported, but is not required for an ordinary authorized task.
 
 # Message structure
 

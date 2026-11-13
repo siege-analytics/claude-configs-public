@@ -205,8 +205,8 @@ NO_REVIEW=false; [[ "$COMMIT_MSG" == *'[no-review]'* ]] && NO_REVIEW=true
 if [[ "$NO_REVIEW" == "true" && "$REVIEW_TIER" != "A" ]]; then
     MISSING+=("remove [no-review]: it is allowed only for independently validated Tier A")
 fi
-if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
-    MISSING+=("ticket reference: #NNN in the message, or [no-ticket] if exempt")
+if ! printf '%s' "$COMMIT_MSG" | python3 -B "$HOOK_DIR/../lib/git_command.py" --cwd "$EFFECTIVE_CWD" --policy ticket-message >/dev/null 2>&1; then
+    MISSING+=("task reference: #NNN, project ticket/URL, or [task: authorized request]; bare [no-ticket] is invalid")
 fi
 if [[ "$REVIEW_COUNT" -ne 1 ]]; then
     if [[ "$NO_REVIEW" != "true" || "$REVIEW_TIER" != "A" ]]; then

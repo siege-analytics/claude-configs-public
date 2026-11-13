@@ -175,7 +175,7 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA EXTRA || [[ -n "$LOCAL_R
             fi
             [[ "$SELF_COUNT" -eq 1 ]] || REASONS+=("Self-Review: <one-line summary of the review pass>  (requires exactly one non-empty Self-Review trailer)")
             [[ "$MSG" == *'[no-review]'* && "$TIER" != "A" ]] && REASONS+=("[no-review] is allowed only for validated Tier A")
-            echo "$MSG" | grep -qE '(#[0-9]+|\[no-ticket\])' || REASONS+=("ticket reference: #NNN in the message, or [no-ticket]  (missing ticket reference or [no-ticket])")
+            printf '%s' "$MSG" | python3 -B "$HOOK_DIR/../lib/git_command.py" --cwd "$REPO_ROOT" --policy ticket-message >/dev/null 2>&1 || REASONS+=("task reference: #NNN, project ticket/URL, or [task: authorized request]; bare [no-ticket] is invalid")
             if [[ "$TIER" != "A" && "$SOURCE_COUNT" -ne 1 ]]; then
                 REASONS+=("Self-Review-Source: <path or URL to the self-review artifact>  (Tier $TIER requires exactly one Self-Review-Source)")
             elif [[ "$TIER" != "A" ]] && ! validate_committed_artifact "$COMMIT" "$SOURCE_VALUE" "$TIER"; then

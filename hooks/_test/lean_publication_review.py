@@ -47,10 +47,10 @@ class PublicationReview(unittest.TestCase):
     def git(self,*args):
         return subprocess.run(['git','-C',str(self.repo),*args],env=self.env,text=True,capture_output=True,check=True,timeout=20)
 
-    def commit(self,artifact=COMPACT,review=True,review_path='plans/independent.md'):
+    def commit(self,artifact=COMPACT,review=True,review_path='plans/independent.md',reference='#1'):
         (self.repo/'plans/review.md').write_text(artifact)
         self.git('add','.')
-        message='fix: assigned fixture #1\n\nReview-Tier: C\nSelf-Review: actual focused checks\nSelf-Review-Source: plans/review.md\n'
+        message=f'fix: assigned fixture {reference}\n\nReview-Tier: C\nSelf-Review: actual focused checks\nSelf-Review-Source: plans/review.md\n'
         if review: message+='Hostile-Review: '+review_path+'\n'
         self.git('commit','-q','-m',message)
 
@@ -69,6 +69,30 @@ class PublicationReview(unittest.TestCase):
             result = invoke()
             code = 1 if invoke.__name__ == 'native_hook' and expected else expected
             self.assertEqual(result.returncode, code, invoke.__name__ + result.stdout + result.stderr)
+
+    def test_task_reference_grammar_matches_both_publication_adapters(self):
+        for reference, expected in (
+            ('[task: finish the authorized documentation repair]', 0),
+            ('OPS-123', 0),
+            ('https://example.invalid/tasks/authorized-repair', 0),
+            ('[no-ticket: Reason: assigned; Evidence: user request; Falsification: scope differs]', 0),
+            ('[no-ticket]', 2), ('[task:   ]', 2),
+            ('[no-ticket: Reason: assigned; Evidence: ; Falsification: scope differs]', 2),
+            ('', 2),
+        ):
+            with self.subTest(reference=reference):
+                fixture = PublicationReview()
+                fixture.setUp()
+                try:
+                    fixture.commit(reference=reference)
+                    fixture.assert_publication(expected)
+                    message_file = fixture.repo/'commit-message.txt'
+                    message_file.write_text(fixture.git('log','-1','--format=%B').stdout)
+                    result = subprocess.run(['bash',str(ROOT/'.githooks/commit-msg'),str(message_file)],
+                        cwd=fixture.repo,env=fixture.env,text=True,capture_output=True,timeout=20)
+                    self.assertEqual(result.returncode, 1 if expected else 0, result.stdout+result.stderr)
+                finally:
+                    fixture.doCleanups()
 
     def test_fixture_git_locations_cannot_stage_or_commit_in_the_caller(self):
         before = self.git('status','--porcelain').stdout
