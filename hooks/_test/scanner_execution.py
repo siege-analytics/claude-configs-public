@@ -92,6 +92,20 @@ class ScannerExecution(unittest.TestCase):
         return subprocess.run(shlex.split(self.command(*mode)),env=env or self.f.env,
                               capture_output=True,text=True,timeout=60)
 
+    def test_host_session_spelling_preserves_physical_task_authority(self):
+        session=self.f.ws/'sessions/one'
+        alias=self.f.ws/'session-directory-alias'
+        alias.symlink_to(session.parent,target_is_directory=True)
+        for spelling in (str(session)+'/',str(alias/'one'),str(alias/'one')+'/'):
+            with self.subTest(session=spelling):
+                env={**self.f.env,'CRAFT_SESSION_DIR':spelling}
+                self.f.assertGate(0,self.command('--commit-message-file',str(self.message)),env=env)
+        foreign=self.f.ws/'sessions/foreign'
+        foreign.mkdir()
+        alias.unlink();alias.symlink_to(foreign,target_is_directory=True)
+        self.f.assertGate(2,self.command('--commit-message-file',str(self.message)),
+                          env={**self.f.env,'CRAFT_SESSION_DIR':str(alias)})
+
     def test_no_task_foreign_session_status_and_paths_are_denied(self):
         path=self.gate/'think-gate.json';original=path.read_text()
         for patch in [dict(status='designing'),dict(sessionId='other'),dict(scope_paths=[str(self.repo/'a')])]:

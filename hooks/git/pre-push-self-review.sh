@@ -66,16 +66,16 @@ validate_committed_artifact() {
     [[ "$value" =~ ^https?:// || "$value" =~ ^#[0-9]+$ ]] && return 0
     content=$(git show "$commit:${value#./}" 2>/dev/null) || return 1
     if [[ "$tier" == "B" ]]; then
-        for section in "## Assumptions" "## Test plan"; do grep -qF "$section" <<<"$content" || return 1; done
+        for section in "## Assumptions" "## Test plan"; do grep -qE "^${section}[[:space:]]*$" <<<"$content" || return 1; done
     else
         if grep -Eq '^## Peer review[[:space:]]*$' <<<"$content" && grep -Eq '^## Lead review[[:space:]]*$' <<<"$content" && grep -Eq '^## Quantified claims[[:space:]]*$' <<<"$content"; then
-            for section in "## Assumptions" "## Peer review" "## Lead review" "## Quantified claims"; do grep -qF "$section" <<<"$content" || return 1; done
+            for section in "## Assumptions" "## Peer review" "## Lead review" "## Quantified claims"; do grep -qE "^${section}[[:space:]]*$" <<<"$content" || return 1; done
         else
-            for section in "## Assumptions" "## Test plan" "## Findings" "## Independent review"; do grep -qF "$section" <<<"$content" || return 1; done
+            for section in "## Assumptions" "## Test plan" "## Findings" "## Independent review"; do grep -qE "^${section}[[:space:]]*$" <<<"$content" || return 1; done
         fi
     fi
-    local findings unresolved
-    findings=$(awk '/^## Findings[[:space:]]*$/ {active=1;next} /^## / {active=0} active {print}' <<<"$content")
+    local findings unresolved findings_heading_re='^##[[:blank:]]+findings([^[:alnum:]_]|$)'
+    findings=$(awk -v heading="$findings_heading_re" '/^##[[:blank:]]+/ {active=(tolower($0) ~ heading);next} active {print}' <<<"$content")
     unresolved=$(
         printf '%s\n' "$findings" | awk '/^\|/ {
             delete cells
