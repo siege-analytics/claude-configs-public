@@ -94,6 +94,89 @@ class ScannerExecution(unittest.TestCase):
         return subprocess.run(shlex.split(self.command(*mode)),env=env or self.f.env,
                               capture_output=True,text=True,timeout=60)
 
+    def test_working_filters_are_disabled_without_changing_raw_selection(self):
+        def git(*args):
+            return f.fixture_git('-C',self.repo,*args,check=True,capture_output=True,text=True,timeout=15)
+        source=self.repo/'sample.py';source.write_text('value = 1\n')
+        (self.repo/'.gitattributes').write_text('*.py filter=owned\n')
+        git('add','.');git('-c','user.name=Fixture','-c','user.email=f@example.invalid','commit','-qm','fixture')
+        marker=self.data/'filter-executed';helper=self.data/'filter-helper'
+        helper.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\nexit 97\n');helper.chmod(0o700)
+        source.write_text('value = 22222\n')
+        for operation in ('clean','process'):
+            with self.subTest(operation=operation):
+                git('config','filter.owned.'+operation,str(helper))
+                git('config','filter.owned.required','true')
+                result=self.run_scanner('--working')
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+                self.assertFalse(marker.exists(),'working filter executed selected repository code')
+                identity=json.loads(result.stderr.split('scanner input identity: ')[-1])
+                self.assertEqual(identity['selection']['files_sha256']['sample.py'],
+                                 hashlib.sha256(source.read_bytes()).hexdigest())
+                git('config','--unset','filter.owned.'+operation)
+
+    def test_missing_promisor_objects_never_trigger_implicit_transport(self):
+        for mode in ('staged','working'):
+            with self.subTest(mode=mode):
+                nested=ScannerExecution()
+                try:
+                    nested.setUp()
+                    def git(*args):
+                        return f.fixture_git('-C',nested.repo,*args,check=True,capture_output=True,text=True,timeout=15)
+                    source=nested.repo/'sample.py';source.write_text('value = 1\n')
+                    git('add','.');git('-c','user.name=Fixture','-c','user.email=f@example.invalid','commit','-qm','fixture')
+                    blob=git('rev-parse','HEAD:sample.py').stdout.strip()
+                    marker=nested.data/'lazy-transport-executed';helper=nested.data/'lazy-helper'
+                    helper.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\nexit 97\n');helper.chmod(0o700)
+                    git('config','core.repositoryformatversion','1');git('config','extensions.partialClone','origin')
+                    git('config','remote.origin.promisor','true');git('config','remote.origin.partialclonefilter','blob:none')
+                    git('remote','set-url','origin','ssh://fixture.invalid/repo');git('config','core.sshCommand',str(helper))
+                    (nested.repo/'.git/objects'/blob[:2]/blob[2:]).unlink()
+                    if mode=='working':
+                        source.write_text('value = 2\n')
+                    result=nested.run_scanner('--'+mode)
+                    self.assertEqual(result.returncode,2,result.stdout+result.stderr)
+                    self.assertFalse(marker.exists(),'missing input caused an undeclared fetch')
+                    self.assertIn('incomplete',result.stderr)
+                finally:
+                    nested.doCleanups()
+
+    def test_pr_fetch_never_recurses_into_populated_submodule(self):
+        def git(repo,*args):
+            return f.fixture_git('-C',repo,*args,check=True,capture_output=True,text=True,timeout=15)
+        def identity(repo):
+            git(repo,'config','user.name','Fixture');git(repo,'config','user.email','f@example.invalid')
+        sub=self.f.ws/'subsource';sub.mkdir();git(sub,'init','-q');identity(sub)
+        (sub/'file').write_text('one');git(sub,'add','.');git(sub,'commit','-qm','one')
+        identity(self.repo)
+        git(self.repo,'-c','protocol.file.allow=always','submodule','add',str(sub),'child')
+        git(self.repo,'commit','-qam','base');base=git(self.repo,'rev-parse','HEAD').stdout.strip()
+        remote=self.f.ws/'remote.git'
+        f.fixture_git('clone','--bare',self.repo,remote,check=True,capture_output=True,timeout=15)
+        author=self.f.ws/'author'
+        f.fixture_git('clone',remote,author,check=True,capture_output=True,timeout=15);identity(author)
+        (sub/'file').write_text('two');git(sub,'commit','-qam','two')
+        oid=git(sub,'rev-parse','HEAD').stdout.strip()
+        git(author,'update-index','--cacheinfo','160000,'+oid+',child')
+        git(author,'commit','-qm','head');git(author,'push','origin','HEAD')
+        head=git(author,'rev-parse','HEAD').stdout.strip()
+        marker=self.data/'submodule-transport-executed';helper=self.data/'submodule-helper'
+        helper.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\nexit 97\n');helper.chmod(0o700)
+        git(self.repo/'child','remote','set-url','origin','ssh://fixture.invalid/repo')
+        git(self.repo/'child','config','core.sshCommand',str(helper))
+        git(self.repo,'remote','set-url','origin',str(remote))
+        git(self.repo,'config','fetch.recurseSubmodules','true')
+        gate=self.gate/'think-gate.json';value=json.loads(gate.read_text())
+        value['scope_paths'].append(str(remote));f.write(gate,value)
+        tools=self.data/'tools';tools.mkdir();gh=tools/'gh'
+        gh.write_text('#!'+sys.executable+'\nprint('+repr(json.dumps({'baseRefOid':base,'headRefOid':head}))+')\n');gh.chmod(0o700)
+        refs=git(self.repo,'for-each-ref','--format=%(refname) %(objectname)').stdout
+        result=self.run_scanner('--pr','1805',env={**self.f.env,'PATH':str(tools)+os.pathsep+self.f.env['PATH']})
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertFalse(marker.exists(),'explicit parent fetch executed submodule transport')
+        self.assertEqual(git(self.repo,'for-each-ref','--format=%(refname) %(objectname)').stdout,refs)
+        self.assertEqual(git(self.repo,'rev-parse','HEAD').stdout.strip(),base)
+
     def test_host_session_spelling_preserves_physical_task_authority(self):
         session=self.f.ws/'sessions/one'
         alias=self.f.ws/'session-directory-alias'

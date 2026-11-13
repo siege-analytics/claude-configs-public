@@ -19,7 +19,26 @@ def command(args, *, cwd, input=None):
 
 
 def git(root, *args, input=None):
-    return command(['git', '-c', 'core.quotepath=false', *args], cwd=root, input=input)
+    return command(['git', '--no-lazy-fetch', '-c', 'core.quotepath=false', *args], cwd=root, input=input)
+
+
+
+def working_filter_options(root):
+    # Enumerate names, never values: selected configuration is data, not code.
+    result = subprocess.run(['git', '--no-lazy-fetch', 'config', '--null',
+        '--name-only', '--get-regexp', r'^filter\..*\.(clean|process|required)$'],
+        cwd=root, capture_output=True, timeout=60)
+    require(result.returncode in (0, 1), 'cannot enumerate working filter drivers')
+    drivers = set()
+    for raw in result.stdout.split(b'\0'):
+        if raw:
+            key = raw.decode()
+            require(re.fullmatch(r'filter\..+\.(?:clean|process|required)', key),
+                    'unsupported working filter key')
+            drivers.add(key.rsplit('.', 1)[0])
+    return [argument for driver in sorted(drivers)
+            for key, value in (('clean', ''), ('process', ''), ('required', 'false'))
+            for argument in ('-c', driver + '.' + key + '=' + value)]
 
 
 def relevant(path):
@@ -64,11 +83,11 @@ def tree_files(root, tree):
 
 
 def head_or_empty(root):
-    head = subprocess.run(['git', 'rev-parse', '--verify', 'HEAD'], cwd=root, capture_output=True, timeout=60)
+    head = subprocess.run(['git', '--no-lazy-fetch', 'rev-parse', '--verify', 'HEAD'], cwd=root, capture_output=True, timeout=60)
     if head.returncode == 0:
         return head.stdout.decode().strip()
     branch = git(root, 'symbolic-ref', '--quiet', 'HEAD').decode().strip()
-    exists = subprocess.run(['git', 'show-ref', '--verify', '--quiet', branch], cwd=root, capture_output=True, timeout=60)
+    exists = subprocess.run(['git', '--no-lazy-fetch', 'show-ref', '--verify', '--quiet', branch], cwd=root, capture_output=True, timeout=60)
     require(exists.returncode == 1, 'cannot establish unborn repository baseline')
     return git(root, 'hash-object', '-w', '-t', 'tree', '--stdin', input=b'').decode().strip()
 
@@ -93,9 +112,9 @@ def snapshot(mode, destination, *, pr=None, cwd=None):
         refs = [metadata.get('baseRefOid'), metadata.get('headRefOid')]
         require(all(isinstance(ref, str) and re.fullmatch(r'[0-9a-f]{40}', ref) for ref in refs), 'PR metadata lacks exact base/head')
         for ref in refs:
-            present = subprocess.run(['git', 'cat-file', '-e', ref + '^{commit}'], cwd=root, capture_output=True, timeout=60)
+            present = subprocess.run(['git', '--no-lazy-fetch', 'cat-file', '-e', ref + '^{commit}'], cwd=root, capture_output=True, timeout=60)
             if present.returncode:
-                git(root, 'fetch', '--no-tags', 'origin', ref)
+                git(root, 'fetch', '--no-tags', '--no-recurse-submodules', 'origin', ref)
             require(git(root, 'rev-parse', ref + '^{commit}').decode().strip() == ref, 'PR ref is not an exact commit')
         base, selected = refs
         merge_base = git(root, 'merge-base', base, selected).decode().strip()
@@ -121,14 +140,15 @@ def snapshot(mode, destination, *, pr=None, cwd=None):
                 files[path] = source.read_bytes()
     else:
         raise ValueError('unknown source mode')
-    diff = git(root, 'diff', *diff_options, '--unified=3', *comparison)
-    changed = git(root, 'diff', *diff_options, '--name-only', '-z', '--diff-filter=ACMRT', *comparison)
+    filter_options = working_filter_options(root) if mode == 'working' else []
+    diff = git(root, *filter_options, 'diff', *diff_options, '--unified=3', *comparison)
+    changed = git(root, *filter_options, 'diff', *diff_options, '--name-only', '-z', '--diff-filter=ACMRT', *comparison)
     python_paths = [path.decode() for path in changed.split(b'\0') if path.endswith(b'.py')]
     require(all(path in files for path in python_paths), 'selected Python input missing from snapshot')
     if mode == 'working':
         # Working mode is explicitly mutable. Refuse observed changes while
         # copying rather than silently mixing the two observed views.
-        require(diff == git(root, 'diff', *diff_options, '--unified=3'), 'working diff changed during scan selection')
+        require(diff == git(root, *filter_options, 'diff', *diff_options, '--unified=3'), 'working diff changed during scan selection')
         require(all((root / safe_path(path)).read_bytes() == content for path, content in files.items()), 'working input changed during scan selection')
     seen = set()
     for path in files:
