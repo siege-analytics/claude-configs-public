@@ -1,0 +1,17 @@
+# Scanner Git configuration and child cleanup #1361
+
+## Assumptions
+Read scanner_capability.py validate_files, scanner-exec.py main/wait_scanner and task_actions.py content verification. Git's primary documentation confirms GIT_CONFIG changes git config's selected file without affecting other Git commands, and core.alternateRefsCommand runs a shell command: https://git-scm.com/docs/git-config/2.43.6.html (ENVIRONMENT and core.alternateRefsCommand). This explains why auditing one configuration and executing another was unsafe. Existing physical inputs, source closure, exact Task/session/repo identity and bounded outputs remain required.
+
+## Test plan
+The three permanent methods failed four original-source cases: startup OSError, startup KeyboardInterrupt, GIT_CONFIG audit masking, and alternate-refs helper admission. The corrected focused methods passed in 1.130 seconds. The full 23-method scanner suite passed in 31.193 seconds through the supported unbound test-evidence producer, with no invented host binding. Registration tests: four passed in 8.842 seconds. Scanner source tests: 27 passed in 23.359 seconds. Full build, build check, inventory freshness, source-authority freshness, language-scope freshness and data-scope freshness passed. The controlled startup faults create only an owned harmless sleeping Python child; the regression kills/reaps it in its own cleanup even when the baseline adapter fails.
+
+## Findings
+The adapter now uses the existing process-group cleanup body through one helper, called both by wait_scanner and by a finally covering process creation, startup diagnostic and wait. Source-mode validation rejects inherited GIT_CONFIG and extends the existing PR local-helper pattern with alternateRefsCommand. Pure text scanning still accepts the same environment after child sanitization; it does not need Git. Content hashes in the adapter and the two task_actions constants are refreshed to the reviewed bytes; verification is retained.
+
+The full suite retains foreign Task/session/scratch/output denials, default/private index preservation, real staged/message/working/PR selection, physical closure checks, timeout escalation, actual signal interruption, child raw results, and exact PR object/ref preservation. No live installed behavior or completed promotion is claimed.
+
+The complete staged scan remains non-clean with 42 inherited diagnostics: 32 task_actions, eight adapter and two capability rows. Each normalized diagnostic matches prior accepted 1350/1211 findings; every exception-handler AST is unchanged from protected 2a7. All task_actions function ASTs are unchanged because that file only refreshes two content pins. The adapter cleanup handlers moved into stop_scanner, and now have a startup caller: new startup faults, existing timeout/escalation controls and a handled owned-group-disappearance probe exercise those effects. Author per-finding reasons and falsifiers remain in the private evidence record; existing debt #1329 is retained.
+
+## Independent review
+Root independently read the full four-file source/test diff and passed the three new methods in 1.147 seconds. Root verified the capability and both task_actions content pins against actual source bytes, accepted the narrow control changes, and confirmed Task/session/repo and producer/input protections remain. The 42-row author rebind retains individual reasons, current caller evidence and falsifiers; it is not a scan-clean claim.

@@ -84,7 +84,7 @@ def validate_files(plan, producer):
     if producer != root/'hooks/lib/scanner-exec.py':
         raise ScannerError('scanner producer must be the exact installed entry')
     source_mode = plan['mode'] in {'staged','working','pr'}
-    if source_mode and any(os.environ.get(key) for key in ('GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE','GIT_COMMON_DIR','GIT_OBJECT_DIRECTORY','GIT_ALTERNATE_OBJECT_DIRECTORIES','GIT_CONFIG_COUNT','GIT_CONFIG_PARAMETERS')):
+    if source_mode and any(os.environ.get(key) for key in ('GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE','GIT_COMMON_DIR','GIT_OBJECT_DIRECTORY','GIT_ALTERNATE_OBJECT_DIRECTORIES','GIT_CONFIG','GIT_CONFIG_COUNT','GIT_CONFIG_PARAMETERS')):
         raise ScannerError('inherited Git targeting/configuration is ambiguous; use an explicit scanner target/index')
     if plan['mode'] == 'pr' and os.environ.get('GH_HOST','github.com') != 'github.com':
         raise ScannerError('scanner PR host must be github.com')
@@ -106,7 +106,7 @@ def validate_files(plan, producer):
             raise ScannerError('scanner repo must be the exact Git toplevel')
     if plan['mode'] == 'pr':
         config = subprocess.run(['git','config','--show-scope','--name-only','--get-regexp',
-            r'^(core\.(sshcommand|gitproxy)|remote\..*\.(uploadpack|proxy|vcs)|credential\.|url\.|http\.|protocol\.|ssh\.)'],
+            r'^(core\.(sshcommand|gitproxy|alternaterefscommand)|remote\..*\.(uploadpack|proxy|vcs)|credential\.|url\.|http\.|protocol\.|ssh\.)'],
             cwd=repo,capture_output=True,text=True,timeout=5)
         if config.returncode not in (0,1):
             raise ScannerError('scanner cannot establish Git transport configuration')
