@@ -374,6 +374,102 @@ def _publication_help(args, values):
     return False
 
 
+def _publication_option_dispatch(words):
+    """Inspect known prefix options without granting their target authority."""
+    args = list(words)
+    while args and re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', args[0]):
+        args.pop(0)
+    wrapper = os.path.basename(args.pop(0)) if args else ''
+    while args and args[0].startswith('-'):
+        option = args.pop(0)
+        if option == '--':
+            break
+        if wrapper == 'env' and option in {'-i', '--ignore-environment'} or wrapper == 'command' and option == '-p':
+            continue
+        if wrapper == 'env' and option in {'-u', '--unset'} and args:
+            args.pop(0)
+            continue
+        if wrapper == 'env' and option.startswith('--unset='):
+            continue
+        if wrapper == 'time' and option == '-p' or wrapper == 'exec' and re.fullmatch(r'-[cl]+', option):
+            continue
+        if wrapper == 'exec' and option == '-a' and args:
+            args.pop(0)
+            continue
+        if wrapper == 'exec' and option.startswith('-a') and len(option) > 2:
+            continue
+        if wrapper == 'timeout':
+            if option in {'-f', '--foreground', '-p', '--preserve-status', '-v', '--verbose'}:
+                continue
+            if option in {'-s', '--signal', '-k', '--kill-after'} and args:
+                args.pop(0)
+                continue
+            if option.startswith(('--signal=', '--kill-after=')) or re.match(r'^-[sk].+', option):
+                continue
+        return None
+    if wrapper == 'timeout':
+        if not args:
+            return None
+        args.pop(0)  # Duration syntax belongs to timeout, not task authority.
+    return args
+
+
+def _publication_executable_positions(args):
+    """Keep executable expansion provenance across the known wrapper grammar."""
+    positions, index, assignments = [], 0, True
+    while index < len(args):
+        # Leading shell assignments and env assignment operands are not programs.
+        while assignments and index < len(args) and re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', args[index]):
+            index += 1
+        if index == len(args):
+            break
+        positions.append(index)
+        name = os.path.basename(args[index])
+        if name in {'command', 'env', 'exec', 'timeout', 'time'}:
+            child = _publication_option_dispatch(args[index:])
+            if child is None:
+                break
+            index = len(args) - len(child)
+            assignments = name == 'env' or name == 'time' and args[positions[-1]] == 'time'
+        elif name in {'sudo', 'nice', 'builtin', '!'}:
+            index += 1
+            assignments = False
+            if index < len(args) and args[index].startswith('-'):
+                break
+        else:
+            break
+    return positions
+
+
+def _publication_may_publish(args, globs=()):
+    """Inspect possible CLI verbs, not dynamic metadata or literal examples."""
+    index = 0
+    while index < len(args) and args[index].startswith('-'):
+        word = args[index]
+        if word in {'--help', '-h', '--version', '-v'}:
+            return False
+        if word == '--':
+            index += 1
+            break
+        if word in {'--no-pager', '-P', '--paginate', '-p', '--no-optional-locks', '--bare',
+                    '--no-replace-objects', '--no-lazy-fetch', '--no-advice',
+                    '--literal-pathspecs', '--glob-pathspecs', '--noglob-pathspecs', '--icase-pathspecs'}:
+            index += 1
+        elif word in {'-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env'}:
+            index += 2
+        elif word.startswith(('-C', '-c', '--git-dir=', '--work-tree=', '--namespace=', '--config-env=')):
+            index += 1
+        else:
+            break
+    if index < len(args):
+        verb = args[index]
+        if _PUBLICATION_DYNAMIC in verb or index < len(globs) and globs[index] and fnmatch.fnmatchcase('push', verb):
+            return True
+        if verb == 'push' and not _publication_help(args[index + 1:], {'--repo', '--receive-pack', '--exec', '--push-option', '-o'}):
+            return True
+    return any(_publication_cli([cli, *args]) is not None for cli in ('gh', 'glab'))
+
+
 def publication_effects(command, cwd, depth=0, state=None):
     """Find direct publication argv; never inspect literal metadata as code.
 
@@ -385,42 +481,77 @@ def publication_effects(command, cwd, depth=0, state=None):
     from git_command import literal_prefix, prefix, directory_target
     if depth > 4:
         raise UnknownShape("publication wrapper exceeds inspection limit")
-    command, expansion_effects = _publication_mask(command, cwd, depth)
+    command, substitutions = _publication_mask(command, cwd, depth)
     parsed = shell_tokens(command, inspection_comments=True)
-    groups, words, redirected = [], [], False
+    groups, words, expansion_words, redirected = [], [], [], False
     for word, operator, globs in parsed:
         if redirected:
             if operator:
                 raise UnknownShape("unresolved publication redirect")
+            expansion_words.append(word)
             redirected = False
             continue
         if operator:
             if re.fullmatch(r"[0-9]*(?:>>|>&|<&|>\||>|<)|&>>|&>", word):
                 redirected = True
             elif word in {";", "&&", "||", "|", "&"}:
-                groups.append(words); words = []
+                groups.append((words, expansion_words)); words, expansion_words = [], []
             else:
                 raise UnknownShape("unsupported publication shell operator")
         else:
             words.append((word, globs))
+            expansion_words.append(word)
     if redirected:
         raise UnknownShape("missing publication redirect target")
-    groups.append(words)
-    effects = list(expansion_effects)
-    for group in groups:
+    groups.append((words, expansion_words))
+    effects = []
+    for group, expansion_words in groups:
+        for marker, program in substitutions:
+            if any(marker in word for word in expansion_words):
+                nested = publication_trigger(program, cwd, depth + 1)
+                if nested['kind'] == 'unknown':
+                    effects.append({'kind': 'git', 'cwd': cwd, 'scope': ''})
+                else:
+                    effects.extend(nested.get('effects', []))
         if not group:
             continue
         args = [word for word, _ in group]
-        if group[0][1] or _PUBLICATION_DYNAMIC in args[0]:
-            raise UnknownShape("unresolved executable expansion")
+        positions = _publication_executable_positions(args)
+        for index in positions:
+            if group[index][1]:
+                args[index] = _PUBLICATION_DYNAMIC
+        dynamic = [index for index in positions if _PUBLICATION_DYNAMIC in args[index]]
+        if dynamic:
+            if any(_publication_may_publish(args[start + 1:], [flags for _, flags in group[start + 1:]]) for start in dynamic):
+                effects.append({'kind': 'git', 'cwd': cwd, 'scope': ''})
+            continue
         original = list(args)
         args, _environment = literal_prefix(args, strict=True)
         if not args:
             continue
+        if _PUBLICATION_DYNAMIC in args[0]:
+            if _publication_may_publish(args[1:]):
+                effects.append({'kind': 'git', 'cwd': cwd, 'scope': ''})
+            continue
         name = os.path.basename(args[0])
+        if name in {'command', 'env'}:
+            nested = publication_trigger(shlex.join(args), cwd, depth + 1)
+            if nested['kind'] != 'none':
+                effects.append({'kind': 'git', 'cwd': cwd, 'scope': ''})
+            continue
+        if name == 'time':
+            wrapped = args[1:]
+            if wrapped[:1] == ['-p']:
+                wrapped = wrapped[1:]
+            if wrapped and not wrapped[0].startswith('-'):
+                nested_state = {}
+                effects.extend(publication_effects(shlex.join(wrapped), cwd, depth + 1, nested_state))
+                cwd = nested_state['cwd']
+                continue
+            raise UnknownShape('unresolved time dispatch')
         if name == "cd":
             target = directory_target(original)
-            if any(operator and word != "&&" for word, operator, _ in parsed):
+            if any(operator and word in {';', '||', '|', '&'} for word, operator, _ in parsed):
                 raise UnknownShape("unresolved publication directory control flow")
             cwd = target
             continue
@@ -474,9 +605,19 @@ def _publication_mask(command, cwd, depth):
     positions remain unresolved; ordinary data operands do not become code.
     """
     from task_actions import UnknownShape
-    output, effects, quote, index = [], [], '', 0
+    output, effects, quote, index, comment = [], [], '', 0, False
     while index < len(command):
         char = command[index]
+        if comment:
+            output.append(char)
+            comment = char != '\n'
+            index += 1
+            continue
+        if char == '#' and not quote and (index == 0 or command[index - 1].isspace() or command[index - 1] in ';&|()'):
+            comment = True
+            output.append(char)
+            index += 1
+            continue
         if char == "\\" and quote != "'" and index + 1 < len(command):
             output.extend(command[index:index + 2]); index += 2
             continue
@@ -489,11 +630,9 @@ def _publication_mask(command, cwd, depth):
             end = command.find(')' if char == '$' else '`', start)
             if end < 0 or '(' in command[start:end]:
                 raise UnknownShape("unresolved nested publication substitution")
-            nested = publication_trigger(command[start:end], cwd, depth + 1)
-            if nested['kind'] == 'unknown':
-                raise UnknownShape("unresolved publication substitution")
-            effects.extend(nested.get('effects', []))
-            output.append(_PUBLICATION_DYNAMIC); index = end + 1
+            marker = _PUBLICATION_DYNAMIC + '_sub_' + str(len(effects))
+            effects.append((marker, command[start:end]))
+            output.append(marker); index = end + 1
             continue
         elif quote != "'" and char == '$':
             match = re.match(r'\$(?:[A-Za-z_][A-Za-z0-9_]*|[0-9@*#?$!-]|\{[^{}]*\})', command[index:])
@@ -509,6 +648,7 @@ def _publication_mask(command, cwd, depth):
 def publication_trigger(command, cwd, depth=0):
     """A resolved effect, proven non-trigger, or plausible unresolved trigger."""
     from task_actions import UnknownShape
+    command = _publication_continuations(command)
     try:
         effects = publication_effects(command, os.path.realpath(cwd or os.getcwd()), depth)
         targets = set(item['cwd'] for item in effects)
@@ -528,6 +668,35 @@ def publication_trigger(command, cwd, depth=0):
         plausible = re.search(r"(?:^|[^A-Za-z0-9_])(?:git(?:\s+[^;|&]*?\bpush)|(?:gh|glab)\s+[^;|&]*?\b(?:pr|mr)\s+[^;|&]*?\b(?:create|merge))\b", normalized)
         dynamic = re.search(r"(?:^|[;&|]\s*)[^\s]*[$`*?\[][^\s]*\s+(?:push|pr|mr)\b", normalized) or re.search(r"\b(?:git|gh(?:\s+pr)?|glab(?:\s+mr)?)\s+[^\s]*[$`*?\[]", normalized)
         return {'kind': 'unknown', 'error': str(exc)} if plausible or dynamic or 'Git alias' in str(exc) else {'kind': 'none'}
+
+
+def _publication_continuations(command):
+    """Shell backslash-newline joins code, except inside single-quoted data."""
+    output, quote, index, comment = [], '', 0, False
+    while index < len(command):
+        char = command[index]
+        if comment:
+            output.append(char)
+            comment = char != '\n'
+            index += 1
+            continue
+        if char == '#' and not quote and (index == 0 or command[index - 1].isspace() or command[index - 1] in ';&|()'):
+            comment = True
+            output.append(char)
+            index += 1
+            continue
+        if char == '\\' and quote != "'" and index + 1 < len(command):
+            if command[index + 1] != '\n':
+                output.extend(command[index:index + 2])
+            index += 2
+            continue
+        if char == "'" and quote != '"':
+            quote = '' if quote == "'" else "'"
+        elif char == '"' and quote != "'":
+            quote = '' if quote == '"' else '"'
+        output.append(char)
+        index += 1
+    return ''.join(output)
 
 
 def main():

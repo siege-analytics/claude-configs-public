@@ -11,7 +11,7 @@ import subprocess
 # scanner/adapter changes in the same reviewed source change, never at runtime.
 CLOSURE = {
     'skills/detect-ai-fingerprints/scan.sh':'a69df093ed7a84a0a0864250927857d8294df21cffc6e50c9d8a1de663616fb8',
-    'skills/detect-ai-fingerprints/scan_snapshot.py':'a047ec75454836023cabebd62b114f9bd66eb8fd66fa23d3803ad498ceebf6b0',
+    'skills/detect-ai-fingerprints/scan_snapshot.py':'5b134743c253822ccd12c4b6f28ceab1024a5c3333742c487b81fd1404699868',
     'skills/detect-ai-fingerprints/scan_ast.py':'27e0960e2ee767ff8573d4c02ed0d72e7f92fc37382a63b325fbe11971ae7b44',
 }
 
