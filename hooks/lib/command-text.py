@@ -5,6 +5,7 @@ Reads a command on stdin.
 
     (no args)      write the command with data regions removed
     --is-commit    exit 0 if the command invokes `git commit`, else 1
+    --publication CWD  emit direct publication trigger/target data for adapters
 
 Guards that block on command shape must answer "does this command DO x", and the
 naive answer - grep the raw text for the literal string - cannot tell doing from
@@ -31,10 +32,18 @@ This is a heuristic, not a shell parser. It decides WHERE to look; each guard's
 own patterns decide WHAT counts, unchanged. Ref: #55, #106.
 """
 
+import fnmatch
+import json
+import os
 import re
+import shlex
 import sys
 
+# Trigger inspection must not write bytecode into the installed hook package.
+sys.dont_write_bytecode = True
+
 _MAX_DEPTH = 3
+_PUBLICATION_DYNAMIC = "__ccp_publication_dynamic__"
 
 # <<TAG, <<-TAG, <<'TAG', <<"TAG" - and NOT the left-shift operator. The opener
 # must be followed by an identifier, and `$((1 << 2))` therefore does not match
@@ -296,8 +305,237 @@ def is_git_commit(command):
     return bool(_COMMIT.search(code_only(command)))
 
 
+def _publication_cli(args):
+    """Locate literal CLI resource/verb and repo flags across their valid positions.
+
+    GitHub reuses the metadata recognizer's [github.com/]OWNER/REPO spelling.
+    GitLab retains literal nested/host-qualified selectors for the existing
+    owner-prefix policy. These boundaries never authorize the CLI action.
+    """
+    values = set("--title -t --body -b --body-file -F --head -H --base -B --reviewer -r --assignee -a --label -l --milestone -m --project -p -P --template -T --subject --author-email -A --match-head-commit --hostname".split())
+    gitlab = os.path.basename(args[0]) == 'glab'
+    if gitlab:
+        values = set("--title -t --description -d --description-file --source-branch -s --target-branch -b --reviewer -r --assignee -a --label -l --milestone -m --related-issue --target-project --source-project".split())
+    repositories, positionals, help_flag, literal, index = [], [], False, False, 1
+    while index < len(args):
+        word = args[index]
+        flag, equal, value = word.partition('=')
+        if not literal and word == '--':
+            literal = True
+        elif not literal and (flag in {'--repo', '-R'} or flag.startswith('-R')):
+            if flag.startswith('-R') and flag != '-R':
+                value = flag[2:]
+            elif not equal:
+                index += 1
+                value = args[index] if index < len(args) else ''
+            repositories.append(value)
+        elif not literal and flag in values:
+            if not equal:
+                index += 1  # Free text stays one value, including '--help'/'--repo'.
+        elif not literal and word in {'--help', '-h'}:
+            help_flag = True
+        elif literal or not word.startswith('-'):
+            positionals.append(word)
+        index += 1
+    resource = 'pr' if os.path.basename(args[0]) == 'gh' else 'mr'
+    if len(positionals) < 2 or help_flag:
+        return None
+    if any(_PUBLICATION_DYNAMIC in word for word in positionals[:2]):
+        return ''
+    if positionals[0] != resource:
+        if any(char in positionals[0] for char in '*?[') and fnmatch.fnmatchcase(resource, positionals[0]) and positionals[1] in {'create', 'merge'}:
+            return ''
+        return None
+    if positionals[1] not in {'create', 'merge'}:
+        return '' if any(char in positionals[1] for char in '*?[') else None
+    repository = ''
+    for value in repositories:
+        pattern = r'((?:https?://)?[A-Za-z0-9_.:-]+(?:/[A-Za-z0-9_.-]+)+)' if gitlab else r'(?:github\.com/)?([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)'
+        match = re.fullmatch(pattern, value, re.I)
+        if not match or repository and repository != match[1]:
+            return ''  # Known publication, unresolved selector: never "no trigger".
+        repository = match[1]
+    return os.path.basename(args[0]) + ' ' + ' '.join(positionals[:2]) + (' --repo ' + repository if repository else '')
+
+
+def _publication_help(args, values):
+    """A real help option, excluding option values and post-- operands."""
+    index = 0
+    while index < len(args):
+        word = args[index]
+        flag, equal, _value = word.partition('=')
+        if word == '--':
+            return False
+        if flag in values and not equal:
+            index += 1
+        elif word in {'--help', '-h'}:
+            return True
+        index += 1
+    return False
+
+
+def publication_effects(command, cwd, depth=0, state=None):
+    """Find direct publication argv; never inspect literal metadata as code.
+
+    Reuse the released shell token and Git/global-option boundaries. This is
+    trigger selection only: ordinary external programs are not presumed to
+    publish, and task/target/body authority remains with its owning guards.
+    """
+    from task_actions import UnknownShape, shell_tokens
+    from git_command import literal_prefix, prefix, directory_target
+    if depth > 4:
+        raise UnknownShape("publication wrapper exceeds inspection limit")
+    command, expansion_effects = _publication_mask(command, cwd, depth)
+    parsed = shell_tokens(command, inspection_comments=True)
+    groups, words, redirected = [], [], False
+    for word, operator, globs in parsed:
+        if redirected:
+            if operator:
+                raise UnknownShape("unresolved publication redirect")
+            redirected = False
+            continue
+        if operator:
+            if re.fullmatch(r"[0-9]*(?:>>|>&|<&|>\||>|<)|&>>|&>", word):
+                redirected = True
+            elif word in {";", "&&", "||", "|", "&"}:
+                groups.append(words); words = []
+            else:
+                raise UnknownShape("unsupported publication shell operator")
+        else:
+            words.append((word, globs))
+    if redirected:
+        raise UnknownShape("missing publication redirect target")
+    groups.append(words)
+    effects = list(expansion_effects)
+    for group in groups:
+        if not group:
+            continue
+        args = [word for word, _ in group]
+        if group[0][1] or _PUBLICATION_DYNAMIC in args[0]:
+            raise UnknownShape("unresolved executable expansion")
+        original = list(args)
+        args, _environment = literal_prefix(args, strict=True)
+        if not args:
+            continue
+        name = os.path.basename(args[0])
+        if name == "cd":
+            target = directory_target(original)
+            if any(operator and word != "&&" for word, operator, _ in parsed):
+                raise UnknownShape("unresolved publication directory control flow")
+            cwd = target
+            continue
+        if name in {"git", "gh", "glab"} and any(globs for _, globs in group[:3]):
+            raise UnknownShape("unresolved publication verb expansion")
+        if name in {"bash", "sh", "zsh", "dash", "ksh", "ash"}:
+            index = 1
+            while index < len(args) and args[index].startswith('-'):
+                flag = args[index]
+                if re.fullmatch(r'-[A-Za-z]*c[A-Za-z]*', flag):
+                    if index + 1 >= len(args):
+                        raise UnknownShape("missing publication shell program")
+                    if index == 1 and flag == '-c':
+                        effects.extend(publication_effects(args[index + 1], cwd, depth + 1))
+                    else:
+                        # Login/startup flags can change cwd. Inspect literal
+                        # program code, but never borrow the caller's HEAD.
+                        nested = publication_trigger(args[index + 1], cwd, depth + 1)
+                        if nested['kind'] != 'none':
+                            effects.append({'kind': 'git', 'cwd': cwd, 'scope': ''})
+                    break
+                index += 2 if flag in {'-o', '--rcfile', '--init-file'} else 1
+            continue
+        if name == "eval":
+            nested = {}
+            effects.extend(publication_effects(" ".join(args[1:]), cwd, depth + 1, nested))
+            cwd = nested["cwd"]
+        elif name == "git":
+            item = prefix(original, cwd)
+            if item and item['args'][0] == "push" and not _publication_help(item['args'][1:], {'--repo', '--receive-pack', '--exec', '--push-option', '-o'}):
+                effects.append({'kind': 'git', 'cwd': item['cwd'], 'scope': '' if any(_PUBLICATION_DYNAMIC in word for word in original) else 'git push'})
+        elif name in {"gh", "glab"}:
+            scope = _publication_cli(args)
+            if scope is not None:
+                effects.append({'kind': name, 'cwd': cwd, 'scope': scope})
+        elif name == "exec" and len(args) > 1 and not args[1].startswith('-'):
+            effects.extend(publication_effects(shlex.join(args[1:]), cwd, depth + 1))
+        elif name == "timeout" and len(args) > 2 and re.fullmatch(r"[0-9]+(?:\.[0-9]+)?[smhd]?", args[1]):
+            effects.extend(publication_effects(shlex.join(args[2:]), cwd, depth + 1))
+        elif name in {"sudo", "nice", "command", "env", "exec", "timeout", "if", "then", "for", "do", "while", "until", "!"}:
+            raise UnknownShape("unresolved publication dispatch")
+    if state is not None:
+        state["cwd"] = cwd
+    return effects
+
+
+def _publication_mask(command, cwd, depth):
+    """Mark dynamic operands while separately inspecting substitution programs.
+
+    The shared lexer still owns quotes/operators. Marked executable/verb/target
+    positions remain unresolved; ordinary data operands do not become code.
+    """
+    from task_actions import UnknownShape
+    output, effects, quote, index = [], [], '', 0
+    while index < len(command):
+        char = command[index]
+        if char == "\\" and quote != "'" and index + 1 < len(command):
+            output.extend(command[index:index + 2]); index += 2
+            continue
+        if char == "'" and quote != '"':
+            quote = '' if quote == "'" else "'"
+        elif char == '"' and quote != "'":
+            quote = '' if quote == '"' else '"'
+        elif quote != "'" and (command.startswith('$(', index) or char == '`'):
+            start = index + (2 if char == '$' else 1)
+            end = command.find(')' if char == '$' else '`', start)
+            if end < 0 or '(' in command[start:end]:
+                raise UnknownShape("unresolved nested publication substitution")
+            nested = publication_trigger(command[start:end], cwd, depth + 1)
+            if nested['kind'] == 'unknown':
+                raise UnknownShape("unresolved publication substitution")
+            effects.extend(nested.get('effects', []))
+            output.append(_PUBLICATION_DYNAMIC); index = end + 1
+            continue
+        elif quote != "'" and char == '$':
+            match = re.match(r'\$(?:[A-Za-z_][A-Za-z0-9_]*|[0-9@*#?$!-]|\{[^{}]*\})', command[index:])
+            if match:
+                if '$(' in match[0] or '`' in match[0]:
+                    raise UnknownShape("unresolved publication parameter substitution")
+                output.append(_PUBLICATION_DYNAMIC); index += len(match[0])
+                continue
+        output.append(char); index += 1
+    return ''.join(output), effects
+
+
+def publication_trigger(command, cwd, depth=0):
+    """A resolved effect, proven non-trigger, or plausible unresolved trigger."""
+    from task_actions import UnknownShape
+    try:
+        effects = publication_effects(command, os.path.realpath(cwd or os.getcwd()), depth)
+        targets = set(item['cwd'] for item in effects)
+        if any(not item['scope'] for item in effects):
+            return {'kind': 'unknown', 'error': 'literal publication selector is unresolved'}
+        if len(targets) > 1:
+            return {'kind': 'unknown', 'error': 'publish different repositories in separate tool calls'}
+        return {'kind': 'publication', 'cwd': next(iter(targets)), 'effects': effects, 'fingerprint': any(item['kind'] != 'glab' for item in effects)} if effects else {'kind': 'none'}
+    except (UnknownShape, OSError, ValueError) as exc:
+        # Never use legacy code_only's quote-stripping heuristic as a proof of
+        # absent publication. Only the released reader may discharge unknown
+        # syntax; plausible executable publication stays unresolved.
+        from task_actions import released_read_verdict
+        if released_read_verdict(command) == 0:
+            return {'kind': 'none'}
+        normalized = re.sub(r"[\\\"']", "", command)
+        plausible = re.search(r"(?:^|[^A-Za-z0-9_])(?:git(?:\s+[^;|&]*?\bpush)|(?:gh|glab)\s+[^;|&]*?\b(?:pr|mr)\s+[^;|&]*?\b(?:create|merge))\b", normalized)
+        dynamic = re.search(r"(?:^|[;&|]\s*)[^\s]*[$`*?\[][^\s]*\s+(?:push|pr|mr)\b", normalized) or re.search(r"\b(?:git|gh(?:\s+pr)?|glab(?:\s+mr)?)\s+[^\s]*[$`*?\[]", normalized)
+        return {'kind': 'unknown', 'error': str(exc)} if plausible or dynamic or 'Git alias' in str(exc) else {'kind': 'none'}
+
+
 def main():
     command = sys.stdin.read()
+    if "--publication" in sys.argv[1:]:
+        index = sys.argv.index("--publication")
+        print(json.dumps(publication_trigger(command, sys.argv[index + 1] if index + 1 < len(sys.argv) else "")))
+        return 0
     if "--stage-args" in sys.argv[1:]:
         for path in git_add_targets(command):
             print(path)
