@@ -27,6 +27,8 @@ _FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CM
 # blanks squeezed; skip only if neither matches. A command containing ANSI-C
 # $'...' (which can spell any byte) takes the full path.
 [[ "$_FAST_CMDS" == *"\$'"* ]] && _FAST_FULL=1
+# Expansions require structural argv inspection, even with no literal CLI name.
+[[ "$_FAST_CMDS" == *'$'* || "$_FAST_CMDS" == *'`'* || "$_FAST_CMDS" == *'*'* || "$_FAST_CMDS" == *'?'* || "$_FAST_CMDS" == *'['* ]] && _FAST_FULL=1
 # A quote or backslash between two letters or digits (`pr"x"`, `x\git`) joins
 # words; only the full path's quote handling decides what that runs. In the
 # JSON text a shell `"` or `\` is itself escaped, hence the leading backslash.
@@ -233,6 +235,32 @@ HOOKEOF
     exit 2
 fi
 
+# Markdown examples cannot supply section headings or Findings. A real
+# section may still contain meaningful fenced command/results evidence.
+review_artifact_text() {
+    awk -v heading="${1:-}" '{
+        line=$0
+        sub(/\r$/, "", line)
+        sub(/^[ ]?[ ]?[ ]?/, "", line)
+        first=substr(line,1,1)
+        if (first == "`" || first == "~") {
+            count=0
+            while (substr(line,count+1,1) == first) count++
+            rest=substr(line,count+1)
+            if (!fence && count >= 3 && (first == "~" || rest !~ /`/)) {fence=first; width=count; next}
+            if (fence == first && count >= width && rest ~ /^[[:blank:]]*$/) {fence=""; next}
+        }
+        if (!fence) {
+            if (!heading) {print; next}
+            normalized=$0
+            sub(/[[:space:]]+$/, "", normalized)
+            if (normalized == heading) {active=1; next}
+            if (line ~ /^##[[:blank:]]+/) active=0
+        }
+        if (heading && active && /[^[:space:]]/) {print; exit}
+    }'
+}
+
 # Tier A uses the short review trailer. B/C retain one compact outcome record.
 if [[ "$REVIEW_TIER" == "A" ]]; then exit 0; fi
 SOURCE_PATH=""
@@ -242,9 +270,10 @@ if [[ ! "$SOURCE_VALUE" =~ ^https?:// && ! "$SOURCE_VALUE" =~ ^#[0-9]+$ ]]; then
         *) SOURCE_PATH="$EFFECTIVE_CWD/$SOURCE_VALUE" ;;
     esac
     [[ -f "$SOURCE_PATH" ]] || { echo "BLOCKED: review artifact is unavailable: $SOURCE_VALUE" >&2; exit 2; }
+    REVIEW_CONTENT=$(review_artifact_text <"$SOURCE_PATH")
     REQUIRED_SECTIONS=("## Assumptions" "## Test plan")
     if [[ "$REVIEW_TIER" == "C" ]]; then
-        if grep -Eq '^## Peer review[[:space:]]*$' "$SOURCE_PATH" && grep -Eq '^## Lead review[[:space:]]*$' "$SOURCE_PATH" && grep -Eq '^## Quantified claims[[:space:]]*$' "$SOURCE_PATH"; then
+        if grep -Eq '^## Peer review[[:space:]]*$' <<<"$REVIEW_CONTENT" && grep -Eq '^## Lead review[[:space:]]*$' <<<"$REVIEW_CONTENT" && grep -Eq '^## Quantified claims[[:space:]]*$' <<<"$REVIEW_CONTENT"; then
             # Previously valid records remain publishable without history edits.
             REQUIRED_SECTIONS=("## Assumptions" "## Peer review" "## Lead review" "## Quantified claims")
         else
@@ -252,10 +281,10 @@ if [[ ! "$SOURCE_VALUE" =~ ^https?:// && ! "$SOURCE_VALUE" =~ ^#[0-9]+$ ]]; then
         fi
     fi
     for section in "${REQUIRED_SECTIONS[@]}"; do
-        if ! grep -Eq "^${section}[[:space:]]*$" "$SOURCE_PATH"; then
+        if ! grep -Eq "^${section}[[:space:]]*$" <<<"$REVIEW_CONTENT"; then
             echo "BLOCKED: review artifact requires $section" >&2; exit 2
         fi
-        content=$(awk -v heading="$section" '{line=$0;sub(/[[:space:]]+$/,"",line)} line==heading {active=1;next} /^## / {active=0} active && /[^[:space:]]/ {print;exit}' "$SOURCE_PATH")
+        content=$(review_artifact_text "$section" <"$SOURCE_PATH")
         [[ -n "$content" ]] || { echo "BLOCKED: review artifact has empty $section" >&2; exit 2; }
     done
 
@@ -487,23 +516,14 @@ fi
 # hook-enforced — P2 ticket-existence is agent discipline, P3 is
 # documentation-only.
 FINDINGS_HEADING_RE='^[ ]?[ ]?[ ]?##[[:blank:]]+findings([^[:alnum:]_]|$)'
-if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qiE "$FINDINGS_HEADING_RE" "$SOURCE_PATH"; then
+if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qiE "$FINDINGS_HEADING_RE" <<<"$REVIEW_CONTENT"; then
     FINDINGS_BLOCK=$(awk -v heading="$FINDINGS_HEADING_RE" '{
         line=$0
         sub(/\r$/, "", line)
         sub(/^[ ]?[ ]?[ ]?/, "", line)
-        first=substr(line,1,1)
-        if (first == "`" || first == "~") {
-            count=0
-            while (substr(line,count+1,1) == first) count++
-            rest=substr(line,count+1)
-            if (!fence && count >= 3 && (first == "~" || rest !~ /`/)) {fence=first; width=count; next}
-            if (fence == first && count >= width && rest ~ /^[[:blank:]]*$/) {fence=""; next}
-        }
-        if (fence) next
         if (line ~ /^##[[:blank:]]+/) {active=(tolower($0) ~ heading); next}
         if (active) print
-    }' "$SOURCE_PATH")
+    }' <<<"$REVIEW_CONTENT")
     UNRESOLVED_P1=$(
         printf '%s\n' "$FINDINGS_BLOCK" | awk '/^[ ]?[ ]?[ ]?\|/ {
             delete cells
