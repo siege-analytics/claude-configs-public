@@ -12,18 +12,7 @@ against a ticket's intent), hostile-review scans the ENTIRE codebase for
 latent defects using mechanical grep patterns followed by contextual
 reasoning.
 
-Hostile reviews are normally performed by a fresh agent session, not by the
-author in the same session and not by a human reviewer. Human hostile reviews
-are exceptional override cases; record why an agent review was unavailable if a
-human review is used. Apply `[rule:tandem-agent]` to every reviewer session: the
-reviewer is review-only unless explicitly reauthorized for implementation in a
-new scoped message. The reviewer task is complete when durable findings are
-delivered to the coordinator or authorized external comment location, blockers
-are separated from follow-ups, and a terminal status/baton is sent. The review
-gate for the work is complete only after an authorized implementer fixes or the
-operator accepts the named blockers, and an independent reviewer re-reviews the
-new commit range. Production UAT is a separate post-fix gate when applicable; it
-does not authorize the reviewer to implement.
+A full-codebase audit is optional when it serves the requested scope; it is not a prerequisite to every change. For independent publication review, a qualified human or another agent may review the actual diff. A particular provider, job title or full-codebase audit is not universally required. Apply [rule:tandem-agent] to delegated review-only roles, return useful findings, and re-review consequential fixes. Do not invent findings or implementation authority.
 
 ## Function-chain and shelf-grounded hostile review
 
@@ -50,93 +39,11 @@ comment plus passing local tests is not authorization to push code. Direct PR or
 ticket commenting is allowed only when the role contract grants comment-only
 posting; otherwise send findings back to the coordinator for posting.
 
-## Dispatch verification and orphan fallback
+## Dispatch and follow-through
 
-Sibling spawn dispatch is unreliable in practice. A spawn can return a
-sessionId without the target session ever producing substantive output. The
-parent must verify the sibling dispatched, retry once on a different provider,
-try cross-review as a fallback, and defer with a documented gap when all three
-fail. Without this protocol the parent gets stuck in a spawn-retry loop
-(observed live in bright-gust epic-682 for 75 minutes on ticket 688
-pre-mortem review; see #718).
+Use supported session state and actual output to verify that a delegated review is progressing. An admission receipt, elapsed duration or an observation timeout does not prove a session failed or authorize duplicate reviewers. Preserve live handles and inspect the same owner before a bounded recovery under [skill:stalled-session-recovery]. Use another supported reviewer when a real failure calls for replacement, without a mandatory provider-switch ladder or fixed waiting ceremony.
 
-### Observable orphan signal
-
-Read the sibling's `~/.craft-agent/workspaces/<ws>/sessions/<id>/session.jsonl`
-header (line 1) at least ten minutes after spawn. The session is orphaned
-when three or more of the following are true:
-
-- `messageCount` at most three (only the initial user prompt and one
-  or two tool acknowledgements landed).
-- `outputTokens` under one hundred.
-- `lastMessageRole` is `user` or `error`.
-- `lastMessageAt` is within sixty seconds of `createdAt` (the dispatch
-  never advanced past the initial turn).
-
-Canonical example: session `260831-vast-marsh` (siege-analytics workspace,
-2026-08-31) shows all four conditions and produced zero review output
-despite being spawned on Opus 5.
-
-### Retry ladder
-
-Apply in strict order per orphaned unit:
-
-1. **Same-provider respawn once.** Give dispatch a second chance on the
-   same model class. If the second spawn is also orphaned by the
-   ten-minute threshold above, do NOT keep respawning.
-2. **Different-provider respawn once.** If the first attempt used Claude,
-   try GPT-5.5 or an OpenAI equivalent, and vice versa. Same
-   ten-minute observable threshold.
-3. **Cross-review MCP.** If `mcp__cross-review__list_providers` shows any
-   provider with valid credits, call `mcp__cross-review__review` with the
-   `hostile-review` skill slug against the target file directly. This
-   is a single-shot review without spawn overhead. It is OPTIONAL in
-   the ladder because credit availability is not guaranteed.
-4. **Review-deferred artifact.** If the ladder exhausts without a
-   delivered review, write `plans/review-deferred-<ticket>.md` per the
-   schema below, label the ticket `review-deferred`, and MOVE TO THE
-   NEXT UNIT. Do not self-merge. Do not stall the epic.
-
-### Review-deferred artifact schema
-
-```markdown
-# Review deferred: <ticket>
-
-## What was reviewed by whom
-- <session-id or MCP provider>: <what they covered, one line>
-
-## What remains unreviewed and why
-- <ticket / file / concern>: <reason review dispatch failed, with
-  same-turn evidence: session ids that orphaned, cross-review error
-  message, ten-minute observable-signal readings>
-
-## Retry command
-<the exact spawn or cross-review invocation to re-attempt later>
-
-## Severity self-assessment
-<what the parent believes might be missed by skipping external review;
-label as low / medium / high impact>
-
-## Followup
-<owner and target date to re-attempt the review, or the sweep skill
-that will pick it up>
-```
-
-The artifact is SUPPLEMENTAL evidence, not a substitute for the
-standard `Self-Review:` and `Hostile-Review-Source:` commit trailers.
-The parent still writes its own self-review; the deferred artifact
-documents the missing external voice.
-
-### Continuous-work invariant
-
-Orphan-blocked reviews DO NOT block progression on other units in the
-epic. The parent files the deferred artifact and moves on. A later
-scheduled sweep (see follow-up work) picks up deferred reviews and
-retries the ladder. This is an explicit exception to the general
-completion criterion in the prose above: dispatch orphan is a
-recognized deferral, not a completion. The general rule that hostile
-review is required for merge is not weakened; the deferral simply
-means "not yet reviewed, tracked, do not merge until resolved."
+A required review remains unfinished until substantive findings or acceptance arrive. Continue independent work, record a concrete return route, and resolve actual blocking findings. Do not turn missing review output into a whole-mission pause or require the operator to prompt the next eligible action.
 
 ## When to Use
 

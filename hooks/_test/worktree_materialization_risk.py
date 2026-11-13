@@ -67,9 +67,9 @@ class Materialization(unittest.TestCase):
         return result
 
     def tier_c(self, command=None):
-        result = self.hook(command, expected=2)
-        self.assertIn('review tier is C', result.stderr)
-        return result
+        verdict = fixture.r.task_tier(self.data, [str(self.repo), str(self.destination)], command or self.command(), str(self.repo))
+        self.assertEqual(verdict['effective'], 'C', verdict)
+        return verdict
 
     def test_unchanged_workflow_materialization_is_not_authored_change(self):
         self.hook()
@@ -168,7 +168,7 @@ class Materialization(unittest.TestCase):
         self.hook(expected=2)
         self.data['sessionId'] = 'one'
         foreign = self.f.ws / 'foreign'
-        subprocess.run(['git', 'init', '-q', str(foreign)], check=True, capture_output=True, env=self.f.env)
+        subprocess.run(['git', 'init', '-q', str(foreign)], check=True, capture_output=True, env=self.f.env, timeout=20)
         self.data['scope_paths'] = [str(self.repo), str(foreign)]
         self.save_gate()
         self.hook(self.command(destination=foreign / 'assigned-but-foreign-repo'), expected=2)
@@ -198,7 +198,8 @@ class Materialization(unittest.TestCase):
                         'env ' + self.command(),
                         self.command().rsplit(' ', 1)[0]]:
             with self.subTest(command=command):
-                self.hook(command, expected=2)
+                self.tier_c(command)
+                self.hook(command)
 
 
 if __name__ == '__main__':

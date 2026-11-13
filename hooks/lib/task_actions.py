@@ -8,6 +8,7 @@ Only bounded pure-reader/pytest grammars admit pathname globs, with a literal
 non-option prefix or a genuine -- terminator; quoted patterns do not expand.
 """
 from __future__ import annotations
+from pathlib import Path
 
 import ast
 import json
@@ -1174,6 +1175,9 @@ def reader(args: list[str]) -> bool:
         if not rest:
             return False
         sub, opts = rest[0], rest[1:]
+        if sub == "diff-files":
+            # Reuse the authoritative bounded grammar for companion mutations.
+            return _released_read_classifier().git_ok(args[1:])
         if any(a.startswith(("--output", "--ext-diff", "--textconv", "--exec", "-o")) for a in opts):
             return False
         if sub == "reflog":
@@ -1198,7 +1202,7 @@ def reader(args: list[str]) -> bool:
         return sub in {"stash", "worktree"} and bool(opts) and opts[0] == "list"
     if cmd == "gh" and rest:
         if rest[0] == "api":
-            return not any(a in {"-X", "--method", "--input", "--raw-field", "--field", "-f", "-F"} or a.startswith(("-X", "-f", "-F", "--method=", "--input=", "--field=", "--raw-field=")) for a in rest[1:])
+            return _released_read_classifier().gh_ok(rest)
         return len(rest) >= 2 and (rest[0], rest[1]) in {(x, y) for x in {"issue", "pr", "release", "run"} for y in {"view", "list", "checks", "diff", "status"}} | {("repo", "view")}
     return False
 
@@ -1482,6 +1486,76 @@ def action(command: str, cwd: str) -> dict:
         # A vetoed command writes or runs a program: its cwd is unknown writes (#1152).
         result["fallback_paths"] = list(dict.fromkeys(list(result.get("fallback_paths") or []) + [canonical(cwd)]))
     return result
+
+
+SCANNER_CAPABILITY_SHA256 = '489888db51876971fbfc3d4308e51fc06bf643cdaab1ba3c6e2a5b1ee510acf0'
+SCANNER_ADAPTER_SHA256 = '6ffb5666aff0637aec1260d3fd53f8d739b73979fbfed8bbe592f541170b2672'
+
+def _scanner_code(path, expected):
+    import hashlib
+    if not path.is_absolute() or os.path.realpath(path) != str(path):
+        raise ValueError('scanner code cannot use symlink aliases')
+    fd = os.open(path,os.O_RDONLY|os.O_NONBLOCK|getattr(os,'O_NOFOLLOW',0))
+    with os.fdopen(fd,'rb') as source:
+        info=os.fstat(source.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size > 1024*1024:
+            raise ValueError('scanner code must be bounded and singly linked')
+        raw=source.read(1024*1024+1)
+    if hashlib.sha256(raw).hexdigest() != expected:
+        raise ValueError('installed scanner code differs: '+str(path))
+    return raw
+
+def _scanner_module(root):
+    import types
+    path = root/'hooks/lib/scanner_capability.py'
+    raw = _scanner_code(path,SCANNER_CAPABILITY_SHA256)
+    module=types.ModuleType('verified_scanner_capability');module.__file__=str(path)
+    exec(compile(raw,str(path),'exec'),module.__dict__)
+    return module
+
+def scanner_owned_plan(plan, gate_path, gate_data, session):
+    return _scanner_module(Path(plan['scanner_root'])).owned_plan(plan,gate_path,gate_data,session)
+
+def _scanner_execution(tokens, cwd: str):
+    words = [word for word, _, _ in tokens]
+    invocation = list(words)
+    while invocation and invocation[0].startswith('CCP_TASK_ID='):
+        invocation.pop(0)
+    script = 1
+    while script < len(invocation) and invocation[script] in {'-I','-B'}:
+        script += 1
+    candidate = bool(invocation) and (os.path.basename(invocation[0]) == 'scanner-exec.py' or
+                os.path.basename(invocation[0]) in {'python','python3'} and script < len(invocation)
+                and os.path.basename(invocation[script]) == 'scanner-exec.py')
+    if not candidate:
+        return None
+    if any(operator or glob for _, operator, glob in tokens):
+        raise UnknownShape('scanner requires one literal argv command')
+    binding = ''
+    while words and words[0].startswith('CCP_TASK_ID='):
+        value = words.pop(0).split('=',1)[1]
+        if binding and binding != value: raise UnknownShape('conflicting scanner Task bindings')
+        binding = value
+    if len(words) < 4 or words[0] != 'python3' or words[1:3] != ['-I','-B']:
+        raise UnknownShape('scanner requires python3 -I -B and the installed entry')
+    try:
+        root = Path(__file__).resolve().parents[2]
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('scanner_registration',str(Path(__file__).with_name('craft-settings-router.py')))
+        router = importlib.util.module_from_spec(spec); spec.loader.exec_module(router)
+        payload = json.loads(os.environ.get('CCP_HOOK_INPUT_JSON') or '{}')
+        provider = router.registered_test_provider(os.environ,payload)
+        if provider is not None: root = Path(provider).parents[2]
+        producer = root/'hooks/lib/scanner-exec.py'
+        if words[3] != str(producer): raise ValueError('scanner requires the exact selected installed entry')
+        _scanner_code(producer,SCANNER_ADAPTER_SHA256)
+        policy = _scanner_module(root)
+        plan = policy.validate_files(policy.parse_arguments(words[4:]),producer)
+        return {'read_only':False,'investigation':False,'self_managed_shape':False,
+                'paths':[plan['repo'],plan['tmp'],*([plan['message']] if plan['message'] else []),*([plan['index']] if plan.get('index') else []),*([plan['log_dir']] if plan.get('log_dir') else [])],
+                'binding':binding,'scanner_execution':plan}
+    except (OSError,ValueError,subprocess.SubprocessError) as error:
+        raise UnknownShape('scanner execution denied: '+str(error)) from error
 
 
 def _test_receipt_record(tokens, cwd: str):
@@ -1961,9 +2035,63 @@ def task_branch_preparation(args, cwd):
         raise UnknownShape('invalid branch preparation name')
     return [canonical(values.get('--repo', cwd), cwd), canonical(values['--worktree'], cwd)]
 
+
+def _project_execution_wrapper(args: list[str]):
+    """Literal env/command project execution; retain mutation and environment targets.
+
+    This is not a reader or a general wrapper parser. Git keeps its existing
+    stricter normalizer; shell/remote/unknown dispatch cannot borrow cwd scope.
+    """
+    wrapper = os.path.basename(args[0])
+    if wrapper not in {'env', 'command'}:
+        return None
+    index, targets, environment = 1, [], []
+    if wrapper == 'env':
+        if args[index:index + 1] in (['-i'], ['--ignore-environment']):
+            index += 1
+        if args[index:index + 1] == ['--']:
+            index += 1
+        while index < len(args) and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*=.*', args[index], re.S):
+            environment.append(args[index].split('=', 1))
+            index += 1
+    elif args[index:index + 1] == ['--']:
+        index += 1
+    dispatch = args[index:]
+    if dispatch and os.path.basename(dispatch[0]) == 'git':
+        return None  # all Git environment/options remain with its existing normalizer
+    for name, value in environment:
+        if name == 'PATH':
+            if not value or any(not os.path.isabs(part) for part in value.split(':')):
+                raise UnknownShape('project execution PATH needs literal absolute search directories')
+        elif name == 'PYTHONPATH':
+            targets.extend(part or '.' for part in value.split(':'))
+        elif name in {'HOME', 'XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'TMPDIR', 'BUN_RUNTIME_TRANSPILER_CACHE_PATH'}:
+            if not value:
+                raise UnknownShape('project execution environment target is empty')
+            if name != 'BUN_RUNTIME_TRANSPILER_CACHE_PATH' or value != '0':
+                targets.append(value)
+        elif name not in {'NODE_ENV', 'CI', 'DO_NOT_TRACK', 'LANG', 'LC_ALL', 'LC_CTYPE'}:
+            raise UnknownShape('unsupported project execution environment override: ' + name)
+    if not dispatch or dispatch[0].startswith('-'):
+        raise UnknownShape('unsupported project execution wrapper options or missing executable')
+    executable = os.path.basename(dispatch[0])
+    if executable not in {'bun', 'node', 'python', 'python3', 'pytest', 'make', 'npm', 'pnpm', 'yarn'}:
+        raise UnknownShape('unsupported project execution wrapper executable')
+    inline = ('-c',) if executable in {'python', 'python3'} else ('-e', '-p') if executable in {'bun', 'node'} else ()
+    if inline and any(word.startswith(inline) or executable in {'python', 'python3'}
+                      and word.startswith('-') and not word.startswith('--') and 'c' in word[1:]
+                      for word in dispatch[1:]):
+        raise UnknownShape('opaque inline execution has unbounded mutation targets')
+    if executable in {'bun', 'node'} and any(word.partition('=')[0] in {'--eval', '--print'} for word in dispatch[1:]):
+        raise UnknownShape('opaque inline execution has unbounded mutation targets')
+    return dispatch, targets
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
+        scanner = _scanner_execution(tokens, cwd)
+        if scanner is not None:
+            return scanner
         receipt = _test_receipt_record(tokens, cwd)
         if receipt is not None:
             return receipt
@@ -2104,6 +2232,11 @@ def _action(command: str, cwd: str) -> dict:
                 self_managed = False
                 args, arg_globs = [], []
                 return
+            wrapped = _project_execution_wrapper(args)
+            if wrapped is not None:
+                args, environment_targets = wrapped
+                paths.extend(canonical(value, effective) for value in environment_targets)
+                # This branch is already a mutation; do not rerun reader admission.
             self_managed = self_managed and args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "ln"}
             if args[0] in {'eval', 'exec', 'bash', 'sh', 'zsh', 'dash', 'ksh'} or args[0] in {'python', 'python3'} and any(x == '-c' or x.startswith('-c') for x in args[1:]):
                 raise UnknownShape('opaque inline execution has unbounded mutation targets')

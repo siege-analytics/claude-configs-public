@@ -1,18 +1,18 @@
 ---
 name: commit
-description: Create git commits with descriptive messages that link to tickets and explain the why. Enforces ticket references.
+description: Create coherent reviewed commits that explain the change and reference the motivating task.
 allowed-tools: Read Grep Glob Bash
 ---
 
 # Instructions
 
-0. **Verify-before-execute** -- emit the verification block from [rule:verify-before-execute] for the commit you are about to make. The Standards line must include `[skill:commit]` and the relevant project/language rules; the Intent line must summarize what the commit accomplishes; the Evidence line (if this is a fix) must reference same-turn tool calls demonstrating the bug. Skipping requires `[verify-skip: <reason>]` -- and `[verify-skip]` does NOT exempt the commit from any later step in this skill.
+0. Check the intended target, diff and existing authority using [rule:verify-before-execute]. Refresh relevant evidence when it may have changed; no visible per-command verification template or same-turn re-reading ceremony is required.
 
 0.5. **Branch guard -- verify you are NOT on a protected branch**
    1. Run `git branch --show-current` to get the current branch name
    2. If the branch is `main`, `master`, `develop`, `dev`, `development`, `staging`, `next`, or `integration` → **STOP**
-   3. Inform the user: "You are on `{branch}`. Commits should go on a feature branch, not directly on a protected branch."
-   4. Offer to create a feature branch (use the branch skill) before proceeding
+   3. Preserve current work and prepare an isolated feature branch through [skill:branch] under the existing task authorization.
+   4. Continue on that verified feature branch without asking for routine permission; hold only a genuine unresolved ownership or preservation problem
    5. Only proceed if the user explicitly overrides: "Commit directly to {branch}"
    6. If the user overrides, add `[direct-commit]` to the commit body as an audit trail
 1. Review what has changed
@@ -35,13 +35,13 @@ allowed-tools: Read Grep Glob Bash
    3. 60-second timeout per affected-test run. Tests slower than that get marked `slow` and run at PR-open time only.
    4. Non-zero exit blocks the commit. No silent skip: if the heuristic finds no test files for a touched source file, that itself is reported and the agent decides whether to write a test or proceed with `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]`.
    5. Override syntax: `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per `[rule:writing-code]` writing-code:5 escape hatch. Track override frequency; using it more than once per session is a smell.
-   6. Run the affected test command through `hooks/lib/test-evidence.py record --repo <target-repo> --think-gate <own-think-gate> --output <own-task-dir>/test-gate.json --source <exact-relative-source> --framework <declared-framework> -- <test-command>`. Repeat `--source` for every touched source. Use resolved literal paths to the exact installed producer and the selected own-task gate/adjacent receipt. The bound-session execution lane requires that task to be implementing with its effective review tier satisfied; running tests is computation, not a read or own-scratch exemption. The producer records a version 2 content/revision receipt only after the command passes without source changes; failed/interrupted reruns invalidate prior success. Tests may run before the commit when it preserves exactly that tested content. Do not hand-upgrade legacy evidence; rerun tests. See `[skill:testing-frameworks]` for the schema and report-only compatibility check.
+   6. Run the affected test command through `hooks/lib/test-evidence.py record --repo <target-repo> --think-gate <own-think-gate> --output <own-task-dir>/test-gate.json --source <exact-relative-source> --framework <declared-framework> -- <test-command>`. Repeat `--source` for every touched source. Use resolved literal paths to the exact installed producer and the selected own-task gate/adjacent receipt. The bound-session execution lane requires that task to be implementing with truthful target scope; publication review is not a prerequisite to running its tests; running tests is computation, not a read or own-scratch exemption. The producer records a version 2 content/revision receipt only after the command passes without source changes; failed/interrupted reruns invalidate prior success. Tests may run before the commit when it preserves exactly that tested content. Do not hand-upgrade legacy evidence; rerun tests. See `[skill:testing-frameworks]` for the schema and report-only compatibility check.
    7. For a genuinely unbound native Git invocation, use that same producer with `--output /path/to/repo/test-gate.json` and omit `--think-gate`. This existing root-receipt route applies only when no supported host/session binding exists; an invalid binding cannot fall back to it. Keep the actual environment unchanged: do not invent a Craft identity or clear one to select this route. The receipt proves tested source content for native Git; it does not authorize a Craft action or replace a bound task's evidence.
-5. **Check for a ticket reference** (see Ticket enforcement below)
-   1. If no ticket exists for this work, stop and create one first
-   2. If the user explicitly overrides, mark the commit with `[no-ticket]`
+5. **Check for a ticket reference** (see Task references below)
+   1. Reference the existing task or user request; create a ticket only when useful or required by the project policy
+   2. Do not require a routine user override merely because an authorized task has no issue
 6. Write the commit message (see Message structure below)
-7. **Verify ticket reference is in the footer**
+7. **Verify the footer references the motivating ticket, or `[task: meaningful authorized task or request]` when no issue exists.**
 8. Verify after committing
    1. Run `git log -1` to confirm the message looks correct
    2. Run `git status` to confirm nothing was missed or accidentally included
@@ -154,51 +154,9 @@ Using `[run-skip]` more than once per session is a smell. The threshold is wrong
 
 `[rule:writing-code]` writing-code:5 requires that code depending on a library, service, or external API exercises the real dependency before claiming the code works. The honor-system version of that rule is "I checked." The mechanical version is "the tests ran and passed in the same commit-attempt." This gate is the mechanical version.
 
-# Ticket enforcement
+# Task references
 
-**Every commit must reference a ticket.** If the work is committable, it is ticketable. This is not optional -- it is the default behaviour.
-
-## Before creating any commit
-
-Scan the planned commit message for ticket patterns. If no ticket reference is found, **stop and ask**.
-
-## If no ticket exists for this work
-
-1. Inform the user: "This work doesn't have a ticket. If it's committable, it's ticketable."
-2. Offer to create a ticket first (use the create-ticket skill)
-3. Only proceed with the commit after a ticket exists or the user explicitly overrides
-
-## Decision tree
-
-```
-Commit ready?
-├── Has ticket reference in footer? → Proceed with commit
-├── No ticket reference?
-│   ├── Ticket exists but not referenced? → Add reference, then commit
-│   ├── No ticket exists?
-│   │   ├── User wants to create ticket? → Create ticket, then commit
-│   │   └── User explicitly overrides? → Commit with [no-ticket] in body
-│   └── Trivial change (typo, formatting)? → Ask user if override is appropriate
-└── Ambiguous? → Ask user
-```
-
-## Override syntax
-
-When the user explicitly says to skip the ticket requirement:
-
-```
-User: "Just commit it, no ticket needed"
-User: "Override the ticket check"
-User: "This is too trivial for a ticket"
-```
-
-In these cases, add to the commit body:
-
-```
-[no-ticket] Trivial formatting change, per operator override.
-```
-
-This should be rare -- the goal is to make ticketless commits uncomfortable, not impossible.
+Link existing relevant tickets in the commit footer. If no ticket exists, identify the authorized task or request in the message; do not stop to ask for routine permission or create an issue solely to satisfy a universal ceremony. Preserve any explicit project-specific ticket requirement and repair missing tracking within that grant. Use `[task: meaningful authorized task or request]` when there is no issue; the commit and publication guards accept this reference without a fresh operator waiver. They also accept project ticket identifiers and issue/task URLs. Bare `[no-ticket]` is invalid. The legacy structured `[no-ticket: Reason: <reason>; Evidence: <observation>; Falsification: <disproof>]` remains supported, but is not required for an ordinary authorized task.
 
 # Message structure
 
@@ -294,7 +252,7 @@ because it assumes a fixed width, which varies by identifier type.
 
 ## Footer
 
-The footer links the commit to tickets and related context. **This is mandatory** (see Ticket enforcement above).
+The footer links the commit to its motivating task and related context; use existing ticket references where available.
 
 ### Ticket references
 
@@ -404,7 +362,7 @@ If it was already committed, remove it from history and rotate the credential im
 
 # Checklist
 
-- [ ] **[rule:verify-before-execute] block emitted** -- Standards, Intent, and (for fixes) same-turn Evidence
+- [ ] Intended target, diff and existing authority checked; refresh evidence where relevant context may have changed, without a per-command template
 - [ ] **Not on a protected branch** (main, develop, etc.) -- or user explicitly overrode with `[direct-commit]`
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`
@@ -414,8 +372,8 @@ If it was already committed, remove it from history and rotate the credential im
 - [ ] **Affected tests ran and passed** -- per the heuristic or `.claude/affected-tests.toml`, or `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]` documented in commit body
 - [ ] Subject line: type prefix, imperative mood, under 72 chars, specific
 - [ ] Body explains the why (if the change is non-trivial)
-- [ ] **Footer references the relevant ticket(s)** -- mandatory unless user overrides with `[no-ticket]`
-- [ ] Ticket exists for this work (if committable, it's ticketable)
+- [ ] **Footer references the relevant task or ticket** where available; preserve explicit project requirements
+- [ ] Motivating task is clear; any explicit project ticket requirement is satisfied
 - [ ] No AI/agent attribution anywhere in the commit message
 - [ ] Verified with `git log -1` and `git status` after committing
 

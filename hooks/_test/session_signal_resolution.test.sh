@@ -168,13 +168,13 @@ cat >"$TMP/sessions/session-brand-new/tasks/current/think-gate.json" <<JSON
 {"ticket":"#current","repo_root":"$TMP/repo","status":"implementing"}
 JSON
 out=$(printf '%s' "$payload_current_repo" | CRAFT_AGENT_SESSION_ID=session-brand-new bash "$TMP_INVESTIGATE" 2>&1)
-if echo "$out" | grep -q "INVESTIGATION REQUIRED" && echo "$out" | grep -q "#current"; then
+if [[ -z "$out" ]]; then
   _HARNESS_PASS=$((_HARNESS_PASS + 1))
-  printf '  [PASS] investigate gate still warns for current-task missing investigation\n'
+  printf '  [PASS] legacy investigation callback adds no current-task preparation requirement\n'
 else
   _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
-  _HARNESS_FAILED_NAMES+=("investigate gate still warns for current-task missing investigation")
-  printf '  [FAIL] investigate gate did not warn for current task\n'
+  _HARNESS_FAILED_NAMES+=("legacy investigation callback adds no current-task preparation requirement")
+  printf '  [FAIL] legacy investigation callback emitted a preparation requirement\n'
   printf '         output: %s\n' "${out:0:300}"
 fi
 
@@ -240,13 +240,13 @@ cat >"$TMP/sessions/session-brand-new/tasks/current/think-gate.json" <<JSON
 {"ticket":"#same-repo-current-session","repo_root":"$TMP/repo","session":"session-brand-new","status":"implementing"}
 JSON
 out=$(printf '%s' "$payload_current_repo" | CRAFT_AGENT_SESSION_ID=session-brand-new bash "$TMP_INVESTIGATE" 2>&1)
-if echo "$out" | grep -q "INVESTIGATION REQUIRED" && echo "$out" | grep -q "#same-repo-current-session"; then
+if [[ -z "$out" ]]; then
   _HARNESS_PASS=$((_HARNESS_PASS + 1))
-  printf '  [PASS] investigate gate still accepts same-repo current-session task gate\n'
+  printf '  [PASS] legacy investigation callback leaves same-repo task admission to the mutation guard\n'
 else
   _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
-  _HARNESS_FAILED_NAMES+=("investigate gate still accepts same-repo current-session task gate")
-  printf '  [FAIL] investigate gate rejected current-session local gate\n'
+  _HARNESS_FAILED_NAMES+=("legacy investigation callback leaves same-repo task admission to the mutation guard")
+  printf '  [FAIL] legacy investigation callback emitted output for an owned task\n'
   printf '         output: %s\n' "${out:0:300}"
 fi
 

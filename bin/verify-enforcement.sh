@@ -41,7 +41,7 @@ NATIVE_GIT_REPO=""
 SETTINGS_OVERRIDE=""
 # Code-owned trust anchor for the canonical compact kernel. This verifier is a
 # Tier C surface; never derive the expected digest from the mutable target.
-EXPECTED_KERNEL_SHA256="106213a475a855b9b63ba2d4a9a74f1258ca225df3fa958a7c21e806a9d8dc43"
+EXPECTED_KERNEL_SHA256="1e61dbbc7cd5cbe2d394d308bc792c90fc7f0086b33e65f5d681eaea6ac91ce8"
 KERNEL_VERIFIED=0
 
 usage() {

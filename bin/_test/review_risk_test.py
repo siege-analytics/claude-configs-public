@@ -205,15 +205,15 @@ hooks/bash/coordinator-status-guard.sh|hooks/lib/hook_payload.py
 hooks/git/detect-ai-fingerprints.sh|hooks/lib/github-merge-queue.py
 hooks/git/fix-shape-guard.sh|hooks/lib/github-merge-queue.py
 hooks/git/self-review.sh|hooks/lib/github-merge-queue.py
+hooks/git/self-review.sh|hooks/lib/command-text.py
+hooks/git/detect-ai-fingerprints.sh|hooks/lib/command-text.py
 hooks/git/survey-context.sh|hooks/lib/github-merge-queue.py
 hooks/git/test-guard.sh|hooks/lib/github-merge-queue.py
 hooks/git/test-tracking-guard.sh|hooks/lib/github-merge-queue.py
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/session_anchor.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/hook_payload.py
-hooks/bash/universal-mutation-gate.sh|hooks/lib/session_anchor.py
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/hook_payload.py
 hooks/git/test-guard.sh|hooks/lib/hook_payload.py
-hooks/resolver/investigate-gate-guard.sh|hooks/lib/hook_payload.py
 hooks/resolver/pipeline-state-guard.sh|hooks/lib/hook_payload.py
 hooks/resolver/skill-enforcement-gate.sh|hooks/lib/hook_payload.py
 hooks/resolver/standing-order-guard.sh|hooks/lib/hook_payload.py
@@ -249,7 +249,6 @@ hooks/git/pr-base-guard.sh|hooks/lib/extract-json.py
 hooks/git/self-review.sh|hooks/lib/extract-json.py
 hooks/git/self-review.sh|hooks/lib/read-only-command.py
 hooks/git/self-review.sh|hooks/lib/probe-runner.py
-hooks/git/self-review.sh|hooks/lib/resolve-think-gate.py
 hooks/git/self-review.sh|hooks/lib/scope-check.sh
 hooks/git/survey-context.sh|hooks/lib/extract-json.py
 hooks/git/survey-context.sh|hooks/lib/scope-check.sh
@@ -266,7 +265,6 @@ hooks/infrastructure/catalog-guard.sh|hooks/lib/classify-catalog-command.py
 hooks/resolver/branch-state-guard.sh|hooks/lib/log-block.sh
 hooks/resolver/ca-enforcement-gate.sh|hooks/lib/detect-host.sh
 hooks/resolver/ca-enforcement-gate.sh|hooks/lib/gate-registry.sh
-hooks/resolver/investigate-gate-guard.sh|hooks/lib/resolve-think-gate.py
 hooks/resolver/pipeline-state-guard.sh|hooks/lib/resolve-think-gate.py
 hooks/resolver/pipeline-state-guard.sh|hooks/lib/pipeline_state.py
 hooks/resolver/skill-enforcement-gate.sh|hooks/lib/extract-json.py
@@ -305,8 +303,8 @@ hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
 hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "888762d8a7a41e8e3e40d1b4d7fc18481c5905685f34f5310fc077d9a21d1a70"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "353464de155f466922c0d3c5eb0868a00b9a5b4241f3f2f66126d0638cf9e89d"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "405c7de22d57f3710ffd82304432579c8c9fb73c021bdaf954da1035e2cd961a"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "bfcc0d437678bdfb8ff1842d464a8dec28f702b6f7638ab43d756a3b0677f606"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
@@ -314,19 +312,18 @@ hooks/agent-comms/no-slug-form-outbound.sh|hooks/lib/extract-json.py|2
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/resolve-think-gate.py|1
 hooks/bash/coordinator-status-guard.sh|hooks/lib/extract-json.py|2
 hooks/bash/destructive-guard.sh|hooks/lib/extract-json.py|2
-hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py|4
+hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py|3
 hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/branch-guard.sh|hooks/lib/extract-json.py|2
-hooks/git/detect-ai-fingerprints.sh|hooks/lib/extract-json.py|2
+hooks/git/detect-ai-fingerprints.sh|hooks/lib/extract-json.py|5
 hooks/git/fix-shape-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/no-attribution.sh|hooks/lib/extract-json.py|2
 hooks/git/no-broad-staging.sh|hooks/lib/extract-json.py|2
 hooks/git/no-sensitive-files.sh|hooks/lib/extract-json.py|2
 hooks/git/post-error-revision-required.sh|hooks/lib/extract-json.py|1
 hooks/git/pr-base-guard.sh|hooks/lib/extract-json.py|3
-hooks/git/self-review.sh|hooks/lib/extract-json.py|2
+hooks/git/self-review.sh|hooks/lib/extract-json.py|4
 hooks/git/self-review.sh|hooks/lib/read-only-command.py|1
-hooks/git/self-review.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/survey-context.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/test-evidence.py|2
@@ -340,7 +337,6 @@ hooks/infrastructure/catalog-guard.sh|hooks/lib/classify-catalog-command.py|1
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py|1
 hooks/resolver/branch-state-guard.sh|hooks/lib/log-block.sh|1
 hooks/resolver/ca-enforcement-gate.sh|hooks/lib/gate-registry.sh|1
-hooks/resolver/investigate-gate-guard.sh|hooks/lib/resolve-think-gate.py|2
 hooks/resolver/pipeline-state-guard.sh|hooks/lib/resolve-think-gate.py|1
 hooks/resolver/pre-action-guard.sh|hooks/lib/log-block.sh|1
 hooks/resolver/skill-enforcement-gate.sh|hooks/lib/resolve-think-gate.py|1
@@ -575,7 +571,7 @@ def ci_site_problems(overrides:dict[str,str]|None=None)->list[tuple]:
  return problems
 
 # Paired helper calls serve the action/typed-reply consumers and turn metadata/binding.
-REQUIRED_HELPER_INVOCATION_SITE_COUNTS = {("hooks/bash/coordinator-status-guard.sh","hooks/lib/task_actions.py"):2, ("hooks/resolver/pipeline-state-guard.sh","hooks/lib/hook_payload.py"):2}
+REQUIRED_HELPER_INVOCATION_SITE_COUNTS = {("hooks/bash/coordinator-status-guard.sh","hooks/lib/git_command.py"):2, ("hooks/bash/coordinator-status-guard.sh","hooks/lib/task_actions.py"):2, ("hooks/resolver/pipeline-state-guard.sh","hooks/lib/hook_payload.py"):2}
 
 def verify_dependency_graph()->None:
  source_settings,manifest,generated_settings=entrypoint_surfaces()
@@ -648,6 +644,9 @@ def verify_dependency_graph()->None:
     assert (source,target) not in {(a,b) for a,b,_ in python_helper_chain_sites({source},{source:changed})},("dynamic helper nonexecution accepted",source,site,replacement)
    changed=replace_nth_line(original,site,site+"\n"+site,0)
    assert (source,target) not in {(a,b) for a,b,_ in python_helper_chain_sites({source},{source:changed})},("duplicate dynamic helper statement accepted",source,site)
+  malformed=replace_nth_line(original,chain[0],"if invalid Python",0)
+  assert not python_helper_chain_sites({source},{source:malformed}),"invalid Python cannot establish a helper chain"
+  assert helper_site_problems(entrypoints,{source:malformed}),"invalid helper syntax must fail dependency audit with a diagnostic"
   ordered="try:\n"+"\n".join("    "+line for line in chain)+"\n        pass\nexcept Exception:\n    pass"
   decoys=["if False:\n"+"\n".join("    "+line for line in ordered.splitlines()),
           "def never_called():\n"+"\n".join("    "+line for line in ordered.splitlines()),

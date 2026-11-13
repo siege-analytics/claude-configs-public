@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
@@ -14,12 +15,35 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def command(args, *, cwd, input=None):
-    return subprocess.check_output(args, cwd=cwd, input=input, stderr=subprocess.PIPE, timeout=60)
+def command(args, *, cwd, input=None, env=None):
+    return subprocess.check_output(args, cwd=cwd, input=input, env=env, stderr=subprocess.PIPE, timeout=60)
 
 
 def git(root, *args, input=None):
-    return command(['git', '-c', 'core.quotepath=false', *args], cwd=root, input=input)
+    env = {**os.environ, 'CCP_SCANNER_FILTER_EMPTY': '', 'CCP_SCANNER_FILTER_OPTIONAL': 'false',
+           'GIT_GRAFT_FILE': os.devnull}
+    return command(['git', '--no-lazy-fetch', '--no-replace-objects', '-c', 'core.quotepath=false', *args], cwd=root, input=input, env=env)
+
+
+
+def working_filter_options(root):
+    # Enumerate names, never values: selected configuration is data, not code.
+    result = subprocess.run(['git', '--no-lazy-fetch', '--no-replace-objects', 'config', '--null',
+        '--name-only', '--get-regexp', r'^filter\..*\.(clean|process|required)$'],
+        cwd=root, capture_output=True, timeout=60)
+    require(result.returncode in (0, 1), 'cannot enumerate working filter drivers')
+    drivers = set()
+    for raw in result.stdout.split(b'\0'):
+        if raw:
+            key = raw.decode()
+            require(re.fullmatch(r'filter\..+\.(?:clean|process|required)', key),
+                    'unsupported working filter key')
+            drivers.add(key.rsplit('.', 1)[0])
+    return ['--config-env=' + driver + '.' + key + '=' + variable
+            for driver in sorted(drivers)
+            for key, variable in (('clean', 'CCP_SCANNER_FILTER_EMPTY'),
+                                  ('process', 'CCP_SCANNER_FILTER_EMPTY'),
+                                  ('required', 'CCP_SCANNER_FILTER_OPTIONAL'))]
 
 
 def relevant(path):
@@ -64,11 +88,11 @@ def tree_files(root, tree):
 
 
 def head_or_empty(root):
-    head = subprocess.run(['git', 'rev-parse', '--verify', 'HEAD'], cwd=root, capture_output=True, timeout=60)
+    head = subprocess.run(['git', '--no-lazy-fetch', '--no-replace-objects', 'rev-parse', '--verify', 'HEAD'], cwd=root, capture_output=True, timeout=60)
     if head.returncode == 0:
         return head.stdout.decode().strip()
     branch = git(root, 'symbolic-ref', '--quiet', 'HEAD').decode().strip()
-    exists = subprocess.run(['git', 'show-ref', '--verify', '--quiet', branch], cwd=root, capture_output=True, timeout=60)
+    exists = subprocess.run(['git', '--no-lazy-fetch', '--no-replace-objects', 'show-ref', '--verify', '--quiet', branch], cwd=root, capture_output=True, timeout=60)
     require(exists.returncode == 1, 'cannot establish unborn repository baseline')
     return git(root, 'hash-object', '-w', '-t', 'tree', '--stdin', input=b'').decode().strip()
 
@@ -78,7 +102,7 @@ def snapshot(mode, destination, *, pr=None, cwd=None):
     root = Path(git(cwd, 'rev-parse', '--show-toplevel').decode().strip())
     require(not destination.exists(), 'snapshot destination already exists')
     identity = {'mode': mode}
-    diff_options = ['--no-ext-diff', '--no-textconv', '--no-renames']
+    diff_options = ['--no-ext-diff', '--no-textconv', '--no-renames', '--submodule=short']
     if mode == 'staged':
         # write-tree names the index contents once. Both diff and AST use this
         # object; subsequent index/worktree edits cannot change the selection.
@@ -93,9 +117,9 @@ def snapshot(mode, destination, *, pr=None, cwd=None):
         refs = [metadata.get('baseRefOid'), metadata.get('headRefOid')]
         require(all(isinstance(ref, str) and re.fullmatch(r'[0-9a-f]{40}', ref) for ref in refs), 'PR metadata lacks exact base/head')
         for ref in refs:
-            present = subprocess.run(['git', 'cat-file', '-e', ref + '^{commit}'], cwd=root, capture_output=True, timeout=60)
+            present = subprocess.run(['git', '--no-lazy-fetch', '--no-replace-objects', 'cat-file', '-e', ref + '^{commit}'], cwd=root, capture_output=True, timeout=60)
             if present.returncode:
-                git(root, 'fetch', '--no-tags', 'origin', ref)
+                git(root, 'fetch', '--no-tags', '--no-recurse-submodules', '--refmap=', '--no-auto-maintenance', '--no-write-commit-graph', 'origin', ref)
             require(git(root, 'rev-parse', ref + '^{commit}').decode().strip() == ref, 'PR ref is not an exact commit')
         base, selected = refs
         merge_base = git(root, 'merge-base', base, selected).decode().strip()
@@ -121,14 +145,15 @@ def snapshot(mode, destination, *, pr=None, cwd=None):
                 files[path] = source.read_bytes()
     else:
         raise ValueError('unknown source mode')
-    diff = git(root, 'diff', *diff_options, '--unified=3', *comparison)
-    changed = git(root, 'diff', *diff_options, '--name-only', '-z', '--diff-filter=ACMRT', *comparison)
+    filter_options = working_filter_options(root) if mode == 'working' else []
+    diff = git(root, *filter_options, 'diff', *diff_options, '--unified=3', *comparison)
+    changed = git(root, *filter_options, 'diff', *diff_options, '--name-only', '-z', '--diff-filter=ACMRT', *comparison)
     python_paths = [path.decode() for path in changed.split(b'\0') if path.endswith(b'.py')]
     require(all(path in files for path in python_paths), 'selected Python input missing from snapshot')
     if mode == 'working':
         # Working mode is explicitly mutable. Refuse observed changes while
         # copying rather than silently mixing the two observed views.
-        require(diff == git(root, 'diff', *diff_options, '--unified=3'), 'working diff changed during scan selection')
+        require(diff == git(root, *filter_options, 'diff', *diff_options, '--unified=3'), 'working diff changed during scan selection')
         require(all((root / safe_path(path)).read_bytes() == content for path, content in files.items()), 'working input changed during scan selection')
     seen = set()
     for path in files:
@@ -146,6 +171,7 @@ def snapshot(mode, destination, *, pr=None, cwd=None):
         output.write_bytes(content)
     (destination / 'diff').write_bytes(diff)
     (destination / 'python-paths').write_bytes(b''.join(path.encode() + b'\0' for path in python_paths))
+    identity['diff_sha256'] = hashlib.sha256(diff).hexdigest()
     identity['files_sha256'] = {path: hashlib.sha256(content).hexdigest() for path, content in sorted(files.items())}
     (destination / 'selection.json').write_text(json.dumps(identity, sort_keys=True, indent=2) + '\n')
     return identity

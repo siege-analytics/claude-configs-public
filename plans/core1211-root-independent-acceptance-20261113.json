@@ -1,0 +1,23 @@
+{
+  "reviewer": "Root independent review",
+  "sourceTree": "8a47319d6d805f248fb7119e32ad71c0a33af245",
+  "base": "b8786c897bb92e37472aec43c813d537defd749d",
+  "verdict": "accepted for normal commit and PR; no clean scan claimed",
+  "scanExit": 1,
+  "rawFindings": 109,
+  "dispositions": {
+    "demonstrated-false-positive-fixture-data": 4,
+    "rebound-demonstrated-false-positive": 46,
+    "retained-inherited-debt": 45,
+    "demonstrated-false-positive-handled-error-control": 14
+  },
+  "verified": "Exact raw-output SHA, all109 individually mapped rows, five final file hashes and staged tree match. Read final adapter/capability and resolver/dispatcher additions, all new handled controls and fixture explanations; prior full source review retained. Final18 actual scanner runtime tests PASS27.988s; prior registered4 PASS retained with mode-only delta disclosed. Existing45 inherited coverage debt retained; no general waiver.",
+  "tests": {
+    "command": "python3 hooks/_test/scanner_execution.py -q",
+    "exit": 0,
+    "tests": 18,
+    "seconds": 27.988
+  },
+  "scope": "publication acceptance; hosted CI and live installed native acceptance still required",
+  "timeUTC": "2026-11-13T00:55:46.684837+00:00"
+}

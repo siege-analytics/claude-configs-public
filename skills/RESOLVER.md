@@ -14,7 +14,7 @@ This is a navigation and compatibility index, not the executable auto-selection 
 | [rule:typescript] | Effective TypeScript idioms -- applied when touching `*.ts` / `*.tsx` |
 | [rule:rust] | Rust idioms -- applied when touching `*.rs` |
 | [rule:siege-utilities] | Compatibility pointer only; project prescriptions live in the exact `github.com/siege-analytics/siege_utilities` overlay. |
-| [rule:definition-of-done] | Five hard criteria plus one opt-in for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists, KB delta validated. Behavior changes are not finished until all five mandatory criteria pass. |
+| [rule:definition-of-done] | Requested outcome verified through proportionate checks, useful review and actual delivery; keep task status honest. |
 | [rule:knowledge-base] | Knowledge-base consultation discipline -- read before claiming, tag every assumption, update on contradiction, silence is a finding. Applied when the project declares `knowledge_base:` in PROJECT.md. |
 | [rule:robustness] | Robust Python (Viafore) -- type safety, invariant enforcement, fail fast, constrain mutability. Applied when writing or reviewing Python code. |
 | [rule:architecture-patterns] | Architecture Patterns with Python (Percival & Gregory) -- repository pattern, service layer, dependency inversion. Applied when designing service layers or data-access boundaries. |
@@ -50,7 +50,7 @@ This is a navigation and compatibility index, not the executable auto-selection 
 | Explicit QML component review -- optional generic Qt Quick checklist (not auto-routed; ChordLibrary/MuseScore identity UNKNOWN) | [skill:qml-component-review] |
 | Auditing error-path test coverage, writing-tests:5 compliance | [skill:test-coverage-audit] |
 | Choosing a test framework, declaring test layers in PROJECT.md, test-guard enforcement | [skill:testing-frameworks] |
-| Fix a bug or issue identified by code review / audit / static analysis | [skill:think] Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per [skill:evaluate-ticket] criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
+| Fix a bug or issue identified by code review / audit / static analysis | [skill:think]: verify the finding against current code, inspect related failure patterns and add a meaningful regression where practical. |
 
 Named data/engine routes require an operational task in the same clause, not a bare mention in documentation or a read-only “what/how-to” question. A pure choropleth/map request does not activate geometry engines just because its input is a GeoDataFrame; a requested spatial join, overlay, or reprojection does. Shelves remain opt-in, never auto-selected.
 
@@ -197,17 +197,9 @@ These hints apply only to the exact `github.com/siege-analytics/siege_utilities`
 | Function returns empty DataFrame/list/dict/string on error path | Bug -- see [rule:siege-utilities-] (SU-1) |
 | Code under `examples/` or `notebooks/` | Held to library standard -- see [rule:siege-utilities-] (SU-3) |
 
-## Universal pre-action checks
+## Work preparation and delivery
 
-These skills fire automatically before non-trivial work, regardless of which routing entry matched. They are gates, not destinations.
-
-| Check | Skill | When it fires |
-|---|---|---|
-| Branch correctness | [skill:develop-guard] | Before branch creation or branch/PR-base selection |
-| Ticket destination exists | [skill:ticket-guard] | Before non-trivial work begins (once per session, memoized). Ensures strategic decisions have a durable, human-visible home. |
-| Strategic decisions surfaced | [skill:decision-to-ticket] | When making scope, architecture, sequencing, deferral, standing approval, or completion claim decisions. Fires in real time during work, not at session end. Includes a completion guard that prevents scope-reduction rationalization. |
-| Evidentiary fact-finding | [skill:investigate] | After think Step 7 approves, before implementation begins. Required for any work that touches existing entities, modifies data flow, or changes downstream behavior. Produces a Fact Sheet artifact with file:line citations. **Mechanically enforced**: `investigate-gate-guard.sh` blocks implementation writes when think-gate exists but investigate-gate does not. Level 2 spot-checks file:line citations. Self-review enforces artifact reference at push time (v1.3). For transformation code (SQL, DataFrame pipelines), Level 3 requires `Pre-ship-dry-run:` trailer with behavioral verification evidence (#255, #275). |
-| Adversarial risk classification | [skill:pre-mortem] | After investigate completes, before implementation begins. Classifies failure scenarios as Tiger/Paper Tiger/Elephant. Launch-Blocking Tigers halt implementation. Self-review enforces artifact reference at push time (v1.3). |
+Use [skill:think] to understand the requested outcome and actual target scope, then implement under existing authority. Investigation and pre-mortem are optional aids for uncertainty, not universal pre-edit artifacts or posting gates. Use [skill:develop-guard] for branch selection and [skill:self-review] for proportionate validation and publication review. Keep useful decisions and outcomes in the existing task or PR; an authorized operational request does not universally need a new ticket.
 
 ## Disambiguation rules
 

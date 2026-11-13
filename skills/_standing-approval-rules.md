@@ -1,43 +1,22 @@
 ---
-description: Always-on. How to interpret instructions that say "do X when ready," "merge when reviewed," "ship when done," or any other conditional gate. "Ready" is defined by the process, not by the receiver of the instruction. Standing approvals delegate the TIMING of action upon readiness; they never delegate the JUDGMENT of what readiness means.
+description: Act on standing authorization when the applicable conditions are met; preserve real owner holds without inventing new approval ceremonies.
 ---
 
 # Standing Approval
 
-When an operator gives a standing instruction -- "merge when ready," "ship when done," "deploy when verified," "respond when checked" -- the operative concept is the readiness gate. The gate is what the instruction depends on. Bypassing readiness judgment to act on the instruction means you executed the opposite of the instruction.
+A standing instruction such as "merge when ready" authorizes routine execution once its actual conditions are satisfied. Use judgment within that grant; do not ask the operator to repeat it.
 
-## The burgers analogy
+**standing-approval:1. Verify applicable readiness.** Inspect relevant checks, required repository CI, material findings and review required by [skill:self-review] or an explicit project/owner contract. Standard work does not universally need a named counterpart, new human approval or unrelated build. Coordinate parallel work where it could conflict.
 
-> "Please remove the burgers from the stove when ready."
+**standing-approval:2. Obtain a real review when required.** A required review must actually inspect the relevant change; silence or an assigned reviewer is not acceptance. Request it through the existing channel, fix findings and continue independent work. Do not invent a reviewer dependency where the applicable contract does not require one.
 
-If you remove them based on time elapsed, or because they've been on the stove long enough, or because someone is hungry, you produce uncooked meat. The "when ready" was not a timer or a vibe. It was the entire gating condition the instruction depended on.
+**standing-approval:3. Report timing honestly.** Post-publication verification does not prove a required pre-publication review happened. Record missed steps and repair their substantive consequences without fabricating provenance or pretending a non-clean result was clean.
 
-A standing approval delegates the **timing** of the merge / ship / deploy to you, based on readiness. It does not delegate the **judgment** of what readiness means. "Ready" is defined by the process -- by `[rule:definition-of-done]`'s five criteria, by the project's CI, by the asymmetric-expertise counterpart's review -- not by the receiver of the instruction.
+**standing-approval:4. Respect actual role boundaries.** Delegation grants the specified actions and scope. It does not silently expand a review-only role into publishing authority, and an old role map does not revoke duties genuinely transferred to a successor. Clarify a real conflict from the controlling instruction.
 
-If you find yourself rationalizing that something is "ready enough" or that "review will happen post-merge," you have collapsed the gate into a recommendation, which is the failure mode the standing approval was meant to prevent.
+**standing-approval:5. Repair readiness within the grant.** Complete missing checks and obtain required reviews rather than requesting routine waivers or a fresh GO. Once actual conditions are satisfied, proceed. Ask only when material authority, scope or consequences remain unresolved; hold the affected action and continue eligible work.
 
-## The six rules
-
-**standing-approval:1. "Ready" requires every readiness step to have completed.** Before treating any artifact as ready-to-merge / ready-to-ship / ready-to-send, confirm ALL of:
-
-- Build / CI green (per `[rule:definition-of-done]` § a).
-- Substance reviewed by the named reviewer or asymmetric-expertise counterpart (per `[rule:definition-of-done]` § a + `[skill:code-review]`).
-- Any standing-approval gate met (e.g., the operator approved this *class* of change; this artifact is in that class).
-- No race-condition risk with parallel work.
-
-If any step is incomplete, the artifact is not ready. Standing approvals do not authorize skipping any readiness step.
-
-**standing-approval:2. The rebuttal channel IS the review.** If the asymmetric-expertise counterpart hasn't seen the artifact, the rebuttal channel hasn't fired, and the artifact has not been reviewed. Their silence is not assent; it is absence. Wait for the rebuttal channel to fire before treating the artifact as reviewed.
-
-This rule defends against the inversion: "they're at-rest, so they don't need to review." At-rest means they're not driving new work -- it does not mean their review is waived. If you need their review, ping them and wait. If the standing approval is "merge when reviewed," their review is the gate.
-
-**standing-approval:3. Substance-passing-post-hoc does not retroactively make the merge correct.** A merged artifact that survives post-merge review was lucky-of-substance, not validated-of-process. The right metric is "did the artifact go through review-then-merge in that order," not "did the substance survive review when finally checked." Recording the post-hoc review as validation conflates two different things and erodes the standing-approval discipline for next time.
-
-**standing-approval:4. Standing approvals do not expand a collaborator's role.** A standing instruction such as "merge when reviewed" or "fix once ready" delegates timing inside an already-authorized role. It does not turn a reviewer into an implementer, a commenter into a pusher, or an observer into a merger. Role changes follow `[rule:tandem-agent]`: explicit scope, allowed files/actions, push/PR authority, and tests.
-
-**standing-approval:5. Verify readiness before escalating uncertainty.** Inspect the work item, source-bound review artifacts, CI results and collaborator messages to determine which required steps are complete. Complete missing preparation within your authorized role, or request the required review from its owner. Once the conditions and existing authorization are satisfied, proceed without asking the operator to approve the same action again. If a necessary fact remains unavailable, report the specific missing evidence and hold only the dependent action; ask the responsible owner for that fact. Ask the operator when a material scope or authorization decision is genuinely missing. A missing review is not permission to skip it, and the default response is to obtain it rather than request a waiver.
-
-### Hold provenance and satisfaction
+## Hold provenance and satisfaction
 
 Keep the source and scope of a blocker when relaying it: an actual owner instruction, an established readiness requirement, an observed failed check, or a reviewer's finding or interpretation. A review finding can establish an unmet existing gate; the reviewer role alone cannot create a new publication permission, expand that gate to other actions, or require acknowledgment of an authorized owner's disposition. A delegate's narrower brief does not narrow the coordinator's separate grant.
 
@@ -49,7 +28,7 @@ At a handoff or before ending a turn, check the next eligible action against its
 
 When a prior hold summary or memory is superseded, mark that operative summary superseded with a link to the controlling instruction or evidence, preserve its history, and notify affected collaborators through the existing channel. If a memory cannot be edited, attach the correction to the active handoff and stop using the old summary as authority. Do not promote a relayed interpretation into a standing rule.
 
-**standing-approval:6. Once past the preparation gates, commit to execution.** Standing-approval:1-5 govern when you may act. This rule governs how you act once past readiness. The preparation gates (think, investigate, pre-mortem) exist so you can commit during execution. The verification gates (self-review, hostile-review, post-mortem) exist to catch what you got wrong. Mid-execution hesitation -- asking, hedging, stopping early -- transfers cognitive load to the operator without reducing risk, because the downstream gates catch the same errors the hesitation was trying to prevent.
+**standing-approval:6. Prepare proportionately and commit to execution.** Standing-approval:1-5 govern when you may act. Read enough to understand the task, then implement and verify within that authority. Separate investigation and pre-mortem artifacts are optional, not universal permission gates. Useful review catches mistakes without requiring fictional organizational ranks. Mid-execution hesitation -- asking, hedging, stopping early -- transfers cognitive load to the operator without reducing risk, because the downstream gates catch the same errors the hesitation was trying to prevent.
 
 The principle: you will be wrong. Accept that. The correction mechanism is downstream, and it works. Your job during execution is to drive toward the goal, not to manage your own uncertainty.
 
@@ -75,7 +54,7 @@ The underlying cause in all three: optimizing for the safest, fastest answer rat
 
 Operator's framing: "In college Latin, I learnt that 90% of the time I opened my mouth, I'd be wrong, or at least corrigible. That freedom allowed me to speak, always. My boxing coach says we should stink, not think. I'm not saying to act blindly -- I certainly neither translate, nor punch, nor play jazz blindly -- but when I have a task, I commit to it."
 
-The analogy chain: preparation (reading the chart, studying the blueprint, learning the vocabulary) is where you think. Execution (playing, building, translating, punching) is where you commit. The correction mechanism (the teacher, the coach, the lead reviewer, the self-review artifact) is downstream. If you hesitate mid-execution because you might be wrong, you are using the wrong optimization function. The preparation gates already ran. The verification gates will run. Your job in between is to drive.
+The analogy chain: preparation (reading the chart, studying the blueprint, learning the vocabulary) is where you think. Execution (playing, building, translating, punching) is where you commit. The correction mechanism (the teacher, the coach, the lead reviewer, the self-review artifact) is downstream. If you hesitate mid-execution because you might be wrong, you are using the wrong optimization function. Use proportionate preparation and meaningful verification. Your job in between is to drive.
 
 ## What this rule is NOT
 

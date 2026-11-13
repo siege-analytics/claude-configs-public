@@ -84,10 +84,12 @@ class GitAddRisk(unittest.TestCase):
         self.f.assertGate(0, 'git add README.md')
         self.f.assertGate(0, 'git -C ' + str(self.repo) + ' add -- docs/note.md', cwd=self.f.ws)
 
-    def test_real_hook_retains_B_C_preparation(self):
+    def test_owned_staging_preserves_publication_risk_without_preedit_artifacts(self):
         self.task()
-        self.f.assertGate(2, 'git add module.py')
-        self.f.assertGate(2, 'git add .github/workflows/ci.yml')
+        self.assertEqual(self.tier('git add module.py')['floor'], 'B')
+        self.assertEqual(self.tier('git add .github/workflows/ci.yml')['floor'], 'C')
+        self.f.assertGate(0, 'git add module.py')
+        self.f.assertGate(0, 'git add .github/workflows/ci.yml')
         self.task(artifacts=True)
         self.f.assertGate(0, 'git add module.py')
         self.f.assertGate(0, 'git add .github/workflows/ci.yml')
@@ -102,7 +104,8 @@ class GitAddRisk(unittest.TestCase):
         self.task()
         self.f.assertGate(2, "CCP_TASK_ID='example/project#99' git add README.md")
         self.f.assertGate(2, 'git add README.md && touch ' + str(self.f.ws / 'outside.md'))
-        self.f.assertGate(2, 'git add .github/workflows/ci.yml README.md')
+        self.assertEqual(self.tier('git add .github/workflows/ci.yml README.md')['floor'], 'C')
+        self.f.assertGate(0, 'git add .github/workflows/ci.yml README.md')
 
     def test_designing_status_does_not_authorize_staging(self):
         self.task(status='designing')

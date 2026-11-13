@@ -121,12 +121,10 @@ run_gate "$SID" "git -C '$WT' checkout -b feature/empty-cwd-owned-worktree" \
   || fail "non-git CWD with an implementing worktree owner must allow git -C mutation"
 session_think_gate
 
-# --- KNOWN-BAD 1: known session, implementing gate, MISSING artifacts -> BLOCK
+# Missing optional preparation artifacts do not block an owned implementing task.
 rm -f "$WS/sessions/$SID/"{investigate-gate,junior-senior-gate,artifacts-posted-gate}.json "$WS/sessions/$SID/plans/pre-mortem-926test.md"
-if out="$(run_gate "$SID" "touch '$WS/empty-reporoot-noart.txt'" 2>&1)"; then
-  fail "known session with implementing gate but no artifacts must BLOCK"
-fi
-grep -qi 'artifacts missing' <<<"$out" || fail "expected missing-artifacts diagnostic ($out)"
+run_gate "$SID" "touch '$WS/empty-reporoot-noart.txt'" \
+  || fail "known session with an owned implementing task needs no ceremonial companions"
 
 # --- KNOWN-BAD 2: known session, NO session gate, but a shared-root singleton
 # present -> must BLOCK (must not inherit the shared root). This is the bleed.

@@ -65,7 +65,7 @@ class ReceiptLane(unittest.TestCase):
     def implementing(self, *, artifacts=True):
         self.g.task(self.identity, self.repo, artifacts=artifacts)
 
-    def test_no_gate_designing_and_missing_tier_evidence_deny_before_execution(self):
+    def test_owned_implementing_task_can_record_tests_without_preedit_artifacts(self):
         argv = self.argv()
         argv[argv.index("--"):argv.index("--")] = ["--source", "util.py"]
         self.assert_denied(argv)
@@ -75,9 +75,8 @@ class ReceiptLane(unittest.TestCase):
         data = json.loads(self.think.read_text())
         data["tier"] = "A"
         self.think.write_text(json.dumps(data))
-        result = self.assert_denied(argv)
-        self.assertIn("review tier", result.stderr)
-        self.implementing()
+        tier = fixture.r.task_tier(data, [str(self.repo)], self.command(argv), str(self.repo))
+        self.assertNotEqual(tier['floor'], 'A')
         result = self.hook(argv)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         actual = subprocess.run(argv, env=self.env, cwd=self.repo, text=True, capture_output=True, timeout=120)

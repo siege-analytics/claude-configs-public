@@ -258,9 +258,11 @@ class ScannerSourceTest(unittest.TestCase):
 
     def test_child_process_failure_cannot_report_clean(self):
         python = self.base / 'commands/python3'
-        python.write_text('#!/bin/sh\ncase "$1" in */scan_ast.py) exit 23;; esac\nexec ' + shlex.quote(sys.executable) + ' "$@"\n')
+        marker = self.base / 'ast-child-failed'
+        python.write_text('#!/bin/sh\nfor argument in "$@"; do\ncase "$argument" in */scan_ast.py) printf ast > ' + shlex.quote(str(marker)) + '; exit 23;; esac\ndone\nexec ' + shlex.quote(sys.executable) + ' "$@"\n')
         self.write('client.py', 'answer = 2\n'); self.git('add', 'client.py')
         self.expect(self.scan(), 2, 'AST scanner failed (exit 23)')
+        self.assertEqual(marker.read_text(), 'ast')
 
     def test_snapshot_missing_git_is_an_explicit_source_error(self):
         env = {**self.env, 'PATH': str(self.base / 'empty-path')}

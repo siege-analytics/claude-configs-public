@@ -32,16 +32,25 @@ def write(path, data):
     path.write_text(json.dumps(data))
 
 
+def fixture_git(*arguments, env=None, index_file=None, timeout=120, **kwargs):
+    """Run fixture Git without inherited repository, index or config overrides."""
+    source = os.environ if env is None else env
+    safe_env = {key: value for key, value in source.items() if not key.startswith('GIT_')}
+    if index_file is not None:
+        safe_env['GIT_INDEX_FILE'] = str(index_file)
+    return subprocess.run(['git', *map(str, arguments)], env=safe_env, timeout=timeout, **kwargs)
+
+
 class Gates(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='.1051-test-', dir=ROOT)
         self.ws = Path(self.tmp.name)
         self.repo = self.ws / 'repo'
         self.repo.mkdir()
-        subprocess.run(['git', 'init', '-q', str(self.repo)], check=True, timeout=120)
+        fixture_git('init', '-q', self.repo, check=True, timeout=120)
         self.a = self.repo / 'a'; self.a.mkdir()
         self.b = self.repo / 'b'; self.b.mkdir()
-        self.env = {k: v for k, v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_', 'HUB_'))}
+        self.env = {k: v for k, v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_', 'HUB_', 'GIT_'))}
         self.env.update(CRAFT_SESSION_DIR=str(self.ws / 'sessions/one'), CRAFT_AGENT_WORKSPACE=str(self.ws))
         write(self.ws / 'sessions/one/session.jsonl', {'id': 'one', 'sdkSessionId': SDK_UUID, 'sessionStatus': 'in_progress'})
         self.old = dict(os.environ)
@@ -83,7 +92,7 @@ class Gates(unittest.TestCase):
 
     def real_identity_hooks(self, payload, env):
         results = []
-        for hook in ['hooks/bash/universal-mutation-gate.sh', 'hooks/resolver/investigate-gate-guard.sh']:
+        for hook in ['hooks/bash/universal-mutation-gate.sh', 'hooks/resolver/pipeline-state-guard.sh']:
             results.append(subprocess.run(['bash', str(ROOT / hook)], input=json.dumps(payload),
                                           env=env, text=True, capture_output=True, timeout=120))
         return results
@@ -238,10 +247,8 @@ class Gates(unittest.TestCase):
             self.assertIn(str(self.ws / 'sessions/one'), r.session_dirs(str(self.ws)))
         payload.update(cwd=str(self.a), tool_name='Bash', tool_input={'command':'touch file'})
         mutation, guard = self.real_identity_hooks(payload, self.identity_env(payload))
-        self.assertEqual(mutation.returncode, 2)
+        self.assertEqual(mutation.returncode, 0)
         self.assertNotIn('Session id unresolved', mutation.stderr)
-        self.assertIn('required artifacts are missing', mutation.stderr)
-        self.assertIn('INVESTIGATION REQUIRED', guard.stdout)
         self.assertIn('o/r#uuid-transcript', guard.stdout)
 
     def test_uuid_only_has_actionable_diagnostic_not_wrong_directory(self):
@@ -342,31 +349,7 @@ class Gates(unittest.TestCase):
         self.assertIn(str(directory / 'tasks'), result.stderr)
         self.assertGate(0, tool='Write', path=directory / 'tasks/report-run/think-gate.json', env=env)
 
-    def test_plain_task_premortem_cannot_come_from_shared_shelves(self):
-        self.task('report-run', self.a, slug='report-run')
-        plans = self.ws / 'sessions/one/plans'
-        for p in plans.iterdir(): p.unlink()
-        for shelf in (self.ws / 'plans', self.repo / 'plans'):
-            shelf.mkdir(exist_ok=True)
-            (shelf / 'pre-mortem-other.md').write_text('report-run\nSeverity: 50\n')
-        self.assertGate(2, 'touch report.pdf', cwd=self.a)
-        (plans / 'pre-mortem-report.md').write_text('report-run\nSeverity: 50\n')
-        self.assertGate(0, 'touch report.pdf', cwd=self.a)
 
-    def test_plain_task_premortem_cannot_follow_cross_session_links(self):
-        self.task('report-run', self.a, slug='report-run')
-        plans = self.ws / 'sessions/one/plans'
-        for p in plans.iterdir(): p.unlink()
-        other = self.ws / 'sessions/two/plans/pre-mortem-other.md'
-        other.parent.mkdir(parents=True)
-        other.write_text('report-run\nSeverity: 50\n')
-        candidate = plans / 'pre-mortem-report.md'
-        candidate.symlink_to(other)
-        self.assertGate(2, 'touch report.pdf', cwd=self.a)
-        candidate.unlink(); os.link(other, candidate)
-        self.assertGate(2, 'touch report.pdf', cwd=self.a)
-        candidate.unlink(); plans.rmdir(); plans.symlink_to(other.parent)
-        self.assertGate(2, 'touch report.pdf', cwd=self.a)
 
     def test_unscoped_action_teaches_own_task_bootstrap_not_global_signals(self):
         result = self.hook('touch new-report.pdf')
@@ -417,9 +400,8 @@ class Gates(unittest.TestCase):
         self.assertGate(0, 'touch file', cwd=self.a)
         artifact = self.ws / 'sessions/one/tasks' / r.task_slug('o/r#target') / 'investigate-gate.json'
         data = json.loads(artifact.read_text()); data['repo_root'] = str(self.ws); write(artifact, data)
-        result = self.assertGate(2, 'touch file', cwd=self.a)
-        self.assertIn(str(artifact), result.stderr)
-        self.assertIn('utilities.git', result.stderr)
+        self.assertGate(0, 'touch file', cwd=self.a)
+        self.assertGate(2, 'touch file', cwd=self.b)
 
     def test_workspace_cwd_does_not_override_correct_target_repo(self):
         self.target_repositories()
@@ -588,15 +570,17 @@ class Gates(unittest.TestCase):
         artifact = directory / 'investigate-gate.json'
         for identity in ('o/r#20', 'foreign/r#2', '#2'):
             write(artifact, {'ticket': identity, 'findings': [1]})
-            self.assertGate(2, 'touch file', cwd=self.b)
+            self.assertGate(0, 'touch file', cwd=self.b)
+            self.assertGate(2, 'touch file', cwd=self.a)
         write(artifact, {'ticket': 'o/r#2', 'sessionId': 'other', 'findings': [1]})
-        self.assertGate(2, 'touch file', cwd=self.b)
+        self.assertGate(0, 'touch file', cwd=self.b)
+        self.assertGate(2, 'touch file', cwd=self.a)
 
     def test_root_singletons_never_authorize_or_satisfy(self):
         self.task('o/r#2', self.b, artifacts=False)
         for name in ('think', 'investigate', 'junior-senior', 'artifacts-posted', 'review'):
             write(self.ws / (name + '-gate.json'), {'ticket': 'o/r#2', 'repo_root': str(self.repo), 'status': 'implementing', 'findings': [1], 'junior_found': True, 'senior_found': True, 'investigate_posted': True, 'premortem_posted': True})
-        self.assertGate(2, 'touch file', cwd=self.b)
+        self.assertGate(0, 'touch file', cwd=self.b)
         self.assertGate(2, 'touch file', cwd=self.a)
         unknown = {k: v for k, v in self.env.items() if not k.startswith('CRAFT_SESSION')}
         self.assertGate(2, 'touch file', env=unknown)
@@ -618,7 +602,7 @@ class Gates(unittest.TestCase):
 
     def test_missing_artifacts_and_terminal_do_not_bypass(self):
         directory = self.task('o/r#2', self.b, artifacts=False)
-        self.assertGate(2, 'touch file', cwd=self.b)
+        self.assertGate(0, 'touch file', cwd=self.b)
         data = json.loads((directory / 'think-gate.json').read_text()); data['status'] = 'complete'
         write(directory / 'think-gate.json', data)
         write(directory / 'investigate-gate.json', {**data, 'findings': [1]})
@@ -634,6 +618,45 @@ class Gates(unittest.TestCase):
         for tool in ('Write', 'Edit', 'MultiEdit', 'NotebookEdit'):
             self.assertGate(0, tool=tool, path=self.b / 'x')
             self.assertGate(2, tool=tool, path=self.a / 'x')
+
+    def test_parked_task_yields_selection_and_resumes_without_losing_state(self):
+        parked = self.task('o/r#parked', self.a, slug='parked')
+        active = self.task('o/r#active', self.a, slug='active')
+        parked_gate = parked / 'think-gate.json'
+        active_gate = active / 'think-gate.json'
+        original = json.loads(parked_gate.read_text())
+        # A stale legacy copy must not reappear when its canonical Task pauses.
+        write(parked.parent.parent / 'think-gate.json', original)
+        for status in ('parked', 'paused', 'on-hold'):
+            with self.subTest(status=status):
+                write(parked_gate, {**original, 'status': status})
+                self.assertGate(0, 'touch current', cwd=self.a)
+                self.assertGate(0, tool='Write', path=self.a / 'current')
+                self.assertGate(0, "CCP_TASK_ID='o/r#active' touch bound", cwd=self.a)
+                selected = r.select_task(str(self.ws), [str(self.a / 'current')])
+                self.assertEqual(selected['gate']['path'], str(active_gate))
+                self.assertGate(2, "CCP_TASK_ID='o/r#parked' touch paused", cwd=self.a)
+                self.assertTrue(r._canonical_seen(str(parked.parent.parent), 'one', 'o/r#parked', str(self.ws)))
+                # Resume the original gate in place; no disposal or recreation.
+                active_data = json.loads(active_gate.read_text())
+                write(active_gate, {**active_data, 'status': 'parked'})
+                self.assertGate(2, 'touch no-active-task', cwd=self.a)
+                write(parked_gate, original)
+                self.assertGate(0, "CCP_TASK_ID='o/r#parked' touch resumed", cwd=self.a)
+                self.assertEqual(r.select_task(str(self.ws), [str(self.a / 'resumed')])['gate']['path'], str(parked_gate))
+                self.assertGate(2, "CCP_TASK_ID='o/r#parked' touch foreign", cwd=self.b)
+                self.assertEqual(json.loads(parked_gate.read_text()), original)
+                self.assertTrue((parked / 'investigate-gate.json').exists())
+                write(active_gate, active_data)
+
+    def test_unknown_task_status_still_fails_closed(self):
+        unknown = self.task('o/r#unknown', self.a, status='implementng')
+        self.assertGate(2, 'touch typo', cwd=self.a)
+        self.assertGate(2, "CCP_TASK_ID='o/r#unknown' touch typo", cwd=self.a)
+        self.task('o/r#active', self.a)
+        self.assertGate(2, 'touch ambiguous', cwd=self.a)
+        self.assertGate(0, "CCP_TASK_ID='o/r#active' touch bound", cwd=self.a)
+        self.assertTrue((unknown / 'think-gate.json').exists())
 
     def test_session_legacy_read(self):
         identity = 'o/r#2'
@@ -657,43 +680,21 @@ class Gates(unittest.TestCase):
         self.assertGate(0, 'touch file', cwd=self.b, env=env)
         self.assertGate(2, 'touch file', cwd=self.a, env=env)
 
-    def test_concurrent_pipeline_writers(self):
-        # Copy real production hook and helper tree into an isolated workspace.
-        shutil.copytree(ROOT / 'hooks', self.ws / 'hooks')
-        fakebin = self.ws / 'fakebin'; fakebin.mkdir()
-        gh = fakebin / 'gh'
-        comment = 'current behavior intended behavior steps to get there success criteria what could go wrong hasty mistakes observable behavior over-focusing leave out prior work right environment failure case instance or class done match skip if nobody findings citations disposition fact sheet investigation verified evidence severity: tiger risks pre-mortem elephant mitigation'
-        gh.write_text('#!' + sys.executable + '\nimport json\nprint(json.dumps(' + repr(comment) + '))\n')
-        gh.chmod(0o755)
-        def run(sid, ticket, legacy=False):
-            directory = self.task(ticket, self.repo, sid=sid)
-            if legacy:
-                # Artifact-only migration must not deactivate a legacy owner.
-                for source in directory.glob('*-gate.json'):
-                    shutil.copyfile(source, directory.parent.parent / source.name)
-                shutil.rmtree(directory)
-                self.task('o/r#other', self.a, status='designing', sid=sid)
-            # Prove the production writer creates both companions; setup or
-            # legacy migration must not leave an already-passing artifact.
-            for target in (directory, directory.parent.parent) if legacy else (directory,):
-                for name in ('junior-senior-gate.json', 'artifacts-posted-gate.json'):
-                    (target / name).unlink(missing_ok=True)
-            env = {**self.env, 'CRAFT_SESSION_DIR': str(directory.parent.parent), 'PATH': str(fakebin) + os.pathsep + self.env['PATH']}
-            if legacy:
-                env['CCP_TASK_ID'] = ticket
-            result = subprocess.run(['bash', str(self.ws / 'hooks/resolver/pipeline-state-guard.sh')], input=json.dumps(craft_payload(cwd=str(self.repo))), env=env, capture_output=True, text=True, timeout=120)
-            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
-            for name in ('junior-senior', 'artifacts-posted'):
-                self.assertEqual(json.loads((directory / (name + '-gate.json')).read_text())['ticket'], ticket)
+    def test_concurrent_task_diagnostics_do_not_write_preparation_companions(self):
+        def run(sid, ticket):
+            directory = self.task(ticket, self.repo, sid=sid, artifacts=False)
+            env = {**self.env, 'CRAFT_SESSION_DIR': str(directory.parent.parent)}
+            result = subprocess.run(['bash', str(ROOT / 'hooks/resolver/pipeline-state-guard.sh')],
+                input=json.dumps(craft_payload(cwd=str(self.repo))), env=env, capture_output=True, text=True, timeout=20)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(ticket, result.stdout)
+            self.assertEqual(sorted(path.name for path in directory.iterdir()), ['think-gate.json'])
             return directory
         with concurrent.futures.ThreadPoolExecutor() as pool:
-            dirs = list(pool.map(lambda v: run(*v), [('one', 'o/r#1'), ('two', 'o/r#2')]))
+            directories = list(pool.map(lambda pair: run(*pair), [('one', 'o/r#1'), ('two', 'o/r#2')]))
+        self.assertNotEqual(directories[0], directories[1])
         self.assertFalse(list(self.ws.glob('*gate*.json')))
-        self.assertNotEqual(dirs[0], dirs[1])
-        legacy_dir = run('legacy-writer', 'o/r#3', legacy=True)
-        env = {'CRAFT_SESSION_DIR': str(legacy_dir.parent.parent)}
-        self.assertGate(0, 'touch file', cwd=self.b, env=env)
-        self.assertGate(2, 'touch file', cwd=self.a, env=env)
+
 
 
     def test_pipeline_session_task_independent_of_cwd(self):
@@ -709,12 +710,12 @@ class Gates(unittest.TestCase):
         gh.chmod(0o755)
         git_env = {**self.env, 'GIT_AUTHOR_NAME': 'Fixture', 'GIT_AUTHOR_EMAIL': 'fixture@example.invalid',
                    'GIT_COMMITTER_NAME': 'Fixture', 'GIT_COMMITTER_EMAIL': 'fixture@example.invalid'}
-        tree = subprocess.check_output(['git', '-C', str(self.repo), 'mktree'], input=b'', env=git_env).decode().strip()
-        commit = subprocess.check_output(['git', '-C', str(self.repo), 'commit-tree', tree, '-m', 'fixture'], env=git_env).decode().strip()
-        subprocess.run(['git', '-C', str(self.repo), 'update-ref', 'HEAD', commit], check=True, env=git_env)
-        subprocess.run(['git', '-C', str(self.repo), 'remote', 'add', 'origin', 'https://github.com/o/r.git'], check=True)
+        tree = subprocess.check_output(['git', '-C', str(self.repo), 'mktree'], input=b'', env=git_env, timeout=20).decode().strip()
+        commit = subprocess.check_output(['git', '-C', str(self.repo), 'commit-tree', tree, '-m', 'fixture'], env=git_env, timeout=20).decode().strip()
+        subprocess.run(['git', '-C', str(self.repo), 'update-ref', 'HEAD', commit], check=True, env=git_env, timeout=20)
+        subprocess.run(['git', '-C', str(self.repo), 'remote', 'add', 'origin', 'https://github.com/o/r.git'], check=True, timeout=20)
         sibling = self.ws / 'sibling-worktree'
-        subprocess.run(['git', '-C', str(self.repo), 'worktree', 'add', '--detach', str(sibling), commit], check=True, capture_output=True, env=git_env)
+        subprocess.run(['git', '-C', str(self.repo), 'worktree', 'add', '--detach', str(sibling), commit], check=True, capture_output=True, env=git_env, timeout=20)
 
         def check(label, cwd, *, extra=False, binding='', override='', foreign=False, expect=True, request=None):
             sid = 'pipeline-' + label
@@ -745,42 +746,134 @@ class Gates(unittest.TestCase):
                 self.assertIn('Ambiguous task ownership', result.stderr)
             for name in ('junior-senior', 'artifacts-posted'):
                 artifact = directory / (name + '-gate.json')
-                self.assertEqual(artifact.exists(), expect, label + result.stdout + result.stderr)
+                self.assertFalse(artifact.exists(), label + result.stdout + result.stderr)
                 if expect:
-                    self.assertEqual(json.loads(artifact.read_text())['ticket'], 'o/r#1292')
+                    self.assertIn('legacy-local-task-id', result.stdout)
+                else:
+                    self.assertNotIn('Task \"legacy-local-task-id\"', result.stdout)
             if other_directory:
                 self.assertEqual((other_directory / 'think-gate.json').read_bytes(), other_before)
                 for name in ('junior-senior', 'artifacts-posted'):
                     self.assertFalse((other_directory / (name + '-gate.json')).exists(), label)
             # Diagnostic discovery must not expand mutation authority to the cwd.
             if expect and cwd != sibling:
-                self.assertGate(2, 'touch unauthorized', cwd=cwd, env=env)
+                # A new tool event must carry the selected Task; a prompt
+                # selector is not a persistent mutation of the host environment.
+                self.assertGate(2, 'touch unauthorized', cwd=cwd, env={**env, 'CCP_TASK_ID': 'legacy-local-task-id'})
 
         check('sibling', self.repo)
         check('nongit', self.ws)
         check('same', sibling)
         check('foreign', self.repo, foreign=True, expect=False)
         check('ambiguous', self.repo, extra=True, expect=False)
-        check('bound', self.repo, extra=True, binding='o/r#1292')
-        check('typed-turn', self.repo, extra=True, request={'task_id': 'o/r#1292'})
-        check('environment-priority', self.repo, extra=True, binding='o/r#1292', request={'task_id': 'o/r#1293'})
-        check('environment-prompt-priority', self.repo, extra=True, binding='o/r#1292', request={'prompt': 'CCP_TASK_ID=o/r#1293'})
-        check('environment-conflict-priority', self.repo, extra=True, binding='o/r#1292', request={'task_id': 'o/r#1293', 'prompt': 'CCP_TASK_ID=o/r#1292'})
-        check('prompt-turn', self.repo, extra=True, request={'prompt': 'Continue the assigned task.\nCCP_TASK_ID=o/r#1292\nPreserve the other task.'})
-        check('long-prompt-turn', self.repo, extra=True, request={'prompt': 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1292'})
-        check('long-conflict-turn', self.repo, extra=True, expect=False, request={'prompt': 'CCP_TASK_ID=o/r#1292\n' + 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1293'})
-        check('nested-turn', self.repo, extra=True, request={'metadata': {'task_id': 'o/r#1292'}})
-        check('conflicting-turn', self.repo, extra=True, expect=False, request={'task_id': 'o/r#1292', 'prompt': 'CCP_TASK_ID=o/r#1293'})
+        check('bound', self.repo, extra=True, binding='legacy-local-task-id')
+        check('typed-turn', self.repo, extra=True, request={'task_id': 'legacy-local-task-id'})
+        check('environment-priority', self.repo, extra=True, binding='legacy-local-task-id', request={'task_id': 'o/r#1293'})
+        check('environment-prompt-priority', self.repo, extra=True, binding='legacy-local-task-id', request={'prompt': 'CCP_TASK_ID=o/r#1293'})
+        check('environment-conflict-priority', self.repo, extra=True, binding='legacy-local-task-id', request={'task_id': 'o/r#1293', 'prompt': 'CCP_TASK_ID=legacy-local-task-id'})
+        check('prompt-turn', self.repo, extra=True, request={'prompt': 'Continue the assigned task.\nCCP_TASK_ID=legacy-local-task-id\nPreserve the other task.'})
+        check('long-prompt-turn', self.repo, extra=True, request={'prompt': 'context ' * 1000 + '\nCCP_TASK_ID=legacy-local-task-id'})
+        check('long-conflict-turn', self.repo, extra=True, expect=False, request={'prompt': 'CCP_TASK_ID=legacy-local-task-id\n' + 'context ' * 1000 + '\nCCP_TASK_ID=o/r#1293'})
+        check('nested-turn', self.repo, extra=True, request={'metadata': {'task_id': 'legacy-local-task-id'}})
+        check('conflicting-turn', self.repo, extra=True, expect=False, request={'task_id': 'legacy-local-task-id', 'prompt': 'CCP_TASK_ID=o/r#1293'})
         check('unknown-turn', self.repo, extra=True, expect=False, request={'task_id': 'o/r#9999'})
-        check('noncanonical-turn', self.repo, extra=True, expect=False, request={'task_id': 'legacy-local-task-id'})
-        check('quoted-turn', self.repo, extra=True, expect=False, request={'prompt': '> CCP_TASK_ID=o/r#1292'})
-        check('fenced-turn', self.repo, extra=True, expect=False, request={'prompt': '```text\nCCP_TASK_ID=o/r#1292\n```'})
+        check('operational-id-turn', self.repo, extra=True, request={'task_id': 'legacy-local-task-id'})
+        check('issue-reference-is-not-selector', self.repo, extra=True, expect=False, request={'task_id': 'o/r#1292'})
+        check('quoted-turn', self.repo, extra=True, expect=False, request={'prompt': '> CCP_TASK_ID=legacy-local-task-id'})
+        check('fenced-turn', self.repo, extra=True, expect=False, request={'prompt': '```text\nCCP_TASK_ID=legacy-local-task-id\n```'})
         check('quote-fence-blank-turn', self.repo, extra=True, expect=False, request={'prompt': '> Example task:\n```text\n\nCCP_TASK_ID=o/r#1293\n```'})
         check('invalid-turn', self.repo, extra=True, expect=False, request={'task_id': '../invalid task'})
-        check('foreign-typed', self.repo, extra=True, foreign=True, expect=False, request={'task_id': 'o/r#1292'})
+        check('foreign-typed', self.repo, extra=True, foreign=True, expect=False, request={'task_id': 'legacy-local-task-id'})
         check('unknown-binding', self.repo, binding='o/r#9999', expect=False)
         check('foreign-override', self.repo, override=str(self.ws / 'foreign.json'), expect=False)
 
+
+    def test_same_issue_distinct_task_selectors_preserve_scope_and_artifacts(self):
+        first = self.task('o/r#3133', self.a, slug='inspector')
+        second = self.task('o/r#3133', self.b, slug='capture')
+        for directory, identity in ((first, 'inspector-task'), (second, 'capture-task')):
+            for path in directory.glob('*-gate.json'):
+                data = json.loads(path.read_text())
+                data['task_id'] = identity
+                write(path, data)
+        for directory, identity, owned, foreign in ((first, 'inspector-task', self.a, self.b),
+                                                    (second, 'capture-task', self.b, self.a)):
+            os.environ['CCP_TASK_ID'] = identity
+            self.assertEqual(r.find_session_gate(str(self.ws))['path'], str(directory / 'think-gate.json'))
+            self.assertEqual(r.find_session_gate(str(self.ws), 'investigate-gate')['path'], str(directory / 'investigate-gate.json'))
+            self.assertEqual(r.select_task(str(self.ws), [str(owned)])['gate']['path'], str(directory / 'think-gate.json'))
+            self.assertIsNone(r.select_task(str(self.ws), [str(foreign)])['gate'])
+            self.assertGate(0, tool='Write', path=owned / 'new.txt', env={**self.env, 'CCP_TASK_ID': identity})
+            self.assertGate(2, tool='Write', path=foreign / 'new.txt', env={**self.env, 'CCP_TASK_ID': identity})
+        for binding in ('', 'unknown-task', 'o/r#3133'):
+            with self.subTest(binding=binding):
+                if binding: os.environ['CCP_TASK_ID'] = binding
+                else: os.environ.pop('CCP_TASK_ID', None)
+                self.assertIsNone(r.find_session_gate(str(self.ws)))
+        # Same issue reference does not let the other Task's artifact satisfy it.
+        artifact = second / 'investigate-gate.json'
+        data = json.loads(artifact.read_text()); data['task_id'] = 'inspector-task'
+        write(artifact, data)
+        os.environ['CCP_TASK_ID'] = 'capture-task'
+        self.assertIsNone(r.find_session_gate(str(self.ws), 'investigate-gate'))
+        # A duplicate explicit id is still ambiguous, never directory-order selected.
+        data = json.loads((second / 'think-gate.json').read_text())
+        data['task_id'] = 'inspector-task'; write(second / 'think-gate.json', data)
+        os.environ['CCP_TASK_ID'] = 'inspector-task'
+        self.assertIsNone(r.find_session_gate(str(self.ws)))
+
+    def test_explicit_task_id_canonical_retirement_keeps_ticket_only_legacy_closed(self):
+        directory = self.task('o/r#3133', self.a, slug='canonical')
+        legacy = directory.parent.parent / 'think-gate.json'
+        write(legacy, json.loads((directory / 'think-gate.json').read_text()))
+        data = json.loads((directory / 'think-gate.json').read_text())
+        data['task_id'] = 'exact-task-id'; write(directory / 'think-gate.json', data)
+        self.assertEqual(len(r._session_thinks(str(self.ws))), 1)
+        (directory / 'think-gate.json').unlink()
+        self.assertEqual(r._session_thinks(str(self.ws)), [])
+
+    def test_direct_own_lifecycle_delete_retires_ticket_alias_before_enumeration(self):
+        directory = self.task('o/r#3133', self.a, slug='canonical')
+        gate = directory / 'think-gate.json'
+        legacy = directory.parent.parent / 'think-gate.json'
+        write(legacy, json.loads(gate.read_text()))
+        data = json.loads(gate.read_text())
+        data['task_id'] = 'exact-task-id'
+        write(gate, data)
+        # The real lifecycle hook must remember both denial identities before
+        # the host removes the gate, without any prior Task enumeration.
+        claims = directory.parent / '.canonical'
+        self.assertFalse(claims.exists())
+        self.assertGate(0, 'rm ' + shlex.quote(str(gate)))
+        gate.unlink()
+        self.assertEqual(r._session_thinks(str(self.ws)), [])
+        self.assertGate(2, 'touch file', cwd=self.a)
+
+    def test_selected_task_non_git_roots_do_not_expand_physical_scope(self):
+        # The default fixture is inside this source checkout: use a genuine
+        # outside-Git workspace so a parent repository cannot supply identity.
+        with tempfile.TemporaryDirectory() as outside:
+            f = Gates()
+            with patch.dict(globals(), ROOT=Path(outside)):
+                f.setUp()
+            try:
+                private = f.ws / 'sessions/one/data/capture'
+                private.mkdir(parents=True)
+                self.assertFalse(r._target_repo(str(private)))
+                directory = f.task('o/r#3133', private, slug='private-capture', artifacts=False)
+                path = directory / 'think-gate.json'
+                data = json.loads(path.read_text())
+                data['task_id'] = 'four-cycle-capture'
+                os.environ['CCP_TASK_ID'] = 'four-cycle-capture'
+                for root in (str(private), ''):
+                    data['repo_root'] = root
+                    write(path, data)
+                    self.assertEqual(r.select_task(str(f.ws), [str(private / 'body.csv')])['gate']['path'], str(path))
+                    self.assertIsNone(r.select_task(str(f.ws), [str(private.parent / 'foreign.csv')])['gate'])
+                data['sessionId'] = 'two'; write(path, data)
+                self.assertIsNone(r.find_session_gate(str(f.ws)))
+            finally:
+                f.tearDown()
 
     def test_ticketless_pipeline_does_not_borrow_other_task_plans(self):
         gate = self.task('design-task', self.a, status='designing', artifacts=False) / 'think-gate.json'
@@ -795,8 +888,8 @@ class Gates(unittest.TestCase):
         result = subprocess.run(['python3', str(LIB / 'pipeline_state.py'), str(gate), str(self.ws), str(LIB)],
                                 env=self.env, text=True, capture_output=True, timeout=120)
         self.assertEqual(result.returncode, 0)
-        self.assertIn('No investigation artifact found', result.stdout)
-        self.assertIn('No pre-mortem artifact found', result.stdout)
+        self.assertIn('explicit-task-a', result.stdout)
+        self.assertNotIn('unrelated-task-b', result.stdout)
 
 
     def test_own_session_gate_lifecycle_end_to_end(self):
@@ -962,44 +1055,18 @@ class Gates(unittest.TestCase):
         self.task('design-status', self.repo, status='designing', artifacts=False)
         for tier, relative in (('A', 'docs/notes.md'), ('B', 'src/app.py'), ('C', 'hooks/bash/guard.sh')):
             result = self.assertGate(2, f'touch {self.repo / relative}')
-            self.assertIn('Effective tier: ' + tier + '.', result.stderr)
+            self.assertIn('status=implementing', result.stderr)
             self.assertNotIn('with full artifacts', result.stderr)
 
-    def test_tiered_task_gates_require_only_their_tier(self):
-        """#1086: an implementing task needs only its effective tier's artifacts.
-        The tier is the higher of the gate's declared tier and the floor that
-        bin/review-risk.py computes for the mutation's targets."""
-        (self.repo / 'docs').mkdir(); (self.repo / 'src').mkdir(); (self.repo / 'hooks/bash').mkdir(parents=True)
-        def gate_only(identity, **extra):
-            d = self.task(identity, self.repo, artifacts=False)
-            data = json.loads((d / 'think-gate.json').read_text()); data.update(extra)
-            write(d / 'think-gate.json', data)
-            return d, data
-        def add(d, data, *names):
-            fields = {'investigate': {'findings': [{'claim': 'verified'}]},
-                      'junior-senior': {'junior_found': True, 'senior_found': True},
-                      'artifacts-posted': {'investigate_posted': True, 'premortem_posted': True}}
-            for name in names:
-                if name == 'pre-mortem':
-                    plans = self.repo / 'plans'; plans.mkdir(exist_ok=True)
-                    (plans / ('pre-mortem-' + r.task_slug(data['ticket']) + '.md')).write_text(
-                        'Ticket: ' + data['ticket'] + '\nSeverity: 50\nImplementation may proceed: YES\n')
-                else:
-                    write(d / (name + '-gate.json'), {**data, **fields[name]})
-        # Tier A floor (docs, plans, *.md): the implementing gate alone suffices.
-        d, data = gate_only('o/r#101')
-        self.assertGate(0, f'touch {self.repo}/docs/notes.md')
-        # Tier B floor (ordinary code): needs investigation + pre-mortem, not junior/senior.
-        result = self.assertGate(2, f'touch {self.repo}/src/app.py')
-        self.assertIn('review tier is B', result.stderr)
-        add(d, data, 'investigate', 'pre-mortem')
-        self.assertGate(0, f'touch {self.repo}/src/app.py')
-        # Tier C floor (hooks/bash/**): B's artifacts are not enough; the full set is.
-        result = self.assertGate(2, f'touch {self.repo}/hooks/bash/x.sh')
-        self.assertIn('review tier is C', result.stderr)
-        self.assertIn('Junior', result.stderr)
-        add(d, data, 'junior-senior', 'artifacts-posted')
-        self.assertGate(0, f'touch {self.repo}/hooks/bash/x.sh')
+    def test_risk_tiers_do_not_require_preedit_artifacts(self):
+        directory = self.task('o/r#101', self.repo, artifacts=False)
+        data = json.loads((directory / 'think-gate.json').read_text())
+        for tier, relative in [('A', 'docs/notes.md'), ('B', 'src/app.py'), ('C', 'hooks/bash/guard.sh')]:
+            target = self.repo / relative
+            command = 'touch ' + str(target)
+            self.assertEqual(r.task_tier(data, [str(target)], command, str(self.repo))['effective'], tier)
+            self.assertGate(0, command)
+
 
     def test_tree_wide_targets_are_classified_by_their_contents(self):
         """#1086 review: a directory or repository-wide target is as risky as the
@@ -1019,16 +1086,18 @@ class Gates(unittest.TestCase):
         for command in [f'rm -rf {self.repo}/hooks/bash', f'cp -r {self.repo}/src {self.repo}/hooks/bash',
                         f'git -C {self.repo} apply p.diff', f'git -C {self.repo} reset --hard']:
             with self.subTest(command=command):
-                result = self.assertGate(2, command)
-                self.assertIn('review tier is C', result.stderr)
+                self.assertGate(0, command)
+                shape = r.action(command, str(self.repo))
+                self.assertEqual(r.task_tier(data, shape['paths'], command, str(self.repo))['effective'], 'C')
         # A tree-wide command over B-only files stays B (passes with B evidence).
         self.assertGate(0, f'rm -rf {self.repo}/src')
         # A lone git commit is classified by what it records.
         (self.repo / 'docs/a.md').write_text('y'); git('add', 'docs/a.md')
         self.assertGate(0, f'git -C {self.repo} commit -m docs')
         (self.repo / 'hooks/bash/guard.sh').write_text('y')
-        result = self.assertGate(2, f'git -C {self.repo} commit -m hook')
-        self.assertIn('review tier is C', result.stderr)
+        command = f'git -C {self.repo} commit -m hook'
+        self.assertGate(0, command)
+        self.assertEqual(r.task_tier(data, [str(self.repo)], command, str(self.repo))['effective'], 'C')
 
     def test_lone_commit_with_conventional_message_is_classified_by_what_it_records(self):
         """#1092 review: quoted parentheses, arrows and slashes in a commit
@@ -1038,12 +1107,14 @@ class Gates(unittest.TestCase):
         (self.repo / 'hooks/bash/guard.sh').write_text('x'); (self.repo / 'docs/a.md').write_text('x')
         git('add', 'hooks/bash/guard.sh', 'docs/a.md')
         git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'init')
-        self.task('o/r#conventional', self.repo, artifacts=False)   # Tier A evidence only
+        directory = self.task('o/r#conventional', self.repo, artifacts=False)
+        data = json.loads((directory / 'think-gate.json').read_text())
         (self.repo / 'docs/a.md').write_text('y'); git('add', 'docs/a.md')
         self.assertGate(0, f'git -C {self.repo} commit -m "fix(docs): a -> b, see docs/a.md"')
         (self.repo / 'hooks/bash/guard.sh').write_text('y')
-        result = self.assertGate(2, f'git -C {self.repo} commit -m "fix(hooks): a -> b"')
-        self.assertIn('review tier is C', result.stderr)
+        command = f'git -C {self.repo} commit -m "fix(hooks): a -> b"'
+        self.assertGate(0, command)
+        self.assertEqual(r.task_tier(data, [str(self.repo)], command, str(self.repo))['effective'], 'C')
 
     def test_invalid_host_binding_cannot_use_native_legacy_test_evidence(self):
         (self.repo / 'PROJECT.md').write_text('name: fixture\ntesting:\n  command: python3 -m pytest\n')
@@ -1111,16 +1182,18 @@ class Gates(unittest.TestCase):
         data = json.loads((d / 'think-gate.json').read_text()); data['tier'] = 'A'
         write(d / 'think-gate.json', data)
         (self.repo / 'hooks/bash').mkdir(parents=True)
-        result = self.assertGate(2, f'touch {self.repo}/hooks/bash/x.sh')
-        self.assertIn('review tier is C', result.stderr)
+        command = f'touch {self.repo}/hooks/bash/x.sh'
+        self.assertGate(0, command)
+        self.assertEqual(r.task_tier(data, [str(self.repo / 'hooks/bash/x.sh')], command, str(self.repo))['effective'], 'C')
 
     def test_declared_tier_can_raise_the_floor(self):
         d = self.task('o/r#tier-declared-high', self.repo, artifacts=False)
         data = json.loads((d / 'think-gate.json').read_text()); data['tier'] = 'C'
         write(d / 'think-gate.json', data)
         (self.repo / 'docs').mkdir()
-        result = self.assertGate(2, f'touch {self.repo}/docs/notes.md')
-        self.assertIn('review tier is C', result.stderr)
+        command = f'touch {self.repo}/docs/notes.md'
+        self.assertGate(0, command)
+        self.assertEqual(r.task_tier(data, [str(self.repo / 'docs/notes.md')], command, str(self.repo))['effective'], 'C')
 
     def test_stdio_redirect_reads_and_diagnostics_in_real_hooks(self):
         commands = ['cat x 2>/dev/null', 'grep foo f 2>&1', 'ls 2>&1 | head',

@@ -15,6 +15,7 @@ a task gate (siege#1051, #1057; electinfo#348).
 import re
 import shlex
 import sys
+from urllib.parse import urlsplit
 sys.dont_write_bytecode = True
 
 # Bare read verbs whose arguments cannot make them write.
@@ -246,6 +247,12 @@ def git_ok(args):
         return False
     if sub == "reflog":
         return not any(a in {"expire", "delete", "drop", "write"} for a in rest)
+    if sub == "diff-files":
+        # Plumbing defaults do not enable external diff/textconv. Certify only
+        # the native worktree cleanliness probe, not common-diff-options.
+        # Quiet alone is NOT a helper veto: trusted external helpers can still
+        # execute when enabled. Keep the option vetoes above and exact grammar.
+        return rest == ["--quiet"]
     if sub in GIT_READ:
         return True
     if sub == "fsck":
@@ -325,6 +332,73 @@ def ss_kills(args):
     return any(long_opt(a, "--kill", "--diag") or short_has(a, "KD", "fAFN") for a in args)
 
 
+def gh_api_rest_read(args):
+    """Prove one body-free REST GET, consuming pflag option values/clusters.
+
+    GH defaults to GET without fields; explicit GET is equivalent here.
+    Field/input flags remain outside this proof even when GET is requested.
+    https://cli.github.com/manual/gh_api
+    """
+    endpoint, method, i, help_requested = None, None, 0, False
+    values = {"--method", "--header", "--hostname", "--jq", "--template", "--preview", "--cache"}
+    flags = {"--include", "--paginate", "--silent", "--slurp", "--verbose", "--help"}
+    while i < len(args):
+        arg = args[i]
+        if arg.startswith("--"):
+            name, equal, value = arg.partition("=")
+            if name in flags and not equal:
+                help_requested |= name == "--help"
+                i += 1
+                continue
+            if name not in values:
+                return False
+            if not equal:
+                i += 1
+                if i >= len(args):
+                    return False
+                value = args[i]
+            if name == "--method":
+                if method is not None or value != "GET":
+                    return False
+                method = value
+        elif arg.startswith("-"):
+            cluster = arg[1:]
+            if not cluster:
+                return False
+            while cluster:
+                flag, cluster = cluster[0], cluster[1:]
+                if flag in "ish":
+                    help_requested |= flag == "h"
+                    continue
+                if flag not in "XHqtp":
+                    return False
+                value = cluster
+                if not value:
+                    i += 1
+                    if i >= len(args):
+                        return False
+                    value = args[i]
+                elif value.startswith("="):
+                    value = value[1:]
+                if flag == "X":
+                    if method is not None or value != "GET":
+                        return False
+                    method = value
+                break  # The rest of a short cluster is this flag's value.
+        else:
+            if endpoint is not None:
+                return False
+            endpoint = arg
+        i += 1
+    if not endpoint:
+        return help_requested
+    try:
+        path = urlsplit(endpoint).path.strip("/")
+    except ValueError:
+        return False
+    return path not in {"graphql", "api/graphql"}
+
+
 def gh_ok(args):
     if any(long_opt(a, "--web") or short_has(a, "w", "HpqtRJLSB") for a in args[1:]):
         return False   # --web/-w launches a browser (#1089)
@@ -340,10 +414,7 @@ def gh_ok(args):
         except (ValueError, TypeError, KeyError):
             return False
     if args[:1] == ["api"]:
-        for a in args[1:]:
-            if long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF", "Hpqt"):
-                return False   # pflag accepts clusters: -iXDELETE is -i -X DELETE
-        return not (len(args) > 1 and args[1] == "graphql")   # graphql may carry a mutation body
+        return gh_api_rest_read(args[1:])
     return args[:2] in (["auth", "status"],)
 
 
@@ -705,8 +776,7 @@ def unsafe(words):
     if w == "gh" and any(long_opt(a, "--web") or short_has(a, "w", "HpqtRJLSB") for a in args[1:]):
         return True   # --web/-w launches a browser (#1089)
     if w == "gh" and args[:1] == ["api"]:
-        return any(long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF", "Hpqt")
-                   for a in args[1:])
+        return not gh_api_rest_read(args[1:])
     return False
 
 

@@ -6,8 +6,6 @@
 # Install: symlink or copy to .git/hooks/pre-push in target repos
 #   ln -sf /path/to/claude-configs-public/hooks/git/pre-push-self-review.sh .git/hooks/pre-push
 #
-# Bypass: git push --no-verify (standard git escape hatch)
-#
 # This hook fires for ALL push sources: sub-agents, Craft Agent, Claude
 # Code, humans, CI. It validates that every non-merge commit in the push
 # range has Self-Review: and Self-Review-Source: trailers.
@@ -63,17 +61,100 @@ elif [[ "$#" -ne 0 ]]; then
 fi
 # A direct no-argument fixture has no remote baseline and checks the full graph.
 
+# Markdown examples cannot supply section headings or Findings. A real
+# section may still contain meaningful fenced command/results evidence.
+review_artifact_text() {
+    awk -v heading="${1:-}" '{
+        line=$0
+        sub(/\r$/, "", line)
+        sub(/^[ ]?[ ]?[ ]?/, "", line)
+        first=substr(line,1,1)
+        if (first == "`" || first == "~") {
+            count=0
+            while (substr(line,count+1,1) == first) count++
+            rest=substr(line,count+1)
+            if (!fence && count >= 3 && (first == "~" || rest !~ /`/)) {fence=first; width=count; next}
+            if (fence == first && count >= width && rest ~ /^[[:blank:]]*$/) {fence=""; next}
+        }
+        if (!fence) {
+            if (!heading) {print; next}
+            normalized=$0
+            sub(/[[:space:]]+$/, "", normalized)
+            if (normalized == heading) {active=1; next}
+            if (line ~ /^##[[:blank:]]+/) active=0
+        }
+        if (heading && active && /[^[:space:]]/) {print; exit}
+    }'
+}
+
 validate_committed_artifact() {
-    local commit="$1" value="$2" tier="$3" content section
+    local commit="$1" value="$2" tier="$3" content section raw_content
     [[ "$value" =~ ^https?:// || "$value" =~ ^#[0-9]+$ ]] && return 0
     content=$(git show "$commit:${value#./}" 2>/dev/null) || return 1
-    if [[ "$tier" == "B" ]]; then
-        for section in "## Assumptions" "## Test plan"; do grep -qF "$section" <<<"$content" || return 1; done
-    else
-        for section in "## Assumptions" "## Peer review" "## Lead review" "## Quantified claims"; do grep -qF "$section" <<<"$content" || return 1; done
-        grep -qE '^Pre-mortem-artifact:[[:space:]]+\S' <<<"$content" || return 1
-        grep -qE '^Hostile-review-artifact:[[:space:]]+\S' <<<"$content" || return 1
+    raw_content="$content"
+    content=$(review_artifact_text <<<"$raw_content")
+    local required_sections=("## Assumptions" "## Test plan") body
+    if [[ "$tier" != "B" ]]; then
+        if grep -Eq '^## Peer review[[:space:]]*$' <<<"$content" && grep -Eq '^## Lead review[[:space:]]*$' <<<"$content" && grep -Eq '^## Quantified claims[[:space:]]*$' <<<"$content"; then
+            required_sections=("## Assumptions" "## Peer review" "## Lead review" "## Quantified claims")
+        else
+            required_sections+=("## Findings" "## Independent review")
+        fi
     fi
+    for section in "${required_sections[@]}"; do
+        grep -qE "^${section}[[:space:]]*$" <<<"$content" || return 1
+        body=$(review_artifact_text "$section" <<<"$raw_content")
+        [[ -n "$body" ]] || return 1
+    done
+    local findings unresolved findings_heading_re='^[ ]?[ ]?[ ]?##[[:blank:]]+findings([^[:alnum:]_]|$)'
+    findings=$(awk -v heading="$findings_heading_re" '{
+        line=$0
+        sub(/\r$/, "", line)
+        sub(/^[ ]?[ ]?[ ]?/, "", line)
+        if (line ~ /^##[[:blank:]]+/) {active=(tolower($0) ~ heading); next}
+        if (active) print
+    }' <<<"$content")
+    unresolved=$(
+        printf '%s\n' "$findings" | awk '/^[ ]?[ ]?[ ]?\|/ {
+            delete cells
+            count=1
+            for (i=1; i<=length($0); i++) {
+                char=substr($0, i, 1)
+                if (char == "\\" && i<length($0)) {
+                    cells[count]=cells[count] char substr($0, ++i, 1)
+                } else if (char == "|") {
+                    count++
+                } else {
+                    cells[count]=cells[count] char
+                }
+            }
+            if (cells[3] ~ /^[[:space:]]*P1[[:space:]]*$/) {
+                resolution=cells[5]
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", resolution)
+                if ((count != 5 && count != 6) ||
+                    (count == 6 && cells[6] !~ /^[[:space:]]*$/) ||
+                    tolower(resolution) != "fixed") print
+            }
+        }'
+        printf '%s\n' "$findings" | awk '
+            tolower($0) ~ /^[[:space:]]*([-*][[:space:]]+)?p1[[:space:]]*:/ {
+                count=split($0, fields, ";")
+                resolutions=0
+                fixed=0
+                for (i=1; i<=count; i++) {
+                    value=fields[i]
+                    sub(/^[[:space:]]+/, "", value)
+                    if (tolower(value) ~ /^resolution[[:space:]]*:/) {
+                        resolutions++
+                        sub(/^[^:]*:/, "", value)
+                        gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+                        if (tolower(value) == "fixed") fixed++
+                    }
+                }
+                if (resolutions != 1 || fixed != 1) print
+            }'
+    )
+    [[ -z "$unresolved" ]]
 }
 
 while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA EXTRA || [[ -n "$LOCAL_REF$LOCAL_SHA$REMOTE_REF$REMOTE_SHA$EXTRA" ]]; do
@@ -148,7 +229,7 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA EXTRA || [[ -n "$LOCAL_R
             fi
             [[ "$SELF_COUNT" -eq 1 ]] || REASONS+=("Self-Review: <one-line summary of the review pass>  (requires exactly one non-empty Self-Review trailer)")
             [[ "$MSG" == *'[no-review]'* && "$TIER" != "A" ]] && REASONS+=("[no-review] is allowed only for validated Tier A")
-            echo "$MSG" | grep -qE '(#[0-9]+|\[no-ticket\])' || REASONS+=("ticket reference: #NNN in the message, or [no-ticket]  (missing ticket reference or [no-ticket])")
+            printf '%s' "$MSG" | python3 -B "$HOOK_DIR/../lib/git_command.py" --cwd "$REPO_ROOT" --policy ticket-message >/dev/null 2>&1 || REASONS+=("task reference: #NNN, project ticket/URL, or [task: authorized request]; bare [no-ticket] is invalid")
             if [[ "$TIER" != "A" && "$SOURCE_COUNT" -ne 1 ]]; then
                 REASONS+=("Self-Review-Source: <path or URL to the self-review artifact>  (Tier $TIER requires exactly one Self-Review-Source)")
             elif [[ "$TIER" != "A" ]] && ! validate_committed_artifact "$COMMIT" "$SOURCE_VALUE" "$TIER"; then
@@ -156,19 +237,10 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA EXTRA || [[ -n "$LOCAL_R
             fi
             if [[ "$TIER" == "C" && "$HOSTILE_COUNT" -ne 1 ]]; then
                 REASONS+=("Hostile-Review: <URL, #ticket, or committed file with the independent hostile review>  (Tier C requires exactly one Hostile-Review)")
-            elif [[ "$TIER" == "C" && ! "$HOSTILE_VALUE" =~ ^(https?://|#[0-9]+$) ]] && { ! git cat-file -e "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || [[ $(git cat-file -s "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || echo 0) -eq 0 ]]; }; then
+            elif [[ "$TIER" == "C" && ! "$HOSTILE_VALUE" =~ ^(https?://|#[0-9]+$) ]] && { [[ ! "$(git --literal-pathspecs ls-tree --full-tree "$COMMIT" -- "${HOSTILE_VALUE#./}" 2>/dev/null | awk '{print $1}')" =~ ^100(644|755)$ ]] || [[ "$(git cat-file -t "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null)" != blob ]] || [[ $(git cat-file -s "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || echo 0) -eq 0 ]]; }; then
                 REASONS+=("Hostile-Review is not a URL, ticket, or non-empty file in the commit")
             fi
-            if [[ "$TIER" == "C" ]]; then
-                for EVIDENCE in Negative-Tests Full-Suite Canary-Rollback; do
-                    case "$EVIDENCE" in
-                        Negative-Tests) EXAMPLE="<negative cases exercised and their result>" ;;
-                        Full-Suite) EXAMPLE="<full suite command and pass/fail counts>" ;;
-                        Canary-Rollback) EXAMPLE="<canary or revert proof, or N/A with reason>" ;;
-                    esac
-                    [[ $(echo "$TRAILERS" | grep -cE "^${EVIDENCE}:[[:space:]]+\\S") -eq 1 ]] || REASONS+=("$EVIDENCE: $EXAMPLE  (Tier C requires exactly one $EVIDENCE trailer)")
-                done
-            fi
+
         fi
         if [[ ${#REASONS[@]} -gt 0 ]]; then
             BLOCKED=1
@@ -189,16 +261,13 @@ The following commits violate proportional review policy:
 $(echo -e "$BLOCKED_COMMITS")
 
 Every non-merge commit must include Review-Tier: A|B|C and Self-Review:.
-Tier B/C also require Self-Review-Source:. Tier C also requires Hostile-Review:,
-Negative-Tests:, Full-Suite: and Canary-Rollback:. Each commit lists every
-violation found, so one amend can fix them all (#1168).
+Tier B/C also require Self-Review-Source:. Tier C requires actual independent
+Hostile-Review: evidence. The compact record contains actual source facts,
+checks/results and findings; compatible historical review records remain valid.
 The declared tier may escalate but cannot be lower than the machine-computed tier.
 
 To add trailers, amend the commit:
   git commit --amend  (then add trailers to the message)
-
-To bypass (emergencies only):
-  git push --no-verify
 
 See skills/self-review/SKILL.md for the full artifact format.
 

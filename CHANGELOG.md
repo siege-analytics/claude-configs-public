@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Changed: proportionate task preparation and review (#1328)
+
+- Remove universal pre-edit investigation, pre-mortem, junior/senior and posted-artifact prerequisites. Keep actual task ownership, implementing status, physical scope and protected operation controls.
+- Replace compulsory rank-based review records and per-command verification blocks with a compact goal, assumptions, validation and findings record; high-risk publication still needs actual independent review. Pre-mortems remain available as optional risk analysis.
+- Distinguish unfinished parent goals from covered or held dispatches, preserve supported continuation and real action-specific holds, and scope CraftAgents author-label handling to that host. Resolve contradictory scanner acceptance guidance without treating a non-clean scan as clean.
+
+
 ### Fixed: explicit task evidence and steward succession (#1292, #1309, #1311)
 
 - Select turn-start evidence from an explicit current-session Task in bounded host metadata or an unfenced standalone prompt directive; preserve other active tasks and all per-action scope checks.

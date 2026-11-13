@@ -450,8 +450,8 @@ def _artifact_matches_strict_scope(loaded: dict, repo_root: str, session_id: str
 
 
 def task_identity(data: dict) -> str:
-    """Full ticket refs or explicit task ids; never compare #N substrings."""
-    return str(data.get("ticket") or data.get("task_id") or data.get("task") or "").strip()
+    """Select an exact Task independently of its referenced issue; retain legacy ids."""
+    return str(data.get("task_id") or data.get("ticket") or data.get("task") or "").strip()
 
 
 def task_slug(identity: str) -> str:
@@ -535,6 +535,11 @@ def _remember_canonical(sd: str, sid: str, identity: str, workspace: str) -> Non
             os.unlink(temp)
 
 
+def _canonical_retirement_aliases(data: dict) -> set[str]:
+    identity = task_identity(data)
+    return {identity, str(data.get('ticket') or identity).strip()}
+
+
 def _remember_managed_paths(workspace: str, paths: list[str]) -> None:
     sid = session_id_from_env()
     for sd in session_dirs(workspace, sid):
@@ -544,7 +549,8 @@ def _remember_managed_paths(workspace: str, paths: list[str]) -> None:
                 continue
             loaded = _load(think)
             if loaded and _gate_matches_session(loaded, sid) and task_identity(loaded['data']):
-                _remember_canonical(sd, sid, task_identity(loaded['data']), workspace)
+                for alias in _canonical_retirement_aliases(loaded['data']):
+                    _remember_canonical(sd, sid, alias, workspace)
 
 
 def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
@@ -564,9 +570,13 @@ def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
                 identity = task_identity(loaded["data"])
                 key = canonical(path)
                 if key not in seen:
-                    canonical_ids.add(identity)
+                    # Ticket-only legacy aliases stay retired after canonical
+                    # migration; this does not collapse distinct canonical Tasks.
+                    aliases = _canonical_retirement_aliases(loaded["data"])
+                    canonical_ids.update(aliases)
                     try:
-                        _remember_canonical(sd, sid, identity, workspace)
+                        for alias in aliases:
+                            _remember_canonical(sd, sid, alias, workspace)
                     except (OSError, ValueError) as exc:
                         print(f'Canonical retirement record unavailable for {identity}: {exc}', file=sys.stderr)
                     result.append(loaded)
@@ -588,7 +598,8 @@ def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
     # Per-task canonical claims survive individual gate cleanup. Other legacy
     # tasks remain independent; no session-wide namespace switch is used.
     return [g for g in result if str(g['data'].get('status', '')).lower() not in
-            {'disposed', 'complete', 'completed', 'done', 'done-awaiting-pr'}]
+            {'disposed', 'complete', 'completed', 'done', 'done-awaiting-pr',
+             'parked', 'paused', 'on-hold'}]
 
 
 def _gate_matches_session(loaded: dict, session_id: str) -> bool:
@@ -608,8 +619,8 @@ def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
             "Choose a stable unique non-hidden slug; no hash computation or GitHub ticket is required. "
             "Set task_id (or the full ticket), sessionId, target repo_root, scope_paths and status for this task. "
             "Own-session task gate JSON and plans can be bootstrapped without another gate. "
-            "Keep JSON companions beside this task's gate; write its pre-mortem under this session's plans/ naming the task_id. Never overwrite root signals or another task. "
-            "Then satisfy only this task's effective review tier; see [skill:think].")
+            "Keep this Task gate in its own session/task directory. Never overwrite root signals or another Task. "
+            "Preparation is ordinary reading and checking; review evidence is checked at publication. No posted rank or preparation companion grants edit authority; see [skill:think].")
 
 
 def select_task(workspace: str, paths: list[str], binding: str = "", session_id: str = "",
@@ -952,10 +963,28 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     binding = shape.get("binding") or task_binding()
     if shape.get("binding") and task_binding() and shape["binding"] != task_binding():
         return {**shape, "gate": None, "error": "Conflicting explicit task bindings."}
-    selected = post_selected or select_task(workspace, shape["paths"], binding)
+    if shape.get('scanner_execution'):
+        # This named diagnostic selects data through exact repo_root binding;
+        # its bounded Git metadata effects are not repository-wide edit grants.
+        requested = shape['scanner_execution']['gate']
+        candidates = [gate for gate in _session_thinks(workspace)
+                      if canonical(gate['path']) == requested
+                      and (not binding or task_identity(gate['data']) == binding)]
+        selected = {'gate': candidates[0], 'error': ''} if len(candidates) == 1 else {
+            'gate': None, 'error': 'Scanner requires its exact existing own-session Task and binding.'}
+    else:
+        selected = post_selected or select_task(workspace, shape['paths'], binding)
     result = {**shape, **selected}
     if result["gate"]:
         tg = result["gate"]
+        if shape.get('scanner_execution'):
+            from task_actions import scanner_owned_plan
+            try:
+                scanner_owned_plan(shape['scanner_execution'], canonical(tg['path']), tg['data'],
+                                   canonical(own_session_directory(workspace)))
+            except (OSError,ValueError) as error:
+                return {**result,'gate':None,'error':'Scanner authority denied: '+str(error)}
+            result['scanner_execution_authorized'] = True
         if shape.get("test_receipt_output"):
             expected_gate = canonical(tg["path"])
             requested_gate = shape["test_receipt_gate"]
@@ -973,7 +1002,7 @@ def resolve_action(workspace: str, payload: dict) -> dict:
             if not valid:
                 return {**result, "gate": None, "error": "Test execution requires the selected own-task implementing think gate and its exact adjacent test-gate.json receipt; repair task/output ownership before rerunning."}
         result["session_dir"] = own_session_directory(workspace)
-        result["artifacts"] = {name: g["path"] if (g := _artifact_for(tg, name, workspace)) else None for name in ("investigate-gate", "junior-senior-gate", "artifacts-posted-gate", "review-gate", "test-gate")}
+        result["artifacts"] = {}  # Compatibility field; preparation companions do not authorize edits.
         result["task"] = task_identity(tg["data"])
         result["tier"] = task_tier(tg["data"], shape["paths"], command, cwd,
                                    scratch_root=own_session_data_root(workspace))
@@ -1071,7 +1100,8 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
                 verified_scope = True
                 slug = repository(root)
                 if slug: allowed.add(slug)
-        ticket = re.fullmatch(r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*)', identity)
+        ticket = re.fullmatch(r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*)',
+                              str(data.get('ticket') or identity))
         matched = True
         for target in shape['metadata_posts']:
             actual = target['repository'] or implicit_repository(target['cwd'])
@@ -1266,9 +1296,9 @@ def project_policy() -> list:
             raise ValueError('invalid GitHub project standing grant values')
         if extra and (grant['field_name'] != 'Status' or grant['field_type'] != 'SINGLE_SELECT'
                       or not isinstance(grant['values'], list) or not grant['values']
-                      or any(v not in ('In Progress', 'In Review') for v in grant['values'])
+                      or any(v not in ('In Progress', 'In Review', 'Done') for v in grant['values'])
                       or len(set(grant['values'])) != len(grant['values'])):
-            raise ValueError('item-edit grant is limited to Status In Progress/In Review')
+            raise ValueError('item-edit grant is limited to Status In Progress/In Review/Done')
         key = (grant['host'], grant['owner'].lower(), grant['project'], grant['issue_owner'].lower(), grant['operation'])
         if key in seen:
             raise ValueError('ambiguous duplicate GitHub project standing grants')
@@ -1701,7 +1731,7 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "", *, scra
     wins; a missing classifier,
     policy, repo_root or git listing fails closed to C. Bounded root pytest
     uses its branch/working delta and selectors, with at least B; normal task
-    ownership and preparation requirements still apply."""
+    ownership and scope requirements still apply."""
     declared = str(gate.get("tier") or gate.get("review_tier") or "").strip().upper()
     declared = declared if declared in TIER_ORDER else ""
     root = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))

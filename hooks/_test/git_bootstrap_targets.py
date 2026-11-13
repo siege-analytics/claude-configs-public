@@ -32,12 +32,12 @@ class GitBootstrap(unittest.TestCase):
         self.f.env.update(GIT_CONFIG_GLOBAL=os.devnull,GIT_CONFIG_NOSYSTEM='1')
         os.environ.update(GIT_CONFIG_GLOBAL=os.devnull,GIT_CONFIG_NOSYSTEM='1')
         self.source = self.ws / 'source'
-        subprocess.run(['git', 'init', '-q', str(self.source)], check=True)
+        subprocess.run(['git', 'init', '-q', str(self.source)], check=True, timeout=30)
         (self.source / 'note.txt').write_text('preserve me\n')
-        subprocess.run(['git', '-C', str(self.source), 'add', 'note.txt'], check=True)
-        subprocess.run(['git', '-C', str(self.source), '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture'], check=True)
+        subprocess.run(['git', '-C', str(self.source), 'add', 'note.txt'], check=True, timeout=30)
+        subprocess.run(['git', '-C', str(self.source), '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture'], check=True, timeout=30)
         self.bundle = self.ws / 'saved.bundle'
-        subprocess.run(['git', '-C', str(self.source), 'bundle', 'create', str(self.bundle), '--all'], check=True)
+        subprocess.run(['git', '-C', str(self.source), 'bundle', 'create', str(self.bundle), '--all'], check=True, timeout=30)
 
     def tearDown(self):
         self.f.tearDown()
@@ -71,7 +71,7 @@ class GitBootstrap(unittest.TestCase):
                     target.rmdir(); args, cwd = ['git', 'init', '-q', '-b', 'develop', str(target)], self.ws
                 self.assertEqual(self.shape(args, cwd)['paths'], [str(target)])
                 self.run_allowed(args, target, cwd)
-                actual = subprocess.check_output(['git', '-C', str(target), 'rev-parse', '--absolute-git-dir'], text=True).strip()
+                actual = subprocess.check_output(['git', '-C', str(target), 'rev-parse', '--absolute-git-dir'], text=True, timeout=30).strip()
                 self.assertEqual(actual, str(target if form == 'bare' else target / '.git'))
                 # This test's task must not lend another bootstrap scope.
                 for p in (self.ws / 'sessions/one/tasks').glob('*/think-gate.json'):
@@ -85,7 +85,7 @@ class GitBootstrap(unittest.TestCase):
                 args = ['git', 'clone', '--mirror', *(['--no-local'] if source.is_dir() else []), str(source), str(target)]
                 self.assertEqual(self.shape(args)['paths'], [str(target)])
                 self.run_allowed(args, target)
-                refs = subprocess.check_output(['git', '-C', str(target), 'show-ref'], text=True)
+                refs = subprocess.check_output(['git', '-C', str(target), 'show-ref'], text=True, timeout=30)
                 self.assertIn('refs/heads/', refs)
                 if source.is_dir():
                     originals=[p for p in (source/'.git/objects').rglob('*') if p.is_file()]
@@ -105,7 +105,7 @@ class GitBootstrap(unittest.TestCase):
 
     def test_local_source_with_alternates_becomes_independent_under_no_local(self):
         borrowed=self.ws/'borrowed'
-        subprocess.run(['git','clone','--shared','--no-checkout',str(self.source),str(borrowed)],check=True,capture_output=True)
+        subprocess.run(['git','clone','--shared','--no-checkout',str(self.source),str(borrowed)],check=True,capture_output=True, timeout=30)
         self.assertTrue((borrowed/'.git/objects/info/alternates').is_file())
         target=self.ws/'independent'
         self.run_allowed(['git','clone','--mirror','--no-local',str(borrowed),str(target)],target)
@@ -116,8 +116,8 @@ class GitBootstrap(unittest.TestCase):
                 self.assertNotIn((p.stat().st_dev,p.stat().st_ino),original_inodes)
                 self.assertEqual(p.stat().st_nlink,1)
         self.source.rename(self.ws/'source-now-unavailable')
-        subprocess.run(['git','-C',str(target),'fsck','--full'],check=True,capture_output=True)
-        self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],text=True),'preserve me\n')
+        subprocess.run(['git','-C',str(target),'fsck','--full'],check=True,capture_output=True, timeout=30)
+        self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],text=True, timeout=30),'preserve me\n')
 
     def test_missing_gate_foreign_task_wrong_scope_and_nonimplementing_deny(self):
         target = self.ws / 'denied'
@@ -128,15 +128,15 @@ class GitBootstrap(unittest.TestCase):
         self.task(self.ws/'other'); self.f.assertGate(2, command, cwd=self.ws)
         self.assertFalse(target.exists())
 
-    def test_fresh_repo_risk_requires_effective_C_preparation_not_just_declared_A(self):
+    def test_fresh_repo_preserves_C_risk_but_needs_no_preedit_artifacts(self):
         target=self.ws/'risk'
         gate=self.task(target, artifacts=False)
         data=json.loads((gate/'think-gate.json').read_text());data['tier']='A';fixture.write(gate/'think-gate.json',data)
         command=shlex.join(['git','init',str(target)])
         tier=fixture.r.task_tier(data,[str(target)],command,str(self.ws))
         self.assertEqual(tier['floor'],'C');self.assertEqual(tier['effective'],'C')
-        self.f.assertGate(2,command,cwd=self.ws)
-        self.task(target,artifacts=True);self.f.assertGate(0,command,cwd=self.ws)
+        self.f.assertGate(0,command,cwd=self.ws)
+        self.f.assertGate(2,shlex.join(['git','init',str(self.ws/'outside-task')]),cwd=self.ws)
         self.assertFalse(target.exists())
 
     def test_unknown_helpers_metadata_options_and_transports_deny(self):
@@ -186,7 +186,7 @@ class GitBootstrap(unittest.TestCase):
         gate=self.f.task('nested-bootstrap',scratch)
         command=shlex.join(['git','init','-q',str(scratch)])
         self.f.assertGate(0,command,cwd=self.f.repo)
-        subprocess.run(['git','init','-q',str(scratch)],check=True)
+        subprocess.run(['git','init','-q',str(scratch)],check=True, timeout=30)
         (scratch/'note.txt').write_text('scoped')
         staging=shlex.join(['git','-C',str(scratch),'add','note.txt'])
         # A workspace-root declaration cannot masquerade as the new repo.
@@ -194,14 +194,14 @@ class GitBootstrap(unittest.TestCase):
         for p in gate.glob('*.json'):
             data=json.loads(p.read_text());data['repo_root']=str(scratch);fixture.write(p,data)
         self.f.assertGate(0,staging,cwd=self.f.repo)
-        subprocess.run(['git','-C',str(scratch),'add','note.txt'],check=True)
-        self.assertEqual(subprocess.check_output(['git','-C',str(scratch),'diff','--cached','--name-only'],text=True).strip(),'note.txt')
+        subprocess.run(['git','-C',str(scratch),'add','note.txt'],check=True, timeout=30)
+        self.assertEqual(subprocess.check_output(['git','-C',str(scratch),'diff','--cached','--name-only'],text=True, timeout=30).strip(),'note.txt')
 
     def test_existing_bare_and_linked_repository_metadata_cannot_be_reinitialized(self):
         bare=self.ws/'existing-bare'
-        subprocess.run(['git','init','--bare','-q',str(bare)],check=True)
+        subprocess.run(['git','init','--bare','-q',str(bare)],check=True, timeout=30)
         linked=self.ws/'linked'
-        subprocess.run(['git','-C',str(self.source),'worktree','add','--detach','--no-checkout',str(linked),'HEAD'],check=True,capture_output=True)
+        subprocess.run(['git','-C',str(self.source),'worktree','add','--detach','--no-checkout',str(linked),'HEAD'],check=True,capture_output=True, timeout=30)
         self.assertTrue((linked/'.git').is_file())
         for destination in (bare,linked):
             for args in (['git','init',str(destination)],['git','init','--bare',str(destination)]):
@@ -243,23 +243,37 @@ class GitBootstrap(unittest.TestCase):
                                       text=True,capture_output=True,timeout=20,cwd=self.f.repo)
                 outcomes.append((hook.name,result.returncode))
                 self.assertEqual(result.returncode,0,(kind,hook.name,result.stderr,result.stdout))
-                for line in result.stdout.splitlines():
-                    try:
-                        response=json.loads(line)
-                    except ValueError:
-                        continue
-                    if isinstance(response,dict):
-                        self.assertIsNot(response.get('continue'),False,(hook.name,response))
-                        self.assertNotEqual(response.get('decision'),'block',(hook.name,response))
-                        specific=response.get('hookSpecificOutput',{})
-                        if isinstance(specific,dict):
-                            self.assertNotEqual(specific.get('permissionDecision'),'deny',(hook.name,response))
+                self.assert_hook_output_allows(result.stdout)
             subprocess.run(args,cwd=cwd,env=self.f.env,check=True,capture_output=True,timeout=15)
             self.assertTrue((target/('HEAD' if kind=='clone' else '.git/HEAD')).is_file())
             print('native-shaped '+kind+' all '+str(len(outcomes))+' configured Bash hooks permit; explicit empty template and actual Git creation verified')
             self.assertEqual(list(outside.iterdir()),[])
             gate=self.ws/'sessions/one/tasks'/fixture.r.task_slug('bootstrap1240')/'think-gate.json'
             data=json.loads(gate.read_text());data['status']='disposed';fixture.write(gate,data)
+
+    def assert_hook_output_allows(self, output):
+        text = output.strip()
+        encoded = [text] if text.startswith('{') else [line for line in text.splitlines() if line.lstrip().startswith('{')]
+        for value in encoded:
+            # Malformed or mixed machine output fails the acceptance fixture;
+            # it cannot be silently skipped as permission to run the command.
+            response = json.loads(value)
+            if isinstance(response, dict):
+                self.assertIsNot(response.get('continue'), False, response)
+                self.assertNotEqual(response.get('decision'), 'block', response)
+                specific = response.get('hookSpecificOutput', {})
+                if isinstance(specific, dict):
+                    self.assertNotIn(specific.get('permissionDecision'), ('deny', 'ask', 'defer'), response)
+
+    def test_machine_output_parser_checks_complete_pretty_controls(self):
+        self.assert_hook_output_allows('ordinary advisory text')
+        self.assert_hook_output_allows(json.dumps({'continue': True}, indent=2))
+        for response in ({'continue': False}, {'decision': 'block'},
+                         *({'hookSpecificOutput': {'permissionDecision': decision}} for decision in ('deny', 'ask', 'defer'))):
+            with self.subTest(response=response), self.assertRaises(AssertionError):
+                self.assert_hook_output_allows(json.dumps(response, indent=2))
+        with self.assertRaises(json.JSONDecodeError):
+            self.assert_hook_output_allows('{broken machine output')
 
     def test_actual_global_URL_rewrites_validate_effective_source_once_without_transport(self):
         config=self.ws/'global.config';target=self.ws/'rewritten'
@@ -268,7 +282,7 @@ class GitBootstrap(unittest.TestCase):
         url='https://example.test/project.git'
         with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(config),'GIT_CONFIG_NOSYSTEM':'1'}):
             configured('https://example.test/','ext::private-fixture-helper ')
-            actual=subprocess.check_output(['git','ls-remote','--get-url','--',url],text=True).strip()
+            actual=subprocess.check_output(['git','ls-remote','--get-url','--',url],text=True, timeout=30).strip()
             self.assertEqual(actual,'ext::private-fixture-helper project.git')
             self.assertTrue(self.shape(['git','clone',url,str(target)]).get('error'))
             for prefix,replacement,value in (
@@ -287,7 +301,7 @@ class GitBootstrap(unittest.TestCase):
             try:
                 self.f.env.update(GIT_CONFIG_GLOBAL=str(config),GIT_CONFIG_NOSYSTEM='1')
                 self.run_allowed(['git','clone','--mirror','--no-local','local-alias:',str(target)],target)
-                self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],text=True),'preserve me\n')
+                self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],text=True, timeout=30),'preserve me\n')
             finally:
                 self.f.env.clear();self.f.env.update(old_env)
         self.assertTrue((target/'HEAD').is_file())
@@ -303,7 +317,7 @@ class GitBootstrap(unittest.TestCase):
         try:
             self.f.env.update(GIT_CONFIG_GLOBAL=str(config),GIT_CONFIG_NOSYSTEM='1',GIT_TEMPLATE_DIR=str(template))
             with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(config),'GIT_CONFIG_NOSYSTEM':'1','GIT_TEMPLATE_DIR':str(template)}):
-                actual=subprocess.check_output(['git','config','--path','--get','init.templateDir'],text=True).strip()
+                actual=subprocess.check_output(['git','config','--path','--get','init.templateDir'],text=True, timeout=30).strip()
                 self.assertEqual(actual,str(template))
                 for args in (['git','init',str(target)],['git','clone','--mirror',str(self.bundle),str(target)]):
                     self.assertTrue(self.shape(args).get('error'))
@@ -333,7 +347,7 @@ class GitBootstrap(unittest.TestCase):
                 self.task(target)
                 self.f.env['GIT_CONFIG_GLOBAL']=str(config)
                 with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(config)}):
-                    raw=subprocess.check_output(['git','config','--path','--get','init.templateDir'])
+                    raw=subprocess.check_output(['git','config','--path','--get','init.templateDir'], timeout=30)
                     self.assertEqual(raw,value+b'\n')
                     args=['git','init',str(target)]
                     self.assertTrue(self.shape(args).get('error'))
@@ -371,7 +385,7 @@ class GitBootstrap(unittest.TestCase):
         target=self.ws/'control-source-target';self.task(target)
         self.f.env['GIT_CONFIG_GLOBAL']=str(config)
         with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(config)}):
-            raw=subprocess.check_output(['git','ls-remote','--get-url','--','alias:'])
+            raw=subprocess.check_output(['git','ls-remote','--get-url','--','alias:'], timeout=30)
             self.assertEqual(raw,str(source).encode()+b'\n')
             args=['git','clone','--mirror','alias:',str(target)]
             self.assertTrue(self.shape(args).get('error'))
@@ -405,7 +419,7 @@ class GitBootstrap(unittest.TestCase):
         for index,source in enumerate(('a@b:c','https://h/r')):
             with self.subTest(source=source):
                 candidate=self.ws/(source+'.git');candidate.parent.mkdir(parents=True,exist_ok=True)
-                subprocess.run(['git','clone','--template=','--mirror','--no-local',str(self.source),str(candidate)],check=True,capture_output=True,env=self.f.env)
+                subprocess.run(['git','clone','--template=','--mirror','--no-local',str(self.source),str(candidate)],check=True,capture_output=True,env=self.f.env, timeout=30)
                 target=self.ws/('suffix-clone-'+str(index));self.task(target)
                 args=['git','clone','--template=','--mirror',source,str(target)]
                 self.assertTrue(self.shape(args).get('error'))
@@ -420,20 +434,20 @@ class GitBootstrap(unittest.TestCase):
                     safe_source=source
                 self.run_allowed(['git','clone','--template=','--mirror','--no-local',safe_source,str(target)],target)
                 self.assert_independent_objects(candidate,target)
-                actual=subprocess.check_output(['git','-C',str(target),'config','--local','remote.origin.url'],text=True,env=self.f.env)
+                actual=subprocess.check_output(['git','-C',str(target),'config','--local','remote.origin.url'],text=True,env=self.f.env, timeout=30)
                 self.assertEqual(actual,os.path.join(str(self.ws),safe_source)+'\n')
 
     def test_bundle_suffix_is_a_read_input_not_a_repository_alias(self):
         target=self.ws/'bundle-suffix-clone'
         self.run_allowed(['git','clone','--template=','--mirror','saved',str(target)],target)
-        self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],text=True),'preserve me\n')
+        self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],text=True, timeout=30),'preserve me\n')
         self.assertFalse((target/'objects/info/alternates').exists())
 
     def test_parent_config_and_source_remote_names_do_not_sanitize_helper(self):
         parent=self.f.repo;target=self.ws/'parent-config-target';self.task(target)
         literal='reviewfixture1240::x'
-        subprocess.run(['git','-C',str(parent),'config','url.https://example.invalid/.insteadOf','reviewfixture1240::'],check=True,env=self.f.env)
-        old=subprocess.check_output(['git','-C',str(parent),'ls-remote','--get-url','--',literal],text=True,env=self.f.env)
+        subprocess.run(['git','-C',str(parent),'config','url.https://example.invalid/.insteadOf','reviewfixture1240::'],check=True,env=self.f.env, timeout=30)
+        old=subprocess.check_output(['git','-C',str(parent),'ls-remote','--get-url','--',literal],text=True,env=self.f.env, timeout=30)
         self.assertEqual(old,'https://example.invalid/x\n')
         original=tempfile.TemporaryDirectory
         # Even a scratch below that repository must stop upward discovery.
@@ -444,7 +458,7 @@ class GitBootstrap(unittest.TestCase):
         global_config=self.ws/'global-source-alias.config'
         global_config.write_text('[remote "'+literal+'"]\n url = https://example.invalid/safe\n')
         with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(global_config)}):
-            misleading=subprocess.check_output(['git','-C',str(self.ws),'ls-remote','--get-url','--',literal],text=True)
+            misleading=subprocess.check_output(['git','-C',str(self.ws),'ls-remote','--get-url','--',literal],text=True, timeout=30)
             self.assertEqual(misleading,'https://example.invalid/safe\n')
             self.assertTrue(self.shape(args,parent).get('error'))
         self.assertFalse(target.exists())
@@ -452,12 +466,12 @@ class GitBootstrap(unittest.TestCase):
     def test_parent_template_ignored_but_real_global_URL_rewrite_preserved(self):
         parent=self.f.repo;target=self.ws/'ignore-parent-template';outside=self.ws/'parent-template-outside';outside.mkdir()
         template=self.ws/'parent-template';template.mkdir();(template/'objects').symlink_to(outside,target_is_directory=True)
-        subprocess.run(['git','-C',str(parent),'config','init.templateDir',str(template)],check=True,env=self.f.env)
+        subprocess.run(['git','-C',str(parent),'config','init.templateDir',str(template)],check=True,env=self.f.env, timeout=30)
         self.run_allowed(['git','clone','--mirror',str(self.bundle),str(target)],target,cwd=parent)
         self.assertEqual(list(outside.iterdir()),[])
         global_config=self.ws/'global-rewrite.config'
         global_config.write_text('[url "ssh://git@example.invalid/"]\n insteadOf = https://example.invalid/\n')
-        subprocess.run(['git','-C',str(parent),'config','url.ext::must-not-run .insteadOf','https://example.invalid/'],check=True,env=self.f.env)
+        subprocess.run(['git','-C',str(parent),'config','url.ext::must-not-run .insteadOf','https://example.invalid/'],check=True,env=self.f.env, timeout=30)
         with patch.dict(os.environ,{'GIT_CONFIG_GLOBAL':str(global_config)}):
             from task_actions import _git_clone_effective_source
             self.assertEqual(_git_clone_effective_source('https://example.invalid/repo'),'ssh://git@example.invalid/repo')
@@ -466,10 +480,10 @@ class GitBootstrap(unittest.TestCase):
 
     def test_global_default_remote_and_URL_order_match_actual_clone(self):
         other=self.ws/'other-source'
-        subprocess.run(['git','clone','--template=','--no-local',str(self.source),str(other)],check=True,capture_output=True,env=self.f.env)
+        subprocess.run(['git','clone','--template=','--no-local',str(self.source),str(other)],check=True,capture_output=True,env=self.f.env, timeout=30)
         (other/'note.txt').write_text('other source\n')
-        subprocess.run(['git','-C',str(other),'add','note.txt'],check=True,env=self.f.env)
-        subprocess.run(['git','-C',str(other),'-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','other'],check=True,env=self.f.env)
+        subprocess.run(['git','-C',str(other),'add','note.txt'],check=True,env=self.f.env, timeout=30)
+        subprocess.run(['git','-C',str(other),'-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','other'],check=True,env=self.f.env, timeout=30)
         config=self.ws/'global-remote-order.config'
         config.write_text('[clone]\n defaultRemoteName = upstream=name\n[remote "upstream=name"]\n url = '+str(other)+'\n')
         self.f.env['GIT_CONFIG_GLOBAL']=str(config)
@@ -478,12 +492,12 @@ class GitBootstrap(unittest.TestCase):
             from task_actions import _git_clone_effective_source
             self.assertEqual(_git_clone_effective_source(str(self.source)),str(other))
             self.run_allowed(['git','clone','--template=','--mirror','--no-local',str(self.source),str(target)],target)
-        self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],text=True,env=self.f.env),'other source\n')
+        self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],text=True,env=self.f.env, timeout=30),'other source\n')
         self.assert_independent_objects(other/'.git',target)
 
     def test_existing_bare_whitespace_name_keeps_exact_metadata_identity(self):
         bare=self.ws/'existing-bare '
-        subprocess.run(['git','init','--template=','--bare','-q',str(bare)],check=True,env=self.f.env)
+        subprocess.run(['git','init','--template=','--bare','-q',str(bare)],check=True,env=self.f.env, timeout=30)
         original=(bare/'HEAD').read_bytes();self.task(bare)
         args=['git','init',str(bare)]
         self.assertTrue(self.shape(args).get('error'))
@@ -534,7 +548,7 @@ class GitBootstrap(unittest.TestCase):
                     self.run_allowed(args,target)
                 metadata=target if bare else target/'.git'
                 self.assert_independent_objects(self.source/'.git',metadata)
-                self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],env=self.f.env,text=True),'preserve me\n')
+                self.assertEqual(subprocess.check_output(['git','-C',str(target),'show','HEAD:note.txt'],env=self.f.env,text=True, timeout=30),'preserve me\n')
 
     def test_conditional_safe_transport_uses_actual_destination_not_unrelated_include(self):
         target=self.ws/'conditional-safe';target.mkdir()
@@ -569,7 +583,7 @@ class GitBootstrap(unittest.TestCase):
             from task_actions import _git_clone_effective_source
             self.assertEqual(_git_clone_effective_source('https://example.invalid/source',git_dir=str(target/'.git')),str(self.source))
             self.run_allowed(args,target)
-            remote=subprocess.check_output(['git','-C',str(target),'config','--local','--get','remote.UPstream.url'],env=self.f.env,text=True)
+            remote=subprocess.check_output(['git','-C',str(target),'config','--local','--get','remote.UPstream.url'],env=self.f.env,text=True, timeout=30)
             self.assertEqual(remote,'https://example.invalid/source\n')
             self.assert_independent_objects(self.source/'.git',target/'.git')
         # A conditional remote URL alone is also transport configuration.

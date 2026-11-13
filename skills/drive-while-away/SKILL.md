@@ -211,6 +211,8 @@ You actively stop the whole loop ONLY when:
 
 When a whole-loop termination criterion is met, record the outcome or blocker and stop the existing job with `CronDelete` or the host's supported equivalent. Do not promise further fires after expiry or without a working scheduler. Stopping the scheduler does not itself cancel external jobs: preserve their handles and do not cancel or replay them without authority. On an authorized resume, inspect existing jobs and current state before restoring continuation. Otherwise keep the existing continuation mechanism; do not create duplicate jobs.
 
+Apply these criteria to the operator's parent objective, not only the last batch of dispatches. Covered or held child assignments do not establish that objective's completion. Distinguish the user's explicit stop deadline from a finite implementation lease: within an existing continuing grant, routine lease reconciliation and renewal belong to the steward. Before retiring an episode with unfinished parent work, verify its replacement or bounded dependency-check route; merely naming incumbent owners or expecting a GitHub reply does not schedule a callback. Follow [rule:strategic-agency] rule 2 for the role and handoff contract.
+
 ## Escalation criteria
 
 Record and report the affected target when:

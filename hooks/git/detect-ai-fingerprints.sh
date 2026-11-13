@@ -44,6 +44,8 @@ _FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CM
 # blanks squeezed; skip only if neither matches. A command containing ANSI-C
 # $'...' (which can spell any byte) takes the full path.
 [[ "$_FAST_CMDS" == *"\$'"* ]] && _FAST_FULL=1
+# Expansions require structural argv inspection, even with no literal CLI name.
+[[ "$_FAST_CMDS" == *'$'* || "$_FAST_CMDS" == *'`'* || "$_FAST_CMDS" == *'*'* || "$_FAST_CMDS" == *'?'* || "$_FAST_CMDS" == *'['* ]] && _FAST_FULL=1
 # A quote or backslash between two letters or digits (`pr"x"`, `x\git`) joins
 # words; only the full path's quote handling decides what that runs. In the
 # JSON text a shell `"` or `\` is itself escaped, hence the leading backslash.
@@ -51,8 +53,18 @@ _FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CM
 _FAST_BUILT="${_FAST_CMDS//[\"\'\\]/}"
 while [[ "$_FAST_BUILT" == *"  "* ]]; do _FAST_BUILT="${_FAST_BUILT//  / }"; done
 _FAST_FIRST='"tool_input"[[:space:]]*:[[:space:]]*[{][[:space:]]*"command"[[:space:]]*:[[:space:]]*"[^"]'
-_FAST_RE='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
-if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE || "$_FAST_BUILT" =~ $_FAST_RE ]]; then exit 0; fi
+_FAST_RE='(^|[^[:alnum:]])(git|gh|push)([^[:alnum:]]|$)'
+# Preserve #1083's zero-Python path for literal Git reader verbs. Remove
+# only adjacent known verbs from candidate text; globals, aliases, dynamic
+# dispatch and every publication word still take structural inspection.
+_FAST_CANDIDATE="$_FAST_BUILT"
+_FAST_GIT_READ='(^|[^[:alnum:]_])git[[:space:]]+(status|log|diff|show|rev-parse|ls-files|ls-tree|cat-file)([^[:alnum:]_$`]|$)'
+if [[ "$_FAST_CANDIDATE" != *'$'* && "$_FAST_CANDIDATE" != *'`'* ]]; then
+    while [[ "$_FAST_CANDIDATE" =~ $_FAST_GIT_READ ]]; do
+        _FAST_CANDIDATE="${_FAST_CANDIDATE/"${BASH_REMATCH[0]}"/ }"
+    done
+fi
+if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CANDIDATE" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
@@ -67,34 +79,24 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# Mirror self-review.sh's trigger pattern (BSD-portable boundary per issue #106).
-TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
-if ! echo "$COMMAND" | grep -qE "$TRIGGERS"; then
-    exit 0
-fi
+# Trigger selection uses executable argv, not quoted titles/bodies (#1368).
+# No candidate command runs; this grants no Task or publication authority.
+PUBLICATION=$(printf '%s' "$COMMAND" | python3 "$HOOK_DIR/../lib/command-text.py" --publication "$CWD") || {
+    echo "BLOCKED: publication trigger could not be inspected safely" >&2; exit 2;
+}
+PUBLICATION_KIND=$(printf '%s' "$PUBLICATION" | python3 "$EXTRACT" kind 2>/dev/null || true)
+case "$PUBLICATION_KIND" in
+    none) exit 0 ;;
+    publication) ;;
+    *) echo "BLOCKED: unresolved direct publication command; use a literal invocation and separate different repository targets into separate calls" >&2; exit 2 ;;
+esac
+# Keep this adapter's existing Git/GitHub trigger family; self-review also
+# owns GitLab MR publication. A mixed command retains every Git/GitHub member.
+FINGERPRINT_TRIGGER=$(printf '%s' "$PUBLICATION" | python3 "$EXTRACT" fingerprint 2>/dev/null || true)
+[[ "$FINGERPRINT_TRIGGER" == True || "$FINGERPRINT_TRIGGER" == true ]] || exit 0
+EFFECTIVE_CWD=$(printf '%s' "$PUBLICATION" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+[[ -n "$EFFECTIVE_CWD" ]] || { echo "BLOCKED: publication repository is unresolved" >&2; exit 2; }
 
-# Multi-statement-with-cd yield (mirrors self-review.sh + branch-guard.sh).
-CD_COUNT=$(echo "$COMMAND" | { grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null || true; } | wc -l | tr -d ' ')
-if [[ "$CD_COUNT" -gt 0 ]]; then
-    if [[ "$CD_COUNT" -gt 1 ]] || [[ "$COMMAND" == *$'\n'* || "$COMMAND" == *';'* || "$COMMAND" == *'||'* ]]; then
-        exit 0
-    fi
-fi
-
-# Resolve effective repo dir (leading-cd pattern from branch-guard).
-EFFECTIVE_CWD="$CWD"
-if [[ "$COMMAND" =~ ^[[:space:]]*cd[[:space:]]+([^[:space:];&]+) ]]; then
-    CD_TARGET="${BASH_REMATCH[1]}"
-    CD_TARGET="${CD_TARGET%\"}"; CD_TARGET="${CD_TARGET#\"}"
-    CD_TARGET="${CD_TARGET%\'}"; CD_TARGET="${CD_TARGET#\'}"
-    case "$CD_TARGET" in
-        /*) ;;
-        *) CD_TARGET="$CWD/$CD_TARGET" ;;
-    esac
-    if [[ -d "$CD_TARGET" ]]; then
-        EFFECTIVE_CWD="$CD_TARGET"
-    fi
-fi
 
 if [[ -z "$EFFECTIVE_CWD" ]] || ! git -C "$EFFECTIVE_CWD" rev-parse --git-dir >/dev/null 2>&1; then
     exit 0
