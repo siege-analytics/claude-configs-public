@@ -49,6 +49,27 @@ These are what I actually read, and what each one established.
 
 ## Peer review
 
+Shelf checks:
+
+- **writing-tests:1/2 (red before green, negatives pinned):**
+  - Every positive test was red on the pre-fix runtime and is green with the fix; the counts are below.
+  - These negative tests passed on both the pre-fix and the fixed runtime, which pins behaviour that does not change:
+    - `test_gh_path_values_and_operands_stay_targets`
+    - `test_gh_unowned_genuine_text_command_target_still_refuses`
+    - `test_gh_unknown_flags_and_shapes_keep_the_generic_model`
+    - `test_gh_unmodelled_subcommands_and_executables_are_unchanged`
+    - `test_gh_pinned_merge_policy_is_unchanged` (its gate half)
+    - `test_gh_text_values_keep_expansion_and_substitution_checks`
+    - `test_gh_release_assets_survive_bool_and_swallowed_flags`
+    - `test_gh_admin_merge_keeps_the_1347_model`
+- **writing-code:9 (no silently dropped input):** the helper returns `args` unchanged unless `args[0] == 'gh'` and the group is listed. A token is dropped only in two cases:
+  - it is a grammar-valid selector;
+  - it is the value of a table-listed 'text' flag of a modelled subcommand.
+  Every other token is kept.
+- **writing-claims:2 (countable claims):** every count in this record was read from a log in the worker session's `data/harness/` (`all1.out`, `all2.out`, `logs/*`) in the same work cycle. No count was inferred.
+
+Gate evidence:
+
 - **Syntax check:** `hooks/lib/task_actions.py` and `hooks/_test/explicit_target_operands.py` were imported and executed by python 3.11.11 in every run below, so both parse. A Python 3.9 syntax review was done by the code reviewer: the walrus in `elif`, `list[str]` and dict unpacking are all valid.
 - **Red/green, all action-classification only; no real close, merge or release ran:**
   - Tests only, on unfixed develop `2a7c2ba4`: 108 failing subtests, all positive.
