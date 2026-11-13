@@ -1491,29 +1491,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/commit",
           "file_count": 1,
-          "tree_sha256": "828442171b8854a4dabc6e6e0bcc6e1c80a74cdedebb1b5564dc72fbf1598a17"
+          "tree_sha256": "120c66fa36111c105edaa94d3733dffd281683790096593908178fc577b570ce"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/commit",
           "file_count": 1,
-          "tree_sha256": "828442171b8854a4dabc6e6e0bcc6e1c80a74cdedebb1b5564dc72fbf1598a17"
+          "tree_sha256": "120c66fa36111c105edaa94d3733dffd281683790096593908178fc577b570ce"
         },
         "flat": {
           "destination": "dist/flat/skills/commit",
           "file_count": 1,
-          "tree_sha256": "828442171b8854a4dabc6e6e0bcc6e1c80a74cdedebb1b5564dc72fbf1598a17"
+          "tree_sha256": "120c66fa36111c105edaa94d3733dffd281683790096593908178fc577b570ce"
         },
         "nested": {
           "destination": "dist/nested/skills/commit",
           "file_count": 1,
-          "tree_sha256": "828442171b8854a4dabc6e6e0bcc6e1c80a74cdedebb1b5564dc72fbf1598a17"
+          "tree_sha256": "120c66fa36111c105edaa94d3733dffd281683790096593908178fc577b570ce"
         }
       },
       "canonical_source": "skills/commit/SKILL.md",
       "kind": "skill",
       "slug": "commit",
       "source_file_count": 1,
-      "source_tree_sha256": "54bcfe0fdd97a6bae8a097beb3349947c38118fb3172bd2fd4ba97085a46e71b"
+      "source_tree_sha256": "6af2e4defe8c81728f30ce15615fbc1e32d32246a689e1422967fd326035c3e6"
     },
     {
       "artifacts": {
@@ -1578,29 +1578,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/create-pr",
           "file_count": 1,
-          "tree_sha256": "dc87b85ddef304f14e491c922ea2db275817a7eda615d1611ea5ce62b45bca2e"
+          "tree_sha256": "6ee8064c8446a5849c6c7b928266462fc579386ca12a758dd2a5b2e276db37df"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/create-pr",
           "file_count": 1,
-          "tree_sha256": "dc87b85ddef304f14e491c922ea2db275817a7eda615d1611ea5ce62b45bca2e"
+          "tree_sha256": "6ee8064c8446a5849c6c7b928266462fc579386ca12a758dd2a5b2e276db37df"
         },
         "flat": {
           "destination": "dist/flat/skills/create-pr",
           "file_count": 1,
-          "tree_sha256": "dc87b85ddef304f14e491c922ea2db275817a7eda615d1611ea5ce62b45bca2e"
+          "tree_sha256": "6ee8064c8446a5849c6c7b928266462fc579386ca12a758dd2a5b2e276db37df"
         },
         "nested": {
           "destination": "dist/nested/skills/create-pr",
           "file_count": 1,
-          "tree_sha256": "dc87b85ddef304f14e491c922ea2db275817a7eda615d1611ea5ce62b45bca2e"
+          "tree_sha256": "6ee8064c8446a5849c6c7b928266462fc579386ca12a758dd2a5b2e276db37df"
         }
       },
       "canonical_source": "skills/create-pr/SKILL.md",
       "kind": "skill",
       "slug": "create-pr",
       "source_file_count": 1,
-      "source_tree_sha256": "9d265a9fcc60c7a98b1fb0c8857e0865501bfa93c10542a4fe5685044e6cb304"
+      "source_tree_sha256": "4bac2a720378975efdd842616d16b237d583dfc2072d4380ccb48c2f6f92d1c1"
     },
     {
       "artifacts": {
@@ -2767,29 +2767,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/self-review",
           "file_count": 3,
-          "tree_sha256": "ce56360074a03fc7ba7636d545b53bddf8ecb0f88ca5810cb565560895a34665"
+          "tree_sha256": "a0524233aea313c4632acb4ccaa986e968afdcb7dbd097edb3e1c6210f1e0f76"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/self-review",
           "file_count": 3,
-          "tree_sha256": "ce56360074a03fc7ba7636d545b53bddf8ecb0f88ca5810cb565560895a34665"
+          "tree_sha256": "a0524233aea313c4632acb4ccaa986e968afdcb7dbd097edb3e1c6210f1e0f76"
         },
         "flat": {
           "destination": "dist/flat/skills/self-review",
           "file_count": 3,
-          "tree_sha256": "ce56360074a03fc7ba7636d545b53bddf8ecb0f88ca5810cb565560895a34665"
+          "tree_sha256": "a0524233aea313c4632acb4ccaa986e968afdcb7dbd097edb3e1c6210f1e0f76"
         },
         "nested": {
           "destination": "dist/nested/skills/self-review",
           "file_count": 3,
-          "tree_sha256": "ce56360074a03fc7ba7636d545b53bddf8ecb0f88ca5810cb565560895a34665"
+          "tree_sha256": "a0524233aea313c4632acb4ccaa986e968afdcb7dbd097edb3e1c6210f1e0f76"
         }
       },
       "canonical_source": "skills/self-review/SKILL.md",
       "kind": "skill",
       "slug": "self-review",
       "source_file_count": 3,
-      "source_tree_sha256": "57756d33999ef504c9198524e7f60a6d659a7a0d2010051b8d77f359d5fb108e"
+      "source_tree_sha256": "76aa6bef37da03438ac0ced3b63e278a412a97fc538c7a979abb40e1572c5c7d"
     },
     {
       "artifacts": {
