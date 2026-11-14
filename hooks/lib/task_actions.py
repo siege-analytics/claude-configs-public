@@ -1037,6 +1037,72 @@ def _command_string(text: str) -> list[str]:
         return text.split()
 
 
+_ENV_DYNAMIC_WORD = '__ccp_env_dynamic__'
+_ENV_OPTIONAL_WORD = _ENV_DYNAMIC_WORD + 'optional_word__'
+
+
+def _env_split_string(text):
+    """Inspect GNU env -S argv without executing it or reading variable values."""
+    args, word, quote, active, index = [], [], '', False, 0
+    literal = False
+
+    def emit_word():
+        args.append(''.join(word) if literal else _ENV_OPTIONAL_WORD)
+    escapes = {'f': '\f', 'n': '\n', 'r': '\r', 't': '\t', 'v': '\v',
+               '#': '#', '$': '$', '"': '"', "'": "'", '\\': '\\'}
+    while index < len(text):
+        char = text[index]
+        if char == '\\':
+            if index + 1 == len(text):
+                return None  # GNU env rejects incomplete escapes before execution.
+            following = text[index + 1]
+            if quote == "'" and following not in {"'", '\\'}:
+                word.append(char); active = literal = True; index += 1
+                continue
+            if following == 'c':
+                if quote == '"':
+                    return None
+                break
+            if following == '_':
+                if quote == '"':
+                    word.append(' '); active = literal = True
+                elif active:
+                    emit_word(); word, active, literal = [], False, False
+            elif following in escapes:
+                word.append(escapes[following]); active = literal = True
+            else:
+                return None  # Unsupported GNU escapes execute no command.
+            index += 2
+            continue
+        if char in {"'", '"'}:
+            if not quote:
+                quote, active, literal = char, True, True
+            elif quote == char:
+                quote = ''
+            else:
+                word.append(char); literal = True
+        elif not quote and char in ' \t\r\n\v\f':
+            if active:
+                emit_word(); word, active, literal = [], False, False
+        elif not quote and char == '#' and not active:
+            break
+        elif char == '$' and quote != "'":
+            variable = re.match(r'\$\{[A-Za-z0-9_]+\}', text[index:])
+            if variable is None:
+                return None
+            word.append(_ENV_DYNAMIC_WORD); active = True
+            index += len(variable[0])
+            continue
+        else:
+            word.append(char); active = literal = True
+        index += 1
+    if quote:
+        return None
+    if active:
+        emit_word()
+    return args
+
+
 def _wrapped_command(args: list[str], *, preserve_shell=False):
     """Argv that a supported command wrapper runs: None when args[0] is not a
     wrapper, [] when the wrapper runs no command."""
@@ -1047,8 +1113,10 @@ def _wrapped_command(args: list[str], *, preserve_shell=False):
         # env -S splits argv; unlike flock/script/watch it does not run a shell.
         if preserve_shell and name in {'flock', 'script', 'watch'}:
             return ['sh', '-c', text]
-        split = _command_string(text)
-        return ['env'] + split if preserve_shell and name == 'env' else split
+        if preserve_shell and name == 'env':
+            split = _env_split_string(text)
+            return ['env'] + split if split is not None else None
+        return _command_string(text)
 
     values, strings = _WRAPPER_VALUES[name], _WRAPPER_STRINGS.get(name, set())
     stops, exec_mode, index = _WRAPPER_NO_COMMAND.get(name, set()), False, 1
@@ -1069,7 +1137,8 @@ def _wrapped_command(args: list[str], *, preserve_shell=False):
                 return []
             if option in strings:
                 text = attached if equal else (args[index] if index < len(args) else "")
-                return command_string(text) + (args[index + (0 if equal else 1):] if name == "env" else [])
+                split = command_string(text)
+                return split + (args[index + (0 if equal else 1):] if name == "env" else []) if split is not None else []
             exec_mode = exec_mode or option == "--exec"
             if option in values and not equal:
                 index += 1
@@ -1081,7 +1150,8 @@ def _wrapped_command(args: list[str], *, preserve_shell=False):
                 return []
             if option in strings:
                 text = rest or (args[index] if index < len(args) else "")
-                return command_string(text) + (args[index + (0 if rest else 1):] if name == "env" else [])
+                split = command_string(text)
+                return split + (args[index + (0 if rest else 1):] if name == "env" else []) if split is not None else []
             exec_mode = exec_mode or (name == "watch" and option == "-x")
             if option in values:
                 if not rest:
@@ -1091,7 +1161,8 @@ def _wrapped_command(args: list[str], *, preserve_shell=False):
     rest = args[index:]
     if rest and rest[0].partition("=")[0] in strings:  # flock FILE -c CMD, script FILE -c CMD
         option, equal, attached = rest[0].partition("=")
-        return command_string(attached if equal else (rest[1] if len(rest) > 1 else ""))
+        split = command_string(attached if equal else (rest[1] if len(rest) > 1 else ""))
+        return split if split is not None else []
     if name == "watch" and not exec_mode:  # watch runs its words as one sh -c string
         return command_string(" ".join(rest))
     return rest
@@ -2107,7 +2178,7 @@ def _gh_admin_argv(args, globs=()):
             break
         elif word in {'--help', '-h'} or word.startswith('--help='):
             help_requested = '=' not in word or word.partition('=')[2] in {'1', 't', 'T', 'true', 'TRUE', 'True'}
-        elif '__ccp_publication_dynamic__' in word:
+        elif '__ccp_publication_dynamic__' in word or _ENV_DYNAMIC_WORD in word:
             uncertain = True
         elif globs and globs[index] and fnmatch.fnmatchcase('--admin', word):
             uncertain = True
@@ -2126,6 +2197,21 @@ def _gh_admin_argv(args, globs=()):
         return None, False
     shape = positional[:2]
     return shape, shape == ['pr', 'merge'] and (enabled or uncertain)
+
+
+def _env_executable_argv(args):
+    # An unquoted variable-only word may disappear in GNU env. Inspect that
+    # possible executable position without assigning it an environment value.
+    while args and args[0] == _ENV_OPTIONAL_WORD:
+        if _gh_admin_argv(['gh', *args[1:]])[1]:
+            return args, True
+        args = args[1:]
+    suffix = args[0].rsplit(_ENV_DYNAMIC_WORD, 1)[-1] if args else ''
+    possible_gh = suffix.rsplit('/', 1)[-1] == 'gh' if '/' in suffix else 'gh'.endswith(suffix)
+    if (args and _ENV_DYNAMIC_WORD in args[0] and possible_gh
+            and _gh_admin_argv(['gh', *args[1:]])[1]):
+        return args, True
+    return args, False
 
 
 _GH_SHELL_KEYWORDS = {'!', 'if', 'then', 'elif', 'else', 'do', 'while', 'until', 'coproc'}
@@ -2204,6 +2290,9 @@ def unparseable_merge_refusal(command, _depth=0, _supplied=False):
         args = [word for word, _globs, _quoted, _assignment in group]
         supplied = _supplied
         for _ in range(5):
+            args, ambiguous_env = _env_executable_argv(args)
+            if ambiguous_env:
+                return UNPARSEABLE_MERGE_REFUSAL
             if not args:
                 break
             supplied = supplied or os.path.basename(args[0]) in {'xargs', 'parallel'}
@@ -2267,6 +2356,9 @@ def gh_merge_refusal(command, _depth=0, _supplied=False):
         args = [word for word, _globs, _quoted, _assignment in group]
         supplied = _supplied
         for _ in range(5):
+            args, ambiguous_env = _env_executable_argv(args)
+            if ambiguous_env:
+                return 'argument-supplied gh merge executable is unresolved'
             if not args:
                 break
             name = os.path.basename(args[0]).casefold()
