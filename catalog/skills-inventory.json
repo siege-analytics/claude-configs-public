@@ -4081,10 +4081,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 17629,
-      "content_sha256": "ecdd01a0c56f540b1e0bf3fa53633310090cadec916be2599e2d327613d885b4",
+      "characters": 17885,
+      "content_sha256": "693f941f7bc45bfb7924f2d8c4eff08d5c7fe3f95650de35eaea57da5e3eb357",
       "description": "unknown",
-      "estimated_tokens": 4408,
+      "estimated_tokens": 4472,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -4109,7 +4109,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 210,
+      "lines": 216,
       "owner": [
         "unknown"
       ],
@@ -7408,10 +7408,10 @@
     },
     {
       "canonical_source": "skills/_writing-code-rules.md",
-      "characters": 51195,
-      "content_sha256": "bd9b921f985361580dc0845463357dd5d9e056996cdf3b3509c34a80ef5b8ddc",
-      "description": "Always-on. Code-authoring discipline. Docstring brevity, no history references in code comments, no speculative abstractions, verify symbols exist before naming them, verify dependencies are reachable before writing code that uses them, doc-edit symmetry, no silent error swallowing, migration completeness (old-path grep must return zero), deprecation shims require companion follow-up tickets. Test-writing rules live in `_writing-tests-rules.md`; claim-grounding (commit/PR-body claims) lives in `_writing-claims-rules.md`.",
-      "estimated_tokens": 12799,
+      "characters": 51268,
+      "content_sha256": "f93b82923a45e926937a256cc53a3d351e7c4b9e2430003587fbf7b0c9a34b4c",
+      "description": "Always-on. Code-authoring discipline. Docstring brevity, no history references in code comments, no speculative abstractions, verify symbols and dependency contracts before using them, exercise real dependencies before claiming integration works, doc-edit symmetry, no silent error swallowing, migration completeness (old-path grep must return zero), deprecation shims require companion follow-up tickets. Test-writing rules live in `_writing-tests-rules.md`; claim-grounding (commit/PR-body claims) lives in `_writing-claims-rules.md`.",
+      "estimated_tokens": 12817,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_writing-code-rules.md",
@@ -7443,7 +7443,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 384,
+      "lines": 388,
       "owner": [
         "unknown"
       ],
@@ -13068,9 +13068,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2478791,
+    "characters": 2479120,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 619774,
+    "estimated_tokens": 619856,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13091,7 +13091,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1082397
+      "unclassified": 1082726
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13103,7 +13103,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 270640
+      "unclassified": 270722
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
