@@ -22,7 +22,7 @@ log_block_event() {
     local gate_id="${1:-unknown}"
     local invariant="${2:-unknown}"
     local command="${3:-}"
-    local workspace="${CRAFT_AGENT_WORKSPACE:-}"
+    local workspace="${CRAFT_AGENT_WORKSPACE:-${CCP_HOOK_STATE_DIR:-${CLAUDE_SESSION_DIR:-}}}"
 
     if [[ -z "$workspace" ]]; then
         local script_dir
@@ -30,6 +30,7 @@ log_block_event() {
         workspace="$(cd "$script_dir/../.." && pwd)"
     fi
 
+    # Data routing only: this path never selects Task or publication authority.
     local logfile="$workspace/enforcement-blocks.jsonl"
 
     python3 -c "

@@ -24,6 +24,7 @@ import uuid
 ROOT = Path(__file__).resolve().parents[1]
 ROUTER_SOURCE = "hooks/lib/craft-settings-router.py"
 ANCHOR_SOURCE = "hooks/lib/session_anchor.py"
+PROJECT_SOURCE = "bin/project-settings-bootstrap.py"
 
 
 def load(relative, name):
@@ -36,6 +37,7 @@ def load(relative, name):
 
 trust = load("bin/craft-workspace-trust.py", "craft_router_install_primitives")
 router = load(ROUTER_SOURCE, "craft_router_registration_protocol")
+project = load(PROJECT_SOURCE, "craft_project_bootstrap")
 
 
 def saved(path: Path):
@@ -197,16 +199,25 @@ def install(workspace: Path, home: Path, *, apply=False):
     snapshots = {"global-settings.json": (global_path, saved(global_path)),
                  "legacy-project.json": (legacy_path, saved(legacy_path)),
                  "router.py": (target, saved(target)),
+                 "project-bootstrap.py": (home / project.RELATIVE, saved(home / project.RELATIVE)),
+                 "project-bootstrap.json": (home / project.RECEIPT, saved(home / project.RECEIPT)),
                  "registration.json": (receipt_path, saved(receipt_path))}
     old_router = snapshots["router.py"][1]["raw"]
     if old_router is not None and b"# Managed bootstrap: siege-craft-settings-router/v1\n" not in old_router.splitlines(keepends=True)[:3]:
         raise ValueError("router destination is operator-owned; refusing to overwrite it")
+    old_project = snapshots["project-bootstrap.py"][1]
+    if old_project["raw"] is not None and b"# Managed bootstrap: siege-project-settings/v1\n" not in old_project["raw"].splitlines(keepends=True)[:3]:
+        raise ValueError("project bootstrap destination is operator-owned")
+    old_project_receipt = snapshots["project-bootstrap.json"][1]
+    if old_project_receipt["raw"] is not None and trust.document(old_project_receipt).get("purpose") != project.BOOTSTRAP_ABI:
+        raise ValueError("shared project bootstrap registration is operator-owned")
     merged = merge_global(trust.document(snapshots["global-settings.json"][1]), target, workspace, policy=policy)
     router.verify_global(merged, target, workspace, policy=policy)
     legacy_original = trust.document(snapshots["legacy-project.json"][1])
     legacy = retire_project(legacy_original, owned)
     router_bytes = source_bytes(revision, ROUTER_SOURCE, apply=apply)
     anchor_bytes = source_bytes(revision, ANCHOR_SOURCE, apply=apply)
+    project_bytes = source_bytes(revision, PROJECT_SOURCE, apply=apply)
     read_bytes = source_bytes(revision, "hooks/lib/read-only-command.py", apply=apply)
     if saved(workspace / "hooks/lib/read-only-command.py")["raw"] != read_bytes:
         raise ValueError("installed read classifier differs from accepted source")
@@ -244,7 +255,9 @@ def install(workspace: Path, home: Path, *, apply=False):
     except (ValueError, TypeError):
         old_receipt = None  # Reserved owned metadata is repairable after main/profile verification.
     changed = (merged != trust.document(snapshots["global-settings.json"][1]) or legacy != legacy_original
-               or old_router != router_bytes or old_receipt != receipt)
+               or old_router != router_bytes or old_receipt != receipt
+               or snapshots["project-bootstrap.py"][1]["raw"] != project_bytes
+               or old_project_receipt["raw"] != project.registration_bytes(project_bytes))
     summary["changed"] = changed
     if not apply or not changed:
         if apply:
@@ -261,6 +274,11 @@ def install(workspace: Path, home: Path, *, apply=False):
         for relative, snapshot in inspected["watched"].items():
             if saved(workspace / relative)["fingerprint"] != snapshot["fingerprint"]:
                 raise ValueError("workspace policy changed before bootstrap activation")
+        def bootstrap_source_fresh():
+            if trust.source_authority() != revision:
+                raise ValueError("exact-main source changed before shared bootstrap publication")
+        project.publish(home, project_bytes, before_publish=bootstrap_source_fresh,
+                        expected=(old_project["raw"], old_project_receipt["raw"]))
         publish(receipt_path, snapshots["registration.json"][1], json_bytes({"schema_version": 1, "state": "staging"}))
         staging_receipt = saved(receipt_path)
         # Policy exists and is locally verified before global discovery points

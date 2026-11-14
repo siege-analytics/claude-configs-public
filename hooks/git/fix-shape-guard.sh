@@ -192,8 +192,8 @@ BLOCKED: ${TOP_COUNT} commits on this branch share scope '${REPEATED_SCOPE}'
 Per writing-rules:7, when the same fix shape repeats across commits,
 the pattern itself needs examination. Add a Class-Audit: trailer:
 
-  Class-Audit: ${REPEATED_SCOPE} — N=${TOP_COUNT} fixes address the same root cause (describe)
-  Class-Audit: ${REPEATED_SCOPE} — independent fixes, same scope is coincidental
+  Class-Audit: ${REPEATED_SCOPE} -- N=${TOP_COUNT} fixes address the same root cause (describe)
+  Class-Audit: ${REPEATED_SCOPE} -- independent fixes, same scope is coincidental
 
 Or override with evidence:
   [no-class-audit: Reason / Evidence / Falsification]
@@ -211,8 +211,8 @@ BLOCKED: File '${REPEATED_FILE}' touched in ${TOP_FILE_COUNT} commits on this br
 Per writing-rules:7, repeated edits to the same file suggest a pattern
 that should be examined as a class. Add a Class-Audit: trailer:
 
-  Class-Audit: ${REPEATED_FILE} — N=${TOP_FILE_COUNT} edits address the same root cause (describe)
-  Class-Audit: ${REPEATED_FILE} — independent changes, file overlap is coincidental
+  Class-Audit: ${REPEATED_FILE} -- N=${TOP_FILE_COUNT} edits address the same root cause (describe)
+  Class-Audit: ${REPEATED_FILE} -- independent changes, file overlap is coincidental
 
 Or override with evidence:
   [no-class-audit: Reason / Evidence / Falsification]

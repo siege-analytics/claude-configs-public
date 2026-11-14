@@ -40,7 +40,8 @@ import sys
 import glob
 import stat
 import subprocess
-from task_actions import action, canonical, github_ticket_reference
+from task_actions import (action, canonical, github_ticket_reference, gh_merge_refusal, unparseable_merge_refusal,
+                          UNPARSEABLE_MERGE_REFUSAL)
 from session_anchor import correct_environ as _correct_session_environ
 
 # A mis-tagged CRAFT_SESSION_DIR must not decide whose gates apply (#1099). Fix
@@ -364,9 +365,24 @@ def resolve_project(repo_root: str, workspace: str = "") -> str:
     PROJECT.md's `repo:` field -- the same key the build uses for uniqueness.
     Falls back to 'umbrella' on no/ambiguous match, never raising.
     """
-    origin = _origin_to_slug(_git_origin(repo_root))
+    manifest = project_manifest(repo_root, workspace)
+    return os.path.basename(os.path.dirname(manifest)) if manifest else "umbrella"
+
+
+def project_manifest(repo_root: str, workspace: str = "", *, strict_identity: bool = False) -> str:
+    """Select the descriptor for this repository, never an unrelated overlay."""
+    if strict_identity:
+        observed = subprocess.run(['git', '-C', repo_root, 'config', '--get', 'remote.origin.url'],
+                                  capture_output=True, text=True, timeout=3,
+                                  env=_metadata_git_environment())
+        if observed.returncode not in (0, 1):
+            observed.check_returncode()
+        origin_url = observed.stdout.strip() if observed.returncode == 0 else ''
+    else:
+        origin_url = _git_origin(repo_root)
+    origin = _origin_to_slug(origin_url)
     if not origin:
-        return "umbrella"
+        return ""
     search_roots = []
     if workspace:
         search_roots.append(os.path.join(workspace, "projects"))
@@ -380,8 +396,8 @@ def resolve_project(repo_root: str, workspace: str = "") -> str:
         for manifest in sorted(glob.glob(os.path.join(proot, "*", "PROJECT.md"))):
             repo_field = _project_repo_field(manifest)
             if repo_field and repo_field == origin:
-                return os.path.basename(os.path.dirname(manifest))
-    return "umbrella"
+                return manifest
+    return ""
 
 
 def _project_repo_field(manifest_path: str) -> str:
@@ -892,7 +908,38 @@ def own_session_path(workspace: str, path: str, directory: bool = False, removal
     return len(parts) >= 3 and not os.path.isdir(target) and bool(re.fullmatch(r'[A-Za-z0-9_.-]+-gate\.json', parts[-1]))
 
 
+def _admits(result: dict) -> bool:
+    """Whether universal-mutation-gate.sh would allow this resolution (its lines 99-108).
+
+    Like the shell, an `error` does not cancel read_only, an early-allow flag
+    or a gate: only admitting results matter here.
+    """
+    early = ((result.get('metadata_only') or result.get('remote_contact_only') or result.get('investigation'))
+             and not result.get('metadata_posts'))
+    return bool(result.get('read_only') or early or result.get('self_management') or result.get('remote_only_authorized')
+                or result.get('scanner_execution_authorized') or result.get('gate'))
+
+
 def resolve_action(workspace: str, payload: dict) -> dict:
+    """An admin merge is refused in every gh spelling before any route, task or
+    queue proof can admit it (#1207 AC3, #1371, #1372)."""
+    command = (payload.get("tool_input") or {}).get("command", "")
+    refusal = ''
+    if isinstance(command, str) and command:
+        try:
+            refusal = gh_merge_refusal(command) or ''
+        except Exception:  # A predicate fault fails closed for merge/admin text only.
+            refusal = unparseable_merge_refusal(command) or ''
+    denied = {'read_only': False, 'paths': [], 'gate': None, 'error': 'Pinned merge denied: pinned merge queue: ' + refusal}
+    if refusal and refusal != UNPARSEABLE_MERGE_REFUSAL:
+        return denied
+    result = _resolve_action(workspace, payload)
+    # Unresolved GH publication text keeps any more specific refusal of
+    # the ordinary path (which refuses shell expansion itself); never admitted.
+    return denied if refusal and _admits(result) else result
+
+
+def _resolve_action(workspace: str, payload: dict) -> dict:
     ti = payload.get("tool_input") or {}
     command = ti.get("command", "")
     cwd = payload.get("cwd") or os.getcwd()
@@ -1866,6 +1913,7 @@ def main():
     parser.add_argument("--session-gate", action="store_true", help="Resolve <gate-name>.json from the current session's own signal dir only, no repo binding (#926)")
     parser.add_argument("--session-scoped", action="store_true", help="With --resolve-many: resolve from the session dir only; no --repo-root required (#926)")
     parser.add_argument("--project", action="store_true", help="Print the project slug for --repo-root (or 'umbrella')")
+    parser.add_argument("--project-manifest", action="store_true", help="Print the matching project's descriptor path, or an empty line")
     parser.add_argument(
         "--resolve-many", default="",
         help="Comma-separated gate names; returns name-to-path map",
@@ -1892,6 +1940,12 @@ def main():
 
     if args.project:
         print(resolve_project(args.repo_root, args.workspace))
+        return
+    if args.project_manifest:
+        try:
+            print(project_manifest(args.repo_root, args.workspace, strict_identity=True))
+        except (OSError, subprocess.SubprocessError):
+            parser.exit(2, 'Project descriptor lookup failed; repair repository identity or Git metadata.\n')
         return
 
     if args.session_gate:
