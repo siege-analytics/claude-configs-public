@@ -94,6 +94,49 @@ class ScannerExecution(unittest.TestCase):
         return subprocess.run(shlex.split(self.command(*mode)),env=env or self.f.env,
                               capture_output=True,text=True,timeout=60)
 
+    def test_active_credential_config_is_isolated_before_preflight(self):
+        marker=self.data/'ambient-credential-executed'
+        helper=self.data/'ambient-credential-helper'
+        helper.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\nexit 1\n')
+        helper.chmod(0o700)
+        env={**self.f.env,'GIT_CONFIG_COUNT':'1',
+             'GIT_CONFIG_KEY_0':'credential.https://fixture.invalid.helper',
+             'GIT_CONFIG_VALUE_0':str(helper)}
+        original=dict(env)
+        before=f.fixture_git('-C',self.repo,'write-tree',env=self.f.env,
+                             check=True,capture_output=True,text=True,timeout=10).stdout.strip()
+        self.f.assertGate(0,self.command('--staged'),env=env)
+        result=self.run_scanner('--staged',env=env)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        identity=json.loads(next(line.split(': ',1)[1] for line in result.stderr.splitlines()
+                                 if line.startswith('scanner input identity: ')))
+        self.assertEqual(identity['repo'],str(self.repo))
+        self.assertEqual(identity['selection']['tree'],before)
+        after=f.fixture_git('-C',self.repo,'write-tree',env=self.f.env,
+                            check=True,capture_output=True,text=True,timeout=10).stdout.strip()
+        self.assertEqual(after,before)
+        self.assertEqual(env,original)
+        self.assertFalse(marker.exists())
+
+    def test_every_preflight_git_read_uses_the_canonical_context(self):
+        spec=importlib.util.spec_from_file_location('scanner_context_policy',ROOT/'hooks/lib/scanner_capability.py')
+        policy=importlib.util.module_from_spec(spec);spec.loader.exec_module(policy)
+        plan=policy.parse_arguments(shlex.split(self.command('--pr','1805'))[4:])
+        actual_run=subprocess.run
+        contexts=[]
+        def observed_run(*args,**kwargs):
+            context=kwargs.get('env') or {}
+            contexts.append((context.get('GIT_CONFIG_COUNT'),context.get('GIT_CONFIG_KEY_0'),
+                             context.get('GIT_CONFIG_KEY_1'),'GIT_CONFIG' in context,
+                             'GIT_CONFIG_PARAMETERS' in context,'GIT_INDEX_FILE' in context))
+            return actual_run(*args,**kwargs)
+        inherited={'GIT_CONFIG_COUNT':'1','GIT_CONFIG_KEY_0':'credential.helper',
+                   'GIT_CONFIG_VALUE_0':'fixture-only','GIT_CONFIG':'/dev/null',
+                   'GIT_CONFIG_PARAMETERS':'invalid fixture configuration'}
+        with patch.dict(os.environ,inherited),patch.object(policy.subprocess,'run',side_effect=observed_run):
+            policy.validate_files(plan,ROOT/'hooks/lib/scanner-exec.py')
+        self.assertEqual(contexts,[('2','core.fsmonitor','core.hooksPath',False,False,False)]*3)
+
     def test_working_filters_are_disabled_without_changing_raw_selection(self):
         def git(*args):
             return f.fixture_git('-C',self.repo,*args,check=True,capture_output=True,text=True,timeout=15)
@@ -592,11 +635,17 @@ except KeyboardInterrupt:
         helper=self.data/'masked-helper'
         helper.write_text('#!/bin/sh\ntouch '+shlex.quote(str(marker))+'\n');helper.chmod(0o700)
         f.fixture_git('-C',self.repo,'config','core.sshCommand',str(helper),check=True,timeout=10)
-        env={**self.f.env,'GIT_CONFIG':'/dev/null'}
-        self.f.assertGate(2,self.command('--pr','1805'),env=env)
-        result=self.run_scanner('--pr','1805',env=env)
-        self.assertEqual(result.returncode,2,result.stdout+result.stderr)
-        self.assertFalse(marker.exists())
+        for injected in [{'GIT_CONFIG':'/dev/null'},
+                         {'GIT_CONFIG_COUNT':'1','GIT_CONFIG_KEY_0':'credential.helper',
+                          'GIT_CONFIG_VALUE_0':str(helper)},
+                         {'GIT_CONFIG_PARAMETERS':'invalid fixture configuration'}]:
+            env={**self.f.env,**injected}
+            with self.subTest(channel=sorted(injected)):
+                self.f.assertGate(2,self.command('--pr','1805'),env=env)
+                result=self.run_scanner('--pr','1805',env=env)
+                self.assertEqual(result.returncode,2,result.stdout+result.stderr)
+                self.assertIn('repository-local transport/helper overrides',result.stderr)
+                self.assertFalse(marker.exists())
         # Pure text scanning does not inspect or use repository Git settings.
         result=self.run_scanner('--message','fix: own text #1361',env=env)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
