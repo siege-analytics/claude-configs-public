@@ -364,9 +364,24 @@ def resolve_project(repo_root: str, workspace: str = "") -> str:
     PROJECT.md's `repo:` field -- the same key the build uses for uniqueness.
     Falls back to 'umbrella' on no/ambiguous match, never raising.
     """
-    origin = _origin_to_slug(_git_origin(repo_root))
+    manifest = project_manifest(repo_root, workspace)
+    return os.path.basename(os.path.dirname(manifest)) if manifest else "umbrella"
+
+
+def project_manifest(repo_root: str, workspace: str = "", *, strict_identity: bool = False) -> str:
+    """Select the descriptor for this repository, never an unrelated overlay."""
+    if strict_identity:
+        observed = subprocess.run(['git', '-C', repo_root, 'config', '--get', 'remote.origin.url'],
+                                  capture_output=True, text=True, timeout=3,
+                                  env=_metadata_git_environment())
+        if observed.returncode not in (0, 1):
+            observed.check_returncode()
+        origin_url = observed.stdout.strip() if observed.returncode == 0 else ''
+    else:
+        origin_url = _git_origin(repo_root)
+    origin = _origin_to_slug(origin_url)
     if not origin:
-        return "umbrella"
+        return ""
     search_roots = []
     if workspace:
         search_roots.append(os.path.join(workspace, "projects"))
@@ -380,8 +395,8 @@ def resolve_project(repo_root: str, workspace: str = "") -> str:
         for manifest in sorted(glob.glob(os.path.join(proot, "*", "PROJECT.md"))):
             repo_field = _project_repo_field(manifest)
             if repo_field and repo_field == origin:
-                return os.path.basename(os.path.dirname(manifest))
-    return "umbrella"
+                return manifest
+    return ""
 
 
 def _project_repo_field(manifest_path: str) -> str:
@@ -1866,6 +1881,7 @@ def main():
     parser.add_argument("--session-gate", action="store_true", help="Resolve <gate-name>.json from the current session's own signal dir only, no repo binding (#926)")
     parser.add_argument("--session-scoped", action="store_true", help="With --resolve-many: resolve from the session dir only; no --repo-root required (#926)")
     parser.add_argument("--project", action="store_true", help="Print the project slug for --repo-root (or 'umbrella')")
+    parser.add_argument("--project-manifest", action="store_true", help="Print the matching project's descriptor path, or an empty line")
     parser.add_argument(
         "--resolve-many", default="",
         help="Comma-separated gate names; returns name-to-path map",
@@ -1892,6 +1908,12 @@ def main():
 
     if args.project:
         print(resolve_project(args.repo_root, args.workspace))
+        return
+    if args.project_manifest:
+        try:
+            print(project_manifest(args.repo_root, args.workspace, strict_identity=True))
+        except (OSError, subprocess.SubprocessError):
+            parser.exit(2, 'Project descriptor lookup failed; repair repository identity or Git metadata.\n')
         return
 
     if args.session_gate:
