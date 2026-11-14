@@ -89,10 +89,19 @@ if metadata is not None:
 # A PR-creation description is not an existing lane's status transition.
 # This is only a status-text exemption: do not add PR creation to the shared
 # metadata-post lane. UMG, review, topology and destructive-action guards still
-# authorize the operation. A composed command cannot borrow this verdict.
+# authorize the operation. Only a literal leading cd may precede creation;
+# another executable member cannot borrow this verdict.
 try:
     from git_command import SAFE_ENV, literal_prefix
     create_tokens = task_actions.shell_tokens(command)
+    # Match the existing supported cwd prefix without treating a second
+    # executable/state transition as PR-description data.
+    if (len(create_tokens) >= 4
+            and create_tokens[0] == ('cd', False, ())
+            and not create_tokens[1][1] and not create_tokens[1][2]
+            and create_tokens[1][0] and not create_tokens[1][0].startswith('-')
+            and create_tokens[2] == ('&&', True, ())):
+        create_tokens = create_tokens[3:]
     create_words, create_environment = literal_prefix(
         [word for word, _, _ in create_tokens], strict=True)
     if (not any(operator or globs for _, operator, globs in create_tokens)

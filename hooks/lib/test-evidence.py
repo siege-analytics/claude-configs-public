@@ -20,9 +20,15 @@ MAX_SOURCE_BYTES = 64 * 1024 * 1024
 SOURCE_SUFFIXES = {'.py', '.js', '.ts', '.jsx', '.tsx', '.scala', '.java', '.kt', '.rs', '.sql'}
 
 
+def git_environment() -> dict:
+    environment = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
+    environment.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1')
+    return environment
+
+
 def git(repo: Path, *args: str, data: bytes | None = None) -> bytes:
-    return subprocess.run(['git', '-C', str(repo), *args], input=data,
-                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, timeout=15).stdout
+    return subprocess.run(['/usr/bin/git', '-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null', '-C', str(repo), *args], input=data,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, timeout=15, env=git_environment()).stdout
 
 
 def relative_source(value: str) -> str:
@@ -35,7 +41,10 @@ def relative_source(value: str) -> str:
 
 
 def source_paths(repo: Path, base: str) -> list[str]:
-    raw = git(repo, 'diff', '--no-ext-diff', '--no-textconv', '--name-only', '-z', '--no-renames', base + '...HEAD')
+    if not isinstance(base, str) or not base or base.startswith('-') or '\x00' in base:
+        raise ValueError('base must be a non-option commit reference')
+    resolved = git(repo, 'rev-parse', '--verify', '--end-of-options', base + '^{commit}').decode().strip()
+    raw = git(repo, 'diff', '--no-ext-diff', '--no-textconv', '--name-only', '-z', '--no-renames', resolved + '...HEAD')
     paths = raw.decode('utf-8', 'surrogateescape').split('\x00')
     return [relative_source(p) for p in paths if p and PurePosixPath(p).suffix in SOURCE_SUFFIXES
             and not (p.startswith(('test_', 'tests/', '__tests__/'))
@@ -67,8 +76,8 @@ def working_blob(repo: Path, source: str) -> str:
 
 
 def committed_blob(repo: Path, source: str) -> str:
-    result = subprocess.run(['git', '-C', str(repo), 'rev-parse', '--verify', 'HEAD:' + source],
-                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
+    result = subprocess.run(['/usr/bin/git', '-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null', '-C', str(repo), 'rev-parse', '--verify', 'HEAD:' + source],
+                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15, env=git_environment())
     return result.stdout.decode().strip() if result.returncode == 0 else 'deleted'
 
 
@@ -97,8 +106,8 @@ def check(repo: Path, receipt: Path, paths: list[str]) -> list[str]:
     revision = document.get('tested_revision')
     if not isinstance(revision, str) or len(revision) not in {40, 64} or any(c not in '0123456789abcdef' for c in revision):
         problems.append('missing canonical tested_revision')
-    elif subprocess.run(['git', '-C', str(repo), 'merge-base', '--is-ancestor', revision, 'HEAD'],
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15).returncode != 0:
+    elif subprocess.run(['/usr/bin/git', '-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null', '-C', str(repo), 'merge-base', '--is-ancestor', revision, 'HEAD'],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15, env=git_environment()).returncode != 0:
         problems.append('tested_revision is not an ancestor of HEAD; rerun affected tests')
     command = document.get('command')
     if not isinstance(command, list) or not command or not all(isinstance(x, str) and x for x in command):

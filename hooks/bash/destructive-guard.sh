@@ -89,6 +89,15 @@ sys.path.insert(0, sys.argv[3])
 from task_actions import action, released_read_verdict
 from github_metadata_comment import metadata_comment
 metadata = metadata_comment(sys.argv[1], sys.argv[2])
+shape = action(sys.argv[1], sys.argv[2])
+posts = shape.get('metadata_posts', [])
+# Typed source proposals retain own-Task repository/head/body authorization in
+# UMG. This guard grants no merge, completion or general shared-state waiver.
+if (not shape.get('error') and not shape.get('paths') and len(posts) == 1
+        and posts[0].get('resource') == 'pr' and posts[0].get('operation') == 'create'
+        and not shape.get('remote_actions') and not shape.get('review_actions')
+        and not shape.get('remote_repos') and not shape.get('remote_hosts')):
+    sys.exit(0)
 if metadata is True:
     sys.exit(0)
 sys.exit(0 if released_read_verdict(sys.argv[1]) == 0 or action(sys.argv[1], sys.argv[2]).get("metadata_only") else 1)

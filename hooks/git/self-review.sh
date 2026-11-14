@@ -301,35 +301,30 @@ fi
 # If the diff touches transformation-code patterns, require a
 # Pre-ship-dry-run: trailer pointing at behavioral verification evidence.
 # Level 3 of the investigation enforcement ladder (#255, #275).
-DIFF_FILES=$(git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true)
-
 TRANSFORM_FILE_RE='\.(sql|sql\.j2)$'
 IS_TRANSFORM=false
 
-if [ -n "$DIFF_FILES" ]; then
-    if echo "$DIFF_FILES" | grep -qE "$TRANSFORM_FILE_RE" 2>/dev/null; then
+TRANSFORM_CONTENT_RE='(CREATE[[:space:]]+TABLE|INSERT[[:space:]]+INTO|UNION[[:space:]]+ALL|\.write\.|\.saveAsTable|\.to_sql)'
+while IFS= read -r -d '' f; do
+    # Test fixture setup requires test evidence, not a production pipeline probe.
+    case "$f" in
+        tests/*|*/tests/*|__tests__/*|*/__tests__/*|_test/*|*/_test/*)
+            continue ;;
+        hooks/git/self-review.sh) continue ;;
+    esac
+    case "${f##*/}" in
+        test_*.py|*.test.*|*.spec.*) continue ;;
+    esac
+    if [[ "$f" =~ $TRANSFORM_FILE_RE ]]; then
         IS_TRANSFORM=true
+        break
     fi
-
-    # Also check file contents for transformation patterns
-    if [ "$IS_TRANSFORM" = "false" ]; then
-        TRANSFORM_CONTENT_RE='(CREATE[[:space:]]+TABLE|INSERT[[:space:]]+INTO|UNION[[:space:]]+ALL|\.write\.|\.saveAsTable|\.to_sql)'
-        for f in $DIFF_FILES; do
-            # Do not let the transformation-content regex literal in this hook
-            # match itself. Editing the enforcement script should require
-            # hostile review and inventoried-shape evidence, not a data-pipeline
-            # Pre-ship-dry-run trailer for a regex string literal.
-            if [ "$f" = "hooks/git/self-review.sh" ]; then
-                continue
-            fi
-            FULL_PATH="$EFFECTIVE_CWD/$f"
-            if [ -f "$FULL_PATH" ] && grep -qE "$TRANSFORM_CONTENT_RE" "$FULL_PATH" 2>/dev/null; then
-                IS_TRANSFORM=true
-                break
-            fi
-        done
+    FULL_PATH="$EFFECTIVE_CWD/$f"
+    if [ -f "$FULL_PATH" ] && grep -qE "$TRANSFORM_CONTENT_RE" "$FULL_PATH" 2>/dev/null; then
+        IS_TRANSFORM=true
+        break
     fi
-fi
+done < <(git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id --name-only -r -z HEAD 2>/dev/null)
 
 if [ "$IS_TRANSFORM" = "true" ]; then
     DRYRUN_LINE=$(echo "$COMMIT_MSG" | { grep -E '^Pre-ship-dry-run:[[:space:]]+\S' || true; } | head -1)

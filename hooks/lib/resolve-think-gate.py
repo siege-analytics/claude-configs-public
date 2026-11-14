@@ -1138,6 +1138,7 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
         if binding and identity != binding:
             continue
         allowed = set()
+        proposal_roots = {}
         verified_scope = False
         for scope in _scopes(gate):
             root = _target_repo(scope, git_environment=inspection_environment)
@@ -1147,12 +1148,53 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
             if proof.get('gate') and canonical(proof['gate']['path']) == canonical(gate['path']):
                 verified_scope = True
                 slug = repository(root)
-                if slug: allowed.add(slug)
+                if slug:
+                    allowed.add(slug)
+                    if canonical(data.get('repo_root') or '') == root:
+                        proposal_roots.setdefault(slug, set()).add(root)
         ticket = re.fullmatch(r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*)',
                               str(data.get('ticket') or identity))
         matched = True
         for target in shape['metadata_posts']:
             actual = target['repository'] or implicit_repository(target['cwd'])
+            if target.get('resource') == 'pr' and target.get('operation') == 'create':
+                if data.get('status') != 'implementing' or not verified_scope:
+                    matched = False; break
+                roots = proposal_roots.get(actual, set())
+                source_roots = []
+                for root in roots:
+                    try:
+                        branch = subprocess.check_output(['git', '-C', root, 'symbolic-ref', '--short', 'HEAD'],
+                            env=inspection_environment, text=True, stderr=subprocess.DEVNULL, timeout=3).strip()
+                        if branch == target['head']:
+                            subprocess.check_output(['git', '-C', root, 'rev-parse', '--verify', 'HEAD^{commit}'],
+                                env=inspection_environment, stderr=subprocess.DEVNULL, timeout=3)
+                            source_roots.append(root)
+                    except (OSError, subprocess.SubprocessError):
+                        continue
+                body = target['body_path']
+                private = own_session_data_root(workspace)
+                if len(source_roots) != 1 or not (any(_within(body, root) for root in source_roots)
+                        or private and _within(body, private) and own_session_path(workspace, body, directory=True)):
+                    matched = False; break
+                sensitive = r'(?:\.env(?:$|\.)|credentials\.json|service-account.*\.json|\.(?:pem|key|p12|pfx)$|id_rsa|id_ed25519|token\.json|\.secrets?$|^\.(?:ssh|aws|gnupg)$)'
+                if any(re.search(sensitive, part, re.I) for part in body.split(os.sep)):
+                    matched = False; break
+                try:
+                    if os.path.abspath(body) != canonical(body):
+                        matched = False; break
+                    fd = os.open(body, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+                    with os.fdopen(fd, 'rb') as stream:
+                        info = os.fstat(stream.fileno())
+                        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size > 1024 * 1024:
+                            matched = False; break
+                        content = stream.read(1024 * 1024 + 1)
+                    if len(content) > 1024 * 1024 or b'\0' in content:
+                        matched = False; break
+                    content.decode('utf-8')
+                except (OSError, ValueError, UnicodeError):
+                    matched = False; break
+                continue
             own_ticket = bool(ticket and target['resource'] == 'issue' and target['operation'] == 'comment'
                               and actual == ticket[1].casefold() and target['selector'] == ticket[2]
                               and (verified_scope or target['repository']))
