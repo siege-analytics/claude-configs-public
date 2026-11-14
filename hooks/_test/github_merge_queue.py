@@ -398,6 +398,19 @@ else: sys.exit(99)
         r"env -S 'gh pr merge 5 --admin\c ignored'",
         "env -S '" + chr(36) + "{EMPTY} gh pr merge 5 --admin'",
         "env -S '" + chr(36) + "{PROGRAM} pr merge 5 --admin'",
+        "env -S " + shlex.quote('gh -R' + chr(36) + '{EMPTY} o/r pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh -b' + chr(36) + '{EMPTY} note pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh -dmF' + chr(36) + '{EMPTY} note pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh pr merge 5 ' + chr(36) + '{FLAG} --admin'),
+        "env -S " + shlex.quote('gh pr merge 5 --admin=false ' + chr(36) + '{FLAG}'),
+        "env -S " + shlex.quote('gh "' + chr(36) + '{GROUP}" merge 5 --admin'),
+        "env -S " + shlex.quote('gh pr "' + chr(36) + '{VERB}" 5 --admin'),
+        "env -S " + shlex.quote('gh "' + chr(36) + '{GROUP}" "' + chr(36) + '{VERB}" 5 --admin'),
+        "env -S " + shlex.quote('gh ' + chr(36) + '{EMPTY} pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh pr ' + chr(36) + '{EMPTY} merge 5 --admin'),
+        "env -S " + shlex.quote('gh --repo ' + chr(36) + '{EMPTY} o/r pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh --body ' + chr(36) + '{EMPTY} title pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh --admin -- "' + chr(36) + '{GROUP}" merge 5'),
         "env -S '" + chr(36) + "{PROGRAM} -R owner/repo pr merge 5 --admin'",
         "env -S '" + chr(36) + "{PROGRAM} --repo=owner/repo pr merge 5 --admin'",
         "env -S '" + chr(36) + "{PROGRAM} pr -R owner/repo merge 5 --admin'",
@@ -420,6 +433,18 @@ else: sys.exit(99)
         r"env -S 'printf\_%s\_gh\_pr\_merge\_5\_--admin'",
         "env -S 'printf %s " + chr(36) + "{EMPTY} gh pr merge 5 --admin'",
         "env -S 'gh pr merge 5 --body " + chr(36) + "{WORDS}'",
+        "env -S " + shlex.quote('gh pr merge 5 ' + chr(36) + '{FLAG} --admin=false'),
+        "env -S " + shlex.quote('gh pr merge 5 --admin --help=' + chr(36) + '{PREFIX}true'),
+        "env -S " + shlex.quote('gh pr merge 5 --admin --help=true' + chr(36) + '{SUFFIX}'),
+        "env -S " + shlex.quote('gh pr merge 5 --admin=' + chr(36) + '{PREFIX}false'),
+        "env -S " + shlex.quote('gh -R' + chr(36) + '{EMPTY} o/r pr merge 5'),
+        "env -S " + shlex.quote('gh -b' + chr(36) + '{EMPTY} note pr merge 5'),
+        "env -S " + shlex.quote('gh pr merge 5 --body=' + chr(36) + '{WORDS}'),
+        "env -S " + shlex.quote('gh pr merge 5 -b' + chr(36) + '{WORDS}'),
+        "env -S " + shlex.quote('gh pr merge 5 --body-file=' + chr(36) + '{PATH}'),
+        "env -S " + shlex.quote('gh pr merge 5 --repo=' + chr(36) + '{REPO}'),
+        "env -S " + shlex.quote('gh pr merge 5 -R' + chr(36) + '{REPO}'),
+        "env -S " + shlex.quote('gh pr merge 5 --help=' + chr(36) + '{HELP}'),
         "env -S " + shlex.quote('gh pr merge 5 --body "' + chr(36) + '{WORDS}"'),
         "flock merge.lock -c " + shlex.quote("env -S 'gh pr merge 5 --body " + chr(36) + "{WORDS}'"),
         "env -S '" + chr(36) + "{PREFIX}printf pr merge 5 --admin'",
@@ -441,6 +466,67 @@ else: sys.exit(99)
         r'find . -name -exec gh pr merge 5 --admin \;',
         r'find . -printf -exec gh pr merge 5 --admin \;',
     ]
+
+    def test_gnu_empty_variables_inside_short_option_clusters(self):
+        spec = importlib.util.spec_from_file_location('env_cluster_fixture_actions', ROOT/'hooks/lib/task_actions.py')
+        actions = importlib.util.module_from_spec(spec); spec.loader.exec_module(actions)
+        variable = chr(36) + '{EMPTY}'
+        for text, expected in (('gh pr merge 5 --admin -' + variable + '- --admin=false', True),
+                               ('gh pr merge 5 -' + variable + '- --body text', False),
+                               ('gh pr merge 5 --body -' + variable + '- --admin=false', False)):
+            command = 'env -S ' + shlex.quote(text)
+            self.assertEqual(bool(actions.gh_merge_refusal(command)), expected)
+            self.assertEqual(bool(actions.unparseable_merge_refusal(command)), expected)
+        for prefix in ('m', 'dm', 'md'):
+            for suffix, expected in (('', True), ('d', False)):
+                command = 'env -S ' + shlex.quote('gh -' + prefix + variable + suffix + ' note pr merge 5 --admin')
+                self.assertEqual(bool(actions.gh_merge_refusal(command)), expected)
+                self.assertEqual(bool(actions.unparseable_merge_refusal(command)), expected)
+        for booleans in ('m', 'dm', 'md'):
+            for value_flag in ('b', 'F', 't', 'A'):
+                for position in range(len(booleans) + 1):
+                    word = '-' + booleans[:position] + variable + booleans[position:] + value_flag
+                    for quoted in (False, True):
+                        argument = '"' + word + '"' if quoted else word
+                        for tail, expected in (('note pr merge 5 --admin', True),
+                                               ('note pr merge 5', False),
+                                               # A nonempty expansion can make an attached value, leaving admin executable.
+                                               ('--admin pr merge 5', True)):
+                            text = 'gh ' + argument + ' ' + tail
+                            command = 'env -S ' + shlex.quote(text)
+                            for inspected in (command, 'flock merge.lock -c ' + shlex.quote(command)):
+                                with self.subTest(command=inspected):
+                                    self.assertEqual(bool(actions.gh_merge_refusal(inspected)), expected)
+                                    self.assertEqual(bool(actions.unparseable_merge_refusal(inspected)), expected)
+                    data = 'env -S ' + shlex.quote('gh ' + word + 'fixed note pr merge 5 --admin')
+                    self.assertIsNone(actions.gh_merge_refusal(data))
+                    self.assertIsNone(actions.unparseable_merge_refusal(data))
+
+    def test_gnu_short_cluster_prewaiver_refusal_survives_helper_failures(self):
+        self.f.task('own-local', self.f.repo)
+        waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
+        variable = chr(36) + '{FLAGS}'
+        commands = ['env -S ' + shlex.quote(text) for text in
+                    ('gh -m' + variable + 'b note pr merge 5 --admin',
+                     'gh -d' + variable + 'mF note pr merge 5 --admin',
+                     'gh -m' + variable + ' note pr merge 5 --admin',
+                     'gh pr merge 5 --admin -' + variable + '- --admin=false')]
+        helper = self.install/'hooks/lib/github-merge-queue.py'
+        original = helper.read_bytes()
+        for mode in ('normal', 'missing-queue', 'missing-syntax'):
+            if mode == 'missing-queue':
+                helper.unlink()
+            elif mode == 'missing-syntax':
+                helper.write_bytes(original)
+                (self.install/'hooks/lib/command-text.py').unlink()
+            for command in commands:
+                with self.subTest(mode=mode, command=command):
+                    if mode == 'normal':
+                        self.assertEqual(self.merge_refusal(command).returncode, 3)
+                        self.hook(command, 2)
+                    self.assertEqual(self.guard(command, waived).returncode, 2)
+            self.assertEqual(self.guard('printf %s gh pr merge --admin', waived).returncode, 0)
+        self.assertFalse(self.calls.exists(), 'inspection must not execute candidate gh')
 
     def test_gnu_env_split_grammar_matches_temporary_stub(self):
         env_binary = shutil.which('genv') or shutil.which('env')
