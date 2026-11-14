@@ -6431,10 +6431,10 @@
     },
     {
       "canonical_source": "skills/_standing-approval-rules.md",
-      "characters": 13243,
-      "content_sha256": "c1a999b32b5337bbf4585ba0fdd86b4b3aa74978bbece64c0f633c67d47aadfd",
+      "characters": 13221,
+      "content_sha256": "88c186a2a3a9b57fbc8a3d6fff05e55720906b8cb72f9da2b1ffbf0a5eaf9d19",
       "description": "Act on standing authorization when the applicable conditions are met; preserve real owner holds without inventing new approval ceremonies.",
-      "estimated_tokens": 3311,
+      "estimated_tokens": 3306,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_standing-approval-rules.md",
@@ -13065,9 +13065,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2478768,
+    "characters": 2478746,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 619768,
+    "estimated_tokens": 619763,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13088,7 +13088,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1082374
+      "unclassified": 1082352
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13100,7 +13100,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 270634
+      "unclassified": 270629
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

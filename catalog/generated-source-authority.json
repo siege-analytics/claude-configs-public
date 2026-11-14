@@ -795,29 +795,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_standing-approval-rules.md",
           "file_count": 1,
-          "tree_sha256": "97113fe619c646050ee524b59b5d2ff2477b4061e1ed0840c36368bf15aae6d0"
+          "tree_sha256": "1e4c2357befce28ca7c95b6602f65c8b373b04d50db6a1b9b593013e57227e85"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_standing-approval-rules.md",
           "file_count": 1,
-          "tree_sha256": "97113fe619c646050ee524b59b5d2ff2477b4061e1ed0840c36368bf15aae6d0"
+          "tree_sha256": "1e4c2357befce28ca7c95b6602f65c8b373b04d50db6a1b9b593013e57227e85"
         },
         "flat": {
           "destination": "dist/flat/skills/_standing-approval-rules.md",
           "file_count": 1,
-          "tree_sha256": "97113fe619c646050ee524b59b5d2ff2477b4061e1ed0840c36368bf15aae6d0"
+          "tree_sha256": "1e4c2357befce28ca7c95b6602f65c8b373b04d50db6a1b9b593013e57227e85"
         },
         "nested": {
           "destination": "dist/nested/skills/_standing-approval-rules.md",
           "file_count": 1,
-          "tree_sha256": "97113fe619c646050ee524b59b5d2ff2477b4061e1ed0840c36368bf15aae6d0"
+          "tree_sha256": "1e4c2357befce28ca7c95b6602f65c8b373b04d50db6a1b9b593013e57227e85"
         }
       },
       "canonical_source": "skills/_standing-approval-rules.md",
       "kind": "rule",
       "slug": "standing-approval",
       "source_file_count": 1,
-      "source_tree_sha256": "f1f7b1f4c00703576ba02ff5aeedff695e6958af66897d97cce85f9a0b64abf3"
+      "source_tree_sha256": "1003373a7ebabf14cdd5c477857f140296b65cc14e6299cf2791cb41484af64c"
     },
     {
       "artifacts": {
