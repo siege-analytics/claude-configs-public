@@ -86,4 +86,43 @@ expect_block \
   "AC3 local-only repo still blocks a genuine 3 same-scope cluster" \
   "$HOOK" "$(payload "git push" "$R4")"
 
+# The suggested trailers are user-facing commit-message input. Exercise both
+# real diagnostics through the same scanner used for publication.
+check_suggestions() {
+  local repo="$1" label="$2" out status line count=0 scan_status
+  out=$(printf '%s' "$(payload "git push" "$repo")" | bash "$HOOK" 2>&1)
+  status=$?
+  while IFS= read -r line; do
+    [[ "$line" == "  Class-Audit: "* ]] || continue
+    count=$((count + 1))
+    printf 'fix: examine repeated changes\n\n%s\n' "${line#  }" > "$WORK/message.txt"
+    bash "$ROOT/skills/detect-ai-fingerprints/scan.sh" --commit-message-file "$WORK/message.txt" > "$WORK/scan.txt" 2>&1
+    scan_status=$?
+    if [[ "$scan_status" -eq 0 ]]; then
+      _HARNESS_PASS=$((_HARNESS_PASS + 1))
+      printf '  [PASS] %s suggestion %d passes message scanner\n' "$label" "$count"
+    else
+      _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+      _HARNESS_FAILED_NAMES+=("$label suggestion $count")
+      printf '  [FAIL] %s suggestion %d rejected\n' "$label" "$count"
+      cat "$WORK/scan.txt"
+    fi
+  done <<< "$out"
+  if [[ "$status" -ne 2 || "$count" -ne 2 ]]; then
+    _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+    _HARNESS_FAILED_NAMES+=("$label emitted two suggestions")
+    printf '  [FAIL] %s expected block with two suggestions, got %d/%d\n' "$label" "$status" "$count"
+  fi
+}
+check_suggestions "$R2" scope
+R5=$(newrepo repeated-file)
+git -C "$R5" branch develop
+git -C "$R5" checkout -q -b feat/file
+for scope in first second third; do
+  printf '%s\n' "$scope" >> "$R5/shared.txt"
+  git -C "$R5" add shared.txt
+  git -C "$R5" commit -q -m "fix($scope): update shared file"
+done
+check_suggestions "$R5" file
+
 report

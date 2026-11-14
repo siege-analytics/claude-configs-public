@@ -40,7 +40,8 @@ import sys
 import glob
 import stat
 import subprocess
-from task_actions import action, canonical, github_ticket_reference
+from task_actions import (action, canonical, github_ticket_reference, gh_merge_refusal, unparseable_merge_refusal,
+                          UNPARSEABLE_MERGE_REFUSAL)
 from session_anchor import correct_environ as _correct_session_environ
 
 # A mis-tagged CRAFT_SESSION_DIR must not decide whose gates apply (#1099). Fix
@@ -364,9 +365,25 @@ def resolve_project(repo_root: str, workspace: str = "") -> str:
     PROJECT.md's `repo:` field -- the same key the build uses for uniqueness.
     Falls back to 'umbrella' on no/ambiguous match, never raising.
     """
-    origin = _origin_to_slug(_git_origin(repo_root))
+    manifest = project_manifest(repo_root, workspace)
+    return os.path.basename(os.path.dirname(manifest)) if manifest else "umbrella"
+
+
+def project_manifest(repo_root: str, workspace: str = "", *, strict_identity: bool = False) -> str:
+    """Select the descriptor for this repository, never an unrelated overlay."""
+    if strict_identity:
+        observed = subprocess.run(['git', '-C', repo_root, 'config', '--null', '--get-all', 'remote.origin.url'],
+                                  capture_output=True, text=True, timeout=3,
+                                  env=_metadata_git_environment())
+        if observed.returncode not in (0, 1):
+            observed.check_returncode()
+        # Fetch uses the first configured URL, not --get's final value.
+        origin_url = observed.stdout.split('\0', 1)[0].strip() if observed.returncode == 0 else ''
+    else:
+        origin_url = _git_origin(repo_root)
+    origin = _origin_to_slug(origin_url)
     if not origin:
-        return "umbrella"
+        return ""
     search_roots = []
     if workspace:
         search_roots.append(os.path.join(workspace, "projects"))
@@ -380,8 +397,8 @@ def resolve_project(repo_root: str, workspace: str = "") -> str:
         for manifest in sorted(glob.glob(os.path.join(proot, "*", "PROJECT.md"))):
             repo_field = _project_repo_field(manifest)
             if repo_field and repo_field == origin:
-                return os.path.basename(os.path.dirname(manifest))
-    return "umbrella"
+                return manifest
+    return ""
 
 
 def _project_repo_field(manifest_path: str) -> str:
@@ -892,7 +909,38 @@ def own_session_path(workspace: str, path: str, directory: bool = False, removal
     return len(parts) >= 3 and not os.path.isdir(target) and bool(re.fullmatch(r'[A-Za-z0-9_.-]+-gate\.json', parts[-1]))
 
 
+def _admits(result: dict) -> bool:
+    """Whether universal-mutation-gate.sh would allow this resolution (its lines 99-108).
+
+    Like the shell, an `error` does not cancel read_only, an early-allow flag
+    or a gate: only admitting results matter here.
+    """
+    early = ((result.get('metadata_only') or result.get('remote_contact_only') or result.get('investigation'))
+             and not result.get('metadata_posts'))
+    return bool(result.get('read_only') or early or result.get('self_management') or result.get('remote_only_authorized')
+                or result.get('scanner_execution_authorized') or result.get('gate'))
+
+
 def resolve_action(workspace: str, payload: dict) -> dict:
+    """An admin merge is refused in every gh spelling before any route, task or
+    queue proof can admit it (#1207 AC3, #1371, #1372)."""
+    command = (payload.get("tool_input") or {}).get("command", "")
+    refusal = ''
+    if isinstance(command, str) and command:
+        try:
+            refusal = gh_merge_refusal(command) or ''
+        except Exception:  # A predicate fault fails closed for merge/admin text only.
+            refusal = unparseable_merge_refusal(command) or ''
+    denied = {'read_only': False, 'paths': [], 'gate': None, 'error': 'Pinned merge denied: pinned merge queue: ' + refusal}
+    if refusal and refusal != UNPARSEABLE_MERGE_REFUSAL:
+        return denied
+    result = _resolve_action(workspace, payload)
+    # Unresolved GH publication text keeps any more specific refusal of
+    # the ordinary path (which refuses shell expansion itself); never admitted.
+    return denied if refusal and _admits(result) else result
+
+
+def _resolve_action(workspace: str, payload: dict) -> dict:
     ti = payload.get("tool_input") or {}
     command = ti.get("command", "")
     cwd = payload.get("cwd") or os.getcwd()
@@ -1286,15 +1334,24 @@ def project_policy() -> list:
     seen = set()
     for grant in data['grants']:
         extra = {'field_name', 'field_type', 'values'} if isinstance(grant, dict) and grant.get('operation') == 'item-edit' else set()
+        declared = isinstance(grant, dict) and grant.get('issue_binding') == 'current-task-or-declared-targets'
+        if declared:
+            extra |= {'declared_issue_repositories'}
         if not isinstance(grant, dict) or set(grant) != fields | extra:
             raise ValueError('invalid GitHub project standing grant fields')
         if (grant['host'] != 'github.com' or grant['operation'] not in {'item-add', 'item-edit'}
-                or grant['issue_binding'] != 'current-task-ticket'
+                or grant['issue_binding'] not in {'current-task-ticket', 'current-task-or-declared-targets'}
                 or type(grant['project']) is not int or grant['project'] < 1
                 or any(not isinstance(grant[k], str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*', grant[k]) for k in ('owner', 'issue_owner'))
                 or not isinstance(grant['authority_source'], str) or not grant['authority_source'].strip()):
             raise ValueError('invalid GitHub project standing grant values')
-        if extra and (grant['field_name'] != 'Status' or grant['field_type'] != 'SINGLE_SELECT'
+        if declared:
+            repositories = grant['declared_issue_repositories']
+            if (grant['operation'] != 'item-add' or not isinstance(repositories, list) or not repositories
+                    or any(not isinstance(repo, str) or not re.fullmatch(re.escape(grant['issue_owner']) + r'/[A-Za-z0-9_.-]+', repo, re.I) for repo in repositories)
+                    or len({repo.lower() for repo in repositories}) != len(repositories)):
+                raise ValueError('declared project targets require an item-add repository allowlist')
+        if grant['operation'] == 'item-edit' and (grant['field_name'] != 'Status' or grant['field_type'] != 'SINGLE_SELECT'
                       or not isinstance(grant['values'], list) or not grant['values']
                       or any(v not in ('In Progress', 'In Review', 'Done') for v in grant['values'])
                       or len(set(grant['values'])) != len(grant['values'])):
@@ -1307,7 +1364,7 @@ def project_policy() -> list:
 
 
 def select_project_task(workspace: str, shape: dict) -> dict:
-    """Standing permission narrows to one current task's exact canonical ticket."""
+    """Installed policy narrows to one own Task and its exact issue/board target."""
     def deny(message):
         return {'gate': None, 'error': 'GitHub project remote scope: ' + message}
     if not session_id_from_env():
@@ -1337,20 +1394,38 @@ def select_project_task(workspace: str, shape: dict) -> dict:
                 target = module.verify(target, grants)
             except (OSError, ValueError, TypeError) as error:
                 return deny('cannot verify live Status membership: ' + str(error))
-        permitted = any(g['host'] == target['host'] and g['operation'] == target['operation']
-                        and g['project'] == target['project'] and g['owner'].lower() == target['owner'].lower()
-                        and g['issue_owner'].lower() == target['issue_owner'].lower() for g in grants)
-        if not permitted:
+        matching = [g for g in grants if g['host'] == target['host'] and g['operation'] == target['operation']
+                    and g['project'] == target['project'] and g['owner'].lower() == target['owner'].lower()
+                    and g['issue_owner'].lower() == target['issue_owner'].lower()]
+        if not matching:
             return deny('installed standing policy does not grant this owner/project/issue-owner operation; task fields cannot grant it.')
         ticket = f"{target['issue_owner']}/{target['repository']}#{target['issue']}".lower()
         owners = []
         for gate in _session_thinks(workspace):
             value = gate['data'].get('ticket') or gate['data'].get('task_id', '')
-            if (isinstance(value, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+#[1-9][0-9]*', value)
-                    and value.lower() == ticket and (not binding or task_identity(gate['data']) == binding)):
+            if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+#[1-9][0-9]*', value):
+                continue
+            if binding and task_identity(gate['data']) != binding:
+                continue
+            own_ticket = value.lower() == ticket
+            declared_target = False
+            repository = target['issue_owner'] + '/' + target['repository']
+            if (binding and target['operation'] == 'item-add'
+                    and any(g['issue_binding'] == 'current-task-or-declared-targets'
+                            and repository.lower() in {r.lower() for r in g['declared_issue_repositories']} for g in matching)):
+                claims = gate['data'].get('github_project_targets', [])
+                if isinstance(claims, list):
+                    expected = dict(owner=target['owner'], project=target['project'], repository=repository,
+                                    issue=target['issue'], operation='item-add')
+                    for claim in claims:
+                        if (isinstance(claim, dict) and set(claim) == set(expected)
+                                and type(claim['project']) is int and type(claim['issue']) is int
+                                and claim == expected):
+                            declared_target = True
+            if own_ticket or declared_target:
                 alias = gate['data'].get('task_id', '')
                 if (isinstance(alias, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+#[1-9][0-9]*', alias)
-                        and alias.lower() != ticket):
+                        and alias.lower() != value.lower()):
                     return deny('conflicting canonical issue in ticket and task_id; repair the owning task identity.')
                 owners.append(gate)
         if len(owners) != 1:
@@ -1866,6 +1941,7 @@ def main():
     parser.add_argument("--session-gate", action="store_true", help="Resolve <gate-name>.json from the current session's own signal dir only, no repo binding (#926)")
     parser.add_argument("--session-scoped", action="store_true", help="With --resolve-many: resolve from the session dir only; no --repo-root required (#926)")
     parser.add_argument("--project", action="store_true", help="Print the project slug for --repo-root (or 'umbrella')")
+    parser.add_argument("--project-manifest", action="store_true", help="Print the matching project's descriptor path, or an empty line")
     parser.add_argument(
         "--resolve-many", default="",
         help="Comma-separated gate names; returns name-to-path map",
@@ -1892,6 +1968,12 @@ def main():
 
     if args.project:
         print(resolve_project(args.repo_root, args.workspace))
+        return
+    if args.project_manifest:
+        try:
+            print(project_manifest(args.repo_root, args.workspace, strict_identity=True))
+        except (OSError, subprocess.SubprocessError):
+            parser.exit(2, 'Project descriptor lookup failed; repair repository identity or Git metadata.\n')
         return
 
     if args.session_gate:

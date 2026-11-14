@@ -35,7 +35,7 @@ GUARDED = {"sed", "find", "sort", "uniq", "jq", "yq", "date", "rg", "git", "gh",
 SHELL_WORDS = {"do", "done", "then", "else", "fi", "!", "{", "}", "while", "until", "if", "elif"}
 GIT_READ = {"log", "show", "diff", "status", "rev-parse", "rev-list", "ls-files", "ls-remote",
             "ls-tree", "describe", "blame", "grep", "cat-file", "for-each-ref", "merge-base",
-            "shortlog", "show-ref", "name-rev", "count-objects", "whatchanged"}
+            "shortlog", "show-ref", "name-rev", "count-objects", "whatchanged", "check-ref-format"}
 REMOTE_WRITE = {"add", "set-url", "rename", "remove", "rm", "set-head", "set-branches", "prune", "update"}
 GH_READ_VERBS = {"view", "list", "checks", "diff", "status"}
 KUBECTL_READ = {"get", "describe", "logs", "top", "explain", "version", "api-resources", "api-versions",
@@ -230,8 +230,13 @@ def git_ok(args):
     if effect is not None:
         return effect.get("read_only", False)
     i = 0
-    while i < len(args) and args[i] == "-C" and i + 1 < len(args):
-        i += 2
+    while i < len(args):
+        if args[i] == "--no-optional-locks":
+            i += 1  # Inert global flag; does not select a target or run helpers.
+        elif args[i] == "-C" and i + 1 < len(args):
+            i += 2
+        else:
+            break
     if i >= len(args) or args[i].startswith("-"):
         return False
     sub, rest = args[i], args[i + 1:]
@@ -277,6 +282,16 @@ def git_ok(args):
         return all(a in {"-a", "-r", "-v", "-vv", "--list", "--show-current", "--contains", "--merged",
                          "--no-merged", "--all", "--remotes"} or not a.startswith("-") and rest and rest[0] in
                    {"--list", "--contains", "--merged", "--no-merged"} for a in rest)
+    if sub == "symbolic-ref":
+        operands, options = [], True
+        for arg in rest:
+            if options and arg == "--":
+                options = False
+            elif options and arg in {"-q", "--quiet", "--short", "--recurse", "--no-recurse"}:
+                continue
+            else:
+                operands.append(arg)
+        return len(operands) == 1 and bool(operands[0]) and not operands[0].startswith("-")
     if sub == "remote":
         # `git remote [-v]`, `git remote [-v] show|get-url ...`. A leading -v does
         # not make what follows a listing: `git remote -v add|set-url ...` writes (#1087).

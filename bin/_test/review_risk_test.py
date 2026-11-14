@@ -93,6 +93,9 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/github-merge-queue.py",
  "hooks/lib/test-evidence.py",
  "hooks/lib/craft-settings-router.py",
+ "bin/project-settings-bootstrap.py",
+ "bin/core-authoring-profile.py",
+ "bin/_test/project_settings_bootstrap_test.py",
  "bin/install-craft-hook-router.py",
  "bin/craft-workspace-trust.py",
  "bin/_test/craft_hook_router_test.py",
@@ -173,6 +176,15 @@ REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "27e4c17f9a5b68f2ad4f25ae8c887b19f21b8697
 REQUIRED_MANIFEST_REGISTRATIONS_SHA256 = "868ca27fe41ca9d2e6f9335e2ddaf05d7cb992617b42f24cbc3ff2794099414b"
 REQUIRED_GENERATED_SETTINGS_REGISTRATIONS_SHA256 = "19a972d9471da0d66c46568c0efb8a16c356ed66f620702b7f06b8251bc809f0"
 CI_INVOCATION_SITES = [
+ (".github/workflows/build-and-publish.yml","bin/_test/project_settings_bootstrap_test.py","run: python3 bin/_test/project_settings_bootstrap_test.py",1),
+ ("bin/install-craft-hook-router.py","bin/project-settings-bootstrap.py",'project = load(PROJECT_SOURCE, "craft_project_bootstrap")',1),
+ ("bin/project-settings-bootstrap.py","hooks/lib/session_anchor.py","anchor = load(package / 'compatibility/hooks/lib/session_anchor.py', 'project_headless_session_anchor')",1),
+ ("bin/project-settings-bootstrap.py","bin/core-authoring-profile.py","registration = load(package / 'bin/core-authoring-profile.py', 'installed_core_authoring_profile')",1),
+ ("bin/core-authoring-profile.py","bin/build.py","build = load(ROOT / 'bin/build.py', 'core_authoring_build')",1),
+ ("bin/core-authoring-profile.py","bin/selected_registration.py","registration = load(ROOT / 'bin/selected_registration.py', 'core_authoring_export')",1),
+ ("bin/core-authoring-profile.py","bin/project-settings-bootstrap.py","bootstrap = load(ROOT / 'bin/project-settings-bootstrap.py', 'core_authoring_bootstrap')",1),
+ ("bin/core-authoring-profile.py","bin/core-authoring-profile.py","verifier = load(package / 'bin/core-authoring-profile.py', 'verified_installed_core_profile')",1),
+ ("bin/project-settings-bootstrap.py","hooks/lib/craft-settings-router.py","adapter = load(package / 'compatibility/hooks/lib/craft-settings-router.py', 'project_cli_sdk_combiner')",1),
  (".github/workflows/build-and-publish.yml","bin/_test/local_validation_test.py","run: python3 bin/_test/local_validation_test.py",1),
  (".github/workflows/build-and-publish.yml","bin/_test/resident_delivery_test.py","python3 bin/_test/resident_delivery_test.py",1),
  (".github/workflows/build-and-publish.yml","bin/_test/provider_event_test.py","run: python3 bin/_test/provider_event_test.py",1),
@@ -303,8 +315,8 @@ hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
 hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "405c7de22d57f3710ffd82304432579c8c9fb73c021bdaf954da1035e2cd961a"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "bfcc0d437678bdfb8ff1842d464a8dec28f702b6f7638ab43d756a3b0677f606"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "aec2e37fe8a61f1713104c4f071b3b5d97b103aec5ef114930cd5f3c956d731a"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "56e0c5292976f886e43c2acfa5d33cd487e5844aceed7b1e6d8275916c330fad"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
@@ -329,7 +341,7 @@ hooks/git/test-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/test-evidence.py|2
 hooks/bash/destructive-guard.sh|hooks/lib/git_command.py|1
 hooks/git/branch-guard.sh|hooks/lib/git_command.py|1
-hooks/git/test-guard.sh|hooks/lib/resolve-think-gate.py|1
+hooks/git/test-guard.sh|hooks/lib/resolve-think-gate.py|2
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py|3
 hooks/git/ticket-required.sh|hooks/lib/git_command.py|1
@@ -571,7 +583,7 @@ def ci_site_problems(overrides:dict[str,str]|None=None)->list[tuple]:
  return problems
 
 # Paired helper calls serve the action/typed-reply consumers and turn metadata/binding.
-REQUIRED_HELPER_INVOCATION_SITE_COUNTS = {("hooks/bash/coordinator-status-guard.sh","hooks/lib/git_command.py"):2, ("hooks/bash/coordinator-status-guard.sh","hooks/lib/task_actions.py"):2, ("hooks/resolver/pipeline-state-guard.sh","hooks/lib/hook_payload.py"):2}
+REQUIRED_HELPER_INVOCATION_SITE_COUNTS = {("hooks/bash/coordinator-status-guard.sh","hooks/lib/git_command.py"):2, ("hooks/bash/coordinator-status-guard.sh","hooks/lib/task_actions.py"):2, ("hooks/resolver/pipeline-state-guard.sh","hooks/lib/hook_payload.py"):2, ("hooks/bash/destructive-guard.sh","hooks/lib/github-merge-queue.py"):2, ("hooks/bash/destructive-guard.sh","hooks/lib/task_actions.py"):2, ("hooks/bash/destructive-guard.sh","hooks/lib/log-block.sh"):2}
 
 def verify_dependency_graph()->None:
  source_settings,manifest,generated_settings=entrypoint_surfaces()

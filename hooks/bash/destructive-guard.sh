@@ -30,6 +30,34 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+# An admin merge is refused in every gh spelling (#1207 AC3, #1371, #1372),
+# before the queue exemption and every waiver below; no escape hatch applies.
+# Helper protocol: 0 = clear, 3 = refuse. Any other status (a missing, broken
+# or faulting helper) retains a conservative literal gh/merge domain check.
+# An admin path or ordinary data words cannot become a publication solely
+# because the helper is unavailable.
+if [[ -n "$COMMAND" ]]; then
+    ADMIN_REFUSAL=$(python3 "$HOOK_DIR/../lib/github-merge-queue.py" --merge-refusal "$COMMAND" 2>/dev/null)
+    ADMIN_STATUS=$?
+    if [[ "$ADMIN_STATUS" -ne 0 ]]; then
+        # Reuse the same command-position fallback when the queue adapter is
+        # missing/broken. Its inspection mode grants no Task or queue permission.
+        ADMIN_FALLBACK=$(python3 "$HOOK_DIR/../lib/task_actions.py" --merge-fallback "$COMMAND" 2>/dev/null)
+        FALLBACK_STATUS=$?
+        # If even the classifier is unavailable, retain only a direct literal
+        # command-position domain. Never scan arbitrary wrapper operand text.
+        ADMIN_DOMAIN='(^|[;&|])[[:space:]]*([^[:space:]]*/)?[gG][hH][[:space:]][^;&|]*pr[[:space:]][^;&|]*merge'
+        if [[ "$ADMIN_STATUS" -eq 3 || "$FALLBACK_STATUS" -eq 3 ]] || [[ "$FALLBACK_STATUS" -ne 0 && "$COMMAND" == *admin* && "$COMMAND" =~ $ADMIN_DOMAIN ]]; then
+            echo "BLOCKED: ${ADMIN_REFUSAL:-pinned merge queue: merge refusal helper unavailable}" >&2
+            echo "  An admin merge is refused in every gh spelling (#1207 AC3); no waiver applies." >&2
+            source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
+            if declare -F log_block_event >/dev/null; then
+                log_block_event "destructive-guard" "admin merge refused" "$COMMAND"
+            fi
+            exit 2
+        fi
+    fi
+fi
 # Only a proven required-queue request skips these local publication checks.
 # This predicate grants no permission; UMG owns admission and its audit.
 if [[ -n "$COMMAND" ]] && python3 "$HOOK_DIR/../lib/github-merge-queue.py" --queue-required "$COMMAND" "$CWD" >/dev/null 2>&1; then

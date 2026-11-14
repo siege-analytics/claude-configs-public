@@ -4101,6 +4101,7 @@
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
         "skills/_session-coordination-rules.md",
+        "skills/_standing-approval-rules.md",
         "skills/ask-questions/SKILL.md",
         "skills/stalled-session-recovery/host-controls.md",
         "skills/think/SKILL.md"
@@ -5002,6 +5003,7 @@
         "bin/_test/procedure_composition_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/project_composition_test.py",
+        "bin/_test/project_settings_bootstrap_test.py",
         "bin/_test/protected_policy_test.py",
         "bin/_test/recovery_package_test.py",
         "bin/_test/registered_receipt_provider_test.py",
@@ -5551,6 +5553,7 @@
         "bin/_test/procedure_composition_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/project_composition_test.py",
+        "bin/_test/project_settings_bootstrap_test.py",
         "bin/_test/protected_policy_test.py",
         "bin/_test/provider_event_test.py",
         "bin/_test/recovery_package_test.py",
@@ -5961,6 +5964,7 @@
         "bin/_test/procedure_composition_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/project_composition_test.py",
+        "bin/_test/project_settings_bootstrap_test.py",
         "bin/_test/protected_policy_test.py",
         "bin/_test/provider_event_test.py",
         "bin/_test/recovery_package_test.py",
@@ -6427,10 +6431,10 @@
     },
     {
       "canonical_source": "skills/_standing-approval-rules.md",
-      "characters": 13282,
-      "content_sha256": "16ed11b51257fa12aa924bd620b902369e868466f4469d938e1caad2bba0faeb",
+      "characters": 13221,
+      "content_sha256": "88c186a2a3a9b57fbc8a3d6fff05e55720906b8cb72f9da2b1ffbf0a5eaf9d19",
       "description": "Act on standing authorization when the applicable conditions are met; preserve real owner holds without inventing new approval ceremonies.",
-      "estimated_tokens": 3321,
+      "estimated_tokens": 3306,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_standing-approval-rules.md",
@@ -6540,10 +6544,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 7077,
-      "content_sha256": "e7433d148f6f7e4d14afaec41352a1afbda7bcf9d9d86741abf00564e9ec2e3a",
+      "characters": 7325,
+      "content_sha256": "069d11b940c9dbb68854f247cbd426570499f5da4075ac4e7b209a51768b9862",
       "description": "Always-on. Mission-first doctrine for hubs and workers. Skills exist to help agents accomplish strategic goals by deriving and advancing tactical goals with bounded initiative. Agents should keep moving when tactical ordering is safe and non-critical, and should ask for guidance when the choice affects strategy, authorization, risk, or operator control.",
-      "estimated_tokens": 1770,
+      "estimated_tokens": 1832,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -6557,6 +6561,7 @@
         "docs/instruction-architecture.md",
         "plans/independent-review-goal-continuity-1328.md",
         "skills/KERNEL.md",
+        "skills/_standing-approval-rules.md",
         "skills/ask-questions/SKILL.md",
         "skills/drive-while-away/SKILL.md",
         "skills/think/SKILL.md"
@@ -8917,6 +8922,7 @@
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/explicit_gh_get.py",
+        "hooks/_test/explicit_target_operands.py",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/gate_bypass_1164.py",
         "hooks/_test/gate_registry.test.sh",
@@ -9132,6 +9138,7 @@
         "skills/commit/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
         "skills/distill-lessons/SKILL.md",
+        "skills/evaluate-ticket/SKILL.md",
         "skills/hostile-review/SKILL.md",
         "skills/lessons-learned/SKILL.md",
         "skills/rules-audit/SKILL.md",
@@ -9355,6 +9362,7 @@
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/package_generation_test.py",
         "bin/_test/package_selection_test.py",
+        "bin/_test/project_settings_bootstrap_test.py",
         "bin/_test/protected_policy_test.py",
         "bin/_test/provider_event_test.py",
         "bin/_test/registered_receipt_provider_test.py",
@@ -9376,6 +9384,7 @@
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/detect_ai_fingerprints.test.sh",
         "hooks/_test/execution_risk.py",
+        "hooks/_test/explicit_target_operands.py",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/fixtures/metadata-issues-1251.json",
         "hooks/_test/git_bootstrap_targets.py",
@@ -9598,6 +9607,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "RESOLVER.md",
         "bin/_test/resolve_load_set_test.py",
         "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
@@ -9740,10 +9750,10 @@
     },
     {
       "canonical_source": "skills/decision-to-ticket/SKILL.md",
-      "characters": 10997,
-      "content_sha256": "2d0a1926c17479553449618434acea0f6fde2f9852b33494e27435345c16473a",
+      "characters": 11077,
+      "content_sha256": "a447bb141f9aa2b1a4d0a3a01e044bd4542425c6de1928fdb3fc95fd337e4360",
       "description": "Real-time trigger: when the agent makes a strategic decision (scope, architecture, deferral, standing approval, or completion claim), surface it on the ticket destination before moving on. Includes a completion guard that prevents scope-reduction rationalization.",
-      "estimated_tokens": 2750,
+      "estimated_tokens": 2770,
       "frontmatter_name": "decision-to-ticket",
       "generated_outputs": [
         "dist/nested/skills/decision-to-ticket",
@@ -9769,11 +9779,11 @@
       "project": null,
       "quality": {
         "completeness": 0,
-        "cross_references": 50,
-        "grade": "F",
+        "cross_references": 100.0,
+        "grade": "D",
         "provenance": 40,
         "structure": 100.0,
-        "total": 47.5
+        "total": 60.0
       },
       "rule_definitions": [],
       "slug": "decision-to-ticket",
@@ -9848,6 +9858,7 @@
         "bin/_test/review_risk_test.py",
         "bin/_test/scanner_source_test.py",
         "hooks/_test/detect_ai_fingerprints.test.sh",
+        "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/hook_path.test.sh",
@@ -10014,6 +10025,7 @@
       "test_evidence": [
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
+        "hooks/_test/github_merge_queue.py",
         "skills/detect-ai-fingerprints/test_scan_sh_exit_code.sh",
         "skills/detect-ai-fingerprints/test_writing_code_4.sh"
       ],
@@ -10224,10 +10236,10 @@
     },
     {
       "canonical_source": "skills/evaluate-ticket/SKILL.md",
-      "characters": 7953,
-      "content_sha256": "addc542679f1a4c637f5514e2ddc3e6487cf6095c706d8f5e1989c540fc86f20",
-      "description": "Always-on. Before any non-trivial work begins, verify the cited ticket is structurally fit for execution. Six-criterion rubric (title shape, required sections, investigated facts, /think link, Assumptions block, falsification for behavior-change tickets). Invoked by think/SKILL.md Step 0, self-review/SKILL.md Goal source verification, and coding/code-review/SKILL.md Pre-review section. The skill is the prose layer; scripts/discipline/evaluate-ticket.sh is the enforcement layer; they stay in sync.",
-      "estimated_tokens": 1989,
+      "characters": 2771,
+      "content_sha256": "32a861fa603e4f9a9a76e729557568966ce675983b18ad54b6bfe74d035647c7",
+      "description": "Review a ticket for unclear intent, missing evidence or acceptance criteria when creating or improving it. Optional structural diagnostics; not a prerequisite for reading a diff or continuing an authorized task.",
+      "estimated_tokens": 693,
       "frontmatter_name": "evaluate-ticket",
       "generated_outputs": [
         "dist/nested/skills/evaluate-ticket",
@@ -10239,24 +10251,26 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "scripts/discipline/README.md",
         "skills/RESOLVER.md",
+        "skills/decision-to-ticket/SKILL.md",
         "skills/post-error-revision/SKILL.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 110,
+      "lines": 31,
       "owner": [
         "unknown"
       ],
       "project": null,
       "quality": {
         "completeness": 0,
-        "cross_references": 50,
+        "cross_references": 100.0,
         "grade": "F",
-        "provenance": 40,
-        "structure": 100.0,
-        "total": 47.5
+        "provenance": 20,
+        "structure": 90.0,
+        "total": 52.5
       },
       "rule_definitions": [],
       "slug": "evaluate-ticket",
@@ -10681,6 +10695,7 @@
         "bin/_test/native_push_test.py",
         "bin/_test/package_generation_test.py",
         "bin/_test/progressive_mount_test.py",
+        "bin/_test/project_settings_bootstrap_test.py",
         "bin/_test/protected_policy_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -10692,6 +10707,7 @@
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/execution_risk.py",
+        "hooks/_test/explicit_target_operands.py",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/fixtures/metadata-issues-1251.json",
         "hooks/_test/gate_bypass_1164.py",
@@ -10760,6 +10776,7 @@
         "bin/_test/local_validation_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "hooks/_test/broad_staging.test.sh",
+        "hooks/_test/explicit_target_operands.py",
         "hooks/_test/github_project_status.py",
         "hooks/_test/sensitive_files.test.sh",
         "hooks/_test/ticket_propagation_guard.test.sh",
@@ -10870,10 +10887,10 @@
     },
     {
       "canonical_source": "skills/post-error-revision/SKILL.md",
-      "characters": 16849,
-      "content_sha256": "d3272125a94beff1e07a30546368aec6f0e34c2eca195e2a0ddb54c067e7dfa4",
+      "characters": 16893,
+      "content_sha256": "e66c490ae0f9c603444dfd9c7d30b9b3ae4c24aa427982ed2acf4006db706bad",
       "description": "MANDATORY when a failure contradicts a documented Assumption. Walk failure -> commit -> PR -> ticket; append a five-field Post-error revision block (Triggered by / Observed / Falsified assumption / Revised model / Implication) to the originating ticket; preserve-and-annotate the original Assumption; THEN draft the fix or revert PR with a Refs: + Post-error-revision: trailer pair. Implements writing-rules:6. Canonical implementations: scripts/discipline/check-post-error-revision.sh (block-structure validator), hooks/git/post-error-revision-required.sh (trailer requirement on revert / regression-fix).",
-      "estimated_tokens": 4213,
+      "estimated_tokens": 4224,
       "frontmatter_name": "post-error-revision",
       "generated_outputs": [
         "dist/nested/skills/post-error-revision",
@@ -11297,6 +11314,7 @@
         "bin/_test/procedure_composition_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/project_composition_test.py",
+        "bin/_test/project_settings_bootstrap_test.py",
         "bin/_test/protected_policy_test.py",
         "bin/_test/provider_event_test.py",
         "bin/_test/recovery_package_test.py",
@@ -12601,6 +12619,7 @@
         "bin/_test/hook_payload_test.py",
         "bin/_test/inline_delivery_test.py",
         "bin/_test/progressive_mount_test.py",
+        "bin/_test/project_settings_bootstrap_test.py",
         "bin/_test/registered_receipt_provider_test.py",
         "bin/_test/registered_scanner_execution_test.py",
         "bin/_test/review_risk_test.py",
@@ -13048,9 +13067,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2483617,
+    "characters": 2478746,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 620981,
+    "estimated_tokens": 619763,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13062,8 +13081,8 @@
     },
     "quality_grade_counts": {
       "C": 6,
-      "D": 19,
-      "F": 133,
+      "D": 20,
+      "F": 132,
       "unknown": 41
     },
     "quality_low_grade_count": 152,
@@ -13071,7 +13090,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1087223
+      "unclassified": 1082352
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13083,7 +13102,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 271847
+      "unclassified": 270629
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
