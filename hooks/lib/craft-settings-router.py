@@ -42,7 +42,13 @@ class RegistrationError(RoutingError):
     """
 
 
-REGISTRATION_ADVICE = "Repair registration from native CLI with the exact-main installer."
+REGISTRATION_ADVICE = (
+    "A managed workspace update can briefly cause this refusal; let any running update finish, "
+    "then verify registration before requesting repair. After registration verifies, retry only "
+    "a refused action that did not execute; check actual tool results before retrying. "
+    "If registration still fails: "
+    "Repair registration from native CLI with the exact-main installer."
+)
 # [label, start] of the hook now running, for the whole-invocation alarm message.
 RUNNING_HOOK: list = []
 

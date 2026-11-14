@@ -31,6 +31,31 @@ class Safety(unittest.TestCase):
         self.git("commit", "-q", "--allow-empty", "-m", "seed")
         self.git("remote", "add", "origin", "https://github.com/siege-analytics/synthetic.git")
 
+    def test_no_optional_locks_global_preserves_reads_and_mutation_denials(self):
+        import task_actions
+        target = shlex.quote(str(self.repo))
+        prefixes = ['git --no-optional-locks -C '+target,
+                    'git -C '+target+' --no-optional-locks',
+                    'git --no-optional-locks -C '+target+' --no-optional-locks -C .']
+        before = ((self.repo/'.git/config').read_bytes(), self.git('rev-parse', 'HEAD'))
+        for prefix in prefixes:
+            command = prefix+' status --short --ignored --untracked-files=normal'
+            with self.subTest(command=command):
+                self.assertTrue(task_actions.reader(shlex.split(command)))
+                self.assertTrue(task_actions._released_read_classifier().git_ok(shlex.split(command)[1:]))
+                self.g.assertGate(0, command, env=self.env)
+                subprocess.run(command, shell=True, cwd=self.repo, env=self.env,
+                               check=True, capture_output=True, timeout=15)
+        for suffix in ['commit --allow-empty -m denied', 'update-ref refs/heads/denied HEAD',
+                       '-c core.fsmonitor=/tmp/helper status', '--git-dir=/tmp/foreign status',
+                       '--unknown-option status']:
+            command = prefixes[0]+' '+suffix
+            with self.subTest(command=command):
+                self.assertFalse(task_actions.reader(shlex.split(command)))
+                self.g.assertGate(2, command, env=self.env)
+        self.assertEqual(((self.repo/'.git/config').read_bytes(), self.git('rev-parse', 'HEAD')), before)
+        self.assertEqual(self.git('for-each-ref', 'refs/heads/denied'), '')
+
     def test_ref_name_validation_does_not_require_a_mutation_task(self):
         name = 'feat/ref-validation'
         target = shlex.quote(str(self.repo))

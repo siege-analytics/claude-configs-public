@@ -195,6 +195,19 @@ expect_block_because "(i) matching consumer declaration requires evidence" "$HOO
     "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")" \
     'no test-gate.json was found'
 
+# Git fetch uses the first origin URL; a later URL must not select policy.
+git config --add remote.origin.url https://github.com/fixture/other.git
+expect_block_because "(i-first) first matching origin retains testing with a different later URL" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")" \
+    'no test-gate.json was found'
+git config --unset-all remote.origin.url
+git config --add remote.origin.url https://github.com/fixture/other.git
+git config --add remote.origin.url https://github.com/fixture/consumer.git
+expect_pass "(i-reversed) later matching origin does not lend testing to the first URL" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")"
+git config --unset-all remote.origin.url
+git remote set-url origin https://github.com/fixture/consumer.git
+
 # Descriptor identity matters even when two locations reuse the same slug.
 export CRAFT_WORKSPACE_ROOT="$TMPDIR/workspace"
 mkdir -p "$CRAFT_WORKSPACE_ROOT/projects/consumer"
@@ -246,7 +259,7 @@ PROJEOF
 mkdir -p "$TMPDIR/git-shim"
 cat > "$TMPDIR/git-shim/git" <<'GITEOF'
 #!/usr/bin/env bash
-if [[ "${1:-}" = -C && "${3:-}" = config && "${4:-}" = --get && "${5:-}" = remote.origin.url ]]; then
+if [[ "${1:-}" = -C && "${3:-}" = config && "${4:-}" = --null && "${5:-}" = --get-all && "${6:-}" = remote.origin.url ]]; then
     if [[ "${FIXTURE_GIT_FAILURE:-}" = timeout ]]; then
         exec /bin/sleep 5
     fi

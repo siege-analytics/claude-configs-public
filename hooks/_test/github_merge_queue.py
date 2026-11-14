@@ -379,6 +379,60 @@ else: sys.exit(99)
         return subprocess.run(['bash', str(self.install/'hooks/bash/destructive-guard.sh')], input=json.dumps(payload),
                               env=env or self.env, cwd=self.f.repo, text=True, capture_output=True, timeout=12)
 
+    REVIEW_ADMIN = [
+        "flock merge.lock -c 'true; gh pr merge 5 --admin'",
+        "flock -c 'true && gh pr merge 5 --admin' merge.lock",
+        "script -c 'true; gh pr merge 5 --admin'",
+        "watch 'true; gh pr merge 5 --admin'",
+        'if gh pr merge 5 --admin; then :; fi',
+        'if sudo gh pr merge 5 --admin; then :; fi',
+        "GH_REPO='o/r' gh pr merge 5 --admin",
+        'GH_REPO="o/r" gh pr merge 5 --admin',
+        "if GH_REPO='o/r' gh pr merge 5 --admin; then :; fi",
+        'while gh pr merge 5 --admin; do :; done',
+        '! gh pr merge 5 --admin',
+        'coproc gh pr merge 5 --admin',
+        r'find . -exec true \; -exec gh pr merge 5 --admin \;',
+        r'find . -exec true {} + -execdir gh pr merge 5 --admin \;',
+        r"find . -exec true \; -ok sh -c 'true; gh pr merge 5 --admin' \;",
+        "env -S 'sh -c' 'true; gh pr merge 5 --admin'",
+        "env -S 'GH_REPO=o/r gh pr merge 5 --admin'",
+        "env -S '--ignore-environment gh pr merge 5 --admin'",
+    ]
+    REVIEW_DATA = [
+        "'if' gh pr merge 5 --admin", r'\if gh pr merge 5 --admin',
+        'command if gh pr merge 5 --admin',
+        "'coproc' gh pr merge 5 --admin",
+        r'\coproc gh pr merge 5 --admin',
+        'echo coproc gh pr merge 5 --admin',
+        "'GH_REPO=o/r' gh pr merge 5 --admin",
+        "'GH_REPO'=o/r gh pr merge 5 --admin",
+        r'GH_REPO\=o/r gh pr merge 5 --admin',
+        "env -S 'true; gh pr merge 5 --admin'",
+        "env -S 'if gh pr merge 5 --admin'",
+        "watch -x printf %s 'gh pr merge 5 --admin'",
+        "flock merge.lock -c 'printf %s \"gh pr merge 5 --admin\"'",
+        "script -c 'printf %s \"gh pr merge 5 --admin\"'",
+        r'find . -exec printf %s "gh pr merge 5 --admin" \;',
+        r'find . -exec if gh pr merge 5 --admin \;',
+        r'find . -name -exec gh pr merge 5 --admin \;',
+        r'find . -printf -exec gh pr merge 5 --admin \;',
+    ]
+
+    def test_reviewed_shell_keywords_wrappers_and_all_find_actions(self):
+        self.f.task('own-local', self.f.repo)
+        waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
+        for command in self.REVIEW_ADMIN:
+            with self.subTest(admin=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 3)
+                self.hook(command, 2)
+                self.assertEqual(self.guard(command, waived).returncode, 2)
+        for command in self.REVIEW_DATA:
+            with self.subTest(data=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+                self.assertEqual(self.guard(command, waived).returncode, 0)
+        self.assertFalse(self.calls.exists(), 'inspection must not execute candidate gh')
+
     def test_admin_merge_is_refused_in_every_spelling(self):
         self.f.task('own-local', self.f.repo)  # An owned cwd must not admit any of these.
         waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
@@ -454,9 +508,9 @@ else: sys.exit(99)
                 self.assertEqual(self.guard('pwd').returncode, 0)  # never blocks every command
                 for ordinary in ['cat /tmp/admin/report', 'printf %s gh pr merge --admin',
                                  'env printf %s gh pr merge --admin "$(date)"',
-                                 "printf 'print(1)' | python3"]:
+                                 "printf 'print(1)' | python3"] + self.REVIEW_DATA:
                     self.assertEqual(self.guard(ordinary, dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')).returncode, 0)
-                for command in ['gh -R o/r pr merge 5 --admin', "gh pr merge 5 --ad'min'", 'gh pr merge 5 --{admin,squash}',
+                for command in self.REVIEW_ADMIN + ['gh -R o/r pr merge 5 --admin', "gh pr merge 5 --ad'min'", 'gh pr merge 5 --{admin,squash}',
                                 'env gh -R o/r pr merge 5 --admin "$(date)"',
                                 'env gh ' + chr(92) + chr(10) + 'pr merge 5 --admin',
                                 'timeout 5 gh pr merge 5 --admin "$(date)"',
@@ -488,6 +542,15 @@ else: sys.exit(99)
     def test_syntax_helper_failure_does_not_turn_literal_data_into_a_merge(self):
         self.f.task('own-local', self.f.repo)
         (self.install/'hooks/lib/command-text.py').unlink()
+        waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
+        for command in self.REVIEW_ADMIN:
+            with self.subTest(syntax_helper_missing_admin=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 3)
+                self.assertEqual(self.guard(command, waived).returncode, 2)
+        for command in self.REVIEW_DATA:
+            with self.subTest(syntax_helper_missing_data=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+                self.assertEqual(self.guard(command, waived).returncode, 0)
         for command in ['printf %s gh pr merge --admin', 'cat /tmp/admin/report',
                         'env printf %s gh pr merge --admin "$(date)"',
                         "printf 'print(1)' | python3"]:
