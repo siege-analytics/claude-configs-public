@@ -38,8 +38,19 @@ class Proposals(unittest.TestCase):
                                 capture_output=True, timeout=20)
         self.assertEqual(result.returncode, 2, result.stderr)
         self.assertIn('github pull request write', result.stderr)
-        for suffix in [' --repo electinfo/fec-api', ' --unknown-option', ' --draft']:
-            self.assertEqual(self.hook(command + suffix, cwd=self.repo).returncode, 2)
+        for suffix in [' --repo electinfo/fec-api', ' --unknown-option', ' --draft',
+                       " --base develop --title 'source change' --body text", ' --fill',
+                       " --title '--repo --base --head --title --body-file' --body text",
+                       " --title text --body '--repo --base --head --title --body-file'"]:
+            legacy = command + suffix
+            self.assertFalse(fixture.r.action(legacy, str(self.repo)).get('metadata_posts'))
+            payload['tool_input']['command'] = legacy
+            result = subprocess.run(['bash', str(fixture.ROOT / 'hooks/bash/destructive-guard.sh')],
+                                    input=json.dumps(payload), env=self.env, text=True,
+                                    capture_output=True, timeout=20)
+            self.assertEqual(result.returncode, 2, result.stderr)
+            self.assertIn('github pull request write', result.stderr)
+        self.assertEqual(self.hook("gh pr create --base develop --title 'source change' --body text", cwd=self.repo).returncode, 0)
 
     def test_allowlisted_ssh_cannot_borrow_proposal_exemption(self):
         # A private policy package admits one fixture host, never a network call.
@@ -68,7 +79,7 @@ class Proposals(unittest.TestCase):
 
     def test_exact_source_target_and_lifecycle_remain_required(self):
         foreign = self.ws / 'foreign.md'; foreign.write_text('foreign body')
-        for command in [self.command.replace('electinfo/fec-api', 'foreign/repo'), self.command.replace('feat/3133-source', 'feat/foreign'), self.command.replace('--base develop', '--base main'), self.command.replace(str(self.body), str(foreign)), self.command + ' && gh pr close 31', self.command.replace('pr create', 'pr merge'), self.command + ' --repo electinfo/fec-api', self.command.replace(str(self.body), str(self.body) + '.missing'), self.command.replace('--body-file ' + str(self.body), '--body-file -')]:
+        for command in [self.command.replace('electinfo/fec-api', 'foreign/repo'), self.command.replace('feat/3133-source', 'feat/foreign'), self.command.replace('--base develop', '--base main'), self.command.replace(str(self.body), str(foreign)), self.command + ' && gh pr close 31', self.command.replace('pr create', 'pr merge'), self.command + ' --repo electinfo/fec-api', self.command + ' --unknown-option', self.command.replace(str(self.body), str(self.body) + '.missing'), self.command.replace('--body-file ' + str(self.body), '--body-file -')]:
             with self.subTest(command=command):
                 self.assertEqual(self.hook(command, cwd=self.ws).returncode, 2)
         linked = self.body.parent / 'linked.md'; linked.symlink_to(self.body)
