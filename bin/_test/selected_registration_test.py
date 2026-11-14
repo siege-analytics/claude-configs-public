@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.dont_write_bytecode = True
@@ -24,7 +25,10 @@ NATIVE_NAMES = ('--help', '--selected', '--binding', '--command', '-h', '--', ''
 class SelectedRegistrationTest(unittest.TestCase):
     def setUp(self):
         self.fixture = fixtures.PackageSelectionTest()
-        self.fixture.setUp()
+        # Positive registration fixtures require physical paths; macOS exposes
+        # its default temporary directory through the /var symlink.
+        with patch.object(tempfile, 'tempdir', str(Path(tempfile.gettempdir()).resolve())):
+            self.fixture.setUp()
         self.addCleanup(self.fixture.doCleanups)
         self.source = self.fixture.source
         self.output = self.fixture.output
