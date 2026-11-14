@@ -737,29 +737,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "85fc8bc4659732c27841ccd1ae28a416d7ea2a904bc08c07a2e57129535da314"
+          "tree_sha256": "51b744f8d12cf6f22f7ec82236dcc65b0df23d774595a6c38091b72b46b60026"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "85fc8bc4659732c27841ccd1ae28a416d7ea2a904bc08c07a2e57129535da314"
+          "tree_sha256": "51b744f8d12cf6f22f7ec82236dcc65b0df23d774595a6c38091b72b46b60026"
         },
         "flat": {
           "destination": "dist/flat/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "85fc8bc4659732c27841ccd1ae28a416d7ea2a904bc08c07a2e57129535da314"
+          "tree_sha256": "51b744f8d12cf6f22f7ec82236dcc65b0df23d774595a6c38091b72b46b60026"
         },
         "nested": {
           "destination": "dist/nested/skills/_session-coordination-rules.md",
           "file_count": 1,
-          "tree_sha256": "85fc8bc4659732c27841ccd1ae28a416d7ea2a904bc08c07a2e57129535da314"
+          "tree_sha256": "51b744f8d12cf6f22f7ec82236dcc65b0df23d774595a6c38091b72b46b60026"
         }
       },
       "canonical_source": "skills/_session-coordination-rules.md",
       "kind": "rule",
       "slug": "session-coordination",
       "source_file_count": 1,
-      "source_tree_sha256": "018703bcc7edcd4d9a6af17d4edf29954edc4f0abcce789d33f2bac9b954659b"
+      "source_tree_sha256": "bdba327a7928115bfd9142af1b1c31c2ebad6d1ebce6c0451b17c1d3aa781069"
     },
     {
       "artifacts": {
@@ -1926,29 +1926,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/engagement-post-mortem",
           "file_count": 1,
-          "tree_sha256": "c91ada847073f49d363cd9d9774b1b7e67494a22398e798dc95e331085a5697a"
+          "tree_sha256": "0acebb3874114fb4a103e473dc046944f7e77d25baabaaa5cd399e1b76cb44fd"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/engagement-post-mortem",
           "file_count": 1,
-          "tree_sha256": "c91ada847073f49d363cd9d9774b1b7e67494a22398e798dc95e331085a5697a"
+          "tree_sha256": "0acebb3874114fb4a103e473dc046944f7e77d25baabaaa5cd399e1b76cb44fd"
         },
         "flat": {
           "destination": "dist/flat/skills/engagement-post-mortem",
           "file_count": 1,
-          "tree_sha256": "c91ada847073f49d363cd9d9774b1b7e67494a22398e798dc95e331085a5697a"
+          "tree_sha256": "0acebb3874114fb4a103e473dc046944f7e77d25baabaaa5cd399e1b76cb44fd"
         },
         "nested": {
           "destination": "dist/nested/skills/engagement-post-mortem",
           "file_count": 1,
-          "tree_sha256": "c91ada847073f49d363cd9d9774b1b7e67494a22398e798dc95e331085a5697a"
+          "tree_sha256": "0acebb3874114fb4a103e473dc046944f7e77d25baabaaa5cd399e1b76cb44fd"
         }
       },
       "canonical_source": "skills/engagement-post-mortem/SKILL.md",
       "kind": "skill",
       "slug": "engagement-post-mortem",
       "source_file_count": 1,
-      "source_tree_sha256": "47c7639f752679843ca3532a2d35eba10762ef69dd2a1c875036bd544ac374a6"
+      "source_tree_sha256": "a3eadfbfd4b633b14d6898fd7df547345e65cf7eada5284a39e46d1793968fb8"
     },
     {
       "artifacts": {

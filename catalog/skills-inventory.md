@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **199**
-- Characters: **2,479,935**
-- Estimated tokens: **620,059** (character/4 estimate)
+- Characters: **2,479,925**
+- Estimated tokens: **620,057** (character/4 estimate)
 - Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 111 | 1,083,541 | 270,925 |
+| unclassified | 111 | 1,083,531 | 270,923 |
 
 ## Largest source items
 
@@ -43,7 +43,7 @@ This report describes committed source evidence. Missing references or tests do 
 |---|---|---:|---:|---|
 | `writing-code` | rule | 51,268 | 12,817 | `skills/_writing-code-rules.md` |
 | `shelves--top-design` | reference-shelf | 38,675 | 9,669 | `skills/shelves/design/top-design/SKILL.md` |
-| `session-coordination` | rule | 34,936 | 8,734 | `skills/_session-coordination-rules.md` |
+| `session-coordination` | rule | 34,908 | 8,727 | `skills/_session-coordination-rules.md` |
 | `writing-claims` | rule | 31,339 | 7,835 | `skills/_writing-claims-rules.md` |
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
 | `shelves--one-page-marketing` | reference-shelf | 30,696 | 7,674 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
@@ -51,8 +51,8 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
 | `drive-while-away` | skill | 28,087 | 7,022 | `skills/drive-while-away/SKILL.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
+| `engagement-post-mortem` | skill | 26,713 | 6,679 | `skills/engagement-post-mortem/SKILL.md` |
 | `detect-ai-fingerprints` | skill | 26,708 | 6,677 | `skills/detect-ai-fingerprints/SKILL.md` |
-| `engagement-post-mortem` | skill | 26,695 | 6,674 | `skills/engagement-post-mortem/SKILL.md` |
 | `siege-utilities--hostile-review` | project-skill | 25,909 | 6,478 | `projects/siege-utilities/skills/hostile-review/SKILL.md` |
 | `shelves--high-performance-django` | reference-shelf | 25,890 | 6,473 | `skills/shelves/django/high-performance-django/SKILL.md` |
 | `writing-tests` | rule | 25,880 | 6,470 | `skills/_writing-tests-rules.md` |

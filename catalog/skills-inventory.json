@@ -6210,10 +6210,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 34936,
-      "content_sha256": "b409403f072fd227388a0c80ce0aae5761108260ec151ebbed517733090c658f",
+      "characters": 34908,
+      "content_sha256": "65f2be0aa732981b410ca623e25db449f7ecfdce896e01008392c0b4a23ff000",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 8734,
+      "estimated_tokens": 8727,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -10206,10 +10206,10 @@
     },
     {
       "canonical_source": "skills/engagement-post-mortem/SKILL.md",
-      "characters": 26695,
-      "content_sha256": "c666301bb3234a78e3a7c8f43dc742c60131af4ab68bf681caf0143d47b6e52a",
-      "description": "Retrospective discipline for completed multi-PR / multi-decision engagement arcs. Classifies each artifact and decision as Confirmed (cost was paid), Latent (substance survived but process was broken \u2014 the substance-survived-by-luck cell), or Avoided (structural truth visible in retrospect that nobody named at the time). Sibling to `[skill:pre-mortem]` (adversarial risk gate before implementation) and `[skill:post-mortem]` (per-confirmed-failure root-cause analysis). Operates on the FULL ENGAGEMENT including its meta-arc, even when no single confirmed failure occurred. Runs after engagement close.",
-      "estimated_tokens": 6674,
+      "characters": 26713,
+      "content_sha256": "ceae037670f6453e7a8299ea24794ef93b45e1cb644d030b490c266c27061de9",
+      "description": "Retrospective discipline for completed multi-PR / multi-decision engagement arcs. Classifies each artifact and decision as Confirmed (cost was paid), Latent (substance survived but process was broken \u2014 the substance-survived-by-luck cell), or Avoided (structural truth visible in retrospect that nobody named at the time). Sibling to `[skill:pre-mortem]` (optional risk analysis for consequential or uncertain changes) and `[skill:post-mortem]` (per-confirmed-failure root-cause analysis). Operates on the FULL ENGAGEMENT including its meta-arc, even when no single confirmed failure occurred. Runs after engagement close.",
+      "estimated_tokens": 6679,
       "frontmatter_name": "engagement-post-mortem",
       "generated_outputs": [
         "dist/nested/skills/engagement-post-mortem",
@@ -13084,9 +13084,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2479935,
+    "characters": 2479925,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 620059,
+    "estimated_tokens": 620057,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13107,7 +13107,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1083541
+      "unclassified": 1083531
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13119,7 +13119,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 270925
+      "unclassified": 270923
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
