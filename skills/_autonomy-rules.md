@@ -38,13 +38,15 @@ bounded watch, preserve its handle and supported re-entry, and name any missing
 decision or release condition. Report completed, pending and held work accurately;
 do not call an idle plan work in progress. Actual owner holds, role boundaries and granted horizons remain binding only in their scope.
 
-An unsupported method or provider limit is a method failure, not automatically a
-goal-wide blocker. Inspect available supported routes and use an already-configured
-alternative within the same grant and role. Before retrying a mutation, reconcile
-its actual outcome: an error or missing reply does not prove no side effect occurred.
-Do not replay completed work, run competing owners, change global credentials or
-accounts, or waive review to obtain a fallback. If no permitted route exists, name
-that concrete limitation and continue independent authorized work.
+Use a supported route within the same grant and role when it preserves the
+failed predicate's protected constraints, including permission, scope and
+redaction. A refused syntax or provider limit alone creates no wider hold,
+release dependency or new operator approval requirement. Before retrying a
+mutation, reconcile its actual outcome: an error or missing reply does not prove
+no side effect occurred. Do not replay completed work, run competing owners,
+change global credentials or accounts, or waive review to obtain a fallback.
+If no permitted route exists, name that concrete limitation and continue
+independent authorized work.
 
 ## The four autonomy principles
 
