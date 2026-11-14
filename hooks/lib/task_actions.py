@@ -2163,8 +2163,94 @@ def _merge_command_syntax():
     return _MERGE_COMMAND_SYNTAX
 
 
+def _env_word_matches(word, literal):
+    return re.fullmatch('.*'.join(re.escape(part) for part in word.split(_ENV_DYNAMIC_WORD)), literal) is not None
+
+
+def _gh_env_admin_argv(args, globs):
+    # GNU words are single argv entries; unquoted variable-only entries may
+    # disappear even while a flag is waiting for its value. Keep only the two
+    # command positions, so optional words do not expand an argv power set.
+    flags = {**_GH_HELP_FLAGS, **_GH_FLAG_KINDS[('pr', 'merge')]}
+    value_flags = {key: ('text' if kind == 'path' else kind) for key, kind in flags.items()}
+    value_flags.update({'--repo': 'text', '-R': 'text'})
+    states = {((), None, False, False, False, False)}
+    for index, word in enumerate(args[1:], 1):
+        optional = word == _ENV_OPTIONAL_WORD
+        if optional:
+            word = _ENV_DYNAMIC_WORD
+        following = set()
+        for positional, pending, enabled, uncertain, help_requested, ended in states:
+            if optional:
+                following.add((positional, pending, enabled, uncertain, help_requested, ended))
+            if pending in {'text', 'keep'}:
+                value_glob = bool(globs and globs[index] and fnmatch.fnmatchcase('--admin', word))
+                following.add((positional, None, enabled, uncertain or value_glob, help_requested, ended))
+                continue
+            dynamic = _ENV_DYNAMIC_WORD in word
+            if not dynamic and (ended or (not word.startswith('-') and '__ccp_publication_dynamic__' not in word)):
+                following.add(((positional + (word,))[:2], None, enabled, uncertain, help_requested, ended))
+            elif dynamic and not ended and _gh_option_effect(value_flags, word) == (False, None):
+                following.add((positional, None, enabled, uncertain, help_requested, False))
+                _keep, empty_pending = _gh_option_effect(value_flags, word.replace(_ENV_DYNAMIC_WORD, ''))
+                if empty_pending == 'text':
+                    following.add((positional, 'text', enabled, uncertain, help_requested, False))
+            elif dynamic and not ended and word.startswith(('--help=', '--admin=')):
+                option = word.partition('=')[0]
+                for wanted, values in ((True, ('1', 't', 'T', 'true', 'TRUE', 'True')),
+                                       (False, ('0', 'f', 'F', 'false', 'FALSE', 'False'))):
+                    if any(_env_word_matches(word, option + '=' + value) for value in values):
+                        following.add((positional, None, wanted if option == '--admin' else enabled,
+                                       uncertain, wanted if option == '--help' else help_requested, False))
+            elif dynamic:
+                for value in ('pr', 'merge'):
+                    if _env_word_matches(word, value):
+                        following.add(((positional + (value,))[:2], None, enabled, uncertain, help_requested, ended))
+                following.add(((positional + ('',))[:2], None, enabled, uncertain, help_requested, ended))
+                if not ended:
+                    # A GNU expansion is one argument. Keep its possible flag
+                    # roles distinct so a later literal boolean can override it.
+                    following.add((positional, None, enabled, uncertain, help_requested, False))
+                    for option in ('--admin', '--help'):
+                        for wanted, spellings in ((True, ('', '=1', '=t', '=T', '=true', '=TRUE', '=True')),
+                                                  (False, ('=0', '=f', '=F', '=false', '=FALSE', '=False'))):
+                            if any(_env_word_matches(word, option + spelling) for spelling in spellings):
+                                following.add((positional, None, wanted if option == '--admin' else enabled,
+                                               uncertain, wanted if option == '--help' else help_requested, False))
+                    for option in (*flags, '--repo', '-R'):
+                        if _env_word_matches(word, option):
+                            kind = 'text' if option in {'--repo', '-R'} else flags[option]
+                            if kind in {'text', 'path'}:
+                                following.add((positional, 'text', enabled, uncertain, help_requested, False))
+            elif word == '--':
+                following.add((positional, None, enabled, uncertain, help_requested, True))
+            elif word in {'--help', '-h'} or word.startswith('--help='):
+                wanted = '=' not in word or word.partition('=')[2] in {'1', 't', 'T', 'true', 'TRUE', 'True'}
+                following.add((positional, None, enabled, uncertain, wanted, False))
+            elif '__ccp_publication_dynamic__' in word:
+                following.add((positional, None, enabled, True, help_requested, False))
+            elif globs and globs[index] and fnmatch.fnmatchcase('--admin', word):
+                following.add((positional, None, enabled, True, help_requested, False))
+            elif word == '--admin' or word.startswith('--admin='):
+                wanted = '=' not in word or word.partition('=')[2] in {'1', 't', 'T', 'true', 'TRUE', 'True'}
+                following.add((positional, None, wanted, uncertain, help_requested, False))
+            elif word in {'--repo', '-R'}:
+                following.add((positional, 'text', enabled, uncertain, help_requested, False))
+            elif word.startswith(('--repo=', '-R')):
+                following.add((positional, None, enabled, uncertain, help_requested, False))
+            else:
+                _keep, next_pending = _gh_option_effect(flags, word)
+                following.add((positional, next_pending, enabled, uncertain, help_requested, False))
+        states = {state for state in following
+                  if state[0] == ('pr', 'merge')[:len(state[0])]}
+    possible = [state for state in states if state[0] == ('pr', 'merge') and not state[4]]
+    return (['pr', 'merge'], any(state[2] or state[3] for state in possible)) if possible else (None, False)
+
+
 def _gh_admin_argv(args, globs=()):
     """pflag values stay data; return whether actual built-in pr/merge enables admin."""
+    if any(_ENV_DYNAMIC_WORD in word for word in args):
+        return _gh_env_admin_argv(args, globs)
     flags = {**_GH_HELP_FLAGS, **_GH_FLAG_KINDS[('pr', 'merge')]}
     positional, pending, enabled, uncertain, help_requested, index = [], None, False, False, False, 1
     while index < len(args):
