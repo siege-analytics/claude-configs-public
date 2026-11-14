@@ -5071,6 +5071,7 @@
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
         "hooks/_test/test_guard.test.sh",
+        "hooks/_test/test_receipt_reads.py",
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/ticket_required.test.sh",
         "hooks/_test/tier_trailer_aggregation_1168.test.sh",
@@ -5668,6 +5669,7 @@
         "hooks/_test/test_evidence.test.sh",
         "hooks/_test/test_execution_risk.test.sh",
         "hooks/_test/test_guard.test.sh",
+        "hooks/_test/test_receipt_reads.py",
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/think_package.test.sh",
         "hooks/_test/ticket_propagation_guard.test.sh",
@@ -5997,6 +5999,7 @@
         "hooks/_test/session_anchor_mistag.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/survey_context.test.sh",
+        "hooks/_test/test_receipt_reads.py",
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/tier_trailer_aggregation_1168.test.sh",
         "hooks/_test/universal_mutation_gate_fail_closed.test.sh",
@@ -9415,6 +9418,7 @@
         "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_evidence.py",
         "hooks/_test/test_guard.test.sh",
+        "hooks/_test/test_receipt_reads.py",
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/ticket_required.test.sh",
         "hooks/_test/tier_trailer_aggregation_1168.test.sh",
@@ -11426,6 +11430,7 @@
         "hooks/_test/test_evidence.test.sh",
         "hooks/_test/test_execution_risk.test.sh",
         "hooks/_test/test_guard.test.sh",
+        "hooks/_test/test_receipt_reads.py",
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/think_package.test.sh",
         "hooks/_test/ticket_propagation_guard.test.sh",
@@ -12477,10 +12482,10 @@
     },
     {
       "canonical_source": "skills/testing-frameworks/SKILL.md",
-      "characters": 16233,
-      "content_sha256": "b844fbdb45137ba310f6111aaad4c4d446dce8de0ca538bcd2bfbe4a6d1fbd63",
+      "characters": 16976,
+      "content_sha256": "17ec6d8406d4155b97a808e782812d5ee911c20df706ae7c622e5b7988e24c5f",
       "description": "Framework guidance for test writing. Projects declare their test frameworks per architectural layer in PROJECT.md; this skill recommends frameworks by language ecosystem and enforces consistent usage. Pairs with _testing-frameworks-rules.md (always-on) and hooks/git/test-guard.sh (mechanical enforcement at push time). The optional per-layer source globs additionally drive hooks/git/decomposition-guard.sh (one-PR-per-layer warning).",
-      "estimated_tokens": 4059,
+      "estimated_tokens": 4244,
       "frontmatter_name": "testing-frameworks",
       "generated_outputs": [
         "dist/nested/skills/testing-frameworks",
@@ -12516,7 +12521,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 208,
+      "lines": 217,
       "owner": [
         "unknown"
       ],
@@ -13067,9 +13072,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2478746,
+    "characters": 2479489,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 619763,
+    "estimated_tokens": 619948,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13090,7 +13095,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1082352
+      "unclassified": 1083095
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13102,7 +13107,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 270629
+      "unclassified": 270814
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

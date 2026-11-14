@@ -1606,6 +1606,8 @@ def action(command: str, cwd: str) -> dict:
     return result
 
 
+TEST_RECEIPT_READER_SHA256 = 'e7381f43669d846112fda4028a0fbdc351927fdefe6668431acc77f39578cb69'
+
 SCANNER_CAPABILITY_SHA256 = '9be4696157fdafbf8646ff3545375db6bb792f0bd99ecf10041134a822ea7908'
 SCANNER_ADAPTER_SHA256 = 'df44acc0800577539abcf2d66097c76936036f3949dfa3567925c47f0ec62b9e'
 
@@ -1677,11 +1679,11 @@ def _scanner_execution(tokens, cwd: str):
 
 
 def _test_receipt_record(tokens, cwd: str):
-    """Typed execution lane, never a reader or own-scratch exemption.
+    """Typed selected-provider operations, with isolated check/sources readers.
 
-    Only the producer from this policy generation gets the lane. Its test argv
-    remains opaque computation; repository-wide implementing authority is
-    required later, and receipt ownership is checked after task selection.
+    Record test argv remains opaque computation, never an own-scratch reader;
+    repository-wide implementing authority and receipt ownership are checked
+    after task selection. Diagnostic reads do not establish publication authority.
     """
     words = [word for word, _, _ in tokens]
     invocation = list(words)
@@ -1742,6 +1744,56 @@ def _test_receipt_record(tokens, cwd: str):
     if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
         raise UnknownShape("test receipt producer must be an owned regular singly linked file")
     index += 1
+    if words[index:index + 1] in (["check"], ["sources"]):
+        if set(words[1:3]) != {'-I', '-B'} or index != 4:
+            raise UnknownShape('test receipt reads require the known Python with unique -I and -B')
+        try:
+            _scanner_code(Path(owned), TEST_RECEIPT_READER_SHA256)
+        except (OSError, ValueError) as error:
+            raise UnknownShape('selected test receipt provider is not the qualified read version; upgrade normally') from error
+        import shutil
+        interpreter = shutil.which(words[0]) if words[0] == 'python3' else words[0]
+        if not interpreter or os.path.realpath(interpreter) != os.path.realpath(sys.executable):
+            raise UnknownShape('test receipt reader interpreter differs from the policy interpreter')
+        mode = words[index]
+        fields = {}
+        report_only = False
+        index += 1
+        allowed = {'--repo', '--base', '--receipt'} if mode == 'check' else {'--repo', '--base'}
+        while index < len(words):
+            flag = words[index]
+            if flag == '--report-only' and mode == 'check' and not report_only:
+                report_only = True
+                index += 1
+                continue
+            if flag not in allowed or flag in fields or index + 1 >= len(words):
+                raise UnknownShape('test receipt reads require exact unique named fields')
+            value = words[index + 1]
+            if not value or value.startswith('-'):
+                raise UnknownShape('test receipt read field requires a literal value')
+            fields[flag] = value
+            index += 2
+        if set(fields) != allowed or not re.fullmatch(r'(?:[0-9a-f]{40}|[0-9a-f]{64})', fields.get('--base', '')):
+            raise UnknownShape('test receipt reads require a full canonical base object ID')
+        repo = fields['--repo']
+        if not os.path.isabs(repo) or canonical(repo) != os.path.abspath(repo):
+            raise UnknownShape('test receipt read repo must be physical and absolute')
+        environment = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
+        environment.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1')
+        try:
+            top = subprocess.check_output(['/usr/bin/git', '-c', 'core.fsmonitor=false', '-c',
+                                           'core.hooksPath=/dev/null', '-C', repo, 'rev-parse', '--show-toplevel'],
+                                          env=environment, text=True, stderr=subprocess.DEVNULL, timeout=3).strip()
+        except (OSError, subprocess.SubprocessError) as error:
+            raise UnknownShape('cannot resolve test receipt read repository') from error
+        if canonical(top) != repo:
+            raise UnknownShape('test receipt read repo must be the physical Git root')
+        if mode == 'check':
+            receipt = fields['--receipt']
+            if not os.path.isabs(receipt) or canonical(receipt) != os.path.abspath(receipt):
+                raise UnknownShape('test receipt read path must be physical and absolute')
+        return {'read_only': True, 'investigation': False, 'self_managed_shape': False,
+                'paths': [], 'binding': binding, 'proven_by': 'fixed-test-receipt-' + mode}
     if words[index:index + 1] != ["record"]:
         raise UnknownShape("only the fixed test receipt record command has an execution lane")
     index += 1

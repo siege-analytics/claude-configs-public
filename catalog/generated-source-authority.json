@@ -5493,29 +5493,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/testing-frameworks",
           "file_count": 1,
-          "tree_sha256": "a34c5d652ea676cff384ef44c978bbf1f22435458c1096caa0d8f797e19c6b46"
+          "tree_sha256": "e5fe0f1cd6bc9a051362d8e17c2de72c771f8e8a6dd3f5b70ed8ada542229d41"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/testing-frameworks",
           "file_count": 1,
-          "tree_sha256": "a34c5d652ea676cff384ef44c978bbf1f22435458c1096caa0d8f797e19c6b46"
+          "tree_sha256": "e5fe0f1cd6bc9a051362d8e17c2de72c771f8e8a6dd3f5b70ed8ada542229d41"
         },
         "flat": {
           "destination": "dist/flat/skills/testing-frameworks",
           "file_count": 1,
-          "tree_sha256": "a34c5d652ea676cff384ef44c978bbf1f22435458c1096caa0d8f797e19c6b46"
+          "tree_sha256": "e5fe0f1cd6bc9a051362d8e17c2de72c771f8e8a6dd3f5b70ed8ada542229d41"
         },
         "nested": {
           "destination": "dist/nested/skills/testing-frameworks",
           "file_count": 1,
-          "tree_sha256": "a34c5d652ea676cff384ef44c978bbf1f22435458c1096caa0d8f797e19c6b46"
+          "tree_sha256": "e5fe0f1cd6bc9a051362d8e17c2de72c771f8e8a6dd3f5b70ed8ada542229d41"
         }
       },
       "canonical_source": "skills/testing-frameworks/SKILL.md",
       "kind": "skill",
       "slug": "testing-frameworks",
       "source_file_count": 1,
-      "source_tree_sha256": "6cc3a22b1c3a052716960cf1a191c467e8841ef18a88f4b1325a3a64116a1098"
+      "source_tree_sha256": "3584746ca6a4863adb42d768e87ec27c084c9c3c5d3d96b9fdaa1677a68b73cb"
     },
     {
       "artifacts": {
