@@ -1879,6 +1879,49 @@ def github_review_reply(args, cwd: str):
     return {'kind': 'reply-review-comment', 'repository': match[1], 'number': int(match[2]), 'comment_id': int(match[3])}
 
 
+def github_pr_proposal(args, cwd: str):
+    """A literal source-review proposal; never a merge or local file mutation."""
+    if args[:3] != ['gh', 'pr', 'create']:
+        return None
+    fields, draft = {}, False
+    aliases = {'-R': '--repo', '-B': '--base', '-H': '--head', '-t': '--title', '-F': '--body-file'}
+    index = 3
+    while index < len(args):
+        word = args[index]
+        flag, equal, value = word.partition('=')
+        flag = aliases.get(flag, flag)
+        if flag == '--draft' and not equal and not draft:
+            draft = True
+        elif flag in {'--repo', '--base', '--head', '--title', '--body-file'}:
+            if flag in fields:
+                raise UnknownShape('duplicate PR proposal field')
+            if not equal:
+                index += 1
+                if index == len(args):
+                    raise UnknownShape('missing PR proposal field value')
+                value = args[index]
+            if not value:
+                raise UnknownShape('empty PR proposal field')
+            fields[flag] = value
+        else:
+            raise UnknownShape('unsupported PR proposal option; use literal source-review fields')
+        index += 1
+    if set(fields) != {'--repo', '--base', '--head', '--title', '--body-file'}:
+        raise UnknownShape('source PR proposal requires repository, develop base, head, title and body file')
+    if (not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', fields['--repo'])
+            or fields['--base'] != 'develop'
+            or not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_./-]*', fields['--head'])
+            or fields['--head'] in {'main', 'master', 'develop', 'staging'}
+            or '..' in fields['--head'] or '@{' in fields['--head']):
+        raise UnknownShape('source PR proposal has unproven repository/head/develop base')
+    body = os.path.abspath(os.path.join(cwd, fields['--body-file']))
+    if fields['--body-file'] == '-' or body.startswith(('/dev/', '/proc/')):
+        raise UnknownShape('source PR proposal requires a literal regular body file')
+    return {'resource': 'pr', 'operation': 'create', 'repository': fields['--repo'].casefold(),
+            'selector': None, 'head': fields['--head'], 'base': 'develop',
+            'body_source': 'file', 'body_path': body, 'cwd': cwd}
+
+
 def github_metadata_target(args, cwd: str):
     """Existing artifact text edits only; no authorship or task authority claim."""
     if args[:1] != ["gh"]:
@@ -2901,6 +2944,12 @@ def _action(command: str, cwd: str) -> dict:
             project = github_project_action(args)
             if project is not None:
                 remote_actions.append(project)
+                self_managed = False
+                args, arg_globs = [], []
+                return
+            proposal = github_pr_proposal(args, effective)
+            if proposal is not None:
+                metadata_posts.append(proposal)
                 self_managed = False
                 args, arg_globs = [], []
                 return
