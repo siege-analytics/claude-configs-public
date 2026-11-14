@@ -29,9 +29,21 @@ parser.add_argument('--git-repo', type=Path, help='exact consumer worktree root 
 parser.add_argument('--relative', action='store_true', help='generate relative tool settings only, without implicit Git registration')
 args = parser.parse_args(sys.argv[2:])
 
-def git(repo, *argv, optional=False):
-    result = subprocess.run(['git', '-C', str(repo), *argv], text=True, capture_output=True)
-    if result.returncode and not optional:
+def git(repo, *argv, optional=False, operator_config=False):
+    environment = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
+    if operator_config:
+        if argv != ('config', '--get', 'core.hooksPath'):
+            raise ValueError('operator configuration is only used to preserve effective native hooks')
+        if os.environ.get('GIT_CONFIG'):
+            raise ValueError('ambiguous GIT_CONFIG selection; use explicit GIT_CONFIG_GLOBAL or GIT_CONFIG_SYSTEM before native registration')
+        for key in ('GIT_CONFIG_GLOBAL', 'GIT_CONFIG_SYSTEM', 'GIT_CONFIG_NOSYSTEM'):
+            if key in os.environ:
+                environment[key] = os.environ[key]
+    else:
+        environment.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1')
+    result = subprocess.run(['/usr/bin/git', '-C', str(repo), *argv], text=True, capture_output=True,
+                            env=environment, timeout=10)
+    if result.returncode and (not optional or (operator_config and result.returncode != 1)):
         raise ValueError(result.stderr.strip() or 'Git command failed')
     return result.stdout.strip() if result.returncode == 0 else None
 
@@ -164,12 +176,22 @@ try:
     profile_source = root / 'bin/project-settings-bootstrap.py'
     source_profile = root / '.claude/settings.json'
     if profile_source.is_file() and source_profile.is_file() and hooks_root == root and args.workspace is None:
+        authoring_repo = args.git_repo.resolve(strict=True) if args.git_repo is not None else root
+        actual_root = git(authoring_repo, 'rev-parse', '--show-toplevel', optional=True)
+        source_common = git(root, 'rev-parse', '--path-format=absolute', '--git-common-dir', optional=True)
+        target_common = git(authoring_repo, 'rev-parse', '--path-format=absolute', '--git-common-dir', optional=True)
+        authoring_target = (actual_root and source_common and target_common
+                            and Path(actual_root).resolve() == authoring_repo
+                            and Path(source_common).resolve() == Path(target_common).resolve()
+                            and target.resolve() in {
+                                root / '.claude/settings.json', root / '.claude/settings.local.json',
+                                authoring_repo / '.claude/settings.json', authoring_repo / '.claude/settings.local.json'})
         source_value = json.loads(source_profile.read_text())
         prepared_active = any(
             shlex.split(hook.get('command', ''))[3:4] == ['siege-project-bootstrap/v1']
             for groups in source_value.get('hooks', {}).values() for group in groups for hook in group.get('hooks', [])
             if hook.get('type') == 'command')
-        if prepared_active:
+        if prepared_active and authoring_target:
             spec = importlib.util.spec_from_file_location('source_project_bootstrap', profile_source)
             bootstrap = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(bootstrap)
@@ -199,7 +221,7 @@ try:
             path = hooks_root / relative
             if not path.is_file() or (relative.endswith('.sh') or relative.startswith('.githooks/')) and not os.access(path, os.X_OK):
                 raise ValueError(f'native dependency missing or not executable: {path}')
-        configured = git(repo, 'config', '--get', 'core.hooksPath', optional=True)
+        configured = git(repo, 'config', '--get', 'core.hooksPath', optional=True, operator_config=True)
         if configured and (repo / configured).resolve() != native.resolve():
             raise ValueError(f'existing core.hooksPath {configured!r} differs; reconcile native registration explicitly')
         if not configured:
