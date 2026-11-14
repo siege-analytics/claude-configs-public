@@ -230,8 +230,13 @@ def git_ok(args):
     if effect is not None:
         return effect.get("read_only", False)
     i = 0
-    while i < len(args) and args[i] == "-C" and i + 1 < len(args):
-        i += 2
+    while i < len(args):
+        if args[i] == "--no-optional-locks":
+            i += 1  # Inert global flag; does not select a target or run helpers.
+        elif args[i] == "-C" and i + 1 < len(args):
+            i += 2
+        else:
+            break
     if i >= len(args) or args[i].startswith("-"):
         return False
     sub, rest = args[i], args[i + 1:]

@@ -174,6 +174,66 @@ class Bootstrap(unittest.TestCase):
         self.assertEqual((helper.read_bytes(), receipt.read_bytes()), fresh)
         self.assertEqual(b.verify_published(self.home)['sha256'], hashlib.sha256(replacement).hexdigest())
 
+    def test_publish_rejects_parent_swap_before_publication(self):
+        parent = self.home / b.RELATIVE.parent
+        moved = parent.with_name('saved-hooks')
+        outside = self.f.fixture.base / 'outside-publish'
+        outside.mkdir()
+        old = ((self.home / b.RELATIVE).read_bytes(), (self.home / b.RECEIPT).read_bytes())
+        def swap():
+            parent.rename(moved)
+            parent.symlink_to(outside, target_is_directory=True)
+        with self.assertRaises((OSError, ValueError)):
+            b.publish(self.home, old[0] + b'\n# reviewed update\n', before_publish=swap)
+        self.assertEqual(list(outside.iterdir()), [])
+        self.assertEqual(((moved / b.RELATIVE.name).read_bytes(),
+                          (moved / b.RECEIPT.name).read_bytes()), old)
+
+    def test_publish_temp_creation_cannot_follow_swapped_parent(self):
+        parent = self.home / b.RELATIVE.parent
+        moved = parent.with_name('saved-hooks')
+        outside = self.f.fixture.base / 'outside-temp-publish'
+        outside.mkdir()
+        old = ((self.home / b.RELATIVE).read_bytes(), (self.home / b.RECEIPT).read_bytes())
+        original_open = os.open
+        swapped = False
+        def open_with_swap(path, flags, *args, **kwargs):
+            nonlocal swapped
+            if not swapped and flags & os.O_CREAT and Path(path).name.startswith('.project-bootstrap-'):
+                swapped = True
+                parent.rename(moved)
+                parent.symlink_to(outside, target_is_directory=True)
+            return original_open(path, flags, *args, **kwargs)
+        with patch.object(b.os, 'open', side_effect=open_with_swap), self.assertRaises((OSError, ValueError)):
+            b.publish(self.home, old[0] + b'\n# reviewed update\n')
+        self.assertTrue(swapped, 'the actual temporary-file open must cross the race boundary')
+        self.assertEqual(list(outside.iterdir()), [])
+        self.assertEqual(((moved / b.RELATIVE.name).read_bytes(),
+                          (moved / b.RECEIPT.name).read_bytes()), old)
+
+    def test_anchor_temp_creation_cannot_follow_swapped_parent(self):
+        bound = {'git_repo': str(self.repo)}
+        target = b.publish_anchor(self.home, bound)
+        old = target.read_bytes()
+        parent = target.parent
+        moved = parent.with_name('saved-profiles')
+        outside = self.f.fixture.base / 'outside-anchor'
+        outside.mkdir()
+        original_open = os.open
+        swapped = False
+        def open_with_swap(path, flags, *args, **kwargs):
+            nonlocal swapped
+            if not swapped and flags & os.O_CREAT and Path(path).name.startswith('.cli-profile-'):
+                swapped = True
+                parent.rename(moved)
+                parent.symlink_to(outside, target_is_directory=True)
+            return original_open(path, flags, *args, **kwargs)
+        with patch.object(b.os, 'open', side_effect=open_with_swap), self.assertRaises((OSError, ValueError)):
+            b.publish_anchor(self.home, bound)
+        self.assertTrue(swapped, 'the actual anchor temporary-file open must cross the race boundary')
+        self.assertEqual(list(outside.iterdir()), [])
+        self.assertEqual((moved / target.name).read_bytes(), old)
+
     def test_shared_dispatcher_upgrade_does_not_change_workspace_policy_binding(self):
         receipt = self.f.receipt_path.read_bytes()
         target = self.home / b.RELATIVE

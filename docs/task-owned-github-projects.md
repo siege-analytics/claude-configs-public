@@ -29,11 +29,23 @@ The ElectInfo references already require its issues on Tasks project1. Client so
 
 Core deployment replaces the managed hooks tree, including its empty default policy. A client deployment must assemble its current reviewed policy after the Core copy, then verify the assembled hooks and policy together before activation. ElectInfo's client builder owns that overlay step. A Core-only install does not deliver an ElectInfo profile. Do not preserve an old installed policy as a fallback: it may contain revoked grants. Reapply the current client source through normal client delivery.
 
-An add requires one current-session implementing task with an exact canonical `ticket` (or full canonical `task_id` when ticket is absent), for example `electinfo/enterprise#3300`. A slug `task_id` cannot substitute for the canonical issue identity; a parent issue cannot authorize its child. Explicit task binding disambiguates only. Task-written `remote_resources`, arbitrary allowed URLs and local `scope_paths` do not grant project permission. Revoking the installed grant or terminating the task removes this lane. Existing role limits, owner holds and destructive confirmation still apply.
+An add requires one current-session implementing task with an exact canonical `ticket` (or full canonical `task_id` when ticket is absent), for example `electinfo/enterprise#3300`. A slug `task_id` cannot substitute for the canonical issue identity; the default current-ticket grant does not authorize a child issue. Explicit task binding disambiguates only. Task-written `remote_resources`, arbitrary allowed URLs and local `scope_paths` do not grant project permission. Revoking the installed grant or terminating the task removes this lane. Existing role limits, owner holds and destructive confirmation still apply.
 
 The classifier emits `remote_actions` instead of a fake filesystem path. After installed-policy and task ownership checks, remote-only board hygiene receives `remote_only_authorized`, distinct from the existing metadata-edit exception. This administrative operation does not need source-edit investigation/review artifacts. It does not authorize code edits: any composed local write must belong to the same task and pass its ordinary local evidence tier. Other remote writes, shell substitution, opaque execution, unapproved redirects and mismatched tasks remain guarded. Ambient GH_HOST/GH_REPO overrides are rejected for this lane.
 
-For `item-add`, only literal `gh`, project number, `--owner` and canonical issue `--url` are supported, with either flag order. Extra/duplicate/global flags and alternate hosts are rejected. The hook classifies the requested mutation; it does not execute it, authenticate, confirm mutation success or claim the item appeared. The separate Status verifier below performs a fixed read-only GitHub query.
+For `item-add`, only literal `gh`, project number, `--owner`, canonical issue `--url` and optional `--format json` are supported, in any flag order. Extra/duplicate/global flags and alternate hosts are rejected. The hook classifies the requested mutation; it does not execute it, authenticate, confirm mutation success or claim the item appeared. The separate Status verifier below performs a fixed read-only GitHub query.
+
+## Explicit item-add targets in an existing Task
+
+A board-management mission can opt into `issue_binding: "current-task-or-declared-targets"` for an installed `item-add` grant. That grant also declares `declared_issue_repositories`, a nonempty list of exact full repository names under its fixed `issue_owner`. The installed owner, board and operation remain the ceiling; the repository allowlist limits declared targets. The original own-ticket lane remains available. Core ships no such grants. Status grants keep `current-task-ticket` and their live membership checks.
+
+The existing own implementing Task keeps its real ticket and Task identity. It may record exact metadata targets in `github_project_targets`, for example:
+
+```json
+{"github_project_targets": [{"owner": "electinfo", "project": 4, "repository": "electinfo/airflow", "issue": 1074, "operation": "item-add"}]}
+```
+
+Each declaration names one literal board/repository/issue/operation pair. Use the existing explicit `CCP_TASK_ID` binding to select that Task; missing or ambiguous bindings, foreign session ownership and other lifecycle states cannot use this lane. Task fields cannot create the installed grant or expand its repository allowlist. No role name grants authority. This is metadata-only target selection, not parent-to-child source authorization: local writes, services, other remote operations and merges retain their existing checks. A compound action still needs the same Task for every effect; split unsupported mixed operations rather than widening local scope or creating a substitute Task per issue. Actual native results, not a classifier decision, establish whether the board operation succeeded.
 
 ## Bounded Status edits
 

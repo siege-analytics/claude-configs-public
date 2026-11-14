@@ -26,7 +26,7 @@ class UnknownShape(ValueError):
     pass
 
 
-def shell_tokens(command: str, *, inspection_comments=False, inspection_expansions=False) -> list[tuple[str, bool, tuple[int, ...]]]:
+def shell_tokens(command: str, *, inspection_comments=False, inspection_expansions=False, quoted_words=None, assignment_words=None) -> list[tuple[str, bool, tuple[int, ...]]]:
     """Preserve operators and positions of unquoted glob characters.
 
     Reader/diagnostic classification decides whether a glob word is safe;
@@ -36,8 +36,16 @@ def shell_tokens(command: str, *, inspection_comments=False, inspection_expansio
     word = ""
     globs = []
     active = False
+    assignment_literal = False
     fd_literal = True  # only adjacent, wholly unquoted ASCII digits are IO_NUMBER
     quote = ""
+    def emit_word():
+        if quoted_words is not None and not fd_literal:
+            quoted_words.add(len(tokens))
+        if assignment_words is not None and assignment_literal:
+            assignment_words.add(len(tokens))
+        tokens.append((word, False, tuple(globs)))
+
     i = 0
     while i < len(command):
         c = command[i]
@@ -72,6 +80,10 @@ def shell_tokens(command: str, *, inspection_comments=False, inspection_expansio
             quote = c
             active = True
             fd_literal = False
+        elif (inspection_expansions and command.startswith('{}', i) and not active
+              and (i + 2 == len(command) or command[i + 2].isspace() or command[i + 2] in ';&|<>')):
+            word, active = '{}', True  # literal find placeholder, not a shell group
+            i += 1
         elif c in "(){}":
             if not inspection_expansions:
                 raise UnknownShape("shell group requires mutation handling")
@@ -80,9 +92,9 @@ def shell_tokens(command: str, *, inspection_comments=False, inspection_expansio
                 active = True
             elif c in '()' or not active:
                 if active:
-                    tokens.append((word, False, tuple(globs)))
+                    emit_word()
                 tokens.append((';', True, ()))
-                word, active, globs, fd_literal = '', False, [], True
+                word, active, globs, fd_literal, assignment_literal = '', False, [], True, False
             else:
                 word += '__ccp_publication_dynamic__'
                 active = True
@@ -96,8 +108,8 @@ def shell_tokens(command: str, *, inspection_comments=False, inspection_expansio
                 if c in "<>" and fd_literal and re.fullmatch(r"[0-9]+", word):
                     fd = word
                 else:
-                    tokens.append((word, False, tuple(globs)))
-                word, active, globs, fd_literal = "", False, [], True
+                    emit_word()
+                word, active, globs, fd_literal, assignment_literal = "", False, [], True, False
             if c == "\n":
                 tokens.append((";", True, ()))
             elif not c.isspace():
@@ -129,13 +141,15 @@ def shell_tokens(command: str, *, inspection_comments=False, inspection_expansio
                 break
             raise UnknownShape("shell comment requires mutation handling")
         else:
+            if c == '=' and fd_literal and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', word):
+                assignment_literal = True  # value quoting does not quote NAME=
             word += c
             active = True
         i += 1
     if quote:
         raise UnknownShape("unclosed quote")
     if active:
-        tokens.append((word, False, tuple(globs)))
+        emit_word()
     return tokens
 
 
@@ -1023,12 +1037,19 @@ def _command_string(text: str) -> list[str]:
         return text.split()
 
 
-def _wrapped_command(args: list[str]):
+def _wrapped_command(args: list[str], *, preserve_shell=False):
     """Argv that a supported command wrapper runs: None when args[0] is not a
     wrapper, [] when the wrapper runs no command."""
     name = os.path.basename(args[0])
     if name not in _WRAPPER_VALUES:
         return None
+    def command_string(text):
+        # env -S splits argv; unlike flock/script/watch it does not run a shell.
+        if preserve_shell and name in {'flock', 'script', 'watch'}:
+            return ['sh', '-c', text]
+        split = _command_string(text)
+        return ['env'] + split if preserve_shell and name == 'env' else split
+
     values, strings = _WRAPPER_VALUES[name], _WRAPPER_STRINGS.get(name, set())
     stops, exec_mode, index = _WRAPPER_NO_COMMAND.get(name, set()), False, 1
     while index < len(args):
@@ -1048,7 +1069,7 @@ def _wrapped_command(args: list[str]):
                 return []
             if option in strings:
                 text = attached if equal else (args[index] if index < len(args) else "")
-                return _command_string(text) + (args[index + (0 if equal else 1):] if name == "env" else [])
+                return command_string(text) + (args[index + (0 if equal else 1):] if name == "env" else [])
             exec_mode = exec_mode or option == "--exec"
             if option in values and not equal:
                 index += 1
@@ -1060,7 +1081,7 @@ def _wrapped_command(args: list[str]):
                 return []
             if option in strings:
                 text = rest or (args[index] if index < len(args) else "")
-                return _command_string(text) + (args[index + (0 if rest else 1):] if name == "env" else [])
+                return command_string(text) + (args[index + (0 if rest else 1):] if name == "env" else [])
             exec_mode = exec_mode or (name == "watch" and option == "-x")
             if option in values:
                 if not rest:
@@ -1070,9 +1091,9 @@ def _wrapped_command(args: list[str]):
     rest = args[index:]
     if rest and rest[0].partition("=")[0] in strings:  # flock FILE -c CMD, script FILE -c CMD
         option, equal, attached = rest[0].partition("=")
-        return _command_string(attached if equal else (rest[1] if len(rest) > 1 else ""))
+        return command_string(attached if equal else (rest[1] if len(rest) > 1 else ""))
     if name == "watch" and not exec_mode:  # watch runs its words as one sh -c string
-        return _command_string(" ".join(rest))
+        return command_string(" ".join(rest))
     return rest
 
 
@@ -1191,8 +1212,13 @@ def reader(args: list[str]) -> bool:
             return False
         return _options(rest[1:], flags={"--all", "--outdated", "--uptodate", "--editable", "--local", "--user", "--not-required", "--include-editable", "--exclude-editable", "--pre", "--files", "-f", "-v", "--verbose", "-q", "--quiet", "--disable-pip-version-check", "--no-cache-dir"}, values={"--format", "--exclude", "--path"}, maximum=0 if rest[0] == "check" else None)
     if cmd == "git":
-        while rest and rest[0] == "-C" and len(rest) >= 2:
-            rest = rest[2:]
+        while rest:
+            if rest[0] == "--no-optional-locks":
+                rest = rest[1:]  # Inert global flag, never a mutation exemption.
+            elif rest[0] == "-C" and len(rest) >= 2:
+                rest = rest[2:]
+            else:
+                break
         if not rest:
             return False
         sub, opts = rest[0], rest[1:]
@@ -1853,14 +1879,16 @@ def github_project_action(args):
         return dict(operation='item-edit', host='github.com', **fields)
     if args[2:3] != ['item-add']:
         raise UnknownShape('Unsupported GitHub project mutation; only task-owned item-add and verified Status item-edit are modeled')
-    if len(args) != 8 or not re.fullmatch(r'[1-9][0-9]*', args[3]):
-        raise UnknownShape('GitHub project item-add requires a literal project, --owner and --url only')
+    if len(args) not in {8, 10} or not re.fullmatch(r'[1-9][0-9]*', args[3]):
+        raise UnknownShape('GitHub project item-add requires a literal project, --owner, --url and optional --format json')
     fields = {}
-    for i in (4, 6):
-        if args[i] not in {'--owner', '--url'} or args[i] in fields:
+    for i in range(4, len(args), 2):
+        if args[i] not in {'--owner', '--url', '--format'} or args[i] in fields:
             raise UnknownShape('GitHub project item-add has unknown or duplicate flags')
         fields[args[i]] = args[i + 1]
-    if set(fields) != {'--owner', '--url'} or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*', fields['--owner']):
+    if ('--owner' not in fields or '--url' not in fields
+            or '--format' in fields and fields['--format'] != 'json'
+            or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*', fields['--owner'])):
         raise UnknownShape('GitHub project item-add requires an explicit owner and canonical issue URL')
     issue = re.fullmatch(r'https://github\.com/([A-Za-z0-9][A-Za-z0-9-]*)/([A-Za-z0-9_.-]+)/issues/([1-9][0-9]*)', fields['--url'])
     if not issue or issue[2] in {'.', '..'}:
@@ -2100,17 +2128,16 @@ def _gh_admin_argv(args, globs=()):
     return shape, shape == ['pr', 'merge'] and (enabled or uncertain)
 
 
-def unparseable_merge_refusal(command, _depth=0):
-    # Inspection-only tokens never authorize execution. Preserve command positions
-    # and quoted data even when the publication syntax helper is unavailable.
-    if _depth > 4:
-        return None
-    try:
-        parsed = shell_tokens(command, inspection_comments=True, inspection_expansions=True)
-    except UnknownShape:
-        return None  # Incomplete shell syntax is not an executable admin merge.
+_GH_SHELL_KEYWORDS = {'!', 'if', 'then', 'elif', 'else', 'do', 'while', 'until', 'coproc'}
+
+
+def _gh_inspection_groups(command, *, fallback=False):
+    quoted, assignments = set(), set()
+    parsed = shell_tokens(command, inspection_comments=fallback,
+                          inspection_expansions=fallback, quoted_words=quoted,
+                          assignment_words=assignments)
     groups, words, redirect = [], [], False
-    for word, operator, globs in parsed:
+    for index, (word, operator, globs) in enumerate(parsed):
         if redirect:
             redirect = False
         elif operator and re.fullmatch(r'[0-9]*(?:<<|>>|>&|<&|>\||>|<)|&>>|&>', word):
@@ -2118,27 +2145,82 @@ def unparseable_merge_refusal(command, _depth=0):
         elif operator:
             groups.append(words); words = []
         else:
-            words.append((word, globs))
+            words.append((word, globs, index in quoted, index in assignments))
     groups.append(words)
     for group in groups:
-        args = [word for word, _ in group]
-        while args and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*=.*', args[0], re.S):
-            args.pop(0)
-        supplied = False
+        # Reserved words are syntax only before a command, never argv passed by
+        # a wrapper. Quoted/escaped keywords remain ordinary program or data.
+        while group and group[0][0] in _GH_SHELL_KEYWORDS and not group[0][2]:
+            group = group[1:]
+        yield group
+
+
+def _gh_find_refusal(args, depth, inspect):
+    values = {'-name', '-iname', '-path', '-ipath', '-wholename', '-iwholename',
+              '-regex', '-iregex', '-lname', '-ilname', '-type', '-xtype', '-uid',
+              '-gid', '-user', '-group', '-size', '-perm', '-links', '-inum',
+              '-samefile', '-newer', '-anewer', '-cnewer', '-amin', '-cmin', '-mmin',
+              '-atime', '-ctime', '-mtime', '-used', '-maxdepth', '-mindepth',
+              '-context', '-fstype', '-printf', '-fprint', '-fprint0', '-fls',
+              '-regextype', '-D', '-O', '-f'}
+    index = 1
+    while index < len(args):
+        if args[index] == '-fprintf':
+            index += 3  # output path and format are data
+            continue
+        if args[index] in values or re.fullmatch(r'-newer[acmBt][acmBt]', args[index]):
+            index += 2
+            continue
+        if args[index] not in {'-exec', '-execdir', '-ok', '-okdir'}:
+            index += 1
+            continue
+        start = index = index + 1
+        while index < len(args) and args[index] != ';' and not (args[index] == '+' and index > start and args[index - 1] == '{}'):
+            index += 1
+        action = args[start:index]
+        if action:
+            # Find executes argv. Quote every word when re-entering inspection:
+            # literal 'if' and shell punctuation are not shell syntax here.
+            command = ' '.join("'" + word.replace("'", "'\"'\"'") + "'" for word in action)
+            reason = inspect(command, _depth=depth + 1, _supplied=True)
+            if reason:
+                return reason
+        index += 1
+    return None
+
+
+def unparseable_merge_refusal(command, _depth=0, _supplied=False):
+    # Inspection-only tokens never authorize execution. Preserve command positions
+    # and quoted data even when the publication syntax helper is unavailable.
+    if _depth > 4:
+        return None
+    try:
+        groups = list(_gh_inspection_groups(command, fallback=True))
+    except UnknownShape:
+        return None  # Incomplete shell syntax is not executable.
+    for group in groups:
+        while group and group[0][3]:
+            group = group[1:]
+        args = [word for word, _globs, _quoted, _assignment in group]
+        supplied = _supplied
         for _ in range(5):
             if not args:
                 break
             supplied = supplied or os.path.basename(args[0]) in {'xargs', 'parallel'}
-            wrapped = _wrapped_command(args)
+            wrapped = _wrapped_command(args, preserve_shell=True)
             if wrapped is None:
                 break
             args = wrapped
         if not args:
             continue
         name = os.path.basename(args[0]).casefold()
-        if name == 'gh':
-            original = [word for word, _ in group]
-            flags = ([positions for _, positions in group][-len(args):]
+        if name == 'find':
+            reason = _gh_find_refusal(args, _depth, unparseable_merge_refusal)
+            if reason:
+                return reason
+        elif name == 'gh':
+            original = [word for word, _globs, _quoted, _assignment in group]
+            flags = ([positions for _word, positions, _quoted, _assignment in group][-len(args):]
                      if original[-len(args):] == args else [()] * len(args))
             shape, admin = _gh_admin_argv(args, flags)
             if admin or shape == ['pr', 'merge'] and (supplied or any('__ccp_publication_dynamic__' in word for word in args)):
@@ -2154,7 +2236,7 @@ def unparseable_merge_refusal(command, _depth=0):
     return None
 
 
-def gh_merge_refusal(command, _depth=0):
+def gh_merge_refusal(command, _depth=0, _supplied=False):
     """Refuse actual GH admin merge argv through fixed wrappers and literal shells.
 
     Argument suppliers are unresolved only when their GH publication domain is
@@ -2162,7 +2244,7 @@ def gh_merge_refusal(command, _depth=0):
     treated as execution of their data. Existing task and server policy remain.
     """
     if _depth > 4:
-        return unparseable_merge_refusal(command)
+        return unparseable_merge_refusal(command, _supplied=_supplied)
     try:
         syntax = _merge_command_syntax()
         command = syntax._publication_continuations(command)
@@ -2170,37 +2252,26 @@ def gh_merge_refusal(command, _depth=0):
     except (OSError, ImportError, SyntaxError):
         substitutions = []  # The existing literal lexer still proves direct argv.
     except UnknownShape:
-        return unparseable_merge_refusal(command)
+        return unparseable_merge_refusal(command, _supplied=_supplied)
     for _marker, program in substitutions:
         reason = gh_merge_refusal(program, _depth + 1)
         if reason:
             return reason
     try:
-        parsed = shell_tokens(command)
+        groups = list(_gh_inspection_groups(command, fallback=False))
     except UnknownShape:
-        return unparseable_merge_refusal(command)
-    groups, words, redirect = [], [], False
-    for word, operator, globs in parsed:
-        if redirect:
-            redirect = False
-        elif operator and re.fullmatch(r'[0-9]*(?:<<|>>|>&|<&|>\||>|<)|&>>|&>', word):
-            redirect = True
-        elif operator:
-            groups.append(words); words = []
-        else:
-            words.append((word, globs))
-    groups.append(words)
+        return unparseable_merge_refusal(command, _supplied=_supplied)
     for group in groups:
-        args = [word for word, _ in group]
-        while args and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*=.*', args[0], re.S):
-            args.pop(0)
-        supplied = False
+        while group and group[0][3]:
+            group = group[1:]
+        args = [word for word, _globs, _quoted, _assignment in group]
+        supplied = _supplied
         for _ in range(5):
             if not args:
                 break
             name = os.path.basename(args[0]).casefold()
             supplied = supplied or name in {'xargs', 'parallel'}
-            wrapped = _wrapped_command(args)
+            wrapped = _wrapped_command(args, preserve_shell=True)
             if wrapped is None:
                 break
             args = wrapped
@@ -2208,13 +2279,12 @@ def gh_merge_refusal(command, _depth=0):
             continue
         name = os.path.basename(args[0]).casefold()
         if name == 'find':
-            position = next((i for i, word in enumerate(args) if word in {'-exec', '-execdir', '-ok', '-okdir'}), None)
-            if position is not None and position + 1 < len(args):
-                args, supplied = args[position + 1:], True
-                name = os.path.basename(args[0]).casefold()
-        if name == 'gh':
-            original = [word for word, _positions in group]
-            flags = ([positions for _word, positions in group][-len(args):]
+            reason = _gh_find_refusal(args, _depth, gh_merge_refusal)
+            if reason:
+                return reason
+        elif name == 'gh':
+            original = [word for word, _positions, _quoted, _assignment in group]
+            flags = ([positions for _word, positions, _quoted, _assignment in group][-len(args):]
                      if original[-len(args):] == args else [()] * len(args))
             shape, admin = _gh_admin_argv(args, flags)
             if admin:

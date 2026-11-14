@@ -16,7 +16,6 @@ import shlex
 import stat
 import subprocess
 import sys
-import tempfile
 import time
 
 sys.dont_write_bytecode = True
@@ -127,6 +126,84 @@ def regular(path):
     if not stat.S_ISREG(info.st_mode):
         raise ValueError('stable profile input must be a regular file')
     return path.read_bytes()
+
+
+@contextmanager
+def _physical_directory(home, relative, *, create=False):
+    """Pin every directory component; never resolve a publication through links."""
+    if not home.is_absolute() or relative.is_absolute() or '..' in (*home.parts, *relative.parts):
+        raise ValueError('stable publication directory must be physical and home-relative')
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    descriptors, bindings = [], []
+    try:
+        current = os.open(home.anchor, flags)
+        descriptors.append(current)
+        components = [(part, False) for part in home.parts[1:]]
+        components.extend((part, create) for part in relative.parts)
+        for name, make in components:
+            if make:
+                try:
+                    os.mkdir(name, mode=0o700, dir_fd=current)
+                except FileExistsError:
+                    pass  # The no-follow directory open below validates an existing entry.
+            child = os.open(name, flags, dir_fd=current)
+            descriptors.append(child)
+            bindings.append((current, name, child))
+            current = child
+        def verify():
+            for parent, name, child in bindings:
+                named = os.stat(name, dir_fd=parent, follow_symlinks=False)
+                pinned = os.fstat(child)
+                if not stat.S_ISDIR(named.st_mode) or (named.st_dev, named.st_ino) != (pinned.st_dev, pinned.st_ino):
+                    raise ValueError('stable publication directory changed during activation')
+        verify()
+        yield current, verify
+    finally:
+        for descriptor in reversed(descriptors):
+            os.close(descriptor)
+
+
+def _bytes_at(directory, name, *, absent=False):
+    descriptor, verify = directory
+    verify()
+    try:
+        fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=descriptor)
+    except FileNotFoundError:
+        verify()
+        if absent:
+            return None
+        raise
+    with os.fdopen(fd, 'rb') as stream:
+        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+            raise ValueError('stable publication input must be a regular file')
+        data = stream.read()
+    verify()
+    return data
+
+
+def _replace_at(directory, name, contents, mode, previous, *, prefix='.project-bootstrap-'):
+    descriptor, verify = directory
+    verify()
+    if _bytes_at(directory, name, absent=True) != previous:
+        raise ValueError('stable publication target changed during activation')
+    temporary = prefix + os.urandom(16).hex()
+    fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, mode, dir_fd=descriptor)
+    try:
+        with os.fdopen(fd, 'wb') as stream:
+            verify()
+            stream.write(contents)
+            stream.flush()
+            os.fchmod(stream.fileno(), mode)
+            os.fsync(stream.fileno())
+        if _bytes_at(directory, name, absent=True) != previous:
+            raise ValueError('stable publication target changed during activation')
+        os.replace(temporary, name, src_dir_fd=descriptor, dst_dir_fd=descriptor)
+        verify()
+    finally:
+        try:
+            os.unlink(temporary, dir_fd=descriptor)
+        except FileNotFoundError:
+            pass  # A successful descriptor-relative rename consumed this temporary entry.
 
 
 def load(path, name):
@@ -263,33 +340,20 @@ def publish_anchor(home, bound, workspace=None):
     common = common_directory(Path(bound['git_repo']))
     workspace = Path(bound['git_repo']) if workspace is None else workspace
     target = anchor_path(home, common, None if workspace == Path(bound['git_repo']) else workspace)
-    if target.parent.is_symlink():
-        raise ValueError('CLI profile directory must not be a symlink')
-    target.parent.mkdir(mode=0o700, exist_ok=True)
     state = state_path(home, common)
-    for directory in (state.parent, state):
-        if directory.is_symlink():
-            raise ValueError('CLI audit state must not be a symlink')
-        directory.mkdir(mode=0o700, exist_ok=True)
     scope = {'mode': 'native-cli'} if workspace == Path(bound['git_repo']) else {'mode': 'headless-craft', 'workspace': str(workspace)}
     value = {'schema_version': 1, 'purpose': 'core-authoring-profile/v1',
              'git_common_dir': str(common), 'binding': bound, 'scope': scope}
-    if target.exists():
-        old = json.loads(regular(target))
-        if old.get('purpose') != value['purpose'] or old.get('git_common_dir') != str(common):
-            raise ValueError('CLI profile anchor is operator-owned or bound elsewhere')
-    fd, temporary = tempfile.mkstemp(prefix='.cli-profile-', dir=target.parent)
-    try:
-        with os.fdopen(fd, 'w') as stream:
-            json.dump(value, stream, sort_keys=True)
-            stream.write('\n')
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.chmod(temporary, 0o600)
-        os.replace(temporary, target)
-    finally:
-        if os.path.exists(temporary):
-            os.unlink(temporary)
+    with _physical_directory(home, target.parent.relative_to(home), create=True) as directory:
+        with _physical_directory(home, state.relative_to(home), create=True):
+            pass
+        previous = _bytes_at(directory, target.name, absent=True)
+        if previous is not None:
+            old = json.loads(previous)
+            if old.get('purpose') != value['purpose'] or old.get('git_common_dir') != str(common):
+                raise ValueError('CLI profile anchor is operator-owned or bound elsewhere')
+        _replace_at(directory, target.name, (json.dumps(value, sort_keys=True) + '\n').encode(),
+                    0o600, previous, prefix='.cli-profile-')
     return target
 
 
@@ -459,34 +523,34 @@ def registration_bytes(data):
 
 @contextmanager
 def publication_lock(home, *, shared=False):
-    path = home / PUBLISH_LOCK
-    if any(parent.is_symlink() for parent in (path, *path.parents)):
-        raise ValueError('shared bootstrap lock path must be physical')
-    flags = os.O_RDONLY if shared else os.O_RDWR | os.O_CREAT
-    fd = os.open(path, flags | getattr(os, 'O_NOFOLLOW', 0), 0o600)
-    try:
-        if not stat.S_ISREG(os.fstat(fd).st_mode):
-            raise ValueError('shared bootstrap lock must be a regular file')
-        deadline = time.monotonic() + 10
-        while True:
-            try:
-                fcntl.flock(fd, (fcntl.LOCK_SH if shared else fcntl.LOCK_EX) | fcntl.LOCK_NB)
-                break
-            except BlockingIOError:
-                if time.monotonic() >= deadline:
-                    raise ValueError('shared bootstrap publication is busy; retry after the active publisher')
-                time.sleep(0.05)
-        yield
-    finally:
-        os.close(fd)
+    with _physical_directory(home, PUBLISH_LOCK.parent) as directory:
+        descriptor, verify = directory
+        flags = os.O_RDONLY if shared else os.O_RDWR | os.O_CREAT
+        fd = os.open(PUBLISH_LOCK.name, flags | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600, dir_fd=descriptor)
+        try:
+            if not stat.S_ISREG(os.fstat(fd).st_mode):
+                raise ValueError('shared bootstrap lock must be a regular file')
+            deadline = time.monotonic() + 10
+            while True:
+                try:
+                    fcntl.flock(fd, (fcntl.LOCK_SH if shared else fcntl.LOCK_EX) | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    if time.monotonic() >= deadline:
+                        raise ValueError('shared bootstrap publication is busy; retry after the active publisher')
+                    time.sleep(0.05)
+            verify()
+            yield directory
+        finally:
+            os.close(fd)
 
 
 def verify_published(home):
-    with publication_lock(home, shared=True):
-        expected = json.loads(regular(home / RECEIPT))
+    with publication_lock(home, shared=True) as directory:
+        expected = json.loads(_bytes_at(directory, RECEIPT.name))
         if not isinstance(expected, dict) or expected.get('schema_version') != 1 or expected.get('purpose') != BOOTSTRAP_ABI:
             raise ValueError('installed shared bootstrap registration is invalid')
-        if hashlib.sha256(regular(home / RELATIVE)).hexdigest() != expected.get('sha256'):
+        if hashlib.sha256(_bytes_at(directory, RELATIVE.name)).hexdigest() != expected.get('sha256'):
             raise ValueError('installed shared bootstrap bytes changed')
         return expected
 
@@ -496,17 +560,13 @@ def publish(home, data, *, before_publish=None, expected=None):
     target = home / RELATIVE
     if not home.is_absolute() or home.resolve(strict=True) != home:
         raise ValueError('bootstrap home must be a physical absolute directory')
-    parent = target.parent
-    for directory in (home / '.claude', parent):
-        if directory.is_symlink():
-            raise ValueError('bootstrap directory must not be a symlink')
-        directory.mkdir(exist_ok=True, mode=0o700)
-    with publication_lock(home):
-        old = regular(target) if target.exists() else None
+    with _physical_directory(home, RELATIVE.parent, create=True):
+        pass
+    with publication_lock(home) as directory:
+        old = _bytes_at(directory, RELATIVE.name, absent=True)
         if old is not None and b'# Managed bootstrap: siege-project-settings/v1\n' not in old.splitlines(keepends=True)[:3]:
             raise ValueError('project bootstrap destination is operator-owned')
-        receipt = home / RECEIPT
-        old_receipt = regular(receipt) if receipt.exists() else None
+        old_receipt = _bytes_at(directory, RECEIPT.name, absent=True)
         if old_receipt is not None:
             value = json.loads(old_receipt)
             if not isinstance(value, dict) or value.get('purpose') != BOOTSTRAP_ABI:
@@ -514,22 +574,17 @@ def publish(home, data, *, before_publish=None, expected=None):
         desired_receipt = registration_bytes(data)
         if before_publish is not None:
             before_publish()
+        if (_bytes_at(directory, RELATIVE.name, absent=True),
+                _bytes_at(directory, RECEIPT.name, absent=True)) != (old, old_receipt):
+            raise ValueError('shared bootstrap changed during activation; retry with a fresh snapshot')
         if (old, old_receipt) == (data, desired_receipt):
             return target
         if expected is not None and (old, old_receipt) != expected:
             raise ValueError('shared bootstrap changed during activation; retry with a fresh snapshot')
-        for destination, contents, mode in ((target, data, 0o700), (receipt, desired_receipt, 0o600)):
-            fd, temporary = tempfile.mkstemp(prefix='.project-bootstrap-', dir=parent)
-            try:
-                with os.fdopen(fd, 'wb') as stream:
-                    stream.write(contents)
-                    stream.flush()
-                    os.fsync(stream.fileno())
-                os.chmod(temporary, mode)
-                os.replace(temporary, destination)
-            finally:
-                if os.path.exists(temporary):
-                    os.unlink(temporary)
+        _replace_at(directory, RELATIVE.name, data, 0o700, old)
+        _replace_at(directory, RECEIPT.name, desired_receipt, 0o600, old_receipt)
+        if (_bytes_at(directory, RELATIVE.name), _bytes_at(directory, RECEIPT.name)) != (data, desired_receipt):
+            raise ValueError('shared bootstrap changed during publication')
     return target
 
 
