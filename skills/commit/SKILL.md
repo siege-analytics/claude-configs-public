@@ -30,12 +30,12 @@ allowed-tools: Read Grep Glob Bash
    3. Resolve every Blocker; resolve Majors or document why they're being deferred.
    4. If the user overrides in writing, mark the commit with `[review-skip]`. This does not exempt fingerprint scanning or its task-scoped acceptance contract.
 4. **Run affected tests** (see Affected-tests gate below)
-   1. For each `.py` source file in the staged diff under `<package>/`, run `pytest -x tests/test_<X>.py tests/test_<X>_*.py tests/<package>/test_<X>.py` if any exist.
-   2. Per-repo override: if `.claude/affected-tests.toml` exists, use its source-glob to test-glob mapping instead of the default heuristic.
-   3. 60-second timeout per affected-test run. Tests slower than that get marked `slow` and run at PR-open time only.
-   4. Non-zero exit blocks the commit. No silent skip: if the heuristic finds no test files for a touched source file, that itself is reported and the agent decides whether to write a test or proceed with `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]`.
+   1. Use the target layer's declared framework and maintained test commands. Select tests for the changed behavior and affected callers. Do not substitute pytest for a maintained unittest suite or impose Python discovery patterns on a Bun project.
+   2. If `.claude/affected-tests.toml` exists, use its source-glob to test-glob mapping. Otherwise inspect the maintained test layout before using the fallback patterns below; a pattern miss does not prove tests are absent.
+   3. Use bounded execution and the project's actual timeout policy. A maintained test taking more than a minute is not, by itself, a reason to skip it, relabel it or request permission. Preserve real infrastructure limits and report incomplete execution honestly.
+   4. Diagnose the failing layer. Repair a real test or code failure before claiming that behavior verified; continue independent eligible work. When only a verification wrapper fails, preserve its failed receipt and valid individual test results, then use the scoped recovery described in [rule:testing-frameworks]. Missing tests require an adequate test or a truthful documented limitation, not a silent pass.
    5. Override syntax: `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per `[rule:writing-code]` writing-code:5 escape hatch. Track override frequency; using it more than once per session is a smell.
-   6. Run the affected test command through `hooks/lib/test-evidence.py record --repo <target-repo> --think-gate <own-think-gate> --output <own-task-dir>/test-gate.json --source <exact-relative-source> --framework <declared-framework> -- <test-command>`. Repeat `--source` for every touched source. Use resolved literal paths to the exact installed producer and the selected own-task gate/adjacent receipt. The bound-session execution lane requires that task to be implementing with truthful target scope; publication review is not a prerequisite to running its tests; running tests is computation, not a read or own-scratch exemption. The producer records a version 2 content/revision receipt only after the command passes without source changes; failed/interrupted reruns invalidate prior success. Tests may run before the commit when it preserves exactly that tested content. Do not hand-upgrade legacy evidence; rerun tests. See `[skill:testing-frameworks]` for the schema and report-only compatibility check.
+   6. Run the affected test command through `hooks/lib/test-evidence.py record --repo <target-repo> --think-gate <own-think-gate> --output <own-task-dir>/test-gate.json --source <exact-relative-source> --framework <declared-framework> -- <test-command>`. Repeat `--source` for every touched source. Use resolved literal paths to the exact installed producer and the selected own-task gate/adjacent receipt. The bound-session execution lane requires that task to be implementing with truthful target scope; publication review is not a prerequisite to running its tests; running tests is computation, not a read or own-scratch exemption. The producer records a version 2 content/revision receipt only after the command passes without source changes. Failed/interrupted receipts cannot authorize publication; do not edit them into success. Tests may run before the commit when it preserves exactly that tested content. Do not hand-upgrade legacy evidence; produce genuine current evidence. See `[skill:testing-frameworks]` for the schema and report-only compatibility check.
    7. For a genuinely unbound native Git invocation, use that same producer with `--output /path/to/repo/test-gate.json` and omit `--think-gate`. This existing root-receipt route applies only when no supported host/session binding exists; an invalid binding cannot fall back to it. Keep the actual environment unchanged: do not invent a Craft identity or clear one to select this route. The receipt proves tested source content for native Git; it does not authorize a Craft action or replace a bound task's evidence.
 5. **Check for a ticket reference** (see Task references below)
    1. Reference the existing task or user request; create a ticket only when useful or required by the project policy
@@ -111,15 +111,15 @@ Mechanical enforcement of `[rule:writing-code]` writing-code:5 (no hypothetical 
 
 ## What runs
 
-For each `.py` source file in `git diff --cached --name-only`, identify candidate test files using the default heuristic. Given a touched file at `<package>/X.py`, look for:
+Use the project's declared framework, maintained commands and affected caller coverage. For a Python project without an explicit mapping, these are candidate discovery patterns for a touched `<package>/X.py`; they do not select a runner or exclude an existing different layout:
 
 - `tests/test_X.py`
 - `tests/test_X_*.py`
 - `tests/<package>/test_X.py`
 
-Run `pytest -x` against any that exist. Stop at the first failure (`-x`).
+Run the discovered tests with the maintained project runner. For a pytest project, `pytest -x` is one way to stop after the first failing control; it is not a command requirement for other frameworks.
 
-Timeout: 60 seconds per affected-test run. Tests slower than that should be marked `slow` and run at PR-open time instead of commit-time.
+Choose bounded execution suitable for that suite and honor explicit project limits. Keep slow checks visible at the required publication stage; do not silently skip required coverage because an arbitrary one-minute limit elapsed.
 
 ## Per-repo override
 
@@ -135,7 +135,7 @@ The `{stem}` template variable substitutes the basename without extension. Use t
 
 ## What happens when no test file matches
 
-If a touched source file has no candidate tests under the heuristic (or the configured mapping), the agent must decide:
+If the maintained layout and configured mapping contain no adequate tests, decide:
 
 - Write a test in the same commit (preferred; `[rule:writing-tests]` writing-tests:1 requires it for behaviour changes anyway).
 - Override with `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]` in the commit body. Legitimate cases: pure refactor with no behaviour change, deletion of dead code, docstring-only edits to a public symbol that should also be running R-17.
@@ -152,7 +152,7 @@ Using `[run-skip]` more than once per session is a smell. The threshold is wrong
 
 ## Why this exists
 
-`[rule:writing-code]` writing-code:5 requires that code depending on a library, service, or external API exercises the real dependency before claiming the code works. The honor-system version of that rule is "I checked." The mechanical version is "the tests ran and passed in the same commit-attempt." This gate is the mechanical version.
+`[rule:writing-code]` writing-code:5 requires exercising the relevant dependency before claiming that code works. The receipt binds actual executed checks to source content and revision; review still assesses adequacy. It does not require repeating valid checks merely to create a new commit attempt.
 
 # Task references
 
