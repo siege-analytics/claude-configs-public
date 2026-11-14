@@ -2167,6 +2167,25 @@ def _env_word_matches(word, literal):
     return re.fullmatch('.*'.join(re.escape(part) for part in word.split(_ENV_DYNAMIC_WORD)), literal) is not None
 
 
+def _env_short_value_possible(word, flags):
+    booleans = {flag[1] for flag, kind in flags.items() if len(flag) == 2 and kind == 'bool'}
+    values = {flag[1] for flag, kind in flags.items() if len(flag) == 2 and kind == 'text'}
+    states = {0}  # start, boolean-prefix, final value-taking flag
+    for index, part in enumerate(word.split(_ENV_DYNAMIC_WORD)):
+        if index:
+            states |= ({1, 2} if 0 in states else {2} if 1 in states else set())
+        for char in part:
+            following = set()
+            if 0 in states and char == '-':
+                following.add(1)
+            if 1 in states and char in booleans:
+                following.add(1)
+            if 1 in states and char in values:
+                following.add(2)
+            states = following
+    return 2 in states
+
+
 def _gh_env_admin_argv(args, globs):
     # GNU words are single argv entries; unquoted variable-only entries may
     # disappear even while a flag is waiting for its value. Keep only the two
@@ -2188,13 +2207,12 @@ def _gh_env_admin_argv(args, globs):
                 following.add((positional, None, enabled, uncertain or value_glob, help_requested, ended))
                 continue
             dynamic = _ENV_DYNAMIC_WORD in word
+            if dynamic and not ended and _env_short_value_possible(word, value_flags):
+                following.add((positional, 'text', enabled, uncertain, help_requested, False))
             if not dynamic and (ended or (not word.startswith('-') and '__ccp_publication_dynamic__' not in word)):
                 following.add(((positional + (word,))[:2], None, enabled, uncertain, help_requested, ended))
             elif dynamic and not ended and _gh_option_effect(value_flags, word) == (False, None):
                 following.add((positional, None, enabled, uncertain, help_requested, False))
-                _keep, empty_pending = _gh_option_effect(value_flags, word.replace(_ENV_DYNAMIC_WORD, ''))
-                if empty_pending == 'text':
-                    following.add((positional, 'text', enabled, uncertain, help_requested, False))
             elif dynamic and not ended and word.startswith(('--help=', '--admin=')):
                 option = word.partition('=')[0]
                 for wanted, values in ((True, ('1', 't', 'T', 'true', 'TRUE', 'True')),
@@ -2208,6 +2226,8 @@ def _gh_env_admin_argv(args, globs):
                         following.add(((positional + (value,))[:2], None, enabled, uncertain, help_requested, ended))
                 following.add(((positional + ('',))[:2], None, enabled, uncertain, help_requested, ended))
                 if not ended:
+                    if _env_word_matches(word, '--'):
+                        following.add((positional, None, enabled, uncertain, help_requested, True))
                     # A GNU expansion is one argument. Keep its possible flag
                     # roles distinct so a later literal boolean can override it.
                     following.add((positional, None, enabled, uncertain, help_requested, False))
