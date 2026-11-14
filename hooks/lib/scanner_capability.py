@@ -11,7 +11,7 @@ import subprocess
 # scanner/adapter changes in the same reviewed source change, never at runtime.
 CLOSURE = {
     'skills/detect-ai-fingerprints/scan.sh':'a69df093ed7a84a0a0864250927857d8294df21cffc6e50c9d8a1de663616fb8',
-    'skills/detect-ai-fingerprints/scan_snapshot.py':'5b134743c253822ccd12c4b6f28ceab1024a5c3333742c487b81fd1404699868',
+    'skills/detect-ai-fingerprints/scan_snapshot.py':'7003c6ca9c30cd394b7dfe1121a9b6707dedc6dd512f9ea4a96bdb1a25a8740f',
     'skills/detect-ai-fingerprints/scan_ast.py':'27e0960e2ee767ff8573d4c02ed0d72e7f92fc37382a63b325fbe11971ae7b44',
 }
 
@@ -76,6 +76,24 @@ def parse_arguments(args):
     return {'log_dir':fields.get('--log-dir'),'index':fields.get('--index-file'),'repo':fields['--repo'],'gate':fields['--think-gate'],'tmp':fields['--tmp-root'],
             'mode':mode,'scan_args':scan_args,'message':scan_args[1] if mode.endswith('message-file') else None}
 
+
+def execution_environment(*, index=None, hooks=os.devnull):
+    """One trusted-tool context for Git preflight and scanner execution.
+
+    Ambient Git configuration is not target or execution authority. Preserve
+    the producer's existing operator authentication sources, while supplying
+    only our fixed Git safety settings and the selected index.
+    """
+    permitted = {'PATH','HOME','LANG','LC_ALL','LC_CTYPE','GH_TOKEN','GITHUB_TOKEN','GH_HOST','GH_CONFIG_DIR','XDG_CONFIG_HOME','SSH_AUTH_SOCK'}
+    env = {key:value for key,value in os.environ.items() if key in permitted}
+    env.update(PYTHONDONTWRITEBYTECODE='1',PYTHONSAFEPATH='1',GIT_TERMINAL_PROMPT='0',
+               GIT_CONFIG_COUNT='2',GIT_CONFIG_KEY_0='core.fsmonitor',GIT_CONFIG_VALUE_0='false',
+               GIT_CONFIG_KEY_1='core.hooksPath',GIT_CONFIG_VALUE_1=str(hooks))
+    if index:
+        env['GIT_INDEX_FILE'] = index
+    return env
+
+
 def validate_files(plan, producer):
     root = Path(producer).parents[2]
     for relative,digest in CLOSURE.items():
@@ -84,7 +102,7 @@ def validate_files(plan, producer):
     if producer != root/'hooks/lib/scanner-exec.py':
         raise ScannerError('scanner producer must be the exact installed entry')
     source_mode = plan['mode'] in {'staged','working','pr'}
-    if source_mode and any(os.environ.get(key) for key in ('GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE','GIT_COMMON_DIR','GIT_OBJECT_DIRECTORY','GIT_ALTERNATE_OBJECT_DIRECTORIES','GIT_CONFIG','GIT_CONFIG_COUNT','GIT_CONFIG_PARAMETERS')):
+    if source_mode and any(os.environ.get(key) for key in ('GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE','GIT_COMMON_DIR','GIT_OBJECT_DIRECTORY','GIT_ALTERNATE_OBJECT_DIRECTORIES')):
         raise ScannerError('inherited Git targeting/configuration is ambiguous; use an explicit scanner target/index')
     if plan['mode'] == 'pr' and os.environ.get('GH_HOST','github.com') != 'github.com':
         raise ScannerError('scanner PR host must be github.com')
@@ -101,18 +119,19 @@ def validate_files(plan, producer):
         if logs.stat().st_uid != os.geteuid() or stat.S_IMODE(logs.stat().st_mode) != 0o700:
             raise ScannerError('scanner log directory must be own private0700 directory')
     if source_mode:
-        observed = subprocess.run(['git','rev-parse','--show-toplevel'],cwd=repo,capture_output=True,text=True,timeout=5,check=True)
+        git_env = execution_environment()
+        observed = subprocess.run(['git','rev-parse','--show-toplevel'],cwd=repo,env=git_env,capture_output=True,text=True,timeout=5,check=True)
         if Path(observed.stdout.strip()).resolve() != repo:
             raise ScannerError('scanner repo must be the exact Git toplevel')
     if plan['mode'] == 'pr':
         config = subprocess.run(['git','config','--show-scope','--name-only','--get-regexp',
             r'^(core\.(sshcommand|gitproxy|alternaterefscommand|askpass)|remote\..*\.(uploadpack|proxy|vcs)|credential\.|url\.|http\.|protocol\.|ssh\.)'],
-            cwd=repo,capture_output=True,text=True,timeout=5)
+            cwd=repo,env=git_env,capture_output=True,text=True,timeout=5)
         if config.returncode not in (0,1):
             raise ScannerError('scanner cannot establish Git transport configuration')
         if any(line.split(None,1)[0] in {'local','worktree'} for line in config.stdout.splitlines()):
             raise ScannerError('scanner PR rejects repository-local transport/helper overrides')
-        remote = subprocess.run(['git','remote','get-url','origin'],cwd=repo,capture_output=True,text=True,timeout=5,check=True).stdout.strip()
+        remote = subprocess.run(['git','remote','get-url','origin'],cwd=repo,env=git_env,capture_output=True,text=True,timeout=5,check=True).stdout.strip()
         if re.fullmatch(r'https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?',remote) or re.fullmatch(r'git@github\.com:[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?',remote):
             plan['origin'] = remote
         elif os.path.isabs(remote):

@@ -9785,10 +9785,10 @@
     },
     {
       "canonical_source": "skills/detect-ai-fingerprints/SKILL.md",
-      "characters": 26484,
-      "content_sha256": "82bc2888b3b8ffdac12ef447f9ac0c8477cf1057d36addbb469adb25fba92c8a",
+      "characters": 26708,
+      "content_sha256": "23ecea9a989a1f1e2eb4b8deebf719287dd4d12ced143778820bed87da9fc85a",
       "description": "Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4, writing-code:2/4/7/8/9/15, writing-tests:3/5, writing-claims:2, writing-releases:3, plus rule-citation Rule-executed evidence, in staged diffs, working-tree diffs, GitHub PR diffs, or commit/PR message bodies. Reports file:line violations and 0/1/2 exit codes. Remaining rules require [skill:code-review] judgment and are not in scope.",
-      "estimated_tokens": 6621,
+      "estimated_tokens": 6677,
       "frontmatter_name": "detect-ai-fingerprints",
       "generated_outputs": [
         "dist/nested/skills/detect-ai-fingerprints",
@@ -13048,9 +13048,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2483393,
+    "characters": 2483617,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 620925,
+    "estimated_tokens": 620981,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13071,7 +13071,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1086999
+      "unclassified": 1087223
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13083,7 +13083,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 271791
+      "unclassified": 271847
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

@@ -99,6 +99,10 @@ def head_or_empty(root):
 
 def snapshot(mode, destination, *, pr=None, cwd=None):
     cwd = Path.cwd() if cwd is None else Path(cwd)
+    version = command(['git', '--version'], cwd=cwd).decode().strip()
+    parsed = re.match(r'git version ([0-9]+)\.([0-9]+)(?:[.\s]|$)', version)
+    require(parsed is not None and tuple(map(int, parsed.groups())) >= (2, 45),
+            'source scans require Git 2.45 or newer for --no-lazy-fetch; use a supported Git executable on PATH')
     root = Path(git(cwd, 'rev-parse', '--show-toplevel').decode().strip())
     require(not destination.exists(), 'snapshot destination already exists')
     identity = {'mode': mode}

@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **199**
-- Characters: **2,483,393**
-- Estimated tokens: **620,925** (character/4 estimate)
+- Characters: **2,483,617**
+- Estimated tokens: **620,981** (character/4 estimate)
 - Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 111 | 1,086,999 | 271,791 |
+| unclassified | 111 | 1,087,223 | 271,847 |
 
 ## Largest source items
 
@@ -52,8 +52,8 @@ This report describes committed source evidence. Missing references or tests do 
 | `drive-while-away` | skill | 28,087 | 7,022 | `skills/drive-while-away/SKILL.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
 | `writing-tests` | rule | 27,373 | 6,844 | `skills/_writing-tests-rules.md` |
+| `detect-ai-fingerprints` | skill | 26,708 | 6,677 | `skills/detect-ai-fingerprints/SKILL.md` |
 | `engagement-post-mortem` | skill | 26,695 | 6,674 | `skills/engagement-post-mortem/SKILL.md` |
-| `detect-ai-fingerprints` | skill | 26,484 | 6,621 | `skills/detect-ai-fingerprints/SKILL.md` |
 | `siege-utilities--hostile-review` | project-skill | 25,909 | 6,478 | `projects/siege-utilities/skills/hostile-review/SKILL.md` |
 | `shelves--high-performance-django` | reference-shelf | 25,890 | 6,473 | `skills/shelves/django/high-performance-django/SKILL.md` |
 | `shelves--contagious` | reference-shelf | 25,741 | 6,436 | `skills/shelves/marketing/contagious/SKILL.md` |
