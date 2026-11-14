@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import shlex
 from pathlib import Path
 import shutil
 import subprocess
@@ -392,6 +393,15 @@ else: sys.exit(99)
         'while gh pr merge 5 --admin; do :; done',
         '! gh pr merge 5 --admin',
         'coproc gh pr merge 5 --admin',
+        r"env -S 'gh\_pr\_merge\_5\_--admin'",
+        "flock merge.lock -c " + shlex.quote(r"env -S 'gh\_pr\_merge\_5\_--admin'"),
+        r"env -S 'gh pr merge 5 --admin\c ignored'",
+        "env -S '" + chr(36) + "{EMPTY} gh pr merge 5 --admin'",
+        "env -S '" + chr(36) + "{PROGRAM} pr merge 5 --admin'",
+        "env -S '" + chr(36) + "{PROGRAM} -R owner/repo pr merge 5 --admin'",
+        "env -S '" + chr(36) + "{PROGRAM} --repo=owner/repo pr merge 5 --admin'",
+        "env -S '" + chr(36) + "{PROGRAM} pr -R owner/repo merge 5 --admin'",
+        "env -S '" + chr(36) + "{EMPTY} sudo gh pr merge 5 --admin'",
         r'find . -exec true \; -exec gh pr merge 5 --admin \;',
         r'find . -exec true {} + -execdir gh pr merge 5 --admin \;',
         r"find . -exec true \; -ok sh -c 'true; gh pr merge 5 --admin' \;",
@@ -405,6 +415,19 @@ else: sys.exit(99)
         "'coproc' gh pr merge 5 --admin",
         r'\coproc gh pr merge 5 --admin',
         'echo coproc gh pr merge 5 --admin',
+        r"env -S 'gh\_pr\_merge\_5\_--body\_--admin'",
+        r"env -S 'gh\_pr\_merge\_5\_--admin=false'",
+        r"env -S 'printf\_%s\_gh\_pr\_merge\_5\_--admin'",
+        "env -S 'printf %s " + chr(36) + "{EMPTY} gh pr merge 5 --admin'",
+        "env -S 'gh pr merge 5 --body " + chr(36) + "{WORDS}'",
+        "env -S " + shlex.quote('gh pr merge 5 --body "' + chr(36) + '{WORDS}"'),
+        "flock merge.lock -c " + shlex.quote("env -S 'gh pr merge 5 --body " + chr(36) + "{WORDS}'"),
+        "env -S '" + chr(36) + "{PREFIX}printf pr merge 5 --admin'",
+        "env -S '" + chr(36) + "{PREFIX}/printf pr merge 5 --admin'",
+        "env -S " + shlex.quote('"' + chr(36) + '{EMPTY}" gh pr merge 5 --admin'),
+        "env -S " + shlex.quote(r'"gh\_pr\_merge\_5\_--admin"'),
+        "env -S " + shlex.quote(r"'gh\_pr\_merge\_5\_--admin'"),
+        r"env -S 'gh\\_pr\_merge\_5\_--admin'",
         "'GH_REPO=o/r' gh pr merge 5 --admin",
         "'GH_REPO'=o/r gh pr merge 5 --admin",
         r'GH_REPO\=o/r gh pr merge 5 --admin',
@@ -418,6 +441,49 @@ else: sys.exit(99)
         r'find . -name -exec gh pr merge 5 --admin \;',
         r'find . -printf -exec gh pr merge 5 --admin \;',
     ]
+
+    def test_gnu_env_split_grammar_matches_temporary_stub(self):
+        env_binary = shutil.which('genv') or shutil.which('env')
+        version = subprocess.run([env_binary, '--version'], capture_output=True, text=True, timeout=5)
+        if version.returncode or 'GNU coreutils' not in version.stdout:
+            self.skipTest('Install GNU coreutils (genv) to run the primary env -S grammar differential; hook controls remain active')
+        spec = importlib.util.spec_from_file_location('env_split_fixture_actions', ROOT/'hooks/lib/task_actions.py')
+        actions = importlib.util.module_from_spec(spec); spec.loader.exec_module(actions)
+        capture = self.f.ws/'env-split-argv.json'
+        (self.bin/'gh').write_text('#!'+sys.executable+'\nimport os,sys,json\nfrom pathlib import Path\nPath(os.environ["ENV_SPLIT_CAPTURE"]).write_text(json.dumps(sys.argv[1:]))\n')
+        (self.bin/'gh').chmod(0o700)
+        environment = {'PATH': str(self.bin), 'ENV_SPLIT_CAPTURE': str(capture), 'SPLIT_LITERAL': 'value with spaces'}
+        cases = [r'gh\_pr\_merge\_5\_--admin', r'gh pr merge 5 --admin\c ignored',
+                 r'gh pr merge 5 --body "--admin\_words"', r'gh pr merge 5 --body "--admin\twords"',
+                 r"gh pr merge 5 --body 'literal\_words'", r'gh pr merge 5 --body \#literal # ignored',
+                 r'gh pr merge 5 --body ""#suffix', r'gh pr merge 5 --body "" # ignored',
+                 r'gh pr merge 5 --body \n', r'gh pr merge 5 --body \t',
+                 r'gh pr merge 5 --body \f', r'gh pr merge 5 --body \v',
+                 r'gh pr merge 5 --body \r', r'gh pr merge 5 --body \"',
+                 r"gh pr merge 5 --body 'a\'b\\c'", r'gh pr merge 5 --body \$literal',
+                 r'"gh\_pr\_merge\_5\_--admin"', r"'gh\_pr\_merge\_5\_--admin'",
+                 r'gh\\_pr\_merge\_5\_--admin', r'gh pr merge 5 --admin\z',
+                 r'gh pr merge 5 --body "\c"']
+        for text in cases:
+            with self.subTest(split_string=text):
+                capture.unlink(missing_ok=True)
+                actual = subprocess.run([env_binary, '-S', text], env=environment,
+                                        capture_output=True, text=True, timeout=5)
+                parsed = actions._env_split_string(text)
+                if capture.exists():
+                    self.assertEqual(actual.returncode, 0)
+                    self.assertEqual(parsed, ['gh'] + json.loads(capture.read_text()))
+                elif actual.returncode == 125:
+                    self.assertIsNone(parsed)
+                else:
+                    self.assertEqual(actual.returncode, 127)
+                    self.assertNotEqual(parsed[0], 'gh')
+        text = 'gh pr merge 5 --body ' + chr(36) + '{SPLIT_LITERAL}'
+        capture.unlink(missing_ok=True)
+        subprocess.run([env_binary, '-S', text], env=environment, check=True, timeout=5)
+        self.assertEqual(json.loads(capture.read_text())[-1], 'value with spaces')
+        self.assertEqual(actions._env_split_string(text)[-1], actions._ENV_OPTIONAL_WORD)
+        self.assertFalse(self.calls.exists(), 'the primary fixture must not invoke the real or transport gh')
 
     def test_reviewed_shell_keywords_wrappers_and_all_find_actions(self):
         self.f.task('own-local', self.f.repo)
