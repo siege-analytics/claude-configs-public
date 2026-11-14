@@ -10024,6 +10024,7 @@
       "test_evidence": [
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
+        "hooks/_test/github_merge_queue.py",
         "skills/detect-ai-fingerprints/test_scan_sh_exit_code.sh",
         "skills/detect-ai-fingerprints/test_writing_code_4.sh"
       ],

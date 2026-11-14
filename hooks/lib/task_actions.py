@@ -11,6 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import ast
+import fnmatch
 import json
 import os
 import re
@@ -25,7 +26,7 @@ class UnknownShape(ValueError):
     pass
 
 
-def shell_tokens(command: str, *, inspection_comments=False) -> list[tuple[str, bool, tuple[int, ...]]]:
+def shell_tokens(command: str, *, inspection_comments=False, inspection_expansions=False) -> list[tuple[str, bool, tuple[int, ...]]]:
     """Preserve operators and positions of unquoted glob characters.
 
     Reader/diagnostic classification decides whether a glob word is safe;
@@ -47,13 +48,21 @@ def shell_tokens(command: str, *, inspection_comments=False) -> list[tuple[str, 
                 word += c
         elif c == "\\" and quote != "'":
             i += 1
-            if i >= len(command) or command[i] == "\n":
+            if i >= len(command):
+                raise UnknownShape("escaped newline or incomplete escape")
+            if command[i] == "\n":
+                if inspection_expansions:
+                    i += 1
+                    continue
                 raise UnknownShape("escaped newline or incomplete escape")
             word += command[i]
             active = True
             fd_literal = False
         elif c in "$`" and quote != "'":
-            raise UnknownShape("shell expansion requires mutation handling")
+            if not inspection_expansions:
+                raise UnknownShape("shell expansion requires mutation handling")
+            word += '__ccp_publication_dynamic__'
+            active = True
         elif quote == '"':
             if c == quote:
                 quote = ""
@@ -64,7 +73,19 @@ def shell_tokens(command: str, *, inspection_comments=False) -> list[tuple[str, 
             active = True
             fd_literal = False
         elif c in "(){}":
-            raise UnknownShape("shell group requires mutation handling")
+            if not inspection_expansions:
+                raise UnknownShape("shell group requires mutation handling")
+            if quote:
+                word += c
+                active = True
+            elif c in '()' or not active:
+                if active:
+                    tokens.append((word, False, tuple(globs)))
+                tokens.append((';', True, ()))
+                word, active, globs, fd_literal = '', False, [], True
+            else:
+                word += '__ccp_publication_dynamic__'
+                active = True
         elif c in "*?[" and not (c == "[" and not active and i + 1 < len(command) and command[i + 1].isspace()):
             globs.append(len(word))
             word += c
@@ -1966,9 +1987,9 @@ def _gh_path_scan_args(args: list[str]) -> list[str]:
     selector right after a known zero-arity flag. Any unknown flag may own
     the next token, so that token is kept (fail closed). Scanning stops at
     `--`. A command with an `--admin` token anywhere (including option
-    values and after `--`) is never modelled: the pinned merge-queue route
-    refuses an admin merge only in its literal `gh pr merge` form, so no
-    target may be removed from the other forms. The cwd fallback is
+    values and after `--`) is never modelled: gh_merge_refusal owns the
+    admin-merge refusal in every spelling (#1371), and no target may be
+    removed from a form it does not refuse. The cwd fallback is
     unchanged, so this never grants authority.
     """
     if not args or args[0] != 'gh':
@@ -2024,6 +2045,194 @@ def _gh_path_scan_args(args: list[str]) -> list[str]:
                 kept.append(arg)
         i += 1
     return kept
+
+
+# Inspect executable GH argv, not aliases, metadata or arbitrary interpreter programs.
+UNPARSEABLE_MERGE_REFUSAL = 'unresolved executable gh admin merge'
+_MERGE_COMMAND_SYNTAX = None
+
+
+def _merge_command_syntax():
+    global _MERGE_COMMAND_SYNTAX
+    if _MERGE_COMMAND_SYNTAX is None:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            'merge_command_syntax', str(Path(__file__).with_name('command-text.py')))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _MERGE_COMMAND_SYNTAX = module
+    return _MERGE_COMMAND_SYNTAX
+
+
+def _gh_admin_argv(args, globs=()):
+    """pflag values stay data; return whether actual built-in pr/merge enables admin."""
+    flags = {**_GH_HELP_FLAGS, **_GH_FLAG_KINDS[('pr', 'merge')]}
+    positional, pending, enabled, uncertain, help_requested, index = [], None, False, False, False, 1
+    while index < len(args):
+        word = args[index]
+        if pending in {'text', 'keep'}:
+            if globs and globs[index] and fnmatch.fnmatchcase('--admin', word):
+                uncertain = True  # A value glob can supply additional flag argv.
+            pending = None
+        elif word == '--':
+            positional.extend(args[index + 1:])
+            break
+        elif word in {'--help', '-h'} or word.startswith('--help='):
+            help_requested = '=' not in word or word.partition('=')[2] in {'1', 't', 'T', 'true', 'TRUE', 'True'}
+        elif '__ccp_publication_dynamic__' in word:
+            uncertain = True
+        elif globs and globs[index] and fnmatch.fnmatchcase('--admin', word):
+            uncertain = True
+        elif word == '--admin' or word.startswith('--admin='):
+            enabled = '=' not in word or word.partition('=')[2] in {'1', 't', 'T', 'true', 'TRUE', 'True'}
+        elif word in {'--repo', '-R'}:
+            index += 1
+        elif word.startswith(('--repo=', '-R')):
+            pass
+        elif not word.startswith('-'):
+            positional.append(word)
+        else:
+            _keep, pending = _gh_option_effect(flags, word)
+        index += 1
+    if help_requested:
+        return None, False
+    shape = positional[:2]
+    return shape, shape == ['pr', 'merge'] and (enabled or uncertain)
+
+
+def unparseable_merge_refusal(command, _depth=0):
+    # Inspection-only tokens never authorize execution. Preserve command positions
+    # and quoted data even when the publication syntax helper is unavailable.
+    if _depth > 4:
+        return None
+    try:
+        parsed = shell_tokens(command, inspection_comments=True, inspection_expansions=True)
+    except UnknownShape:
+        return None  # Incomplete shell syntax is not an executable admin merge.
+    groups, words, redirect = [], [], False
+    for word, operator, globs in parsed:
+        if redirect:
+            redirect = False
+        elif operator and re.fullmatch(r'[0-9]*(?:<<|>>|>&|<&|>\||>|<)|&>>|&>', word):
+            redirect = True
+        elif operator:
+            groups.append(words); words = []
+        else:
+            words.append((word, globs))
+    groups.append(words)
+    for group in groups:
+        args = [word for word, _ in group]
+        while args and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*=.*', args[0], re.S):
+            args.pop(0)
+        supplied = False
+        for _ in range(5):
+            if not args:
+                break
+            supplied = supplied or os.path.basename(args[0]) in {'xargs', 'parallel'}
+            wrapped = _wrapped_command(args)
+            if wrapped is None:
+                break
+            args = wrapped
+        if not args:
+            continue
+        name = os.path.basename(args[0]).casefold()
+        if name == 'gh':
+            original = [word for word, _ in group]
+            flags = ([positions for _, positions in group][-len(args):]
+                     if original[-len(args):] == args else [()] * len(args))
+            shape, admin = _gh_admin_argv(args, flags)
+            if admin or shape == ['pr', 'merge'] and (supplied or any('__ccp_publication_dynamic__' in word for word in args)):
+                return UNPARSEABLE_MERGE_REFUSAL
+        elif name in {'sh', 'bash', 'zsh', 'dash', 'ksh', 'ash'}:
+            for index in range(1, len(args) - 1):
+                if re.fullmatch(r'-[A-Za-z]*c[A-Za-z]*', args[index]):
+                    if unparseable_merge_refusal(args[index + 1], _depth=_depth + 1):
+                        return UNPARSEABLE_MERGE_REFUSAL
+                    break
+        elif name == 'eval' and unparseable_merge_refusal(' '.join(args[1:]), _depth=_depth + 1):
+            return UNPARSEABLE_MERGE_REFUSAL
+    return None
+
+
+def gh_merge_refusal(command, _depth=0):
+    """Refuse actual GH admin merge argv through fixed wrappers and literal shells.
+
+    Argument suppliers are unresolved only when their GH publication domain is
+    visible. Alias definitions, ordinary programs and stdin processing are not
+    treated as execution of their data. Existing task and server policy remain.
+    """
+    if _depth > 4:
+        return unparseable_merge_refusal(command)
+    try:
+        syntax = _merge_command_syntax()
+        command = syntax._publication_continuations(command)
+        command, substitutions = syntax._publication_mask(command, os.getcwd(), _depth)
+    except (OSError, ImportError, SyntaxError):
+        substitutions = []  # The existing literal lexer still proves direct argv.
+    except UnknownShape:
+        return unparseable_merge_refusal(command)
+    for _marker, program in substitutions:
+        reason = gh_merge_refusal(program, _depth + 1)
+        if reason:
+            return reason
+    try:
+        parsed = shell_tokens(command)
+    except UnknownShape:
+        return unparseable_merge_refusal(command)
+    groups, words, redirect = [], [], False
+    for word, operator, globs in parsed:
+        if redirect:
+            redirect = False
+        elif operator and re.fullmatch(r'[0-9]*(?:<<|>>|>&|<&|>\||>|<)|&>>|&>', word):
+            redirect = True
+        elif operator:
+            groups.append(words); words = []
+        else:
+            words.append((word, globs))
+    groups.append(words)
+    for group in groups:
+        args = [word for word, _ in group]
+        while args and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*=.*', args[0], re.S):
+            args.pop(0)
+        supplied = False
+        for _ in range(5):
+            if not args:
+                break
+            name = os.path.basename(args[0]).casefold()
+            supplied = supplied or name in {'xargs', 'parallel'}
+            wrapped = _wrapped_command(args)
+            if wrapped is None:
+                break
+            args = wrapped
+        if not args:
+            continue
+        name = os.path.basename(args[0]).casefold()
+        if name == 'find':
+            position = next((i for i, word in enumerate(args) if word in {'-exec', '-execdir', '-ok', '-okdir'}), None)
+            if position is not None and position + 1 < len(args):
+                args, supplied = args[position + 1:], True
+                name = os.path.basename(args[0]).casefold()
+        if name == 'gh':
+            original = [word for word, _positions in group]
+            flags = ([positions for _word, positions in group][-len(args):]
+                     if original[-len(args):] == args else [()] * len(args))
+            shape, admin = _gh_admin_argv(args, flags)
+            if admin:
+                return 'admin bypass is not supported'
+            if supplied and (shape == ['pr', 'merge'] or shape == [] and re.search(r'\bpr\s+merge\b', command)):
+                return 'argument-supplied gh merge flags are unresolved'
+        elif name in {'sh', 'bash', 'zsh', 'dash', 'ksh', 'ash'}:
+            for index in range(1, len(args) - 1):
+                if re.fullmatch(r'-[A-Za-z]*c[A-Za-z]*', args[index]):
+                    reason = gh_merge_refusal(args[index + 1], _depth + 1)
+                    if reason:
+                        return reason
+                    break
+        elif name == 'eval':
+            reason = gh_merge_refusal(' '.join(args[1:]), _depth + 1)
+            if reason:
+                return reason
+    return None
 
 
 # Bounded write destinations (#1152). A shape modelled here writes only under
@@ -2647,3 +2856,10 @@ def _action(command: str, cwd: str) -> dict:
             "remote_hosts": list(dict.fromkeys(remote_hosts)),
             "metadata_only": bool(remote_repos) and not remote_actions and not review_actions and not metadata_posts and not remote_hosts and remote_only,
             "remote_contact_only": bool(remote_hosts) and not remote_actions and not review_actions and not metadata_posts and remote_only, "binding": binding}
+
+
+if __name__ == '__main__' and len(sys.argv) == 3 and sys.argv[1] == '--merge-fallback':
+    reason = unparseable_merge_refusal(sys.argv[2])
+    if reason:
+        print(reason)
+    sys.exit(3 if reason else 0)
