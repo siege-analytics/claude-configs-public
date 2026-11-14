@@ -1883,6 +1883,11 @@ def github_pr_proposal(args, cwd: str):
     """A literal source-review proposal; never a merge or local file mutation."""
     if args[:3] != ['gh', 'pr', 'create']:
         return None
+    # Preserve the exact legacy interactive shape: its cwd Task scope and
+    # destructive-guard waiver remain independently required. No partial
+    # explicit proposal or unknown flag borrows that route.
+    if len(args) == 3:
+        return None
     fields, draft = {}, False
     aliases = {'-R': '--repo', '-B': '--base', '-H': '--head', '-t': '--title', '-F': '--body-file'}
     index = 3

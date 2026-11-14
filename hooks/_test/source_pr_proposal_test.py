@@ -30,6 +30,17 @@ class Proposals(unittest.TestCase):
             result = subprocess.run(['bash', str(fixture.ROOT / 'hooks/bash/destructive-guard.sh')], input=json.dumps(payload), env=self.env, text=True, capture_output=True, timeout=20)
             self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_bare_legacy_create_still_requires_destructive_waiver(self):
+        command = 'gh pr create'
+        payload = fixture.craft_payload(tool_name='Bash', cwd=str(self.repo), tool_input={'command': command})
+        result = subprocess.run(['bash', str(fixture.ROOT / 'hooks/bash/destructive-guard.sh')],
+                                input=json.dumps(payload), env=self.env, text=True,
+                                capture_output=True, timeout=20)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn('github pull request write', result.stderr)
+        for suffix in [' --repo electinfo/fec-api', ' --unknown-option', ' --draft']:
+            self.assertEqual(self.hook(command + suffix, cwd=self.repo).returncode, 2)
+
     def test_allowlisted_ssh_cannot_borrow_proposal_exemption(self):
         # A private policy package admits one fixture host, never a network call.
         package = self.ws / 'policy'
