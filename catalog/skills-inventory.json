@@ -9299,10 +9299,10 @@
     },
     {
       "canonical_source": "skills/commit/SKILL.md",
-      "characters": 23395,
-      "content_sha256": "dd560d5bee63f206b2fea1141e956a812c600fc7c46501298c8cfc04670fa0ef",
+      "characters": 23740,
+      "content_sha256": "074fdf5eb3463dfa7d1a747502372e1f4f2deec2331f9d9eb1ac9f6368780fc4",
       "description": "Create coherent reviewed commits that explain the change and reference the motivating task.",
-      "estimated_tokens": 5849,
+      "estimated_tokens": 5935,
       "frontmatter_name": "commit",
       "generated_outputs": [
         "dist/nested/skills/commit",
@@ -13084,9 +13084,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2479925,
+    "characters": 2480270,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 620057,
+    "estimated_tokens": 620143,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13107,7 +13107,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1083531
+      "unclassified": 1083876
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13119,7 +13119,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 270923
+      "unclassified": 271009
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

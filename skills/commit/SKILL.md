@@ -297,11 +297,11 @@ Downstream consumers expecting IntegerType will need to update.
 
 ## One logical change, multiple files
 
-Stage all related files together:
+Stage all related files together. Prepare the complete intended message, including existing required trailers; to retain the current message, read the full HEAD message into an owned regular file in a separate action. The existing task grant covers this repair and normal checks.
 
 ```bash
 git add src/transforms/silver.py tests/test_silver.py docs/schema.md
-git commit
+git commit -F /path/to/prepared-message.txt
 ```
 
 ## Multiple logical changes in the working tree
@@ -326,10 +326,10 @@ For an unpublished owned tip, amend it directly:
 
 ```bash
 git add forgotten_file.py
-git commit --amend
+git commit --amend -F /path/to/prepared-message.txt
 ```
 
-For an ordinary source correction after a push, create a new commit rather than rewriting shared history. Prohibited AI/agent attribution is different: another commit cannot remove a trailer from an earlier candidate commit. Follow [rule:output], Diffs and destructive operations, for bounded cleanup of the owned candidate history. For a message-only repair of an unpublished tip, use `git commit --amend --only` with no path arguments so unrelated staged file changes are excluded; inspect the resulting tree against the retained original tip. Ordinary source corrections may still use the amend procedure above. Earlier candidate messages can be reworded through scoped rebase. A published owned feature branch may be rewritten only under the existing role and project policy, coordinated with active writers and using the explicit expected-tip lease required by [rule:output]. Never rewrite protected branches or another owner's/shared history outside that grant.
+For an ordinary source correction after a push, create a new commit rather than rewriting shared history. Prohibited AI/agent attribution is different: another commit cannot remove a trailer from an earlier candidate commit. Follow [rule:output], Diffs and destructive operations, for bounded cleanup of the owned candidate history. For a message-only repair of an unpublished tip, use `git commit --amend --only -F /path/to/prepared-message.txt` with no path arguments so unrelated staged file changes are excluded; inspect the resulting tree against the retained original tip. Ordinary source corrections may still use the amend procedure above. Earlier candidate messages can be reworded through scoped rebase. A published owned feature branch may be rewritten only under the existing role and project policy, coordinated with active writers and using the explicit expected-tip lease required by [rule:output]. Never rewrite protected branches or another owner's/shared history outside that grant.
 
 Do not stop the whole objective because attribution cleanup is pending. Continue authorized implementation, design and verification; hold only the publication or rewrite action whose readiness or authority is missing. Preserve genuine human authorship, keep the attribution ban and hooks intact, and rebind required exact-head evidence after cleanup. Do not ask for repeat authority or use a repository-wide history filter as an automatic repair.
 

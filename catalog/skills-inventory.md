@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **199**
-- Characters: **2,479,925**
-- Estimated tokens: **620,057** (character/4 estimate)
+- Characters: **2,480,270**
+- Estimated tokens: **620,143** (character/4 estimate)
 - Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 111 | 1,083,531 | 270,923 |
+| unclassified | 111 | 1,083,876 | 271,009 |
 
 ## Largest source items
 
@@ -62,8 +62,8 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--negotiation` | reference-shelf | 24,710 | 6,178 | `skills/shelves/sales/negotiation/SKILL.md` |
 | `shelves--ios-hig-design` | reference-shelf | 24,657 | 6,165 | `skills/shelves/design/ios-hig-design/SKILL.md` |
 | `shelves--37signals-way` | reference-shelf | 24,449 | 6,113 | `skills/shelves/team/37signals-way/SKILL.md` |
+| `commit` | skill | 23,740 | 5,935 | `skills/commit/SKILL.md` |
 | `shelves--data-intensive` | reference-shelf | 23,688 | 5,922 | `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
-| `commit` | skill | 23,395 | 5,849 | `skills/commit/SKILL.md` |
 | `hostile-review` | skill | 23,345 | 5,837 | `skills/hostile-review/SKILL.md` |
 | `shelves--cro-methodology` | reference-shelf | 22,720 | 5,680 | `skills/shelves/marketing/cro-methodology/SKILL.md` |
 
