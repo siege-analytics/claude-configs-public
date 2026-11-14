@@ -4,6 +4,8 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shlex
+import shutil
 import subprocess
 import sys
 import unittest
@@ -175,6 +177,62 @@ class ExecutionRisk(unittest.TestCase):
             verdict=f.r.task_tier(data,[str(self.repo)],'pytest tests',str(self.repo))
         self.assertEqual(verdict['floor'],'C')
         self.assertIn('cannot list explicit test selector',' '.join(verdict['reasons']))
+
+    def reported_1171_forms(self):
+        """Forms reported in #1171 that the bounded pytest risk view does not model."""
+        interpreter = shlex.quote(os.path.realpath(sys.executable))
+        cd = "cd " + str(self.repo) + " && "
+        flagged = 'python3 -m pytest -o addopts="" -p no:cacheprovider -q -W ignore tests/test_app.py'
+        return [
+            (interpreter + ' -B -m pytest -p no:cacheprovider -o addopts="" -q', self.repo),
+            (cd + interpreter + ' -B -m pytest -p no:cacheprovider -o addopts="" tests/test_app.py -q --no-header -x', self.repo),
+            (flagged, self.repo),
+            (cd + flagged, self.f.ws),  # session cwd outside the task's checkout
+            ("gh issue close 5", self.repo),
+        ]
+
+    def test_reported_1171_forms_need_only_owned_implementing_task(self):
+        # The fixture task has no junior/senior or artifacts-posted companion.
+        # Whole-tree risk for an unmodeled shape is not a refusal by itself.
+        self.assertFalse((self.gate / "junior-senior-gate.json").exists())
+        self.assertFalse((self.gate / "artifacts-posted-gate.json").exists())
+        for command, cwd in self.reported_1171_forms():
+            with self.subTest(command=command):
+                result = self.f.hook(command, cwd=cwd)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_reported_1171_forms_keep_task_lifecycle_and_scope(self):
+        data = json.loads((self.gate / "think-gate.json").read_text())
+        for status, scope, reason in (("designing", [str(self.repo)], "not allowed during designing"),
+                                      ("implementing", [str(self.repo / "tests")], "Unscoped mutation")):
+            f.write(self.gate / "think-gate.json", {**data, "status": status, "scope_paths": scope})
+            for command, cwd in self.reported_1171_forms():
+                with self.subTest(status=status, scope=scope, command=command):
+                    result = self.f.hook(command, cwd=cwd)
+                    self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                    self.assertIn(reason, result.stderr)
+
+    def test_reported_1171_forms_cannot_borrow_a_foreign_session_task(self):
+        # Another session's Task, even with every companion present, lends no authority.
+        shutil.rmtree(self.gate)
+        self.f.task("example/app#1171", self.repo, sid="two")
+        for command, cwd in self.reported_1171_forms():
+            with self.subTest(owner="two", command=command):
+                result = self.f.hook(command, cwd=cwd)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertIn("Unscoped mutation", result.stderr)
+        # Control: the identical Task in the current session does authorize, so
+        # session ownership is the only difference behind the refusal above.
+        self.f.task("example/app#1171", self.repo, sid="one")
+        for command, cwd in self.reported_1171_forms():
+            with self.subTest(owner="one", command=command):
+                result = self.f.hook(command, cwd=cwd)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_inline_python_import_remains_opaque_execution(self):
+        # Reported with #1171, but refused by the inline-execution boundary, not by risk tier.
+        result = self.hook('python -c "import app; print(app.__file__)"', 2)
+        self.assertIn("opaque inline execution", result.stderr)
 
     def test_task_lifecycle_and_cross_task_authority_unchanged(self):
         data = json.loads((self.gate / "think-gate.json").read_text())
