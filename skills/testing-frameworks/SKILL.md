@@ -187,12 +187,21 @@ The producer runs argv directly in the target repository. It copies the task/ses
 
 The hook requires `schema_version: 2`, the exact canonical `repo_root`, an ancestor `tested_revision`, a nonempty `command` argv, integer `exit_code: 0`, and one successful evidence entry per touched source with exact `source` and matching `source_blob`. Evidence must match both HEAD and current raw working bytes. Receipt hashing never executes Git clean filters and accepts regular source files up to 64 MiB (or Git symlink text), rejecting devices/FIFOs without blocking. Filter-normalized or CRLF checkouts whose raw bytes differ from HEAD fail closed; use a canonical checkout before rerunning, rather than silently normalizing untested bytes. Deleted source uses `source_blob: "deleted"`. Duplicate, missing, suffix-only, failed, stale and legacy receipts block.
 
-For a **compatibility report only**, inspect an existing receipt before deployment:
+Use the exact selected installed provider and literal absolute paths for receipt reads, with the known Python interpreter isolated by `-I -B`. Replace the base placeholder with the full canonical commit object ID. A strict check validates the receipt and exits nonzero when it is invalid:
 
 ```bash
-python3 hooks/lib/test-evidence.py check --report-only --repo /path/to/repo \
-  --base <merge-base-sha> --receipt /path/to/test-gate.json
+python3 -I -B /path/to/selected/hooks/lib/test-evidence.py check --repo /path/to/repo \
+  --base <full-base-object-id> --receipt /path/to/test-gate.json
 ```
+
+For a **compatibility report only**, add the diagnostic flag:
+
+```bash
+python3 -I -B /path/to/selected/hooks/lib/test-evidence.py check --report-only --repo /path/to/repo \
+  --base <full-base-object-id> --receipt /path/to/test-gate.json
+```
+
+To list affected source paths without executing tests or writing a receipt, use the same selected provider with `sources --repo /path/to/repo --base <full-base-object-id>`. The read lane accepts exact named fields only; it does not grant test execution or publication authority.
 
 Report-only prints the same validation problems but does not authorize a push. Legacy receipts are never automatically upgraded: rerun affected tests with the producer. Actual native terminal pushes retain their existing root-file lookup only when no host binding exists; use the same version 2 producer with `--output /path/to/repo/test-gate.json` and omit `--think-gate` for that native case. Bound sessions must use their own task receipt. Structured inapplicability overrides still require Reason, Evidence and Falsification in the commit body.
 
