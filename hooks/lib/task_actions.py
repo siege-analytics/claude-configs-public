@@ -2164,7 +2164,20 @@ def _merge_command_syntax():
 
 
 def _env_word_matches(word, literal):
-    return re.fullmatch('.*'.join(re.escape(part) for part in word.split(_ENV_DYNAMIC_WORD)), literal) is not None
+    pieces = word.split(_ENV_DYNAMIC_WORD)
+    if len(pieces) == 1:
+        return word == literal
+    if not literal.startswith(pieces[0]) or not literal.endswith(pieces[-1]):
+        return False
+    cursor, end = len(pieces[0]), len(literal) - len(pieces[-1])
+    if cursor > end:
+        return False
+    for piece in pieces[1:-1]:
+        found = literal.find(piece, cursor, end)
+        if found < 0 or '\n' in literal[cursor:found]:
+            return False
+        cursor = found + len(piece)
+    return '\n' not in literal[cursor:end]
 
 
 def _env_short_value_possible(word, flags):

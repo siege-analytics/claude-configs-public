@@ -467,6 +467,39 @@ else: sys.exit(99)
         r'find . -printf -exec gh pr merge 5 --admin \;',
     ]
 
+    def test_gnu_symbolic_word_matcher_preserves_literal_and_newline_semantics(self):
+        import itertools
+        import re
+        spec = importlib.util.spec_from_file_location('env_match_fixture_actions', ROOT/'hooks/lib/task_actions.py')
+        actions = importlib.util.module_from_spec(spec); spec.loader.exec_module(actions)
+        marker = actions._ENV_DYNAMIC_WORD
+        parts = ('', 'a', 'b', '\n', 'a.b', '[x]')
+        literals = ('', 'a', 'b', 'ab', 'ba', 'aa', '\n', 'a\nb', 'a.b', '[x]', '--admin')
+        for count in range(1, 5):
+            for pieces in itertools.product(parts, repeat=count):
+                word = marker.join(pieces)
+                pattern = '.*'.join(re.escape(piece) for piece in pieces)
+                for literal in literals:
+                    self.assertEqual(actions._env_word_matches(word, literal),
+                                     re.fullmatch(pattern, literal) is not None,
+                                     (pieces, literal))
+        code = ('import runpy; a=runpy.run_path(' + repr(str(ROOT/'hooks/lib/task_actions.py')) + '); '
+                'marker=a["_ENV_DYNAMIC_WORD"]; '
+                'assert a["_env_word_matches"](marker*512+"xyz", "--match-head-commit") is False; '
+                'assert a["_env_word_matches"](marker*512, "--admin") is True')
+        result = subprocess.run([sys.executable, '-I', '-B', '-c', code],
+                                capture_output=True, text=True, timeout=3)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.f.task('own-local', self.f.repo)
+        waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
+        large = 'env -S ' + shlex.quote('gh pr merge 5 ' + (chr(36) + '{A}') * 512 + '--admin')
+        self.assertEqual(self.merge_refusal(large).returncode, 3)
+        self.assertEqual(self.guard(large, waived).returncode, 2)
+        (self.install/'hooks/lib/github-merge-queue.py').unlink()
+        self.assertEqual(self.guard(large, waived).returncode, 2)
+        self.assertEqual(self.guard('printf %s gh pr merge --admin', waived).returncode, 0)
+        self.assertFalse(self.calls.exists(), 'inspection must not execute candidate gh')
+
     def test_gnu_empty_variables_inside_short_option_clusters(self):
         spec = importlib.util.spec_from_file_location('env_cluster_fixture_actions', ROOT/'hooks/lib/task_actions.py')
         actions = importlib.util.module_from_spec(spec); spec.loader.exec_module(actions)
