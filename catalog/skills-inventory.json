@@ -9858,6 +9858,7 @@
         "bin/_test/review_risk_test.py",
         "bin/_test/scanner_source_test.py",
         "hooks/_test/detect_ai_fingerprints.test.sh",
+        "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/github_merge_queue.py",
         "hooks/_test/hook_path.test.sh",
