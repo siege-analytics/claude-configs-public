@@ -21,8 +21,11 @@ SOURCE_SUFFIXES = {'.py', '.js', '.ts', '.jsx', '.tsx', '.scala', '.java', '.kt'
 
 
 def git_environment() -> dict:
-    environment = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
-    environment.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1')
+    # Preserve operator-owned protected configuration (not injected key/value
+    # channels), including safe.directory trust for shared repositories.
+    scopes = {'GIT_CONFIG_GLOBAL', 'GIT_CONFIG_SYSTEM', 'GIT_CONFIG_NOSYSTEM'}
+    environment = {key: value for key, value in os.environ.items()
+                   if not key.startswith('GIT_') or key in scopes}
     return environment
 
 

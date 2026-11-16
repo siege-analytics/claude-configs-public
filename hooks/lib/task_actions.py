@@ -1606,7 +1606,7 @@ def action(command: str, cwd: str) -> dict:
     return result
 
 
-TEST_RECEIPT_READER_SHA256 = 'e7381f43669d846112fda4028a0fbdc351927fdefe6668431acc77f39578cb69'
+TEST_RECEIPT_READER_SHA256 = '47b63d8e417b1f7b8f7b7a4ef8fbe8bc5036d83b97bbc4054e1a7d870f54a67c'
 
 SCANNER_CAPABILITY_SHA256 = '9be4696157fdafbf8646ff3545375db6bb792f0bd99ecf10041134a822ea7908'
 SCANNER_ADAPTER_SHA256 = 'df44acc0800577539abcf2d66097c76936036f3949dfa3567925c47f0ec62b9e'
@@ -1930,7 +1930,8 @@ def github_pr_proposal(args, cwd: str):
             or fields['--head'] in {'main', 'master', 'develop', 'staging'}
             or '..' in fields['--head'] or '@{' in fields['--head']):
         raise UnknownShape('source PR proposal has unproven repository/head/develop base')
-    body = os.path.abspath(os.path.join(cwd, fields['--body-file']))
+    # Preserve traversal until the resolver compares lexical and physical paths.
+    body = os.path.join(cwd, fields['--body-file'])
     if fields['--body-file'] == '-' or body.startswith(('/dev/', '/proc/')):
         raise UnknownShape('source PR proposal requires a literal regular body file')
     return {'resource': 'pr', 'operation': 'create', 'repository': fields['--repo'].casefold(),

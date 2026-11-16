@@ -108,6 +108,27 @@ class Proposals(unittest.TestCase):
         self.assertIn('GitHub metadata target scope', result.stderr)
         self.assertEqual(pointer.read_bytes(), original)
 
+    def test_body_operand_preserves_symlink_parent_traversal(self):
+        permitted = self.repo / 'report.md'
+        permitted.write_text('public fixture report\n')
+        private = self.ws / 'private'
+        (private / 'inner').mkdir(parents=True)
+        outside = private / 'report.md'
+        outside.write_text('synthetic private fixture, not a credential\n')
+        (self.repo / 'link').symlink_to(private / 'inner', target_is_directory=True)
+        operand = str(self.repo) + '/link/../report.md'
+        self.assertEqual(Path(operand).read_bytes(), outside.read_bytes())
+        self.assertEqual(self.hook(self.command.replace(str(self.body), str(permitted)), cwd=self.repo).returncode, 0)
+        for body in [operand, 'link/../report.md']:
+            with self.subTest(body=body):
+                result = self.hook(self.command.replace(str(self.body), body), cwd=self.repo)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn('GitHub metadata target scope', result.stderr)
+        (self.repo / 'ordinary').mkdir()
+        ordinary = str(self.repo) + '/ordinary/../report.md'
+        self.assertEqual(self.hook(self.command.replace(str(self.body), ordinary), cwd=self.repo).returncode, 0)
+        self.assertEqual(outside.read_text(), 'synthetic private fixture, not a credential\n')
+
     def test_public_git_configuration_documents_remain_body_inputs(self):
         for name in ['.gitignore', '.gitattributes', '.gitmodules']:
             body = self.repo / name
