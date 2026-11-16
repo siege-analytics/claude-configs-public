@@ -111,7 +111,10 @@ def shell_tokens(command: str, *, inspection_comments=False, inspection_expansio
                     emit_word()
                 word, active, globs, fd_literal, assignment_literal = "", False, [], True, False
             if c == "\n":
-                tokens.append((";", True, ()))
+                # A shell newline after a pipe continues the same concurrent
+                # pipeline, including blank lines and inspected comments.
+                if not tokens or tokens[-1][:2] != ("|", True):
+                    tokens.append((";", True, ()))
             elif not c.isspace():
                 # Longest redirect first: &>> is not background + append,
                 # and >&/<& consume their ampersand, not a shell separator.
@@ -2883,9 +2886,10 @@ def _action(command: str, cwd: str) -> dict:
     arg_globs = []
     effective = canonical(cwd)
     binding = ""
+    pipelined_directory = False
 
-    def finish():
-        nonlocal args, arg_globs, effective, reads, binding, diagnostic, self_managed, mutation_commands, commit_commands
+    def finish(*, pipeline=False):
+        nonlocal args, arg_globs, effective, reads, binding, diagnostic, self_managed, mutation_commands, commit_commands, pipelined_directory
         if not args:
             return
         while args and args[0].startswith("CCP_TASK_ID="):
@@ -2902,6 +2906,7 @@ def _action(command: str, cwd: str) -> dict:
         if args[0] == "cd":
             if len(args) != 2 or args[1].startswith("-") or arg_globs[1]:
                 raise UnknownShape("unsupported cd; use an explicit concrete path")
+            pipelined_directory = pipelined_directory or pipeline
             effective = canonical(args[1], effective)
         elif args[:3] == ['gh', 'api', 'graphql']:
             target = github_graphql(args)
@@ -3202,6 +3207,7 @@ def _action(command: str, cwd: str) -> dict:
 
     try:
         i = 0
+        piped = False
         while i < len(tokens):
             value, op, globs = tokens[i]
             if not op:
@@ -3227,11 +3233,15 @@ def _action(command: str, cwd: str) -> dict:
                     paths.append(canonical(target, effective))
                     file_paths.append(canonical(target, effective))
             elif value in {"&&", ";", "|", "||"}:
-                finish()
+                finish(pipeline=piped or value == "|")
+                piped = value == "|"
             else:
                 raise UnknownShape("unsupported shell operator")
             i += 1
-        finish()
+        finish(pipeline=piped)
+        if pipelined_directory and any(target.get('resource') == 'pr' and target.get('operation') == 'create'
+                                      for target in metadata_posts):
+            raise UnknownShape('source PR proposals require a parent-shell cwd; split pipelined cd from the proposal')
         if commit_commands and mutation_commands > commit_commands:
             raise UnknownShape('separate configuration/file mutations from commit calls; run git commit -F FILE first, then a separately scoped cleanup command')
     except UnknownShape as e:

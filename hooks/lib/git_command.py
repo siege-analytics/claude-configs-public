@@ -192,11 +192,15 @@ def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirec
                 continue
             if word not in {";", "&&", "||", "|"}:
                 raise UnknownShape("Git redirection/background shape is unresolved")
+            if piped and not words:
+                raise UnknownShape("empty Git pipeline member")
             groups.append((words, piped or word == "|"))
             piped = word == "|"
             words = []
         else:
             words.append(word)
+    if piped and not words:
+        raise UnknownShape("empty Git pipeline member")
     groups.append((words, piped))
     if pending_redirect:
         raise UnknownShape("Git redirection target is missing")

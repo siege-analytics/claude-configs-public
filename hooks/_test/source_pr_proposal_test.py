@@ -129,6 +129,51 @@ class Proposals(unittest.TestCase):
         self.assertEqual(self.hook(self.command.replace(str(self.body), ordinary), cwd=self.repo).returncode, 0)
         self.assertEqual(outside.read_text(), 'synthetic private fixture, not a credential\n')
 
+    def test_pipeline_cd_cannot_supply_the_proposal_body_directory(self):
+        body = self.repo / 'report.md'; body.write_text('public fixture report\n')
+        outside = self.ws / 'report.md'; outside.write_text('synthetic private fixture\n')
+        relative = self.command.replace(str(self.body), 'report.md')
+        cd = 'cd ' + shlex.quote(str(self.repo))
+        self.assertEqual(self.hook(cd + ' && ' + relative, cwd=self.ws).returncode, 0)
+        self.assertEqual(self.hook('printf ignored | ' + relative, cwd=self.repo).returncode, 0)
+        for command in [cd + ' | ' + relative,
+                        'CCP_TASK_ID=electinfo/enterprise#3133 ' + cd + ' | ' + relative,
+                        'printf ignored | ' + cd + '; ' + relative]:
+            with self.subTest(command=command):
+                result = self.hook(command, cwd=self.ws)
+                self.assertEqual(result.returncode, 2, result.stderr)
+        # A pipeline cd cannot change the right-hand command's real cwd.
+        actual = subprocess.run(['/bin/bash', '-c', cd + ' | pwd'], cwd=self.ws,
+                                text=True, capture_output=True, timeout=10, check=True)
+        self.assertEqual(Path(actual.stdout.strip()), self.ws)
+        self.assertEqual(outside.read_text(), 'synthetic private fixture\n')
+
+    def test_proposal_body_cannot_overlap_the_commands_write_targets(self):
+        body = self.repo / 'report.md'; body.write_text('public fixture report\n')
+        (self.a / 'source.md').write_text('synthetic replacement fixture\n')
+        command = self.command.replace(str(self.body), str(body))
+        self.assertEqual(self.hook(command, cwd=self.repo).returncode, 0)
+        for write in ['cat ' + shlex.quote(str(self.repo / '.git/config')) + ' > ' + shlex.quote(str(body)),
+                      'printf replacement > ./report.md',
+                      'cp ' + shlex.quote(str(self.a / 'source.md')) + ' ./report.md']:
+            with self.subTest(write=write):
+                result = self.hook(write + ' && ' + command, cwd=self.repo)
+                self.assertEqual(result.returncode, 2, result.stderr)
+        other = self.repo / 'other.md'
+        self.assertEqual(self.hook('printf note > ' + shlex.quote(str(other)) + ' && ' + command,
+                                   cwd=self.repo).returncode, 0)
+        self.assertEqual(body.read_text(), 'public fixture report\n')
+        self.assertFalse(other.exists())
+
+    def test_pipeline_source_proposal_refusal_preserves_issue_reporting(self):
+        command = ('cd ' + shlex.quote(str(self.repo))
+                   + ' | gh issue create --repo electinfo/fec-api --title report --body-file '
+                   + shlex.quote(str(self.body)))
+        shape = fixture.r.action(command, str(self.ws))
+        self.assertFalse(shape.get('error'), shape)
+        self.assertEqual(shape['metadata_posts'][0]['resource'], 'issue')
+        self.assertEqual(self.hook(command, cwd=self.ws).returncode, 0)
+
     def test_public_git_configuration_documents_remain_body_inputs(self):
         for name in ['.gitignore', '.gitattributes', '.gitmodules']:
             body = self.repo / name
