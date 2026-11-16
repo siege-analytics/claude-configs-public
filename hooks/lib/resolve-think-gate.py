@@ -969,6 +969,10 @@ def _resolve_action(workspace: str, payload: dict) -> dict:
     if shape.get('metadata_posts'):
         if shape.get('remote_actions') or shape.get('review_actions'):
             return {**shape, 'gate': None, 'error': 'Split metadata posts from separately granted remote operations.'}
+        bodies = {canonical(target['body_path']) for target in shape['metadata_posts']
+                  if target.get('resource') == 'pr' and target.get('operation') == 'create'}
+        if bodies & {canonical(path) for path in shape['paths']}:
+            return {**shape, 'gate': None, 'error': 'A proposal body file cannot be written by the same command.'}
         post_selected = select_metadata_post_task(workspace, shape)
         if not post_selected.get('gate'):
             return {**shape, **post_selected}

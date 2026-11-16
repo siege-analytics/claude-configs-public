@@ -103,6 +103,30 @@ class GitRedirections(unittest.TestCase):
             self.hook('hooks/bash/destructive-guard.sh', command)
         self.assertFalse(self.output.exists())
 
+    def test_pipeline_newlines_preserve_concurrent_config_membership(self):
+        self.git('config', 'alias.preview', 'status')
+        git = 'git -C ' + q(str(self.f.repo))
+        left = git + ' preview > ' + q(str(self.output))
+        change = git + " config alias.preview 'push --force origin main'"
+        for separator in [' |\n', ' |\n\n', ' | # pipeline comment\n']:
+            pipeline = left + separator + change
+            for command in [pipeline, 'bash -c ' + q(pipeline)]:
+                for guard in ['hooks/git/branch-guard.sh', 'hooks/bash/destructive-guard.sh']:
+                    with self.subTest(separator=separator, command=command, guard=guard):
+                        result = self.hook(guard, command, 2)
+                        self.assertIn('BLOCKED:', result.stdout + result.stderr)
+        for separator in [' |; ', ' |\n; ', ' | || ']:
+            malformed = left + separator + change
+            syntax = subprocess.run(['/bin/bash', '-n', '-c', malformed],
+                                    text=True, capture_output=True, timeout=5)
+            self.assertEqual(syntax.returncode, 2)
+            for guard in ['hooks/git/branch-guard.sh', 'hooks/bash/destructive-guard.sh']:
+                self.hook(guard, malformed, 2)
+        sequential = left + ' |\n cat\n' + change
+        for guard in ['hooks/git/branch-guard.sh', 'hooks/bash/destructive-guard.sh']:
+            self.hook(guard, sequential)
+        self.assertFalse(self.output.exists())
+
     def test_barrier_proves_later_pipeline_member_can_change_dispatch(self):
         self.git('config', 'alias.preview', 'status')
         barrier = self.f.ws / 'barrier'; barrier.mkdir()
