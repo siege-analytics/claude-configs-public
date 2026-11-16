@@ -32,16 +32,25 @@ def write(path, data):
     path.write_text(json.dumps(data))
 
 
+def fixture_git(*arguments, env=None, index_file=None, timeout=120, **kwargs):
+    """Run fixture Git without inherited repository, index or config overrides."""
+    source = os.environ if env is None else env
+    safe_env = {key: value for key, value in source.items() if not key.startswith('GIT_')}
+    if index_file is not None:
+        safe_env['GIT_INDEX_FILE'] = str(index_file)
+    return subprocess.run(['git', *map(str, arguments)], env=safe_env, timeout=timeout, **kwargs)
+
+
 class Gates(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='.1051-test-', dir=ROOT)
         self.ws = Path(self.tmp.name)
         self.repo = self.ws / 'repo'
         self.repo.mkdir()
-        subprocess.run(['git', 'init', '-q', str(self.repo)], check=True, timeout=120)
+        fixture_git('init', '-q', self.repo, check=True, timeout=120)
         self.a = self.repo / 'a'; self.a.mkdir()
         self.b = self.repo / 'b'; self.b.mkdir()
-        self.env = {k: v for k, v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_', 'HUB_'))}
+        self.env = {k: v for k, v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_', 'HUB_', 'GIT_'))}
         self.env.update(CRAFT_SESSION_DIR=str(self.ws / 'sessions/one'), CRAFT_AGENT_WORKSPACE=str(self.ws))
         write(self.ws / 'sessions/one/session.jsonl', {'id': 'one', 'sdkSessionId': SDK_UUID, 'sessionStatus': 'in_progress'})
         self.old = dict(os.environ)

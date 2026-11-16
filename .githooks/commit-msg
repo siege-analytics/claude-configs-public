@@ -78,8 +78,8 @@ elif [[ "$RISK_OK" != "true" || "$DECLARED" < "$REQUIRED" ]]; then
 fi
 
 # Ticket traceability remains universal, including Tier A and [no-review].
-if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
-    MISSING+=("ticket reference: #NNN in the message, or [no-ticket] if exempt")
+if ! printf '%s' "$COMMIT_MSG" | python3 -B "$HOOK_ROOT/hooks/lib/git_command.py" --cwd "$REPO_ROOT" --policy ticket-message >/dev/null 2>&1; then
+    MISSING+=("task reference: #NNN, project ticket/URL, or [task: authorized request]; bare [no-ticket] is invalid")
 fi
 
 # The legacy escape is valid only for computed Tier A. Tier B/C can never

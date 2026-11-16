@@ -188,6 +188,10 @@ Status transitions: `designing` then `implementing` then `done-awaiting-pr`.
 Pause unfinished work with `parked`; resume the same Task at the appropriate
 active status when its existing grant permits.
 
+Keep task evidence as a current-state snapshot rather than a concatenated agent history. When updating phase notes such as `current_phase_limit`, replace superseded self-authored planning restrictions and archive useful history separately with its source and date. Preserve the task identity, declared scope, canonical claims, and the sources of current grants and actual external holds. A status change alone does not release an owner hold; a superseded agent note does not override later applicable authorization.
+
+Within an authorized outcome, choose routine methods and diagnostic verbosity without requesting a new permission amendment (for example, changing an authorized test run from `-q` to `-vv`). Seek clarification only for a material unresolved scope or authority decision or a still-applicable external hold; keep independent authorized work moving.
+
 ### Archiving after completion
 
 When the PR is merged and work is complete:

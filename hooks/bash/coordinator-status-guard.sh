@@ -89,10 +89,19 @@ if metadata is not None:
 # A PR-creation description is not an existing lane's status transition.
 # This is only a status-text exemption: do not add PR creation to the shared
 # metadata-post lane. UMG, review, topology and destructive-action guards still
-# authorize the operation. A composed command cannot borrow this verdict.
+# authorize the operation. Only a literal leading cd may precede creation;
+# another executable member cannot borrow this verdict.
 try:
     from git_command import SAFE_ENV, literal_prefix
     create_tokens = task_actions.shell_tokens(command)
+    # Match the existing supported cwd prefix without treating a second
+    # executable/state transition as PR-description data.
+    if (len(create_tokens) >= 4
+            and create_tokens[0] == ('cd', False, ())
+            and not create_tokens[1][1] and not create_tokens[1][2]
+            and create_tokens[1][0] and not create_tokens[1][0].startswith('-')
+            and create_tokens[2] == ('&&', True, ())):
+        create_tokens = create_tokens[3:]
     create_words, create_environment = literal_prefix(
         [word for word, _, _ in create_tokens], strict=True)
     if (not any(operator or globs for _, operator, globs in create_tokens)
@@ -108,6 +117,90 @@ except ValueError:
 shape = classify_action(command, sys.argv[3] or os.getcwd())
 if shape.get("read_only") or shape.get("metadata_only"):
     sys.exit(0)
+# File-output effects belong to UMG, not status-claim inspection. Prove the
+# entire reader chain with literal output destinations replaced ONLY in this
+# in-memory proof. Keep real operators/data; never execute or rewrite the command.
+def reader_chain_with_outputs(text):
+    try:
+        parts = task_actions.shell_tokens(text)
+    except ValueError:
+        return False, []
+    proof, words, github_reads = [], [], []
+
+    def finish_reader():
+        from git_command import literal_prefix
+        invocation = list(words)
+        # Detect the executable behind supported wrappers, never gh-looking
+        # argument data. This unwrap is NOT a reader/permission verdict: the
+        # complete original chain still needs the canonical proof below.
+        # Literal wrapper nesting cannot exceed its input character count.
+        for _ in range(len(text) + 1):
+            while invocation and re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', invocation[0]):
+                invocation.pop(0)
+            if not invocation:
+                return
+            name = invocation[0].rsplit('/', 1)[-1]
+            if name == 'gh':
+                github_reads.append(task_actions.released_read_verdict(shlex.join(invocation)) == 0)
+                return
+            try:
+                if name == 'command':
+                    invocation, _ = literal_prefix(invocation, strict=True)
+                else:
+                    nested = task_actions._wrapped_command(invocation)
+                    if nested is None:
+                        return
+                    invocation = nested
+            except ValueError:
+                return
+
+    # Collect effects independently of reader-proof syntax. A later glob or
+    # unsupported output cannot erase a real GitHub transition already seen.
+    i = 0
+    while i < len(parts):
+        value, operator, _ = parts[i]
+        if operator and re.fullmatch(r"[0-9]*(?:>>|>&|<&|>\||>|<)|&>>|&>", value):
+            i += 2
+            continue
+        if operator:
+            finish_reader()
+            words = []
+        else:
+            words.append(value)
+        i += 1
+    finish_reader()
+
+    i = 0
+    while i < len(parts):
+        value, operator, globs = parts[i]
+        if globs:
+            return False, github_reads
+        if operator and re.fullmatch(r"[0-9]*(?:>>|>&|<&|>\||>|<)|&>>|&>", value):
+            i += 1
+            if i >= len(parts) or parts[i][1] or parts[i][2] or parts[i][0].startswith('~'):
+                return False, github_reads
+            target = parts[i][0]
+            if value in {'>', '>>', '1>', '1>>', '2>', '2>>'}:
+                target = '/dev/null'
+            proof.extend((value, shlex.quote(target)))
+        elif operator:
+            if value not in {'&&', '||', ';', '|'}:
+                return False, github_reads
+            proof.append(value)
+        else:
+            proof.append(shlex.quote(value))
+        i += 1
+    return task_actions.released_read_verdict(' '.join(proof)) == 0, github_reads
+
+reader_chain, github_reads = reader_chain_with_outputs(command)
+if reader_chain:
+    sys.exit(0)
+# Legacy first-gh inspection must not let a GET hide a later real transition.
+# Existing whole-command typed metadata exceptions above remain unchanged.
+if len(github_reads) > 1 and not all(github_reads):
+    print('BLOCKED: mixed GitHub operations require separately checked status calls; split the command.', file=sys.stderr)
+    sys.exit(2)
+
 # #1210 owns the literal REST review-reply classifier and UMG authorization.
 # A reply's prose is not a workflow transition. Reuse that typed interface
 # when present in the combined source; never inspect arbitrary POST bodies as
@@ -176,8 +269,8 @@ READ_ACTIONS = {"view", "list", "diff", "checks", "status"}
 if resource in {"issue", "pr"} and action in READ_ACTIONS:
     sys.exit(0)
 # `gh api` without a mutating method or a request-body/field flag is a GET read.
-# (Issue-comment/edit api paths were already reclassified to issue+comment/edit
-# above, so they are writes and are not exempted here.)
+# This is the retained fallback for API paths outside the shared reader proof;
+# issue-path status inspection above is not itself evidence of an HTTP write.
 if resource == "api":
     _api_args = tokens[idx + 2:]
     _mutating_method = any(t in {"-X", "--method"} for t in _api_args) and any(

@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import shlex
 from pathlib import Path
 import shutil
 import subprocess
@@ -329,6 +330,424 @@ else: sys.exit(99)
                                            capture_output=True,timeout=5)
                 self.assertNotEqual(predicate.returncode,0)
         self.assertFalse(self.audit.exists())
+
+    # #1207 AC3, #1371, #1372: one row per spelling class. Classification only;
+    # the fixture gh never merges and these rows never reach it.
+    ADMIN_SPELLINGS = [
+        'gh pr merge 5 --admin', 'gh pr merge 5 --admin -R o/r',
+        '(gh pr merge 5 --admin)', '{ gh pr merge 5 --admin; }',
+        'gh -R o/r pr merge 5 --admin', 'gh --repo=o/r pr merge 5 --admin',
+        'gh pr -R o/r merge 5 --admin', 'gh pr -Ro/r merge 5 --admin',
+        'gh pr --repo=o/r merge 5 --admin', 'gh -Ro/r pr -R o/r merge 5 --admin',
+        'gh pr merge 5 -sb -t --admin', 'gh pr merge 5 -sA -t --admin',
+        'gh pr merge 5 -dt -b --admin', 'gh pr merge 5 -mF -t --admin',
+        'gh pr merge 5 -sb x --admin', 'gh pr merge 5 --admin=true',
+        'gh pr merge 5 --body -- --admin', "gh pr merge 5 --ad'min'",
+        'GH pr merge 5 --admin', '/opt/homebrew/bin/gh pr merge 5 --admin',
+        'GH_REPO=o/r gh pr merge 5 --admin', 'gh --admin=true pr merge 5',
+        'gh pr --admin=true merge 5', 'env gh pr merge 5 --admin',
+        'timeout 5 gh -R o/r pr merge 5 --admin', 'command gh pr merge 5 --admin',
+        'true && gh -R o/r pr merge 5 --admin', 'true & gh pr -R o/r merge 5 --admin',
+        'echo y | gh pr merge 5 --admin', 'true\ngh pr -Ro/r merge 5 --admin',
+        'gh pr merge 5 --adm?n', 'gh pr merge 5 *', 'gh pr merge 5 --body *',
+        'gh pr merge 5 $(printf -- --admin)', 'gh pr merge 5 --{admin,squash}',
+        "bash -c 'gh pr merge 5 --admin'", "sh -lc 'gh -R o/r pr merge 5 --admin'",
+        'eval gh pr merge 5 --admin', 'echo 5 | xargs gh pr merge',
+        "echo 'pr merge 5 --admin' | xargs gh", CLI + ' --admin',
+    ]
+    # gh reads these --admin words as option data, or the command is no admin merge.
+    ADMIN_DATA = [CLI + ' --body "--admin"', CLI + ' -b --admin', CLI + ' -sb --admin', CLI + ' --subject=--admin',
+                  CLI + ' -t --admin', CLI + ' && echo --admin', CLI + ' && printf %s "gh pr merge 2 --admin"',
+                  'gh -R o/r pr merge 1794 --squash', 'gh pr -R o/r merge 1794']
+    ORDINARY = ['pwd', 'git merge main', 'gh pr view 5', 'gh issue view 1347 -R o/r', 'gh pr list --search merge',
+                'git commit -m "refuse --admin"', 'grep -e gh -e --admin hooks', 'gh issue comment 5 --body --admin',
+                'find . -name gh', 'command -v gh', 'git -C ../gh merge main', 'gh search issues alias set',
+                'bash hooks/_test/github_merge_queue.test.sh', 'time gh pr view 5', 'echo 5 | xargs gh issue view',
+                "gh alias list", "alias ll='ls -l'", 'alias high=ls', 'gh pr view 5 --json mergeable && bash run.sh',
+                'timeout 10 gh auth status', 'watch gh status', 'sudo gh secret list', 'python3 -B -m py_compile x.py',
+                'git diff | python3 -c "print(1)"', 'python3 -c "from django.contrib import admin; print(1)"',
+                """node -e "require('./admin')" """, 'cat notes.txt | python3 parse.py',
+                "cat notes.txt | awk '{print $1}'", 'ls | python3 -m json.tool', "git log | perl -ne 'print'",
+                'cat notes.txt | bash scripts/check.sh', 'ssh cyberpower bash -s < README.md',
+                'ls /tmp/wt-admin-refusal/hooks | grep "test.sh$"']
+
+    def merge_refusal(self, command):
+        return subprocess.run([sys.executable, str(self.install/'hooks/lib/github-merge-queue.py'), '--merge-refusal', command],
+                              env=self.env, capture_output=True, text=True, timeout=5)
+
+    def guard(self, command, env=None):
+        payload = fixture.craft_payload(tool_name='Bash', cwd=str(self.f.repo), tool_input={'command': command})
+        return subprocess.run(['bash', str(self.install/'hooks/bash/destructive-guard.sh')], input=json.dumps(payload),
+                              env=env or self.env, cwd=self.f.repo, text=True, capture_output=True, timeout=12)
+
+    REVIEW_ADMIN = [
+        "flock merge.lock -c 'true; gh pr merge 5 --admin'",
+        "flock -c 'true && gh pr merge 5 --admin' merge.lock",
+        "script -c 'true; gh pr merge 5 --admin'",
+        "watch 'true; gh pr merge 5 --admin'",
+        'if gh pr merge 5 --admin; then :; fi',
+        'if sudo gh pr merge 5 --admin; then :; fi',
+        "GH_REPO='o/r' gh pr merge 5 --admin",
+        'GH_REPO="o/r" gh pr merge 5 --admin',
+        "if GH_REPO='o/r' gh pr merge 5 --admin; then :; fi",
+        'while gh pr merge 5 --admin; do :; done',
+        '! gh pr merge 5 --admin',
+        'coproc gh pr merge 5 --admin',
+        r"env -S 'gh\_pr\_merge\_5\_--admin'",
+        "flock merge.lock -c " + shlex.quote(r"env -S 'gh\_pr\_merge\_5\_--admin'"),
+        r"env -S 'gh pr merge 5 --admin\c ignored'",
+        "env -S '" + chr(36) + "{EMPTY} gh pr merge 5 --admin'",
+        "env -S '" + chr(36) + "{PROGRAM} pr merge 5 --admin'",
+        "env -S " + shlex.quote('gh -R' + chr(36) + '{EMPTY} o/r pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh -b' + chr(36) + '{EMPTY} note pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh -dmF' + chr(36) + '{EMPTY} note pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh pr merge 5 ' + chr(36) + '{FLAG} --admin'),
+        "env -S " + shlex.quote('gh pr merge 5 --admin=false ' + chr(36) + '{FLAG}'),
+        "env -S " + shlex.quote('gh "' + chr(36) + '{GROUP}" merge 5 --admin'),
+        "env -S " + shlex.quote('gh pr "' + chr(36) + '{VERB}" 5 --admin'),
+        "env -S " + shlex.quote('gh "' + chr(36) + '{GROUP}" "' + chr(36) + '{VERB}" 5 --admin'),
+        "env -S " + shlex.quote('gh ' + chr(36) + '{EMPTY} pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh pr ' + chr(36) + '{EMPTY} merge 5 --admin'),
+        "env -S " + shlex.quote('gh --repo ' + chr(36) + '{EMPTY} o/r pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh --body ' + chr(36) + '{EMPTY} title pr merge 5 --admin'),
+        "env -S " + shlex.quote('gh --admin -- "' + chr(36) + '{GROUP}" merge 5'),
+        "env -S '" + chr(36) + "{PROGRAM} -R owner/repo pr merge 5 --admin'",
+        "env -S '" + chr(36) + "{PROGRAM} --repo=owner/repo pr merge 5 --admin'",
+        "env -S '" + chr(36) + "{PROGRAM} pr -R owner/repo merge 5 --admin'",
+        "env -S '" + chr(36) + "{EMPTY} sudo gh pr merge 5 --admin'",
+        r'find . -exec true \; -exec gh pr merge 5 --admin \;',
+        r'find . -exec true {} + -execdir gh pr merge 5 --admin \;',
+        r"find . -exec true \; -ok sh -c 'true; gh pr merge 5 --admin' \;",
+        "env -S 'sh -c' 'true; gh pr merge 5 --admin'",
+        "env -S 'GH_REPO=o/r gh pr merge 5 --admin'",
+        "env -S '--ignore-environment gh pr merge 5 --admin'",
+    ]
+    REVIEW_DATA = [
+        "'if' gh pr merge 5 --admin", r'\if gh pr merge 5 --admin',
+        'command if gh pr merge 5 --admin',
+        "'coproc' gh pr merge 5 --admin",
+        r'\coproc gh pr merge 5 --admin',
+        'echo coproc gh pr merge 5 --admin',
+        r"env -S 'gh\_pr\_merge\_5\_--body\_--admin'",
+        r"env -S 'gh\_pr\_merge\_5\_--admin=false'",
+        r"env -S 'printf\_%s\_gh\_pr\_merge\_5\_--admin'",
+        "env -S 'printf %s " + chr(36) + "{EMPTY} gh pr merge 5 --admin'",
+        "env -S 'gh pr merge 5 --body " + chr(36) + "{WORDS}'",
+        "env -S " + shlex.quote('gh pr merge 5 ' + chr(36) + '{FLAG} --admin=false'),
+        "env -S " + shlex.quote('gh pr merge 5 --admin --help=' + chr(36) + '{PREFIX}true'),
+        "env -S " + shlex.quote('gh pr merge 5 --admin --help=true' + chr(36) + '{SUFFIX}'),
+        "env -S " + shlex.quote('gh pr merge 5 --admin=' + chr(36) + '{PREFIX}false'),
+        "env -S " + shlex.quote('gh -R' + chr(36) + '{EMPTY} o/r pr merge 5'),
+        "env -S " + shlex.quote('gh -b' + chr(36) + '{EMPTY} note pr merge 5'),
+        "env -S " + shlex.quote('gh pr merge 5 --body=' + chr(36) + '{WORDS}'),
+        "env -S " + shlex.quote('gh pr merge 5 -b' + chr(36) + '{WORDS}'),
+        "env -S " + shlex.quote('gh pr merge 5 --body-file=' + chr(36) + '{PATH}'),
+        "env -S " + shlex.quote('gh pr merge 5 --repo=' + chr(36) + '{REPO}'),
+        "env -S " + shlex.quote('gh pr merge 5 -R' + chr(36) + '{REPO}'),
+        "env -S " + shlex.quote('gh pr merge 5 --help=' + chr(36) + '{HELP}'),
+        "env -S " + shlex.quote('gh pr merge 5 --body "' + chr(36) + '{WORDS}"'),
+        "flock merge.lock -c " + shlex.quote("env -S 'gh pr merge 5 --body " + chr(36) + "{WORDS}'"),
+        "env -S '" + chr(36) + "{PREFIX}printf pr merge 5 --admin'",
+        "env -S '" + chr(36) + "{PREFIX}/printf pr merge 5 --admin'",
+        "env -S " + shlex.quote('"' + chr(36) + '{EMPTY}" gh pr merge 5 --admin'),
+        "env -S " + shlex.quote(r'"gh\_pr\_merge\_5\_--admin"'),
+        "env -S " + shlex.quote(r"'gh\_pr\_merge\_5\_--admin'"),
+        r"env -S 'gh\\_pr\_merge\_5\_--admin'",
+        "'GH_REPO=o/r' gh pr merge 5 --admin",
+        "'GH_REPO'=o/r gh pr merge 5 --admin",
+        r'GH_REPO\=o/r gh pr merge 5 --admin',
+        "env -S 'true; gh pr merge 5 --admin'",
+        "env -S 'if gh pr merge 5 --admin'",
+        "watch -x printf %s 'gh pr merge 5 --admin'",
+        "flock merge.lock -c 'printf %s \"gh pr merge 5 --admin\"'",
+        "script -c 'printf %s \"gh pr merge 5 --admin\"'",
+        r'find . -exec printf %s "gh pr merge 5 --admin" \;',
+        r'find . -exec if gh pr merge 5 --admin \;',
+        r'find . -name -exec gh pr merge 5 --admin \;',
+        r'find . -printf -exec gh pr merge 5 --admin \;',
+    ]
+
+    def test_gnu_symbolic_word_matcher_preserves_literal_and_newline_semantics(self):
+        import itertools
+        import re
+        spec = importlib.util.spec_from_file_location('env_match_fixture_actions', ROOT/'hooks/lib/task_actions.py')
+        actions = importlib.util.module_from_spec(spec); spec.loader.exec_module(actions)
+        marker = actions._ENV_DYNAMIC_WORD
+        parts = ('', 'a', 'b', '\n', 'a.b', '[x]')
+        literals = ('', 'a', 'b', 'ab', 'ba', 'aa', '\n', 'a\nb', 'a.b', '[x]', '--admin')
+        for count in range(1, 5):
+            for pieces in itertools.product(parts, repeat=count):
+                word = marker.join(pieces)
+                pattern = '.*'.join(re.escape(piece) for piece in pieces)
+                for literal in literals:
+                    self.assertEqual(actions._env_word_matches(word, literal),
+                                     re.fullmatch(pattern, literal) is not None,
+                                     (pieces, literal))
+        code = ('import runpy; a=runpy.run_path(' + repr(str(ROOT/'hooks/lib/task_actions.py')) + '); '
+                'marker=a["_ENV_DYNAMIC_WORD"]; '
+                'assert a["_env_word_matches"](marker*512+"xyz", "--match-head-commit") is False; '
+                'assert a["_env_word_matches"](marker*512, "--admin") is True')
+        result = subprocess.run([sys.executable, '-I', '-B', '-c', code],
+                                capture_output=True, text=True, timeout=3)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.f.task('own-local', self.f.repo)
+        waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
+        large = 'env -S ' + shlex.quote('gh pr merge 5 ' + (chr(36) + '{A}') * 512 + '--admin')
+        self.assertEqual(self.merge_refusal(large).returncode, 3)
+        self.assertEqual(self.guard(large, waived).returncode, 2)
+        (self.install/'hooks/lib/github-merge-queue.py').unlink()
+        self.assertEqual(self.guard(large, waived).returncode, 2)
+        self.assertEqual(self.guard('printf %s gh pr merge --admin', waived).returncode, 0)
+        self.assertFalse(self.calls.exists(), 'inspection must not execute candidate gh')
+
+    def test_gnu_empty_variables_inside_short_option_clusters(self):
+        spec = importlib.util.spec_from_file_location('env_cluster_fixture_actions', ROOT/'hooks/lib/task_actions.py')
+        actions = importlib.util.module_from_spec(spec); spec.loader.exec_module(actions)
+        variable = chr(36) + '{EMPTY}'
+        for text, expected in (('gh pr merge 5 --admin -' + variable + '- --admin=false', True),
+                               ('gh pr merge 5 -' + variable + '- --body text', False),
+                               ('gh pr merge 5 --body -' + variable + '- --admin=false', False)):
+            command = 'env -S ' + shlex.quote(text)
+            self.assertEqual(bool(actions.gh_merge_refusal(command)), expected)
+            self.assertEqual(bool(actions.unparseable_merge_refusal(command)), expected)
+        for prefix in ('m', 'dm', 'md'):
+            for suffix, expected in (('', True), ('d', False)):
+                command = 'env -S ' + shlex.quote('gh -' + prefix + variable + suffix + ' note pr merge 5 --admin')
+                self.assertEqual(bool(actions.gh_merge_refusal(command)), expected)
+                self.assertEqual(bool(actions.unparseable_merge_refusal(command)), expected)
+        for booleans in ('m', 'dm', 'md'):
+            for value_flag in ('b', 'F', 't', 'A'):
+                for position in range(len(booleans) + 1):
+                    word = '-' + booleans[:position] + variable + booleans[position:] + value_flag
+                    for quoted in (False, True):
+                        argument = '"' + word + '"' if quoted else word
+                        for tail, expected in (('note pr merge 5 --admin', True),
+                                               ('note pr merge 5', False),
+                                               # A nonempty expansion can make an attached value, leaving admin executable.
+                                               ('--admin pr merge 5', True)):
+                            text = 'gh ' + argument + ' ' + tail
+                            command = 'env -S ' + shlex.quote(text)
+                            for inspected in (command, 'flock merge.lock -c ' + shlex.quote(command)):
+                                with self.subTest(command=inspected):
+                                    self.assertEqual(bool(actions.gh_merge_refusal(inspected)), expected)
+                                    self.assertEqual(bool(actions.unparseable_merge_refusal(inspected)), expected)
+                    data = 'env -S ' + shlex.quote('gh ' + word + 'fixed note pr merge 5 --admin')
+                    self.assertIsNone(actions.gh_merge_refusal(data))
+                    self.assertIsNone(actions.unparseable_merge_refusal(data))
+
+    def test_gnu_short_cluster_prewaiver_refusal_survives_helper_failures(self):
+        self.f.task('own-local', self.f.repo)
+        waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
+        variable = chr(36) + '{FLAGS}'
+        commands = ['env -S ' + shlex.quote(text) for text in
+                    ('gh -m' + variable + 'b note pr merge 5 --admin',
+                     'gh -d' + variable + 'mF note pr merge 5 --admin',
+                     'gh -m' + variable + ' note pr merge 5 --admin',
+                     'gh pr merge 5 --admin -' + variable + '- --admin=false')]
+        helper = self.install/'hooks/lib/github-merge-queue.py'
+        original = helper.read_bytes()
+        for mode in ('normal', 'missing-queue', 'missing-syntax'):
+            if mode == 'missing-queue':
+                helper.unlink()
+            elif mode == 'missing-syntax':
+                helper.write_bytes(original)
+                (self.install/'hooks/lib/command-text.py').unlink()
+            for command in commands:
+                with self.subTest(mode=mode, command=command):
+                    if mode == 'normal':
+                        self.assertEqual(self.merge_refusal(command).returncode, 3)
+                        self.hook(command, 2)
+                    self.assertEqual(self.guard(command, waived).returncode, 2)
+            self.assertEqual(self.guard('printf %s gh pr merge --admin', waived).returncode, 0)
+        self.assertFalse(self.calls.exists(), 'inspection must not execute candidate gh')
+
+    def test_gnu_env_split_grammar_matches_temporary_stub(self):
+        env_binary = shutil.which('genv') or shutil.which('env')
+        version = subprocess.run([env_binary, '--version'], capture_output=True, text=True, timeout=5)
+        if version.returncode or 'GNU coreutils' not in version.stdout:
+            self.skipTest('Install GNU coreutils (genv) to run the primary env -S grammar differential; hook controls remain active')
+        spec = importlib.util.spec_from_file_location('env_split_fixture_actions', ROOT/'hooks/lib/task_actions.py')
+        actions = importlib.util.module_from_spec(spec); spec.loader.exec_module(actions)
+        capture = self.f.ws/'env-split-argv.json'
+        (self.bin/'gh').write_text('#!'+sys.executable+'\nimport os,sys,json\nfrom pathlib import Path\nPath(os.environ["ENV_SPLIT_CAPTURE"]).write_text(json.dumps(sys.argv[1:]))\n')
+        (self.bin/'gh').chmod(0o700)
+        environment = {'PATH': str(self.bin), 'ENV_SPLIT_CAPTURE': str(capture), 'SPLIT_LITERAL': 'value with spaces'}
+        cases = [r'gh\_pr\_merge\_5\_--admin', r'gh pr merge 5 --admin\c ignored',
+                 r'gh pr merge 5 --body "--admin\_words"', r'gh pr merge 5 --body "--admin\twords"',
+                 r"gh pr merge 5 --body 'literal\_words'", r'gh pr merge 5 --body \#literal # ignored',
+                 r'gh pr merge 5 --body ""#suffix', r'gh pr merge 5 --body "" # ignored',
+                 r'gh pr merge 5 --body \n', r'gh pr merge 5 --body \t',
+                 r'gh pr merge 5 --body \f', r'gh pr merge 5 --body \v',
+                 r'gh pr merge 5 --body \r', r'gh pr merge 5 --body \"',
+                 r"gh pr merge 5 --body 'a\'b\\c'", r'gh pr merge 5 --body \$literal',
+                 r'"gh\_pr\_merge\_5\_--admin"', r"'gh\_pr\_merge\_5\_--admin'",
+                 r'gh\\_pr\_merge\_5\_--admin', r'gh pr merge 5 --admin\z',
+                 r'gh pr merge 5 --body "\c"']
+        for text in cases:
+            with self.subTest(split_string=text):
+                capture.unlink(missing_ok=True)
+                actual = subprocess.run([env_binary, '-S', text], env=environment,
+                                        capture_output=True, text=True, timeout=5)
+                parsed = actions._env_split_string(text)
+                if capture.exists():
+                    self.assertEqual(actual.returncode, 0)
+                    self.assertEqual(parsed, ['gh'] + json.loads(capture.read_text()))
+                elif actual.returncode == 125:
+                    self.assertIsNone(parsed)
+                else:
+                    self.assertEqual(actual.returncode, 127)
+                    self.assertNotEqual(parsed[0], 'gh')
+        text = 'gh pr merge 5 --body ' + chr(36) + '{SPLIT_LITERAL}'
+        capture.unlink(missing_ok=True)
+        subprocess.run([env_binary, '-S', text], env=environment, check=True, timeout=5)
+        self.assertEqual(json.loads(capture.read_text())[-1], 'value with spaces')
+        self.assertEqual(actions._env_split_string(text)[-1], actions._ENV_OPTIONAL_WORD)
+        self.assertFalse(self.calls.exists(), 'the primary fixture must not invoke the real or transport gh')
+
+    def test_reviewed_shell_keywords_wrappers_and_all_find_actions(self):
+        self.f.task('own-local', self.f.repo)
+        waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
+        for command in self.REVIEW_ADMIN:
+            with self.subTest(admin=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 3)
+                self.hook(command, 2)
+                self.assertEqual(self.guard(command, waived).returncode, 2)
+        for command in self.REVIEW_DATA:
+            with self.subTest(data=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+                self.assertEqual(self.guard(command, waived).returncode, 0)
+        self.assertFalse(self.calls.exists(), 'inspection must not execute candidate gh')
+
+    def test_admin_merge_is_refused_in_every_spelling(self):
+        self.f.task('own-local', self.f.repo)  # An owned cwd must not admit any of these.
+        waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
+        for command in self.ADMIN_SPELLINGS:
+            with self.subTest(command=command):
+                result = self.hook(command, 2)
+                # A piped program may be refused by action()'s own, more
+                # specific reason first; every other row names the predicate.
+                # Piped and untokenisable rows may report the ordinary path's
+                # own (also refusing) reason first.
+                if not any(c in command for c in '|<$`{(\r\v\u00a0'):
+                    self.assertIn('Pinned merge denied: pinned merge queue:', result.stderr)
+                self.assertEqual(self.merge_refusal(command).returncode, 3)
+                predicate = subprocess.run([sys.executable, str(self.install/'hooks/lib/github-merge-queue.py'),
+                                            '--queue-required', command, str(self.f.repo)], env=self.env,
+                                           capture_output=True, timeout=5)
+                self.assertNotEqual(predicate.returncode, 0)
+                for env in (None, waived):  # No destructive-guard waiver applies.
+                    run = self.guard(command + ' # [destructive-ok: Reason: r; Evidence: e; Falsification: f]', env)
+                    self.assertEqual(run.returncode, 2, (command, run.stderr))
+                    self.assertIn('every gh spelling', run.stderr)
+        self.assertFalse(self.calls.exists())
+        self.assertFalse(self.audit.exists())
+
+    def test_admin_words_are_data_and_unrelated_stdin_programs_keep_task_scope(self):
+        self.f.task('own-local', self.f.repo)
+        self.mode.write_text('noqueue')
+        harmless = ['printf %s gh pr merge --admin', 'printf %s merge --admin',
+                    "printf 'print(1)' | python3",
+                    CLI + ' && printf %s gh pr merge --admin']
+        for command in harmless:
+            with self.subTest(command=command):
+                self.hook(command)
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+                self.assertEqual(self.guard(command, dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')).returncode, 0)
+        self.hook('printf %s gh pr merge --admin && gh -R o/r pr merge 5 --admin', 2)
+        self.hook("printf 'print(1)' | python3; gh pr -R o/r merge 5 --admin", 2)
+        substitution = 'printf %s gh pr merge --admin "$(date)"'
+        result = self.hook(substitution, 2)  # Existing mutation-expansion policy.
+        self.assertNotIn('Pinned merge denied:', result.stderr)
+        self.assertEqual(self.merge_refusal(substitution).returncode, 0)
+        self.assertFalse(self.audit.exists())
+
+    def test_queue_forms_admin_data_and_ordinary_commands_still_pass(self):
+        literal = 'mutation{enqueuePullRequest(input:{pullRequestId:"PR_test",expectedHeadOid:"'+SHA+'"}){mergeQueueEntry{position state}}}'
+        for command in [CLI, CLI+' --repo siege-analytics/siege_utilities', CLI+' -R siege-analytics/siege_utilities',
+                        GQL, "gh api graphql -f query='"+literal+"'"]:
+            with self.subTest(queue=command):
+                self.hook(command)
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+                self.assertEqual(self.guard(command).returncode, 0)
+        self.assertEqual(len(self.audit.read_text().splitlines()), 5)
+        self.mode.write_text('noqueue')
+        self.f.task('own-local', self.f.repo)
+        for command in self.ADMIN_DATA:
+            with self.subTest(data=command):
+                self.hook(command)  # Ordinary owned-task path, never a queue exemption.
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+        for command in self.ORDINARY:
+            with self.subTest(ordinary=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+        self.assertEqual(len(self.audit.read_text().splitlines()), 5)
+
+    def test_guard_refusal_survives_a_missing_or_broken_helper(self):
+        helper = self.install/'hooks/lib/github-merge-queue.py'
+        for content in [None, 'def broken(:\n', 'raise ImportError("fixture")\n', 'import sys\nsys.exit(1)\n',
+                        'import sys\nsys.exit(4)\n']:
+            if content is None:
+                helper.unlink()
+            else:
+                helper.write_text(content)
+            with self.subTest(helper=content):
+                self.assertEqual(self.guard('pwd').returncode, 0)  # never blocks every command
+                for ordinary in ['cat /tmp/admin/report', 'printf %s gh pr merge --admin',
+                                 'env printf %s gh pr merge --admin "$(date)"',
+                                 "printf 'print(1)' | python3"] + self.REVIEW_DATA:
+                    self.assertEqual(self.guard(ordinary, dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')).returncode, 0)
+                for command in self.REVIEW_ADMIN + ['gh -R o/r pr merge 5 --admin', "gh pr merge 5 --ad'min'", 'gh pr merge 5 --{admin,squash}',
+                                'env gh -R o/r pr merge 5 --admin "$(date)"',
+                                'env gh ' + chr(92) + chr(10) + 'pr merge 5 --admin',
+                                'timeout 5 gh pr merge 5 --admin "$(date)"',
+                                '(gh pr merge 5 --admin)', '{ gh pr merge 5 --admin; }']:
+                    run = self.guard(command)
+                    self.assertEqual(run.returncode, 2, run.stderr)
+                    self.assertIn('every gh spelling', run.stderr)
+
+    def test_normal_fixed_wrappers_aliases_and_stdin_are_not_admin_execution(self):
+        self.f.task('own-local', self.f.repo)
+        self.mode.write_text('noqueue')
+        ordinary = ["echo 'pr merge' | xargs gh issue view 5", "echo 'pr merge' | xargs gh pr merge 5 --help", "env -S 'gh -R o/r pr merge 1794 --merge'", 'env gh pr merge 1794 --merge', 'timeout 5 gh pr merge 1794 --merge',
+                    "gh alias set m 'pr merge'", "alias m='gh pr merge 5 --admin'",
+                    'gh alias import aliases.yml', "printf 'print(1)' | python3",
+                    CLI + ' --admin=false', CLI + ' -- --admin', CLI + ' --help --admin']
+        for command in ordinary:
+            with self.subTest(command=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+                self.assertEqual(self.guard(command, dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')).returncode, 0)
+        for wrapped in ['env gh pr merge 1794 --merge', 'timeout 5 gh pr merge 1794 --merge']:
+            result = self.hook(wrapped, 2)  # Existing project-execution wrapper policy.
+            self.assertNotIn('Pinned merge denied:', result.stderr)
+        self.hook("gh alias set m 'pr merge'")
+        self.hook("alias m='gh pr merge 5 --admin'")
+        self.assertEqual(self.merge_refusal("env -S 'gh -R o/r pr merge 1794 --admin'").returncode, 3)
+        self.hook('env gh pr merge 1794 --admin', 2)
+        self.hook('timeout 5 gh pr merge 1794 --admin', 2)
+
+    def test_syntax_helper_failure_does_not_turn_literal_data_into_a_merge(self):
+        self.f.task('own-local', self.f.repo)
+        (self.install/'hooks/lib/command-text.py').unlink()
+        waived = dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')
+        for command in self.REVIEW_ADMIN:
+            with self.subTest(syntax_helper_missing_admin=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 3)
+                self.assertEqual(self.guard(command, waived).returncode, 2)
+        for command in self.REVIEW_DATA:
+            with self.subTest(syntax_helper_missing_data=command):
+                self.assertEqual(self.merge_refusal(command).returncode, 0)
+                self.assertEqual(self.guard(command, waived).returncode, 0)
+        for command in ['printf %s gh pr merge --admin', 'cat /tmp/admin/report',
+                        'env printf %s gh pr merge --admin "$(date)"',
+                        "printf 'print(1)' | python3"]:
+            with self.subTest(command=command):
+                if command.startswith('env '):
+                    self.assertEqual(self.merge_refusal(command).returncode, 0)
+                    self.assertEqual(self.guard(command, dict(self.env, CLAUDE_DESTRUCTIVE_BASH='allow')).returncode, 0)
+                else:
+                    self.hook(command)
+        wrapped = self.hook('env printf %s gh pr merge --admin', 2)
+        self.assertNotIn('Pinned merge denied:', wrapped.stderr)  # Existing execution-wrapper policy.
+        self.hook('printf %s gh pr merge --admin; gh -R o/r pr merge 5 --admin', 2)
 
     def test_bad_graphql_forms(self):
         bad=[GQL.replace('enqueuePullRequest','dequeuePullRequest'),GQL.replace(',expectedHeadOid:$oid',''),GQL.replace(SHA,'abc'),GQL+' -f oid='+SHA,GQL.replace('position state','position state}} deleteIssue(input:{id:$id}){clientMutationId'),GQL+' && touch x',GQL.replace('-f query=', '--input '),GQL.replace('graphql','/graphql'),GQL.replace("'mutation(", '"mutation(').replace("}}}'", '}}}"')]

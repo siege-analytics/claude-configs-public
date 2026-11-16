@@ -168,5 +168,116 @@ expect_block "(f) evidence exists but missing for new file" "$HOOK" \
 expect_block "(g) gh pr create also triggers check" "$HOOK" \
     "$(make_payload 'gh pr create --title test --body test' "$TMPDIR/with-testing")"
 
+# A consumer overlay must not lend its declaration to the config repository.
+cd "$TMPDIR/no-testing"
+git init -q --bare "$TMPDIR/no-testing-bare"
+git remote add origin "$TMPDIR/no-testing-bare"
+git push -q origin develop
+git remote set-url origin https://github.com/fixture/configs.git
+mkdir -p projects/consumer
+cat > projects/consumer/PROJECT.md <<'PROJEOF'
+---
+repo: fixture/consumer
+---
+testing:
+  layers:
+    - framework: pytest
+PROJEOF
+echo 'print("changed")' >> app.py
+git add -A
+git commit -q -m "foreign consumer overlay #1384"
+expect_pass "(h) unrelated consumer testing does not apply to this repo" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")"
+
+# The same declaration applies when its identity actually matches the target.
+git remote set-url origin https://github.com/fixture/consumer.git
+expect_block_because "(i) matching consumer declaration requires evidence" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")" \
+    'no test-gate.json was found'
+
+# Git fetch uses the first origin URL; a later URL must not select policy.
+git config --add remote.origin.url https://github.com/fixture/other.git
+expect_block_because "(i-first) first matching origin retains testing with a different later URL" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")" \
+    'no test-gate.json was found'
+git config --unset-all remote.origin.url
+git config --add remote.origin.url https://github.com/fixture/other.git
+git config --add remote.origin.url https://github.com/fixture/consumer.git
+expect_pass "(i-reversed) later matching origin does not lend testing to the first URL" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")"
+git config --unset-all remote.origin.url
+git remote set-url origin https://github.com/fixture/consumer.git
+
+# Descriptor identity matters even when two locations reuse the same slug.
+export CRAFT_WORKSPACE_ROOT="$TMPDIR/workspace"
+mkdir -p "$CRAFT_WORKSPACE_ROOT/projects/consumer"
+cp projects/consumer/PROJECT.md "$CRAFT_WORKSPACE_ROOT/projects/consumer/PROJECT.md"
+cat > projects/consumer/PROJECT.md <<'PROJEOF'
+---
+repo: fixture/consumer
+---
+No local testing declaration.
+PROJEOF
+expect_block_because "(j) matching workspace overlay requires evidence" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")" \
+    'no test-gate.json was found'
+cat > "$CRAFT_WORKSPACE_ROOT/projects/consumer/PROJECT.md" <<'PROJEOF'
+---
+repo: fixture/other-consumer
+---
+testing:
+  layers:
+    - framework: pytest
+PROJEOF
+expect_pass "(k) foreign same-slug workspace overlay does not apply" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")"
+
+# An unconfigured repository does not acquire a new metadata-helper dependency.
+mkdir -p "$TMPDIR/guard-copy" "$TMPDIR/no-declarations"
+cp -R "$REPO_ROOT/hooks" "$TMPDIR/guard-copy/hooks"
+rm "$TMPDIR/guard-copy/hooks/lib/resolve-think-gate.py"
+cd "$TMPDIR/no-declarations"
+git init -q
+unset CRAFT_WORKSPACE_ROOT
+expect_pass "(l) no declaration remains unaffected when resolver is unavailable" \
+    "$TMPDIR/guard-copy/hooks/git/test-guard.sh" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-declarations")"
+expect_block_because "(m) possible project declaration with missing resolver fails visibly" \
+    "$TMPDIR/guard-copy/hooks/git/test-guard.sh" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")" \
+    'cannot resolve this repository'
+
+# An identity lookup failure is not evidence that the target has no policy.
+cat > "$TMPDIR/no-testing/projects/consumer/PROJECT.md" <<'PROJEOF'
+---
+repo: fixture/consumer
+---
+testing:
+  layers:
+    - framework: pytest
+PROJEOF
+mkdir -p "$TMPDIR/git-shim"
+cat > "$TMPDIR/git-shim/git" <<'GITEOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" = -C && "${3:-}" = config && "${4:-}" = --null && "${5:-}" = --get-all && "${6:-}" = remote.origin.url ]]; then
+    if [[ "${FIXTURE_GIT_FAILURE:-}" = timeout ]]; then
+        exec /bin/sleep 5
+    fi
+    exit 128
+fi
+exec "$FIXTURE_REAL_GIT" "$@"
+GITEOF
+chmod +x "$TMPDIR/git-shim/git"
+REAL_GIT=$(command -v git)
+for failure in error timeout; do
+    FIXTURE_REAL_GIT="$REAL_GIT" FIXTURE_GIT_FAILURE="$failure" PATH="$TMPDIR/git-shim:$PATH" \
+    expect_block_because "(n-$failure) failed identity lookup cannot erase matching testing policy" \
+        "$HOOK" "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")" \
+        'cannot resolve this repository'
+done
+git -C "$TMPDIR/no-testing" remote remove origin
+expect_pass "(o) a genuine missing origin is not a failed metadata lookup" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")"
+
 # --- Report ---
 report

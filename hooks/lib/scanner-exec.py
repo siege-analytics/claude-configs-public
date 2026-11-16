@@ -15,7 +15,7 @@ import types
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # Verified before execution, rather than importing mutable sibling code.
-CAPABILITY_SHA256 = '6b7bcbe18d1816e37f3abb6e8ae9917c0224635a2e5a48ac59119306ff06e9bf'
+CAPABILITY_SHA256 = '9be4696157fdafbf8646ff3545375db6bb792f0bd99ecf10041134a822ea7908'
 def capability():
     path = Path(__file__).with_name('scanner_capability.py')
     if os.path.realpath(path) != str(path):
@@ -35,6 +35,20 @@ def capability():
 class ScannerError(ValueError):
     pass
 
+def stop_scanner(process):
+    if process.poll() is None:
+        os.killpg(process.pid,signal.SIGTERM)
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid,signal.SIGKILL)
+            process.wait(timeout=5)
+        # The shell may exit before a descendant that ignored SIGTERM.
+        try:
+            os.killpg(process.pid,signal.SIGKILL)
+        except ProcessLookupError:
+            pass  # The owned process group is already gone.
+
 def wait_scanner(process, budget=1800, interval=30):
     started = time.monotonic()
     try:
@@ -47,18 +61,7 @@ def wait_scanner(process, budget=1800, interval=30):
                 if elapsed >= budget:
                     raise ScannerError(f'scanner exceeded{budget:g}s; incomplete, no clean verdict')
     finally:
-        if process.poll() is None:
-            os.killpg(process.pid,signal.SIGTERM)
-            try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                os.killpg(process.pid,signal.SIGKILL)
-                process.wait(timeout=5)
-            # The shell may exit before a descendant that ignored SIGTERM.
-            try:
-                os.killpg(process.pid,signal.SIGKILL)
-            except ProcessLookupError:
-                pass  # The owned process group is already gone.
+        stop_scanner(process)
 
 def main():
     try:
@@ -68,25 +71,12 @@ def main():
         validate_files(plan, Path(__file__))
         gate = Path(plan['gate'])
         owned_plan(plan,str(gate),json.loads(gate.read_text()),str(gate.parents[2]))
-        # Keep existing authenticated gh/git configuration, but do not inherit
-        # shell/Python startup injection or Git target overrides. This is a
-        # trusted-tool environment, not a sandbox for arbitrary project code.
-        permitted = {'PATH','HOME','LANG','LC_ALL','LC_CTYPE','GH_TOKEN','GITHUB_TOKEN','GH_HOST','GH_CONFIG_DIR','XDG_CONFIG_HOME','SSH_AUTH_SOCK'}
-        env = {key:value for key,value in os.environ.items() if key in permitted}
-        env['PYTHONDONTWRITEBYTECODE'] = '1'
-        env['PYTHONSAFEPATH'] = '1'
-        if plan.get('index'):
-            env['GIT_INDEX_FILE'] = plan['index']
-        env['GIT_TERMINAL_PROMPT'] = '0'
-        if plan['mode'] == 'pr' and env.get('GH_HOST','github.com') != 'github.com':
-            raise ScannerError('scanner PR host must be github.com')
         with tempfile.TemporaryDirectory(prefix='scan-',dir=plan['tmp']) as tmp:
-            env['TMPDIR'] = tmp
             hooks = Path(tmp)/'empty-hooks'; hooks.mkdir(mode=0o700)
-            # Reading an index can otherwise execute repository fsmonitor code.
-            # Neither index selection nor exact PR fetch needs repository hooks.
-            env.update(GIT_CONFIG_COUNT='2',GIT_CONFIG_KEY_0='core.fsmonitor',GIT_CONFIG_VALUE_0='false',
-                       GIT_CONFIG_KEY_1='core.hooksPath',GIT_CONFIG_VALUE_1=str(hooks))
+            env = policy.execution_environment(index=plan.get('index'),hooks=hooks)
+            env['TMPDIR'] = tmp
+            if plan['mode'] == 'pr' and env.get('GH_HOST','github.com') != 'github.com':
+                raise ScannerError('scanner PR host must be github.com')
             # Execute only freshly verified bytes in the private child, so a
             # later installed-file edit cannot change the selected scanner.
             code_root = Path(tmp)/'tool';code_root.mkdir(mode=0o700)
@@ -118,9 +108,14 @@ def main():
                     stderr=outputs.enter_context((logs/'stderr.log').open('xb'))
                     (logs/'stdout.log').chmod(0o600);(logs/'stderr.log').chmod(0o600)
                     print(f'scanner raw logs: {logs}',file=sys.stderr,flush=True)
-                process = subprocess.Popen(command,cwd=plan['repo'],env=env,start_new_session=True,stdout=stdout,stderr=stderr)
-                print(f'scanner owned process group: {process.pid}',file=sys.stderr,flush=True)
-                code = wait_scanner(process)
+                process = None
+                try:
+                    process = subprocess.Popen(command,cwd=plan['repo'],env=env,start_new_session=True,stdout=stdout,stderr=stderr)
+                    print(f'scanner owned process group: {process.pid}',file=sys.stderr,flush=True)
+                    code = wait_scanner(process)
+                finally:
+                    if process is not None:
+                        stop_scanner(process)
                 result = code
                 if plan['mode'] in ('staged','working','pr'):
                     if selection.is_file():

@@ -31,6 +31,7 @@ class GateContractTest(unittest.TestCase):
 
     def write_generated_fixture(self, dist: Path, *, omit: str = "") -> None:
         ca = dist / "craft-agent"; ca.mkdir(parents=True)
+        shutil.copytree(ROOT / "hooks/lib", ca / "hooks/lib")
         digest = gc.contract_digest(self.contract)
         (ca / "enforcement-manifest.json").write_text(json.dumps({
             "gate_contract_source": gc.CONTRACT.as_posix(),

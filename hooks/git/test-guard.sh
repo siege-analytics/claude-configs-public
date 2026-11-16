@@ -103,10 +103,12 @@ if [[ -z "$REPO_ROOT" ]]; then
 fi
 
 # --- Check for PROJECT.md with testing: section ---
-# Look for PROJECT.md in the repo root OR in projects/*/PROJECT.md
-# (claude-configs-public layout). If no testing: section found,
+# Look for the repo's own PROJECT.md or its identity-matched project overlay.
+# Other consumers' declarations do not apply to this repository. If none declares testing,
 # exit 0 — this project doesn't demand test evidence.
 HAS_TESTING=false
+WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-${CRAFT_WORKSPACE_ROOT:-$REPO_ROOT}}"
+RESOLVE_TG="$(cd "$HOOK_DIR/../lib" && pwd)/resolve-think-gate.py"
 
 find_testing_section() {
     local manifest="$1"
@@ -124,14 +126,23 @@ if find_testing_section "$REPO_ROOT/PROJECT.md"; then
     HAS_TESTING=true
 fi
 
-# Check projects/*/PROJECT.md (claude-configs-public layout)
-if [[ "$HAS_TESTING" = "false" ]] && [[ -d "$REPO_ROOT/projects" ]]; then
-    for proj_manifest in "$REPO_ROOT"/projects/*/PROJECT.md; do
-        if [[ -f "$proj_manifest" ]] && find_testing_section "$proj_manifest"; then
-            HAS_TESTING=true
-            break
-        fi
-    done
+# No declaration candidates means no testing opt-in and no resolver dependency.
+HAS_PROJECT_DESCRIPTORS=false
+for candidate in "$WORKSPACE_ROOT"/projects/*/PROJECT.md "$REPO_ROOT"/projects/*/PROJECT.md; do
+    if [[ -f "$candidate" ]]; then
+        HAS_PROJECT_DESCRIPTORS=true
+        break
+    fi
+done
+# Consult only the descriptor selected for the target's repository identity.
+if [[ "$HAS_TESTING" = "false" && "$HAS_PROJECT_DESCRIPTORS" = "true" ]]; then
+    if ! PROJECT_MANIFEST=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" --project-manifest); then
+        echo "BLOCKED: test-guard cannot resolve this repository's testing declaration." >&2
+        exit 2
+    fi
+    if [[ -n "$PROJECT_MANIFEST" ]] && find_testing_section "$PROJECT_MANIFEST"; then
+        HAS_TESTING=true
+    fi
 fi
 
 if [[ "$HAS_TESTING" = "false" ]]; then
@@ -200,10 +211,9 @@ if [[ "$SOURCE_FILES" == "[]" ]]; then
 fi
 
 # --- Source files ARE touched: now require the test-gate.json signal file ---
-# Task evidence only. Shared workspace and repo singleton files are ignored.
+# Bound sessions require task evidence. Genuinely unbound native Git retains
+# the resolver's content-checked root receipt; invalid bindings cannot use it.
 SIGNAL_FILE=""
-WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-${CRAFT_WORKSPACE_ROOT:-$REPO_ROOT}}"
-RESOLVE_TG="$(cd "$(dirname "$0")/../lib" && pwd)/resolve-think-gate.py"
 if [[ -f "$RESOLVE_TG" ]]; then
     SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" --gate-name test-gate | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
 fi

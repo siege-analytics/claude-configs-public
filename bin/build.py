@@ -1767,7 +1767,7 @@ def install_hook_runtime(pkg_dir: Path, layout: str, include_validator: bool = F
     """Install all scripts and catalogs required by shipped hooks."""
     bin_dir = pkg_dir / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
-    script_names = ["resolve-load-set.py", "review-risk.py", "prepare-task-branch.py"]
+    script_names = ["resolve-load-set.py", "review-risk.py", "prepare-task-branch.py", "project-settings-bootstrap.py"]
     if include_validator:
         script_names.insert(0, "validate-hooks.py")
     for script_name in script_names:

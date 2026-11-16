@@ -1,0 +1,51 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'if [ -L \"$HOME/.claude\" ] || [ -L \"$HOME/.claude/hooks\" ] || [ -L \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then exit 2; fi; if [ ! -f \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then printf \"%s\\n\" \"Project policy bootstrap missing; install the reviewed stable profile.\" >&2; exit 2; fi; python3 -I -B \"$HOME/.claude/hooks/siege-project-bootstrap.py\" --event \"$1\"; status=$?; if [ \"$status\" -ne 0 ]; then exit 2; fi; exit 0' siege-project-bootstrap/v1 UserPromptSubmit",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'if [ -L \"$HOME/.claude\" ] || [ -L \"$HOME/.claude/hooks\" ] || [ -L \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then exit 2; fi; if [ ! -f \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then printf \"%s\\n\" \"Project policy bootstrap missing; install the reviewed stable profile.\" >&2; exit 2; fi; python3 -I -B \"$HOME/.claude/hooks/siege-project-bootstrap.py\" --event \"$1\"; status=$?; if [ \"$status\" -ne 0 ]; then exit 2; fi; exit 0' siege-project-bootstrap/v1 PreToolUse",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'if [ -L \"$HOME/.claude\" ] || [ -L \"$HOME/.claude/hooks\" ] || [ -L \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then exit 2; fi; if [ ! -f \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then printf \"%s\\n\" \"Project policy bootstrap missing; install the reviewed stable profile.\" >&2; exit 2; fi; python3 -I -B \"$HOME/.claude/hooks/siege-project-bootstrap.py\" --event \"$1\"; status=$?; if [ \"$status\" -ne 0 ]; then exit 2; fi; exit 0' siege-project-bootstrap/v1 PostToolUse",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'if [ -L \"$HOME/.claude\" ] || [ -L \"$HOME/.claude/hooks\" ] || [ -L \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then exit 2; fi; if [ ! -f \"$HOME/.claude/hooks/siege-project-bootstrap.py\" ]; then printf \"%s\\n\" \"Project policy bootstrap missing; install the reviewed stable profile.\" >&2; exit 2; fi; python3 -I -B \"$HOME/.claude/hooks/siege-project-bootstrap.py\" --event \"$1\"; status=$?; if [ \"$status\" -ne 0 ]; then exit 2; fi; exit 0' siege-project-bootstrap/v1 PostToolUseFailure",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -745,6 +745,7 @@ def run_ticket_probe(root: Path, contract: dict[str, Any], *, executable_overrid
         (repo / "catalog").mkdir()
         if executable_override is None:
             shutil.copy2(executable, repo / ".githooks/commit-msg")
+            shutil.copytree(root / "hooks/lib", repo / "hooks/lib")
             shutil.copy2(root / "bin/review-risk.py", repo / "bin/review-risk.py")
             shutil.copy2(root / "catalog/review-risk-policy.json", repo / "catalog/review-risk-policy.json")
             target = repo / ".githooks/commit-msg"

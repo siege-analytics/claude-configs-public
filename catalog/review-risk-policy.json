@@ -30,6 +30,9 @@
     }
   },
   "high_risk_path_patterns": [
+    "^\\.claude/settings\\.authoring\\.json$",
+    "^bin/project-settings-bootstrap\\.py$",
+    "^bin/core-authoring-profile\\.py$",
     "^bin/prepare-task-branch\\.py$",
     "^hooks/_test/branch_sources\\.(py|test\\.sh)$",
     "^\\.githooks/",
@@ -50,7 +53,7 @@
     "^skills/KERNEL\\.md$",
     "^bin/(install|verify-enforcement|check-deploy|deploy|wire-enforcement)",
     "^bin/(craft-workspace-trust|build|effective_policy|frontmatter_validation|gate_contract|generated-source-authority|kernel-budget|review-risk|resolve-load-set|skill-inventory|skill-lifecycle|data-scope|validate-hooks|validate-local)\\.py$",
-    "^bin/_test/(craft_hook_router|craft_workspace_trust|craft_backend_canary|data_scope|effective_policy|gate_contract|protected_policy|review_risk|local_validation|scanner_source|hook_payload|inline_delivery|consumer_runtime)_test\\.py$",
+    "^bin/_test/(project_settings_bootstrap|craft_hook_router|craft_workspace_trust|craft_backend_canary|data_scope|effective_policy|gate_contract|protected_policy|review_risk|local_validation|scanner_source|hook_payload|inline_delivery|consumer_runtime)_test\\.py$",
     "^requirements-validation\\.txt$",
     "^hooks/_test/(review_risk_policy|progressive_loading)\\.test\\.sh$",
     "^catalog/legacy-owned-artifacts\\.json$",

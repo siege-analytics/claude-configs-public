@@ -495,9 +495,16 @@ def ticket_policy(command, cwd):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cwd", required=True)
-    parser.add_argument("--policy", choices=("branch", "destructive", "ticket"), required=True)
+    parser.add_argument("--policy", choices=("branch", "destructive", "ticket", "ticket-message"), required=True)
     options = parser.parse_args()
     command = sys.stdin.read()
+    if options.policy == "ticket-message":
+        try:
+            accepted = ticket_reference(command)
+        except UnknownShape as exc:
+            print(str(exc))
+            return 2
+        return 0 if accepted else 2
     try:
         if command.strip() and released_read_verdict(command) == 0:
             print("handled")
@@ -506,7 +513,17 @@ def main():
             ticket_policy(command, os.path.realpath(options.cwd or os.getcwd()))
             print("handled")
             return 0
-        items = invocations(command, os.path.realpath(options.cwd or os.getcwd()))
+        try:
+            items = invocations(command, os.path.realpath(options.cwd or os.getcwd()))
+        except UnknownShape:
+            # Literal redirections do not hide the Git operation, but unsupported
+            # executable wrappers remain unresolved. Task policy owns file effects.
+            items = invocations(command, os.path.realpath(options.cwd or os.getcwd()),
+                                strict=True, redirect_probe=True)
+            if any(item['args'][0] == 'config'
+                   and released_read_verdict(shlex.join(['git', *item['args']])) != 0
+                   for item in items[:-1]):
+                raise UnknownShape('separate Git configuration mutations from redirected operation inspection')
         for item in items:
             if options.policy == "branch":
                 if in_scope(item["cwd"]):

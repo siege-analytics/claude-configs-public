@@ -42,6 +42,81 @@ class ProjectScope(unittest.TestCase):
         self.assertEqual(result.returncode, code, result.stdout + result.stderr)
         return result
 
+    def board_manager(self):
+        grant = {**GRANT, 'issue_binding': 'current-task-or-declared-targets',
+                 'declared_issue_repositories': ['electinfo/airflow', 'electinfo/fec-api']}
+        self.policy.write_text(json.dumps({'schema_version': 1, 'grants': [grant, {**grant, 'project': 4}]}))
+        directory = self.task('electinfo/enterprise#3133')
+        data = json.loads((directory/'think-gate.json').read_text())
+        data['task_id'] = 'tc-3133-overnight-financial-delivery-20261112'
+        data['github_project_targets'] = [dict(owner='electinfo', project=board, repository=repo,
+                                              issue=issue, operation='item-add')
+            for board in (1, 4) for repo, issue in [('electinfo/airflow', 1074), ('electinfo/fec-api', 732)]]
+        fixture.write(directory/'think-gate.json', data)
+        return directory, data
+
+    def board_command(self, board=4, repo='airflow', issue=1074):
+        return ('CCP_TASK_ID=tc-3133-overnight-financial-delivery-20261112 gh project item-add '
+                +str(board)+' --owner electinfo --url https://github.com/electinfo/'+repo+'/issues/'+str(issue)+' --format json')
+
+    def test_declared_board_manager_targets_are_exact_metadata_only(self):
+        self.board_manager()
+        for board in (1, 4):
+            for repo, issue in [('airflow', 1074), ('fec-api', 732)]:
+                self.hook(self.board_command(board, repo, issue))
+        for command in [self.board_command(issue=1075), self.board_command(board=2),
+                        self.board_command(repo='enterprise'), self.board_command().replace('--owner electinfo', '--owner other'),
+                        self.board_command().replace('item-add', 'item-delete'),
+                        self.board_command().replace('--format json', '--format xml'),
+                        self.board_command().replace('--format json', '--format json --jq .'),
+                        self.board_command().replace('CCP_TASK_ID=tc-3133-overnight-financial-delivery-20261112 ', ''),
+                        self.board_command().replace('CCP_TASK_ID=tc-3133-overnight-financial-delivery-20261112', 'CCP_TASK_ID=unrelated'),
+                        self.board_command()+'; touch '+str(self.f.b/'foreign.py')]:
+            with self.subTest(command=command):
+                self.hook(command, 2)
+        self.assertFalse((self.f.b/'foreign.py').exists())
+
+    def test_declared_targets_do_not_replace_policy_owner_or_lifecycle(self):
+        directory, data = self.board_manager()
+        for field, value in [('sessionId', 'foreign'), ('status', 'designing'),
+                             ('github_project_targets', []),
+                             ('github_project_targets', [{**data['github_project_targets'][0], 'operation': 'item-edit'}])]:
+            changed = {**data, field: value}
+            fixture.write(directory/'think-gate.json', changed)
+            self.hook(self.board_command(), 2)
+        fixture.write(directory/'think-gate.json', data)
+        self.policy.write_text(json.dumps({'schema_version': 1, 'grants': [GRANT]}))
+        self.hook(self.board_command(), 2)
+
+    def test_declared_task_ambiguity_and_claim_shape_fail_closed(self):
+        directory, data = self.board_manager()
+        duplicate = self.task('electinfo/enterprise#3133', slug='duplicate-board-task')
+        fixture.write(duplicate/'think-gate.json', data)
+        self.hook(self.board_command(), 2)
+        shutil.rmtree(duplicate)
+        self.hook(self.board_command())
+        for claim in [{**data['github_project_targets'][0], 'project': True},
+                      {**data['github_project_targets'][0], 'issue': '*'},
+                      {**data['github_project_targets'][0], 'host': 'github.com'},
+                      {**data['github_project_targets'][0], 'repository': 'electinfo/enterprise'}]:
+            changed = {**data, 'github_project_targets': [claim]}
+            fixture.write(directory/'think-gate.json', changed)
+            self.hook(self.board_command(board=1), 2)
+        fixture.write(directory/'think-gate.json', {**data, 'task_id': 'electinfo/enterprise#9999'})
+        self.hook(self.board_command().replace('CCP_TASK_ID=tc-3133-overnight-financial-delivery-20261112',
+                                             'CCP_TASK_ID=electinfo/enterprise#9999'), 2)
+
+    def test_declared_mode_cannot_enable_status_or_arbitrary_repositories(self):
+        self.board_manager()
+        grant = {**GRANT, 'issue_binding': 'current-task-or-declared-targets',
+                 'declared_issue_repositories': ['electinfo/airflow']}
+        for change in [{'operation': 'item-edit'}, {'declared_issue_repositories': []},
+                       {'declared_issue_repositories': ['other/airflow']},
+                       {'declared_issue_repositories': ['electinfo/airflow', 'electinfo/airflow']},
+                       {'declared_issue_repositories': '*'}]:
+            self.policy.write_text(json.dumps({'schema_version': 1, 'grants': [{**grant, **change}]}))
+            self.assertIn('standing policy', self.hook(self.board_command(board=1), 2).stderr)
+
     def test_exact_add_uses_ticket_not_slug_and_no_code_artifacts(self):
         directory = self.task()
         data = json.loads((directory / 'think-gate.json').read_text())
@@ -49,6 +124,7 @@ class ProjectScope(unittest.TestCase):
         fixture.write(directory / 'think-gate.json', data)
         self.hook()
         self.hook(ADD + ' # [destructive-ok: Reason: board tracking; Evidence: filed issue; Falsification: absent item]')
+        self.hook(ADD + ' --format json')
         shape = fixture.r.action(ADD, str(self.f.ws))
         self.assertEqual(shape['paths'], [])
         self.assertFalse(shape.get('metadata_only'))
@@ -72,7 +148,7 @@ class ProjectScope(unittest.TestCase):
                         ADD.replace('--owner electinfo', '--owner other'),
                         ADD.replace('github.com', 'example.invalid'),
                         ADD.replace('/electinfo/enterprise/', '/other/enterprise/'),
-                        ADD + ' --owner electinfo', ADD + ' --format json',
+                        ADD + ' --owner electinfo', ADD + ' --format xml',
                         'gh --hostname github.com ' + ADD[3:],
                         'env GH_HOST=example.invalid ' + ADD,
                         ADD.replace('issues/3300', 'pull/3300')]:

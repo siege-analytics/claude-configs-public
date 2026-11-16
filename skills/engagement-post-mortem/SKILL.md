@@ -1,6 +1,6 @@
 ---
 name: engagement-post-mortem
-description: "Retrospective discipline for completed multi-PR / multi-decision engagement arcs. Classifies each artifact and decision as Confirmed (cost was paid), Latent (substance survived but process was broken — the substance-survived-by-luck cell), or Avoided (structural truth visible in retrospect that nobody named at the time). Sibling to `[skill:pre-mortem]` (adversarial risk gate before implementation) and `[skill:post-mortem]` (per-confirmed-failure root-cause analysis). Operates on the FULL ENGAGEMENT including its meta-arc, even when no single confirmed failure occurred. Runs after engagement close."
+description: "Retrospective discipline for completed multi-PR / multi-decision engagement arcs. Classifies each artifact and decision as Confirmed (cost was paid), Latent (substance survived but process was broken — the substance-survived-by-luck cell), or Avoided (structural truth visible in retrospect that nobody named at the time). Sibling to `[skill:pre-mortem]` (optional risk analysis for consequential or uncertain changes) and `[skill:post-mortem]` (per-confirmed-failure root-cause analysis). Operates on the FULL ENGAGEMENT including its meta-arc, even when no single confirmed failure occurred. Runs after engagement close."
 user-invocable: true
 allowed-tools: Read Grep Glob Bash
 ---

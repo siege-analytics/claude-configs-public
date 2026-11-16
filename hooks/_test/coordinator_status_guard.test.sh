@@ -492,4 +492,10 @@ if python3 "$ROOT/hooks/_test/metadata_comment_reporting.py"; then
 else
   _HARNESS_FAIL=$((_HARNESS_FAIL + 1)); _HARNESS_FAILED_NAMES+=("metadata comment corpus")
 fi
+# Exercise the PR-proposal cwd-prefix domain through the maintained CI entrypoint.
+if python3 -I -B "$ROOT/hooks/_test/coordinator_draft_create_test.py"; then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1))
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1)); _HARNESS_FAILED_NAMES+=("draft PR proposal domain")
+fi
 report

@@ -1,20 +1,20 @@
 {
   "characters": {
     "injected": {
-      "explicit_overflow": 8654,
-      "generic": 8573,
-      "multi_route": 9739,
-      "python_review": 8837
+      "explicit_overflow": 8640,
+      "generic": 8559,
+      "multi_route": 9725,
+      "python_review": 8823
     },
-    "kernel": 8075,
-    "legacy_root_resolver": 34834,
-    "legacy_rules_bundle": 375042,
-    "skill_resolver": 18135
+    "kernel": 8061,
+    "legacy_root_resolver": 34796,
+    "legacy_rules_bundle": 374921,
+    "skill_resolver": 18166
   },
   "fixture_selected_content": {
     "explicit_overflow": {
-      "characters": 144249,
-      "estimated_tokens": 36066,
+      "characters": 146309,
+      "estimated_tokens": 36580,
       "items": 13
     },
     "generic": {

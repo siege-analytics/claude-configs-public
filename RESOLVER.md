@@ -196,7 +196,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 | Open a pull request | `skills/git-workflow/create-pr/SKILL.md` |
 | Triage / respond to PR comments | `skills/session/pr-comments/SKILL.md` |
 | Create a ticket | `skills/planning/create-ticket/SKILL.md` |
-| Create ≥2 tickets in one session (epic breakdown, audit findings, batch triage) | `skills/planning/create-ticket/SKILL.md` + `skills/evaluate-ticket/SKILL.md` per ticket. **Test-before-bulk applies:** create the first ticket, run `evaluate-ticket`, fix gaps until it PASSes, THEN continue to the next. Each ticket is an independent act of investigation, not a line item in a list. |
+| Create multiple tickets in one session (epic breakdown, audit findings, batch triage) | [skill:create-ticket]. Inspect the first actual ticket for correct intent, evidence and scope before repeating the pattern. Use [skill:evaluate-ticket] when clarity needs review; its optional structural diagnostic is not a required PASS or approval gate. |
 | Update a ticket (progress comment, field change) | `skills/planning/update-ticket/SKILL.md` |
 | Close a ticket | `skills/planning/close-ticket/SKILL.md` |
 | Start work on a ticket (first commit, mark In Progress, assign to self) | `skills/planning/pre-work-check/SKILL.md` |

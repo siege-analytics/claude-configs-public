@@ -9,7 +9,7 @@ import shlex
 import stat
 import time
 from urllib.parse import quote
-from task_actions import shell_tokens, github_graphql
+from task_actions import shell_tokens, github_graphql, gh_merge_refusal
 
 SHA = r'[0-9a-fA-F]{40}'
 ID = r'[A-Za-z0-9_-]+'
@@ -30,7 +30,13 @@ def require(value, message, error=ValueError):
 
 
 def merge_flags(args, check_pins):
-    """Inspect literal merge flags while keeping option values as data."""
+    """Collect literal merge flags and head pins for the canonical form.
+
+    The admin refusal is not here: gh_merge_refusal (task_actions) applies it
+    to every spelling with gh's own flag arity before parse() reaches this
+    (#1371, #1372). This model only selects the canonical queue form, which
+    parse() then checks token by token.
+    """
     flags, pins, index = [], [], 3
     value_flags = {'--match-head-commit', '--repo', '-R', '--subject', '-t',
                    '--body', '-b', '--body-file', '-F', '--author-email', '-A'}
@@ -40,7 +46,6 @@ def merge_flags(args, check_pins):
             break
         flag, equal, value = word.partition('=')
         if word.startswith('-'):
-            require(flag != '--admin', 'admin bypass is not supported')
             flags.append((flag, bool(equal)))
             if check_pins and flag.startswith('--match'):
                 require(flag == '--match-head-commit', 'unsupported head pin option')
@@ -72,6 +77,9 @@ def command_segments(tokens):
 
 def parse(command):
     """One complete literal command. No shell or GraphQL program extension."""
+    refusal = gh_merge_refusal(command)
+    if refusal:  # Any spelling, any segment (#1207 AC3).
+        raise ValueError('pinned merge queue: ' + refusal)
     if not re.match(r'^\s*gh\s+(?:pr\s+merge|api\s+graphql)(?:\s|$)', command):
         return None
     tokens = shell_tokens(command)
@@ -85,9 +93,6 @@ def parse(command):
             return None
     if args[:3] == ['gh', 'pr', 'merge']:
         segments = list(command_segments(tokens))
-        for segment in segments[1:]:
-            if segment[:3] == ['gh', 'pr', 'merge']:
-                merge_flags(segment, False)  # An ordinary fallback cannot hide a later admin merge.
         flags, pins = merge_flags(segments[0], True)
         require(len(pins) <= 1, 'one full head pin required')
         if not pins:
@@ -272,6 +277,18 @@ def audit(target, session, directory):
 
 if __name__ == '__main__':
     import sys
+    if len(sys.argv) == 3 and sys.argv[1] == '--merge-refusal':
+        # destructive-guard protocol: 0 = clear, 3 = refuse. Any other status
+        # (an import failure before this line exits 1; a predicate fault
+        # exits 4) is neither: the guard then applies its text fallback.
+        try:
+            reason = gh_merge_refusal(sys.argv[2])
+        except BaseException:  # noqa: B036 - a fault is never "clear"
+            sys.exit(4)
+        if reason:
+            print('pinned merge queue: ' + reason)
+            sys.exit(3)
+        sys.exit(0)
     # Pure grammar inspection has no authority. Guard exemptions use the fresh
     # queue predicate; UMG separately owns admission and the single audit.
     try:

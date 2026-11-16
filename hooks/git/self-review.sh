@@ -27,6 +27,8 @@ _FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CM
 # blanks squeezed; skip only if neither matches. A command containing ANSI-C
 # $'...' (which can spell any byte) takes the full path.
 [[ "$_FAST_CMDS" == *"\$'"* ]] && _FAST_FULL=1
+# Expansions require structural argv inspection, even with no literal CLI name.
+[[ "$_FAST_CMDS" == *'$'* || "$_FAST_CMDS" == *'`'* || "$_FAST_CMDS" == *'*'* || "$_FAST_CMDS" == *'?'* || "$_FAST_CMDS" == *'['* ]] && _FAST_FULL=1
 # A quote or backslash between two letters or digits (`pr"x"`, `x\git`) joins
 # words; only the full path's quote handling decides what that runs. In the
 # JSON text a shell `"` or `\` is itself escaped, hence the leading backslash.
@@ -34,8 +36,18 @@ _FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CM
 _FAST_BUILT="${_FAST_CMDS//[\"\'\\]/}"
 while [[ "$_FAST_BUILT" == *"  "* ]]; do _FAST_BUILT="${_FAST_BUILT//  / }"; done
 _FAST_FIRST='"tool_input"[[:space:]]*:[[:space:]]*[{][[:space:]]*"command"[[:space:]]*:[[:space:]]*"[^"]'
-_FAST_RE='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|glab[[:space:]]+mr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
-if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE || "$_FAST_BUILT" =~ $_FAST_RE ]]; then exit 0; fi
+_FAST_RE='(^|[^[:alnum:]])(git|gh|glab|push)([^[:alnum:]]|$)'
+# Preserve #1083's zero-Python path for literal Git reader verbs. Remove
+# only adjacent known verbs from candidate text; globals, aliases, dynamic
+# dispatch and every publication word still take structural inspection.
+_FAST_CANDIDATE="$_FAST_BUILT"
+_FAST_GIT_READ='(^|[^[:alnum:]_])git[[:space:]]+(status|log|diff|show|rev-parse|ls-files|ls-tree|cat-file)([^[:alnum:]_$`]|$)'
+if [[ "$_FAST_CANDIDATE" != *'$'* && "$_FAST_CANDIDATE" != *'`'* ]]; then
+    while [[ "$_FAST_CANDIDATE" =~ $_FAST_GIT_READ ]]; do
+        _FAST_CANDIDATE="${_FAST_CANDIDATE/"${BASH_REMATCH[0]}"/ }"
+    done
+fi
+if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CANDIDATE" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
@@ -65,56 +77,32 @@ if [[ -z "$COMMAND" ]]; then
     fi
 fi
 
-# Trigger on git push, gh pr create / merge (GitHub), or glab mr create / merge
-# (GitLab). Word boundaries via portable character-class form (not
-# BSD-incompatible `\b`); see issue #106. CCP#201 added the GitLab forms.
-TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|glab[[:space:]]+mr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
-if ! echo "$COMMAND" | grep -qE "$TRIGGERS"; then
-    exit 0
-fi
+# Trigger selection uses executable argv, not quoted titles/bodies (#1368).
+# No candidate command runs; this grants no Task or publication authority.
+PUBLICATION=$(printf '%s' "$COMMAND" | python3 "$HOOK_DIR/../lib/command-text.py" --publication "$CWD") || {
+    echo "BLOCKED: publication trigger could not be inspected safely" >&2; exit 2;
+}
+PUBLICATION_KIND=$(printf '%s' "$PUBLICATION" | python3 "$EXTRACT" kind 2>/dev/null || true)
+case "$PUBLICATION_KIND" in
+    none) exit 0 ;;
+    publication) ;;
+    *) echo "BLOCKED: unresolved direct publication command; use a literal invocation and separate different repository targets into separate calls" >&2; exit 2 ;;
+esac
+EFFECTIVE_CWD=$(printf '%s' "$PUBLICATION" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+[[ -n "$EFFECTIVE_CWD" ]] || { echo "BLOCKED: publication repository is unresolved" >&2; exit 2; }
 
 # Content-scope check (#699). Skip out-of-scope repositories.
 if [[ -f "$HOOK_DIR/../lib/scope-check.sh" ]]; then
     source "$HOOK_DIR/../lib/scope-check.sh"
-    if ! _scope_in_scope "$COMMAND" "${CWD:-$PWD}"; then
-        exit 0
-    fi
+    SCOPED_PUBLICATION=false
+    while IFS= read -r SCOPE_COMMAND; do
+        if _scope_in_scope "$SCOPE_COMMAND" "$EFFECTIVE_CWD"; then
+            SCOPED_PUBLICATION=true
+        fi
+    done < <(printf '%s' "$PUBLICATION" | python3 -c 'import json,sys; print("\n".join(x["scope"] for x in json.load(sys.stdin)["effects"]))')
+    [[ "$SCOPED_PUBLICATION" == true ]] || exit 0
 fi
 
-# Multi-statement-with-cd yield (mirrors branch-guard.sh discipline, issue #101).
-# Portable word boundary (leading), same reason as TRIGGERS above.
-#
-# Statement-separator detection uses a shell-builtin `case` rather than grep so
-# the test is unambiguously portable across BSD (macOS) and GNU greps. The
-# earlier single-regex form ($'\n|;|\\|\\|') triggered BSD grep's "empty
-# (sub)expression" error on macOS because BSD ERE treats `\|` as just `|`,
-# which then parses as adjacent empty alternations. The case approach also
-# avoids the `echo "$cmd" | grep -qF $'\n'` false-positive from echo's trailing
-# newline.
-CD_COUNT=$(echo "$COMMAND" | { grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null || true; } | wc -l | tr -d ' ')
-if [[ "$CD_COUNT" -gt 0 ]]; then
-    case "$COMMAND" in
-        *$'\n'*|*';'*|*'||'*) exit 0 ;;
-    esac
-    if [[ "$CD_COUNT" -gt 1 ]]; then
-        exit 0
-    fi
-fi
-
-# Resolve effective repo dir (follow leading-cd pattern from branch-guard).
-EFFECTIVE_CWD="$CWD"
-if [[ "$COMMAND" =~ ^[[:space:]]*cd[[:space:]]+([^[:space:];&]+) ]]; then
-    CD_TARGET="${BASH_REMATCH[1]}"
-    CD_TARGET="${CD_TARGET%\"}"; CD_TARGET="${CD_TARGET#\"}"
-    CD_TARGET="${CD_TARGET%\'}"; CD_TARGET="${CD_TARGET#\'}"
-    case "$CD_TARGET" in
-        /*) ;;
-        *) CD_TARGET="$CWD/$CD_TARGET" ;;
-    esac
-    if [[ -d "$CD_TARGET" ]]; then
-        EFFECTIVE_CWD="$CD_TARGET"
-    fi
-fi
 
 if [[ -z "$EFFECTIVE_CWD" ]] || ! git -C "$EFFECTIVE_CWD" rev-parse --git-dir >/dev/null 2>&1; then
     # Not a git repo (e.g. gh pr merge invoked with -R from anywhere); allow.
@@ -205,8 +193,8 @@ NO_REVIEW=false; [[ "$COMMIT_MSG" == *'[no-review]'* ]] && NO_REVIEW=true
 if [[ "$NO_REVIEW" == "true" && "$REVIEW_TIER" != "A" ]]; then
     MISSING+=("remove [no-review]: it is allowed only for independently validated Tier A")
 fi
-if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
-    MISSING+=("ticket reference: #NNN in the message, or [no-ticket] if exempt")
+if ! printf '%s' "$COMMIT_MSG" | python3 -B "$HOOK_DIR/../lib/git_command.py" --cwd "$EFFECTIVE_CWD" --policy ticket-message >/dev/null 2>&1; then
+    MISSING+=("task reference: #NNN, project ticket/URL, or [task: authorized request]; bare [no-ticket] is invalid")
 fi
 if [[ "$REVIEW_COUNT" -ne 1 ]]; then
     if [[ "$NO_REVIEW" != "true" || "$REVIEW_TIER" != "A" ]]; then
@@ -247,6 +235,32 @@ HOOKEOF
     exit 2
 fi
 
+# Markdown examples cannot supply section headings or Findings. A real
+# section may still contain meaningful fenced command/results evidence.
+review_artifact_text() {
+    awk -v heading="${1:-}" '{
+        line=$0
+        sub(/\r$/, "", line)
+        sub(/^[ ]?[ ]?[ ]?/, "", line)
+        first=substr(line,1,1)
+        if (first == "`" || first == "~") {
+            count=0
+            while (substr(line,count+1,1) == first) count++
+            rest=substr(line,count+1)
+            if (!fence && count >= 3 && (first == "~" || rest !~ /`/)) {fence=first; width=count; next}
+            if (fence == first && count >= width && rest ~ /^[[:blank:]]*$/) {fence=""; next}
+        }
+        if (!fence) {
+            if (!heading) {print; next}
+            normalized=$0
+            sub(/[[:space:]]+$/, "", normalized)
+            if (normalized == heading) {active=1; next}
+            if (line ~ /^##[[:blank:]]+/) active=0
+        }
+        if (heading && active && /[^[:space:]]/) {print; exit}
+    }'
+}
+
 # Tier A uses the short review trailer. B/C retain one compact outcome record.
 if [[ "$REVIEW_TIER" == "A" ]]; then exit 0; fi
 SOURCE_PATH=""
@@ -256,9 +270,10 @@ if [[ ! "$SOURCE_VALUE" =~ ^https?:// && ! "$SOURCE_VALUE" =~ ^#[0-9]+$ ]]; then
         *) SOURCE_PATH="$EFFECTIVE_CWD/$SOURCE_VALUE" ;;
     esac
     [[ -f "$SOURCE_PATH" ]] || { echo "BLOCKED: review artifact is unavailable: $SOURCE_VALUE" >&2; exit 2; }
+    REVIEW_CONTENT=$(review_artifact_text <"$SOURCE_PATH")
     REQUIRED_SECTIONS=("## Assumptions" "## Test plan")
     if [[ "$REVIEW_TIER" == "C" ]]; then
-        if grep -Eq '^## Peer review[[:space:]]*$' "$SOURCE_PATH" && grep -Eq '^## Lead review[[:space:]]*$' "$SOURCE_PATH" && grep -Eq '^## Quantified claims[[:space:]]*$' "$SOURCE_PATH"; then
+        if grep -Eq '^## Peer review[[:space:]]*$' <<<"$REVIEW_CONTENT" && grep -Eq '^## Lead review[[:space:]]*$' <<<"$REVIEW_CONTENT" && grep -Eq '^## Quantified claims[[:space:]]*$' <<<"$REVIEW_CONTENT"; then
             # Previously valid records remain publishable without history edits.
             REQUIRED_SECTIONS=("## Assumptions" "## Peer review" "## Lead review" "## Quantified claims")
         else
@@ -266,10 +281,10 @@ if [[ ! "$SOURCE_VALUE" =~ ^https?:// && ! "$SOURCE_VALUE" =~ ^#[0-9]+$ ]]; then
         fi
     fi
     for section in "${REQUIRED_SECTIONS[@]}"; do
-        if ! grep -Eq "^${section}[[:space:]]*$" "$SOURCE_PATH"; then
+        if ! grep -Eq "^${section}[[:space:]]*$" <<<"$REVIEW_CONTENT"; then
             echo "BLOCKED: review artifact requires $section" >&2; exit 2
         fi
-        content=$(awk -v heading="$section" '{line=$0;sub(/[[:space:]]+$/,"",line)} line==heading {active=1;next} /^## / {active=0} active && /[^[:space:]]/ {print;exit}' "$SOURCE_PATH")
+        content=$(review_artifact_text "$section" <"$SOURCE_PATH")
         [[ -n "$content" ]] || { echo "BLOCKED: review artifact has empty $section" >&2; exit 2; }
     done
 
@@ -286,35 +301,30 @@ fi
 # If the diff touches transformation-code patterns, require a
 # Pre-ship-dry-run: trailer pointing at behavioral verification evidence.
 # Level 3 of the investigation enforcement ladder (#255, #275).
-DIFF_FILES=$(git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true)
-
 TRANSFORM_FILE_RE='\.(sql|sql\.j2)$'
 IS_TRANSFORM=false
 
-if [ -n "$DIFF_FILES" ]; then
-    if echo "$DIFF_FILES" | grep -qE "$TRANSFORM_FILE_RE" 2>/dev/null; then
+TRANSFORM_CONTENT_RE='(CREATE[[:space:]]+TABLE|INSERT[[:space:]]+INTO|UNION[[:space:]]+ALL|\.write\.|\.saveAsTable|\.to_sql)'
+while IFS= read -r -d '' f; do
+    # Test fixture setup requires test evidence, not a production pipeline probe.
+    case "$f" in
+        tests/*|*/tests/*|__tests__/*|*/__tests__/*|_test/*|*/_test/*)
+            continue ;;
+        hooks/git/self-review.sh) continue ;;
+    esac
+    case "${f##*/}" in
+        test_*.py|*.test.*|*.spec.*) continue ;;
+    esac
+    if [[ "$f" =~ $TRANSFORM_FILE_RE ]]; then
         IS_TRANSFORM=true
+        break
     fi
-
-    # Also check file contents for transformation patterns
-    if [ "$IS_TRANSFORM" = "false" ]; then
-        TRANSFORM_CONTENT_RE='(CREATE[[:space:]]+TABLE|INSERT[[:space:]]+INTO|UNION[[:space:]]+ALL|\.write\.|\.saveAsTable|\.to_sql)'
-        for f in $DIFF_FILES; do
-            # Do not let the transformation-content regex literal in this hook
-            # match itself. Editing the enforcement script should require
-            # hostile review and inventoried-shape evidence, not a data-pipeline
-            # Pre-ship-dry-run trailer for a regex string literal.
-            if [ "$f" = "hooks/git/self-review.sh" ]; then
-                continue
-            fi
-            FULL_PATH="$EFFECTIVE_CWD/$f"
-            if [ -f "$FULL_PATH" ] && grep -qE "$TRANSFORM_CONTENT_RE" "$FULL_PATH" 2>/dev/null; then
-                IS_TRANSFORM=true
-                break
-            fi
-        done
+    FULL_PATH="$EFFECTIVE_CWD/$f"
+    if [ -f "$FULL_PATH" ] && grep -qE "$TRANSFORM_CONTENT_RE" "$FULL_PATH" 2>/dev/null; then
+        IS_TRANSFORM=true
+        break
     fi
-fi
+done < <(git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id --name-only -r -z HEAD 2>/dev/null)
 
 if [ "$IS_TRANSFORM" = "true" ]; then
     DRYRUN_LINE=$(echo "$COMMIT_MSG" | { grep -E '^Pre-ship-dry-run:[[:space:]]+\S' || true; } | head -1)
@@ -500,11 +510,54 @@ fi
 # fixed resolution, block publication. P2 and P3 are not
 # hook-enforced — P2 ticket-existence is agent discipline, P3 is
 # documentation-only.
-if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qF '## Findings' "$SOURCE_PATH"; then
-    FINDINGS_BLOCK=$(awk '/^## Findings[[:space:]]*$/ {active=1;next} /^## / {active=0} active {print}' "$SOURCE_PATH")
+FINDINGS_HEADING_RE='^[ ]?[ ]?[ ]?##[[:blank:]]+findings([^[:alnum:]_]|$)'
+if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qiE "$FINDINGS_HEADING_RE" <<<"$REVIEW_CONTENT"; then
+    FINDINGS_BLOCK=$(awk -v heading="$FINDINGS_HEADING_RE" '{
+        line=$0
+        sub(/\r$/, "", line)
+        sub(/^[ ]?[ ]?[ ]?/, "", line)
+        if (line ~ /^##[[:blank:]]+/) {active=(tolower($0) ~ heading); next}
+        if (active) print
+    }' <<<"$REVIEW_CONTENT")
     UNRESOLVED_P1=$(
-        printf '%s\n' "$FINDINGS_BLOCK" | grep -E '^\|[^|]*\|[[:space:]]*P1[[:space:]]*\|' | grep -viE '\|[[:space:]]*fixed' || true
-        printf '%s\n' "$FINDINGS_BLOCK" | grep -Ei '^[[:space:]]*([-*][[:space:]]+)?P1[[:space:]]*:' | grep -viE '(^|;)[[:space:]]*resolution[[:space:]]*:[[:space:]]*fixed[[:space:]]*(;|$)' || true
+        printf '%s\n' "$FINDINGS_BLOCK" | awk '/^[ ]?[ ]?[ ]?\|/ {
+            delete cells
+            count=1
+            for (i=1; i<=length($0); i++) {
+                char=substr($0, i, 1)
+                if (char == "\\" && i<length($0)) {
+                    cells[count]=cells[count] char substr($0, ++i, 1)
+                } else if (char == "|") {
+                    count++
+                } else {
+                    cells[count]=cells[count] char
+                }
+            }
+            if (cells[3] ~ /^[[:space:]]*P1[[:space:]]*$/) {
+                resolution=cells[5]
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", resolution)
+                if ((count != 5 && count != 6) ||
+                    (count == 6 && cells[6] !~ /^[[:space:]]*$/) ||
+                    tolower(resolution) != "fixed") print
+            }
+        }'
+        printf '%s\n' "$FINDINGS_BLOCK" | awk '
+            tolower($0) ~ /^[[:space:]]*([-*][[:space:]]+)?p1[[:space:]]*:/ {
+                count=split($0, fields, ";")
+                resolutions=0
+                fixed=0
+                for (i=1; i<=count; i++) {
+                    value=fields[i]
+                    sub(/^[[:space:]]+/, "", value)
+                    if (tolower(value) ~ /^resolution[[:space:]]*:/) {
+                        resolutions++
+                        sub(/^[^:]*:/, "", value)
+                        gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+                        if (tolower(value) == "fixed") fixed++
+                    }
+                }
+                if (resolutions != 1 || fixed != 1) print
+            }'
     )
     if [[ -n "$UNRESOLVED_P1" ]]; then
         cat >&2 <<HOOKEOF
@@ -513,10 +566,9 @@ BLOCKED: Self-review artifact has unresolved P1 findings:
 $UNRESOLVED_P1
 
 P1 findings must be resolved (Resolution: fixed) before push.
-P2 findings must have a ticket number (ticket #NNN).
-P3 findings are noted — no action required.
+This check blocks P1 findings without a complete fixed resolution.
 
-See skills/self-review/SKILL.md Phase C: Findings triage.
+See skills/self-review/artifact-contract.md for the accepted finding formats.
 Ref: #419
 HOOKEOF
         exit 2

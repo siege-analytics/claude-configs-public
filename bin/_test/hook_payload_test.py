@@ -143,7 +143,12 @@ class Payload(unittest.TestCase):
             for command in ('cd ' + str(g.repo) + ' && gh pr create --help', 'cd x; gh pr create', 'cd x || gh pr create', 'cd x\ngh pr create'):
                 value = fixture.craft_payload(tool_name='Bash', cwd=str(g.repo), tool_input={'command': command})
                 result = subprocess.run(['bash', str(ROOT / 'hooks/git' / (name + '.sh'))], input=json.dumps(value), env=g.env, text=True, capture_output=True, timeout=30)
-                self.assertEqual(result.returncode, 0, result.stderr)
+                # Missing publication cwd is unresolved under the structural
+                # fingerprint guard; a regex check must retain that refusal.
+                unresolved = name == 'detect-ai-fingerprints' and command.startswith('cd x')
+                self.assertEqual(result.returncode, 2 if unresolved else 0, result.stderr)
+                if unresolved:
+                    self.assertIn('unresolved direct publication command', result.stderr)
                 self.assertNotIn('empty (sub)expression', result.stderr)
 
     def test_near_limit_prompt_reaches_all_advisory_guards(self):

@@ -105,7 +105,7 @@ The self-review artifact should reference decisions filed by this skill: "Decisi
 The think skill produces design notes in `plans/`. Decision-to-ticket says: "and file the key decisions from that design on a ticket." The design note is the detailed artifact; the ticket is the human-visible pointer.
 
 ### `evaluate-ticket`
-Evaluate-ticket checks that a ticket is structurally fit. Decision-to-ticket creates tickets. They chain: create → evaluate → fix gaps → proceed.
+Use [skill:evaluate-ticket] when a created ticket needs clarification or evidence review. Correct material gaps within the grant; a structural diagnostic is not permission to proceed and does not stop already-authorized work.
 
 ## Falsification against issue #233 evidence table
 

@@ -27,7 +27,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
+WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-${CCP_HOOK_STATE_DIR:-${CLAUDE_SESSION_DIR:-$(cd "$SCRIPT_DIR/../.." && pwd)}}}"
 BLOCKS_LOG="$WORKSPACE_ROOT/enforcement-blocks.jsonl"
 CLASSIFICATION_FILE="$WORKSPACE_ROOT/block-classification.json"
 
