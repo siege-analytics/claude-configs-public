@@ -77,6 +77,45 @@ class Proposals(unittest.TestCase):
         self.assertEqual(result.returncode, 2, result.stderr)
         self.assertIn('github pull request write', result.stderr)
 
+    def test_git_internal_body_files_are_not_publication_inputs(self):
+        fixture.fixture_git('-C', self.repo, 'config', 'fixture.synthetic',
+                            'not-a-real-credential', check=True, timeout=20)
+        config = self.repo / '.git/config'
+        original = config.read_bytes()
+        self.assertEqual(self.hook(self.command, cwd=self.ws).returncode, 0)
+        for operand in [config, self.repo / '.git/HEAD']:
+            with self.subTest(operand=operand):
+                result = self.hook(self.command.replace(str(self.body), str(operand)), cwd=self.ws)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn('GitHub metadata target scope', result.stderr)
+        self.assertEqual(config.read_bytes(), original)
+
+    def test_linked_worktree_git_pointer_is_not_a_publication_input(self):
+        linked = self.ws / 'linked-source'
+        fixture.fixture_git('-C', self.repo, '-c', 'core.hooksPath=/dev/null',
+                            'worktree', 'add', '-q', '-b', 'feat/3133-linked', linked,
+                            'HEAD', check=True, timeout=20)
+        gate = self.task('electinfo/enterprise#3134', linked, artifacts=False)
+        data = json.loads((gate / 'think-gate.json').read_text())
+        fixture.write(gate / 'think-gate.json', {**data, 'repo_root': str(linked)})
+        command = self.command.replace('feat/3133-source', 'feat/3133-linked')
+        self.assertEqual(self.hook(command, cwd=self.ws).returncode, 0)
+        pointer = linked / '.git'
+        self.assertTrue(pointer.is_file())
+        original = pointer.read_bytes()
+        result = self.hook(command.replace(str(self.body), str(pointer)), cwd=self.ws)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn('GitHub metadata target scope', result.stderr)
+        self.assertEqual(pointer.read_bytes(), original)
+
+    def test_public_git_configuration_documents_remain_body_inputs(self):
+        for name in ['.gitignore', '.gitattributes', '.gitmodules']:
+            body = self.repo / name
+            body.write_text('# public repository document fixture\n')
+            with self.subTest(name=name):
+                result = self.hook(self.command.replace(str(self.body), str(body)), cwd=self.ws)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_exact_source_target_and_lifecycle_remain_required(self):
         foreign = self.ws / 'foreign.md'; foreign.write_text('foreign body')
         for command in [self.command.replace('electinfo/fec-api', 'foreign/repo'), self.command.replace('feat/3133-source', 'feat/foreign'), self.command.replace('--base develop', '--base main'), self.command.replace(str(self.body), str(foreign)), self.command + ' && gh pr close 31', self.command.replace('pr create', 'pr merge'), self.command + ' --repo electinfo/fec-api', self.command + ' --unknown-option', self.command.replace(str(self.body), str(self.body) + '.missing'), self.command.replace('--body-file ' + str(self.body), '--body-file -')]:

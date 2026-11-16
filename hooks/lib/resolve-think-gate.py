@@ -1177,7 +1177,7 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
                 if len(source_roots) != 1 or not (any(_within(body, root) for root in source_roots)
                         or private and _within(body, private) and own_session_path(workspace, body, directory=True)):
                     matched = False; break
-                sensitive = r'(?:\.env(?:$|\.)|credentials\.json|service-account.*\.json|\.(?:pem|key|p12|pfx)$|id_rsa|id_ed25519|token\.json|\.secrets?$|^\.(?:ssh|aws|gnupg)$)'
+                sensitive = r'(?:\.env(?:$|\.)|credentials\.json|service-account.*\.json|\.(?:pem|key|p12|pfx)$|id_rsa|id_ed25519|token\.json|\.secrets?$|^\.(?:git|ssh|aws|gnupg)$)'
                 if any(re.search(sensitive, part, re.I) for part in body.split(os.sep)):
                     matched = False; break
                 try:
