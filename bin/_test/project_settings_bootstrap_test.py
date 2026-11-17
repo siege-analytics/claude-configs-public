@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -102,11 +103,11 @@ class Bootstrap(unittest.TestCase):
         settings['hooks']['PreToolUse'].append(b.profile()['hooks']['PreToolUse'][0])
         self.assertTrue(b.profile_problems(settings))
 
-    def test_prepared_profile_remains_inert_before_rollout(self):
+    def test_active_profile_matches_prepared_stable_dispatch(self):
         settings = json.loads((ROOT / '.claude/settings.authoring.json').read_text())
         self.assertEqual(settings, b.profile())
-        legacy = subprocess.check_output(['/usr/bin/git', 'show', 'bd433bdf5cc8f885ed2a879be269ba8055ba9a20:.claude/settings.json'], cwd=ROOT, timeout=20)
-        self.assertEqual((ROOT / '.claude/settings.json').read_bytes(), legacy)
+        self.assertEqual((ROOT / '.claude/settings.json').read_bytes(),
+                         (ROOT / '.claude/settings.authoring.json').read_bytes())
 
     def test_broken_candidate_does_not_brick_owned_repair_but_real_holds_remain(self):
         result = subprocess.run(['bash', str(self.repo / 'hooks/bash/universal-mutation-gate.sh')],
@@ -282,7 +283,7 @@ class Bootstrap(unittest.TestCase):
         self.assertIn(operator, actual['hooks']['PreToolUse'])
         self.assertTrue(any(hook.get('command') == 'hooks/bash/universal-mutation-gate.sh'
                             for group in actual['hooks']['PreToolUse'] for hook in group['hooks']))
-        self.assertTrue(b.profile_problems(actual), 'legacy installation must not activate an uninstalled bootstrap')
+        self.assertTrue(b.profile_problems(actual), 'explicit consumer installation must retain normal hooks')
         actual = b.profile()
         actual['hooks']['PostToolUse'].append(actual['hooks']['PreToolUse'][0])
         with self.assertRaisesRegex(ValueError, 'conflicting event'):
@@ -294,6 +295,129 @@ class Bootstrap(unittest.TestCase):
         wrong['hooks']['PostToolUse'] = [wrong['hooks']['PreToolUse'][0]]
         with self.assertRaisesRegex(ValueError, 'conflicting event'):
             b.retire_source(wrong, managed)
+
+    def test_active_source_profile_does_not_enroll_foreign_installer_targets(self):
+        source = self.f.fixture.base / 'installer-source'
+        (source / 'bin').mkdir(parents=True)
+        (source / '.claude').mkdir()
+        for name in ('hooks', '.githooks', 'catalog'):
+            (source / name).symlink_to(ROOT / name, target_is_directory=True)
+        for name in ('project-settings-bootstrap.py', 'review-risk.py'):
+            (source / 'bin' / name).symlink_to(ROOT / 'bin' / name)
+        shutil.copyfile(ROOT / 'bin/install-hooks.sh', source / 'bin/install-hooks.sh')
+        (source / '.claude/settings.json').write_text(json.dumps(b.profile()))
+        home = self.f.fixture.base / 'installer-home'
+        home.mkdir()
+        env = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
+        env.update(HOME=str(home), GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=str(home / 'gitconfig'))
+        subprocess.run(['git', 'init', '-q', str(source)], env=env, check=True, timeout=20)
+        subprocess.run(['git', '-C', str(source), '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                        'commit', '--allow-empty', '-qm', 'fixture'], env=env, check=True, timeout=20)
+        linked = self.f.fixture.base / 'linked-authoring'
+        subprocess.run(['git', '-C', str(source), 'worktree', 'add', '--detach', str(linked)],
+                       env=env, check=True, capture_output=True, timeout=20)
+        foreign = self.f.fixture.base / 'foreign-consumer'
+        subprocess.run(['git', 'init', '-q', str(foreign)], env=env, check=True, timeout=20)
+        caller = self.f.fixture.base / 'unrelated-caller'
+        subprocess.run(['git', 'init', '-q', str(caller)], env=env, check=True, timeout=20)
+        subprocess.run(['git', '-C', str(caller), 'config', 'user.name', 'untouched-caller'],
+                       env=env, check=True, timeout=20)
+        caller_before = {str(path.relative_to(caller)): path.read_bytes()
+                         for path in caller.rglob('*') if path.is_file()}
+        parent_environment = dict(os.environ)
+        for name, target, repo in (
+                ('foreign', foreign / '.claude/settings.json', foreign),
+                ('arbitrary', home / 'custom-settings.json', None),
+                ('own', source / '.claude/settings.local.json', None),
+                ('linked', linked / '.claude/settings.json', linked),
+                ('foreign-own-path', source / '.claude/settings.local.json', foreign),
+                ('foreign-hostile', foreign / '.claude/settings.json', foreign),
+                ('foreign-caller', foreign / '.claude/settings.json', foreign)):
+            with self.subTest(target=name):
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(json.dumps({'model': 'operator-choice', 'hooks': {'PreToolUse': [
+                    {'matcher': 'Read', 'hooks': [{'type': 'command', 'command': '/bin/sh -c "exit 2"'}]}]}}))
+                argv = ['bash', str(source / 'bin/install-hooks.sh'), '--target-file', str(target)]
+                if repo is not None:
+                    argv.extend(['--git-repo', str(repo)])
+                install_env = dict(env)
+                if name in {'foreign-hostile', 'foreign-caller'}:
+                    inherited = foreign if name == 'foreign-hostile' else caller
+                    install_env.update(GIT_DIR=str(inherited / '.git'), GIT_WORK_TREE=str(inherited),
+                                       GIT_INDEX_FILE=str(inherited / '.git/index'),
+                                       GIT_CONFIG_COUNT='1', GIT_CONFIG_KEY_0='core.hooksPath',
+                                       GIT_CONFIG_VALUE_0=str(home / 'must-not-register'),
+                                       GIT_CONFIG_PARAMETERS="'core.bare=true'")
+                result = subprocess.run(argv, env=install_env, capture_output=True, text=True, timeout=30)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                value = json.loads(target.read_text())
+                self.assertEqual(value['model'], 'operator-choice')
+                commands = [hook['command'] for groups in value['hooks'].values()
+                            for group in groups for hook in group['hooks']]
+                self.assertIn('/bin/sh -c "exit 2"', commands)
+                self.assertEqual(sum('siege-project-bootstrap/v1' in command for command in commands),
+                                 4 if name in {'own', 'linked'} else 0)
+                if name not in {'own', 'linked'}:
+                    self.assertIn(str(source / 'hooks/bash/universal-mutation-gate.sh'), commands)
+        configured = subprocess.check_output(['git', '-C', str(foreign), 'config', '--get', 'core.hooksPath'],
+                                            env=env, text=True, timeout=20).strip()
+        self.assertEqual(configured, str(source / '.githooks'))
+        self.assertEqual({str(path.relative_to(caller)): path.read_bytes()
+                          for path in caller.rglob('*') if path.is_file()}, caller_before)
+        self.assertEqual(dict(os.environ), parent_environment)
+
+    def test_consumer_registration_preserves_effective_operator_hooks(self):
+        home = self.f.fixture.base / 'operator-hook-home'
+        home.mkdir()
+        hooks = home / 'operator-hooks'
+        hooks.mkdir()
+        marker = home / 'operator-executed'
+        (hooks / 'pre-push').write_text('#!/bin/sh\ntouch ' + shlex.quote(str(marker)) + '\nexit 2\n')
+        (hooks / 'pre-push').chmod(0o700)
+        policy = '[core]\n hooksPath = ' + str(hooks) + '\n'
+        selected_global = home / 'selected-global.config'
+        selected_system = home / 'selected-system.config'
+        selected_global.write_text(policy)
+        selected_system.write_text(policy)
+        for mode in ('default', 'selected-global', 'selected-system', 'ambiguous', 'invalid-global'):
+            with self.subTest(config=mode):
+                (home / '.gitconfig').write_text(policy if mode == 'default' else '')
+                env = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
+                env.update(HOME=str(home), GIT_CONFIG_NOSYSTEM='1')
+                if mode == 'selected-global':
+                    env['GIT_CONFIG_GLOBAL'] = str(selected_global)
+                elif mode == 'selected-system':
+                    env.update(GIT_CONFIG_SYSTEM=str(selected_system), GIT_CONFIG_NOSYSTEM='0')
+                elif mode == 'ambiguous':
+                    env['GIT_CONFIG'] = str(selected_global)
+                repo = self.f.fixture.base / ('operator-consumer-' + mode)
+                subprocess.run(['/usr/bin/git', 'init', '-q', str(repo)], env=env, check=True, timeout=20)
+                if mode == 'invalid-global':
+                    (home / '.gitconfig').write_text('[invalid configuration\n')
+                target = repo / '.claude/settings.json'
+                target.parent.mkdir()
+                target.write_text('{"model":"operator-choice","hooks":{}}\n')
+                original_settings = target.read_bytes()
+                original_config = (repo / '.git/config').read_bytes()
+                original_operator = {str(p.relative_to(home)): p.read_bytes()
+                                     for p in home.rglob('*') if p.is_file()}
+                result = subprocess.run(['bash', str(ROOT / 'bin/install-hooks.sh'), '--target-file', str(target),
+                                         '--git-repo', str(repo)], env=env, capture_output=True, text=True, timeout=30)
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                if mode == 'ambiguous':
+                    self.assertIn('GIT_CONFIG selection', result.stderr)
+                elif mode == 'invalid-global':
+                    self.assertIn('bad config', result.stderr)
+                else:
+                    self.assertIn('existing core.hooksPath', result.stderr)
+                self.assertEqual(target.read_bytes(), original_settings)
+                self.assertEqual((repo / '.git/config').read_bytes(), original_config)
+                self.assertEqual({str(p.relative_to(home)): p.read_bytes() for p in home.rglob('*') if p.is_file()}, original_operator)
+                self.assertFalse(marker.exists())
+                if mode not in {'ambiguous', 'invalid-global'}:
+                    actual = subprocess.check_output(['/usr/bin/git', '-C', str(repo), 'config', '--get', 'core.hooksPath'],
+                                                     env=env, text=True, timeout=20).strip()
+                    self.assertEqual(actual, str(hooks))
 
     def test_sibling_project_verifier_cannot_execute_before_trusted_selection(self):
         sibling = self.f.fixture.base / 'attacker-package'
@@ -407,7 +531,9 @@ class CanonicalCLI(unittest.TestCase):
 
     def test_actual_core_adoption_and_all_canonical_event_vectors(self):
         prepared = self.settings.read_bytes()
-        legacy = json.loads((ROOT / '.claude/settings.json').read_text())
+        legacy = json.loads(subprocess.check_output(
+            ['/usr/bin/git', 'show', 'bd433bdf5cc8f885ed2a879be269ba8055ba9a20:.claude/settings.json'],
+            cwd=ROOT, timeout=20))
         legacy['model'] = 'operator-choice'
         self.settings.write_text(json.dumps(legacy))
         before = self.settings.read_bytes()
