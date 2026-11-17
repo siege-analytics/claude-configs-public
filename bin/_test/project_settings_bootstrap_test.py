@@ -769,6 +769,52 @@ class CanonicalCLI(unittest.TestCase):
         (directory / 'think-gate.json').write_text(json.dumps(data))
         return target, directory, data
 
+    def test_default_native_task_state_is_external_and_survives_next_callback(self):
+        self.install()
+        env = {k: v for k, v in self.env.items() if k not in
+               ('CLAUDE_SESSION_DIR', 'CLAUDE_SESSION_ID', 'CLAUDE_CODE_SESSION_ID',
+                'CLAUDE_SIGNAL_DIR', 'CRAFT_SIGNAL_DIR', 'CRAFT_AGENT_SIGNAL_DIR')}
+        sdk = '12345678-1234-1234-1234-123456789abc'
+        env['CLAUDE_CODE_SESSION_ID'] = sdk
+        ticket = 'example/core#1286'
+        target = self.repo / 'hooks/lib/task_actions.py'
+        target.write_text('else:\nelse:\n')
+        (target.parent / 'resolve-think-gate.py').write_text('else:\nelse:\n')
+        state = b.state_path(self.home, b.common_directory(self.repo))
+        directory = state / 'sessions' / sdk / 'tasks' / gates.r.task_slug(ticket)
+        gate = directory / 'think-gate.json'
+        before = b.package_digest(self.package)
+        def callback(tool, value, identity=sdk):
+            payload = {'hook_event_name': 'PreToolUse', 'session_id': identity,
+                       'cwd': str(self.repo), 'tool_name': tool, 'tool_input': value}
+            return subprocess.run(b.command_for('PreToolUse'), shell=True,
+                                  input=json.dumps(payload), capture_output=True, text=True,
+                                  cwd=self.repo, env=dict(env, CCP_TASK_ID=ticket), timeout=40)
+        denied = callback('Edit', {'file_path': str(target), 'old_string': 'else:', 'new_string': ''})
+        self.assertEqual(denied.returncode, 2, denied.stdout + denied.stderr)
+        self.assertIn(str(state / 'sessions' / sdk / 'tasks'), denied.stdout + denied.stderr)
+        self.assertFalse(gate.is_relative_to(self.package))
+        data = {'ticket': ticket, 'sessionId': sdk, 'repo_root': str(self.repo),
+                'scope_paths': [str(target)], 'status': 'implementing'}
+        seed = callback('Write', {'file_path': str(gate), 'content': json.dumps(data)})
+        self.assertEqual(seed.returncode, 0, seed.stdout + seed.stderr)
+        directory.mkdir(parents=True)
+        gate.write_text(json.dumps(data))  # Simulate only the admitted fixture Write effect.
+        owned = callback('Edit', {'file_path': str(target), 'old_string': 'else:', 'new_string': ''})
+        self.assertEqual(owned.returncode, 0, owned.stdout + owned.stderr)
+        foreign = callback('Edit', {'file_path': str(self.base / 'foreign.py')})
+        self.assertEqual(foreign.returncode, 2, foreign.stdout + foreign.stderr)
+        for field, value in (('sessionId', 'foreign-owner'), ('status', 'done')):
+            gate.write_text(json.dumps(dict(data, **{field: value})))
+            result = callback('Edit', {'file_path': str(target)})
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        for identity in ('', '../invalid'):
+            result = callback('Edit', {'file_path': str(target)}, identity)
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn('valid SDK session identity', result.stderr)
+        self.assertEqual(b.package_digest(self.package), before)
+        self.assertFalse((self.package / 'compatibility/sessions' / sdk).exists())
+
     def callback(self, repo, target, ticket, tool='Edit'):
         raw = json.dumps({'hook_event_name': 'PreToolUse', 'session_id': 'native-one', 'cwd': str(repo),
                           'tool_name': tool, 'tool_input': {'file_path': str(target), 'old_string': 'else:', 'new_string': ''}})
