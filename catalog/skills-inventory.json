@@ -7419,10 +7419,10 @@
     },
     {
       "canonical_source": "skills/_writing-code-rules.md",
-      "characters": 51268,
-      "content_sha256": "f93b82923a45e926937a256cc53a3d351e7c4b9e2430003587fbf7b0c9a34b4c",
+      "characters": 49914,
+      "content_sha256": "76ad60e00c593e3064ba560d0e5ec07a38ceb48d3b922ebb945c39e212b911f7",
       "description": "Always-on. Code-authoring discipline. Docstring brevity, no history references in code comments, no speculative abstractions, verify symbols and dependency contracts before using them, exercise real dependencies before claiming integration works, doc-edit symmetry, no silent error swallowing, migration completeness (old-path grep must return zero), deprecation shims require companion follow-up tickets. Test-writing rules live in `_writing-tests-rules.md`; claim-grounding (commit/PR-body claims) lives in `_writing-claims-rules.md`.",
-      "estimated_tokens": 12817,
+      "estimated_tokens": 12479,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_writing-code-rules.md",
@@ -9150,6 +9150,7 @@
         "skills/_writing-tests-rules.md",
         "skills/commit/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
+        "skills/detect-ai-fingerprints/references/writing-code-enforcement-history.md",
         "skills/distill-lessons/SKILL.md",
         "skills/drive-while-away/references/session-coordination-background.md",
         "skills/evaluate-ticket/SKILL.md",
@@ -9339,6 +9340,7 @@
         "skills/_writing-prose-rules.md",
         "skills/_writing-tests-rules.md",
         "skills/detect-ai-fingerprints/SKILL.md",
+        "skills/detect-ai-fingerprints/references/writing-code-enforcement-history.md",
         "skills/testing-frameworks/SKILL.md"
       ],
       "kind": "skill",
@@ -9815,10 +9817,10 @@
     },
     {
       "canonical_source": "skills/detect-ai-fingerprints/SKILL.md",
-      "characters": 26708,
-      "content_sha256": "23ecea9a989a1f1e2eb4b8deebf719287dd4d12ced143778820bed87da9fc85a",
+      "characters": 26919,
+      "content_sha256": "9a7a11b211234d4d2477ed8c8426dca24e80248c0506cc3febd3606aedecb980",
       "description": "Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4, writing-code:2/4/7/8/9/15, writing-tests:3/5, writing-claims:2, writing-releases:3, plus rule-citation Rule-executed evidence, in staged diffs, working-tree diffs, GitHub PR diffs, or commit/PR message bodies. Reports file:line violations and 0/1/2 exit codes. Remaining rules require [skill:code-review] judgment and are not in scope.",
-      "estimated_tokens": 6677,
+      "estimated_tokens": 6730,
       "frontmatter_name": "detect-ai-fingerprints",
       "generated_outputs": [
         "dist/nested/skills/detect-ai-fingerprints",
@@ -9850,12 +9852,13 @@
         "skills/_writing-tests-rules.md",
         "skills/code-review/SKILL.md",
         "skills/commit/SKILL.md",
+        "skills/detect-ai-fingerprints/references/writing-code-enforcement-history.md",
         "skills/self-review/SKILL.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 267,
+      "lines": 268,
       "owner": [
         "unknown"
       ],
@@ -11978,6 +11981,7 @@
         "skills/_writing-rules-rules.md",
         "skills/_writing-tests-rules.md",
         "skills/create-pr/SKILL.md",
+        "skills/detect-ai-fingerprints/references/writing-code-enforcement-history.md",
         "skills/engagement-post-mortem/SKILL.md",
         "skills/investigate/SKILL.md",
         "skills/merge/SKILL.md",
@@ -13096,9 +13100,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2474872,
+    "characters": 2473729,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 618793,
+    "estimated_tokens": 618508,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13119,7 +13123,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1078478
+      "unclassified": 1077335
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13131,7 +13135,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 269659
+      "unclassified": 269374
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
