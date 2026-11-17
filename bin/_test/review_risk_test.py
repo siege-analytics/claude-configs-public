@@ -178,6 +178,7 @@ REQUIRED_GENERATED_SETTINGS_REGISTRATIONS_SHA256 = "19a972d9471da0d66c46568c0efb
 CI_INVOCATION_SITES = [
  (".github/workflows/build-and-publish.yml","bin/_test/project_settings_bootstrap_test.py","run: python3 bin/_test/project_settings_bootstrap_test.py",1),
  ("bin/install-craft-hook-router.py","bin/project-settings-bootstrap.py",'project = load(PROJECT_SOURCE, "craft_project_bootstrap")',1),
+ ("bin/project-settings-bootstrap.py","hooks/lib/session_anchor.py","anchor = load(package / 'compatibility/hooks/lib/session_anchor.py', 'project_native_session_anchor')",1),
  ("bin/project-settings-bootstrap.py","hooks/lib/session_anchor.py","anchor = load(package / 'compatibility/hooks/lib/session_anchor.py', 'project_headless_session_anchor')",1),
  ("bin/project-settings-bootstrap.py","bin/core-authoring-profile.py","registration = load(package / 'bin/core-authoring-profile.py', 'installed_core_authoring_profile')",1),
  ("bin/core-authoring-profile.py","bin/build.py","build = load(ROOT / 'bin/build.py', 'core_authoring_build')",1),
@@ -193,7 +194,7 @@ CI_INVOCATION_SITES = [
  ("bin/generated-source-authority.py","bin/build.py",'[sys.executable, str(root / "bin" / "build.py"), "--dist", str(fresh_dist)],',1),
  ("bin/kernel-budget.py","bin/generated-source-authority.py",'[sys.executable, str(root / "bin" / "generated-source-authority.py"), "--check"],',1),
  (".github/workflows/build-and-publish.yml","bin/build.py","run: python3 bin/build.py --check",1),
- (".github/workflows/build-and-publish.yml","bin/build.py","run: python3 bin/build.py",2),
+ (".github/workflows/build-and-publish.yml","bin/build.py","run: python3 bin/build.py",6),
  (".github/workflows/build-and-publish.yml","bin/generated-source-authority.py","python3 bin/generated-source-authority.py --check",2),
  (".github/workflows/build-and-publish.yml","bin/kernel-budget.py","python3 bin/kernel-budget.py --check",1),
  (".github/workflows/build-and-publish.yml","bin/skill-inventory.py","python3 bin/skill-inventory.py --check",1),

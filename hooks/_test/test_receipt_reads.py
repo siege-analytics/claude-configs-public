@@ -202,6 +202,43 @@ class ReceiptReads(unittest.TestCase):
                 task_actions._test_receipt_record(task_actions.shell_tokens(shlex.join(argv)), str(self.f.repo))
         self.assertFalse(self.marker.exists())
 
+    def test_operator_safe_directory_survives_receipt_git_isolation(self):
+        spec = importlib.util.spec_from_file_location('receipt_safe_directory', PROVIDER)
+        provider = importlib.util.module_from_spec(spec); spec.loader.exec_module(provider)
+        source = self.f.repo / 'behavior.py'; source.write_text('VALUE = 42\n')
+        fixtures.fixture_git('-C', self.f.repo, 'add', 'behavior.py', check=True, timeout=20)
+        fixtures.fixture_git('-C', self.f.repo, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                             '-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgsign=false',
+                             'commit', '-qm', 'fixture source', check=True, timeout=20)
+        home = self.f.ws / 'operator-home'; home.mkdir()
+        config = home / '.gitconfig'; config.write_text('[safe]\n\tdirectory = ' + str(self.f.repo) + '\n')
+        system = home / 'system.gitconfig'; system.write_text('')
+        original_environment = provider.git_environment
+        # Git's own controlled ownership-test switch exercises its real trust
+        # check. Reinsert only in fixture children after production isolation;
+        # this is not a physically differently-owned repository claim.
+        def ownership_check_environment():
+            return {**original_environment(), 'GIT_TEST_ASSUME_DIFFERENT_OWNER': '1'}
+        injected = {'HOME': str(home), 'XDG_CONFIG_HOME': str(home / 'xdg'),
+                    'GIT_CONFIG_SYSTEM': str(system),
+                    'GIT_DIR': '/untrusted/foreign.git', 'GIT_INDEX_FILE': '/untrusted/index',
+                    'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_KEY_0': 'safe.directory', 'GIT_CONFIG_VALUE_0': '*'}
+        with patch.dict(os.environ, injected, clear=True), patch.object(provider, 'git_environment', ownership_check_environment):
+            self.assertEqual(provider.source_paths(self.f.repo, self.base), ['behavior.py'])
+            self.assertNotEqual(provider.committed_blob(self.f.repo, 'behavior.py'), 'deleted')
+            config.write_text('')
+            with self.assertRaises(subprocess.CalledProcessError):
+                provider.source_paths(self.f.repo, self.base)
+            config.write_text('[safe]\n\tdirectory = ' + str(self.f.repo) + '\n')
+            for selector in ('GIT_CONFIG_GLOBAL', 'GIT_CONFIG_SYSTEM'):
+                with patch.dict(os.environ, {selector: str(config)}):
+                    if selector == 'GIT_CONFIG_SYSTEM':
+                        with patch.dict(os.environ, {'GIT_CONFIG_GLOBAL': str(home / 'missing')}):
+                            self.assertEqual(provider.source_paths(self.f.repo, self.base), ['behavior.py'])
+                    else:
+                        self.assertEqual(provider.source_paths(self.f.repo, self.base), ['behavior.py'])
+        self.assertFalse(self.marker.exists())
+
     def test_cli_named_ref_works_and_option_base_cannot_write(self):
         for base in ('HEAD', self.base, '--output='+str(self.marker)):
             argv = self.argv('sources')

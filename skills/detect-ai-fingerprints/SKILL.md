@@ -256,6 +256,7 @@ Lexical diff checks inspect added lines (`+` prefix), not removed or context lin
 
 ## Cross-references
 
+- For investigations of earlier rollout wording, see [historical writing-code enforcement summary](references/writing-code-enforcement-history.md). This optional record does not define current scanner coverage.
 - The per-act rule files `[rule:writing-prose]`, `[rule:writing-code]`, `[rule:writing-tests]`, `[rule:writing-claims]`, `[rule:writing-releases]` are the rules this skill enforces. Mechanical coverage is enumerated in "What the scanner covers" above; everything else requires `[skill:code-review]` judgment. See `_coverage.md` for the per-rule prevention-path that names what tooling would mechanize each judgment row.
 - `[skill:commit]` calls this skill in step 3 and applies the task-scoped acceptance contract above; a non-clean result is not an automatic whole-task stop.
 - `[skill:code-review]` calls this skill at the start of the review pass. Findings prefix the six-layer review.

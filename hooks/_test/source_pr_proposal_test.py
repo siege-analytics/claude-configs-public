@@ -77,6 +77,111 @@ class Proposals(unittest.TestCase):
         self.assertEqual(result.returncode, 2, result.stderr)
         self.assertIn('github pull request write', result.stderr)
 
+    def test_git_internal_body_files_are_not_publication_inputs(self):
+        fixture.fixture_git('-C', self.repo, 'config', 'fixture.synthetic',
+                            'not-a-real-credential', check=True, timeout=20)
+        config = self.repo / '.git/config'
+        original = config.read_bytes()
+        self.assertEqual(self.hook(self.command, cwd=self.ws).returncode, 0)
+        for operand in [config, self.repo / '.git/HEAD']:
+            with self.subTest(operand=operand):
+                result = self.hook(self.command.replace(str(self.body), str(operand)), cwd=self.ws)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn('GitHub metadata target scope', result.stderr)
+        self.assertEqual(config.read_bytes(), original)
+
+    def test_linked_worktree_git_pointer_is_not_a_publication_input(self):
+        linked = self.ws / 'linked-source'
+        fixture.fixture_git('-C', self.repo, '-c', 'core.hooksPath=/dev/null',
+                            'worktree', 'add', '-q', '-b', 'feat/3133-linked', linked,
+                            'HEAD', check=True, timeout=20)
+        gate = self.task('electinfo/enterprise#3134', linked, artifacts=False)
+        data = json.loads((gate / 'think-gate.json').read_text())
+        fixture.write(gate / 'think-gate.json', {**data, 'repo_root': str(linked)})
+        command = self.command.replace('feat/3133-source', 'feat/3133-linked')
+        self.assertEqual(self.hook(command, cwd=self.ws).returncode, 0)
+        pointer = linked / '.git'
+        self.assertTrue(pointer.is_file())
+        original = pointer.read_bytes()
+        result = self.hook(command.replace(str(self.body), str(pointer)), cwd=self.ws)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn('GitHub metadata target scope', result.stderr)
+        self.assertEqual(pointer.read_bytes(), original)
+
+    def test_body_operand_preserves_symlink_parent_traversal(self):
+        permitted = self.repo / 'report.md'
+        permitted.write_text('public fixture report\n')
+        private = self.ws / 'private'
+        (private / 'inner').mkdir(parents=True)
+        outside = private / 'report.md'
+        outside.write_text('synthetic private fixture, not a credential\n')
+        (self.repo / 'link').symlink_to(private / 'inner', target_is_directory=True)
+        operand = str(self.repo) + '/link/../report.md'
+        self.assertEqual(Path(operand).read_bytes(), outside.read_bytes())
+        self.assertEqual(self.hook(self.command.replace(str(self.body), str(permitted)), cwd=self.repo).returncode, 0)
+        for body in [operand, 'link/../report.md']:
+            with self.subTest(body=body):
+                result = self.hook(self.command.replace(str(self.body), body), cwd=self.repo)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn('GitHub metadata target scope', result.stderr)
+        (self.repo / 'ordinary').mkdir()
+        ordinary = str(self.repo) + '/ordinary/../report.md'
+        self.assertEqual(self.hook(self.command.replace(str(self.body), ordinary), cwd=self.repo).returncode, 0)
+        self.assertEqual(outside.read_text(), 'synthetic private fixture, not a credential\n')
+
+    def test_pipeline_cd_cannot_supply_the_proposal_body_directory(self):
+        body = self.repo / 'report.md'; body.write_text('public fixture report\n')
+        outside = self.ws / 'report.md'; outside.write_text('synthetic private fixture\n')
+        relative = self.command.replace(str(self.body), 'report.md')
+        cd = 'cd ' + shlex.quote(str(self.repo))
+        self.assertEqual(self.hook(cd + ' && ' + relative, cwd=self.ws).returncode, 0)
+        self.assertEqual(self.hook('printf ignored | ' + relative, cwd=self.repo).returncode, 0)
+        for command in [cd + ' | ' + relative,
+                        'CCP_TASK_ID=electinfo/enterprise#3133 ' + cd + ' | ' + relative,
+                        'printf ignored | ' + cd + '; ' + relative]:
+            with self.subTest(command=command):
+                result = self.hook(command, cwd=self.ws)
+                self.assertEqual(result.returncode, 2, result.stderr)
+        # A pipeline cd cannot change the right-hand command's real cwd.
+        actual = subprocess.run(['/bin/bash', '-c', cd + ' | pwd'], cwd=self.ws,
+                                text=True, capture_output=True, timeout=10, check=True)
+        self.assertEqual(Path(actual.stdout.strip()), self.ws)
+        self.assertEqual(outside.read_text(), 'synthetic private fixture\n')
+
+    def test_proposal_body_cannot_overlap_the_commands_write_targets(self):
+        body = self.repo / 'report.md'; body.write_text('public fixture report\n')
+        (self.a / 'source.md').write_text('synthetic replacement fixture\n')
+        command = self.command.replace(str(self.body), str(body))
+        self.assertEqual(self.hook(command, cwd=self.repo).returncode, 0)
+        for write in ['cat ' + shlex.quote(str(self.repo / '.git/config')) + ' > ' + shlex.quote(str(body)),
+                      'printf replacement > ./report.md',
+                      'cp ' + shlex.quote(str(self.a / 'source.md')) + ' ./report.md']:
+            with self.subTest(write=write):
+                result = self.hook(write + ' && ' + command, cwd=self.repo)
+                self.assertEqual(result.returncode, 2, result.stderr)
+        other = self.repo / 'other.md'
+        self.assertEqual(self.hook('printf note > ' + shlex.quote(str(other)) + ' && ' + command,
+                                   cwd=self.repo).returncode, 0)
+        self.assertEqual(body.read_text(), 'public fixture report\n')
+        self.assertFalse(other.exists())
+
+    def test_pipeline_source_proposal_refusal_preserves_issue_reporting(self):
+        command = ('cd ' + shlex.quote(str(self.repo))
+                   + ' | gh issue create --repo electinfo/fec-api --title report --body-file '
+                   + shlex.quote(str(self.body)))
+        shape = fixture.r.action(command, str(self.ws))
+        self.assertFalse(shape.get('error'), shape)
+        self.assertEqual(shape['metadata_posts'][0]['resource'], 'issue')
+        self.assertEqual(self.hook(command, cwd=self.ws).returncode, 0)
+
+    def test_public_git_configuration_documents_remain_body_inputs(self):
+        for name in ['.gitignore', '.gitattributes', '.gitmodules']:
+            body = self.repo / name
+            body.write_text('# public repository document fixture\n')
+            with self.subTest(name=name):
+                result = self.hook(self.command.replace(str(self.body), str(body)), cwd=self.ws)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_exact_source_target_and_lifecycle_remain_required(self):
         foreign = self.ws / 'foreign.md'; foreign.write_text('foreign body')
         for command in [self.command.replace('electinfo/fec-api', 'foreign/repo'), self.command.replace('feat/3133-source', 'feat/foreign'), self.command.replace('--base develop', '--base main'), self.command.replace(str(self.body), str(foreign)), self.command + ' && gh pr close 31', self.command.replace('pr create', 'pr merge'), self.command + ' --repo electinfo/fec-api', self.command + ' --unknown-option', self.command.replace(str(self.body), str(self.body) + '.missing'), self.command.replace('--body-file ' + str(self.body), '--body-file -')]:

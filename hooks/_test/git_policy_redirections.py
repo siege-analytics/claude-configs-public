@@ -83,6 +83,70 @@ class GitRedirections(unittest.TestCase):
         self.assertEqual(self.git('config', '--get', 'alias.preview'), 'status')
         self.assertFalse(self.output.exists())
 
+    def test_pipeline_config_write_cannot_borrow_sequential_last_item_order(self):
+        self.git('config', 'alias.preview', 'status')
+        git = 'git -C ' + q(str(self.f.repo))
+        change = git + " config alias.preview 'push --force origin main'"
+        pipeline = git + ' preview > ' + q(str(self.output)) + ' | ' + change
+        for command in [pipeline, 'bash -c ' + q(pipeline), 'eval ' + q(pipeline),
+                        git + ' preview > ' + q(str(self.output)) + ' | bash -c ' + q(change)]:
+            for guard in ['hooks/git/branch-guard.sh', 'hooks/bash/destructive-guard.sh']:
+                with self.subTest(command=command, guard=guard):
+                    result = self.hook(guard, command, 2)
+                    self.assertIn('BLOCKED:', result.stdout + result.stderr)
+                    if not command.startswith('eval '):
+                        self.assertIn('configuration mutations', result.stdout + result.stderr)
+        # A genuinely later sequential write stays ordered, even after a reader pipe.
+        safe = git + ' status > ' + q(str(self.output)) + ' | cat; ' + change
+        for command in [safe, git + ' preview > ' + q(str(self.output)) + ' | ' + git + ' config --get alias.preview']:
+            self.hook('hooks/git/branch-guard.sh', command)
+            self.hook('hooks/bash/destructive-guard.sh', command)
+        self.assertFalse(self.output.exists())
+
+    def test_pipeline_newlines_preserve_concurrent_config_membership(self):
+        self.git('config', 'alias.preview', 'status')
+        git = 'git -C ' + q(str(self.f.repo))
+        left = git + ' preview > ' + q(str(self.output))
+        change = git + " config alias.preview 'push --force origin main'"
+        for separator in [' |\n', ' |\n\n', ' | # pipeline comment\n']:
+            pipeline = left + separator + change
+            for command in [pipeline, 'bash -c ' + q(pipeline)]:
+                for guard in ['hooks/git/branch-guard.sh', 'hooks/bash/destructive-guard.sh']:
+                    with self.subTest(separator=separator, command=command, guard=guard):
+                        result = self.hook(guard, command, 2)
+                        self.assertIn('BLOCKED:', result.stdout + result.stderr)
+        for separator in [' |; ', ' |\n; ', ' | || ']:
+            malformed = left + separator + change
+            syntax = subprocess.run(['/bin/bash', '-n', '-c', malformed],
+                                    text=True, capture_output=True, timeout=5)
+            self.assertEqual(syntax.returncode, 2)
+            for guard in ['hooks/git/branch-guard.sh', 'hooks/bash/destructive-guard.sh']:
+                self.hook(guard, malformed, 2)
+        sequential = left + ' |\n cat\n' + change
+        for guard in ['hooks/git/branch-guard.sh', 'hooks/bash/destructive-guard.sh']:
+            self.hook(guard, sequential)
+        self.assertFalse(self.output.exists())
+
+    def test_barrier_proves_later_pipeline_member_can_change_dispatch(self):
+        self.git('config', 'alias.preview', 'status')
+        barrier = self.f.ws / 'barrier'; barrier.mkdir()
+        stub = barrier / 'git'
+        started, released, observed = [barrier / name for name in ['started', 'released', 'observed']]
+        script = "#!/" + sys.executable.lstrip('/') + "\n"
+        script += "import os,subprocess,sys,time\nfrom pathlib import Path\n"
+        script += 'started=Path(' + repr(str(started)) + ');released=Path(' + repr(str(released)) + ')\n'
+        script += "def wait(path):\n deadline=time.monotonic()+5\n while not path.exists():\n  if time.monotonic()>deadline:raise SystemExit(3)\n  time.sleep(.01)\n"
+        script += "args=sys.argv[1:]\nif args[0]=='preview':\n started.touch();wait(released)\nelif args[0]=='config':\n wait(started)\n subprocess.run(['/usr/bin/git',*args],check=True,timeout=5)\n released.touch();raise SystemExit(0)\nos.execv('/usr/bin/git',['git',*args])\n"
+        stub.write_text(script); stub.chmod(0o755)
+        changed = '!printf observed > ' + q(str(observed))
+        command = 'git preview > ' + q(str(self.output)) + ' | git config alias.preview ' + q(changed)
+        result = subprocess.run(['/bin/bash', '-c', command], cwd=self.f.repo,
+                                env={**self.env, 'PATH': str(barrier) + os.pathsep + self.env['PATH']},
+                                text=True, capture_output=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(observed.read_text(), 'observed')
+        # Only a synthetic local printf alias ran; no publication command exists.
+
     def test_foreign_output_and_unsupported_dynamic_fd_state_stay_denied(self):
         self.hook('hooks/bash/universal-mutation-gate.sh', self.diff+' > '+q(str(self.f.b/'foreign.patch')), 2)
         for command in [self.diff+' > "$OUTPUT"', self.diff+' > '+q(str(self.f.a))+'/*.patch',

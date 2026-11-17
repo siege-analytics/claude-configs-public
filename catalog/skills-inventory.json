@@ -6213,10 +6213,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 34908,
-      "content_sha256": "65f2be0aa732981b410ca623e25db449f7ecfdce896e01008392c0b4a23ff000",
+      "characters": 29267,
+      "content_sha256": "81f19d9ba567a585d7282010fc81ffeddb4cebfde99957d5f45f24af261e1294",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 8727,
+      "estimated_tokens": 7317,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6244,12 +6244,13 @@
         "skills/_tandem-agent-rules.md",
         "skills/_ticket-lifecycle-rules.md",
         "skills/ask-questions/SKILL.md",
-        "skills/drive-while-away/SKILL.md"
+        "skills/drive-while-away/SKILL.md",
+        "skills/drive-while-away/references/session-coordination-background.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 185,
+      "lines": 152,
       "owner": [
         "unknown"
       ],
@@ -7418,10 +7419,10 @@
     },
     {
       "canonical_source": "skills/_writing-code-rules.md",
-      "characters": 51268,
-      "content_sha256": "f93b82923a45e926937a256cc53a3d351e7c4b9e2430003587fbf7b0c9a34b4c",
+      "characters": 50032,
+      "content_sha256": "8348d0127d99739411875e0476fe2307687eae41d9325cd9fb039f3941093283",
       "description": "Always-on. Code-authoring discipline. Docstring brevity, no history references in code comments, no speculative abstractions, verify symbols and dependency contracts before using them, exercise real dependencies before claiming integration works, doc-edit symmetry, no silent error swallowing, migration completeness (old-path grep must return zero), deprecation shims require companion follow-up tickets. Test-writing rules live in `_writing-tests-rules.md`; claim-grounding (commit/PR-body claims) lives in `_writing-claims-rules.md`.",
-      "estimated_tokens": 12817,
+      "estimated_tokens": 12508,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_writing-code-rules.md",
@@ -8830,7 +8831,8 @@
         "plans/self-review-1056-ask-questions.md",
         "skills/_autonomy-rules.md",
         "skills/_session-coordination-rules.md",
-        "skills/_strategic-agency-rules.md"
+        "skills/_strategic-agency-rules.md",
+        "skills/drive-while-away/references/session-coordination-background.md"
       ],
       "kind": "skill",
       "last_reviewed": "2026-11-06",
@@ -9139,7 +9141,6 @@
         "plans/self-review-ddia-shelf.md",
         "scripts/discipline/test_skill_token_chat_safe.sh",
         "skills/RESOLVER.md",
-        "skills/_session-coordination-rules.md",
         "skills/_tandem-agent-rules.md",
         "skills/_testing-frameworks-rules.md",
         "skills/_writing-claims-rules.md",
@@ -9149,7 +9150,9 @@
         "skills/_writing-tests-rules.md",
         "skills/commit/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
+        "skills/detect-ai-fingerprints/references/writing-code-enforcement-history.md",
         "skills/distill-lessons/SKILL.md",
+        "skills/drive-while-away/references/session-coordination-background.md",
         "skills/evaluate-ticket/SKILL.md",
         "skills/hostile-review/SKILL.md",
         "skills/lessons-learned/SKILL.md",
@@ -9337,6 +9340,7 @@
         "skills/_writing-prose-rules.md",
         "skills/_writing-tests-rules.md",
         "skills/detect-ai-fingerprints/SKILL.md",
+        "skills/detect-ai-fingerprints/references/writing-code-enforcement-history.md",
         "skills/testing-frameworks/SKILL.md"
       ],
       "kind": "skill",
@@ -9813,10 +9817,10 @@
     },
     {
       "canonical_source": "skills/detect-ai-fingerprints/SKILL.md",
-      "characters": 26708,
-      "content_sha256": "23ecea9a989a1f1e2eb4b8deebf719287dd4d12ced143778820bed87da9fc85a",
+      "characters": 26919,
+      "content_sha256": "9a7a11b211234d4d2477ed8c8426dca24e80248c0506cc3febd3606aedecb980",
       "description": "Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4, writing-code:2/4/7/8/9/15, writing-tests:3/5, writing-claims:2, writing-releases:3, plus rule-citation Rule-executed evidence, in staged diffs, working-tree diffs, GitHub PR diffs, or commit/PR message bodies. Reports file:line violations and 0/1/2 exit codes. Remaining rules require [skill:code-review] judgment and are not in scope.",
-      "estimated_tokens": 6677,
+      "estimated_tokens": 6730,
       "frontmatter_name": "detect-ai-fingerprints",
       "generated_outputs": [
         "dist/nested/skills/detect-ai-fingerprints",
@@ -9848,12 +9852,13 @@
         "skills/_writing-tests-rules.md",
         "skills/code-review/SKILL.md",
         "skills/commit/SKILL.md",
+        "skills/detect-ai-fingerprints/references/writing-code-enforcement-history.md",
         "skills/self-review/SKILL.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 267,
+      "lines": 268,
       "owner": [
         "unknown"
       ],
@@ -10102,10 +10107,10 @@
     },
     {
       "canonical_source": "skills/drive-while-away/SKILL.md",
-      "characters": 28087,
-      "content_sha256": "576e5550f4fa8074f25f5ab7c1d813bfaf1d126ad9c58a81a420ee72decf73e6",
+      "characters": 28303,
+      "content_sha256": "ad563a9d8b2e929226829b58f5cbec379bea866c03db97af3a6a19aa67dab6da",
       "description": "When the operator hands off continuous work for an extended period (\"drive while I'm gone,\" \"monitor X overnight,\" \"keep going while I'm out,\" \"watch this and handle it\"), set up an autonomous-re-entry mechanism (CronCreate for regular Claude/Codex sessions, ScheduleWakeup for /loop sessions) when available, but do not claim operator-visible cadence unless the runtime proves those events render in the operator UI. In Craft Agent, use foreground tool calls, durable artifacts, and issue/PR updates for visible evidence; treat async wakeups as agent-internal until proven otherwise. Continuation is automatic only when the scheduler exists and is wired; stopping requires an active decision. Forbids the \"do one task, present a progress report, wait for praise\" anti-pattern.",
-      "estimated_tokens": 7022,
+      "estimated_tokens": 7076,
       "frontmatter_name": "drive-while-away",
       "generated_outputs": [
         "dist/nested/skills/drive-while-away",
@@ -10130,7 +10135,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 289,
+      "lines": 290,
       "owner": [
         "unknown"
       ],
@@ -10393,7 +10398,8 @@
         "skills/_tandem-agent-rules.md",
         "skills/_writing-code-rules.md",
         "skills/_writing-rules-rules.md",
-        "skills/code-review/SKILL.md"
+        "skills/code-review/SKILL.md",
+        "skills/drive-while-away/references/session-coordination-background.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
@@ -11975,6 +11981,7 @@
         "skills/_writing-rules-rules.md",
         "skills/_writing-tests-rules.md",
         "skills/create-pr/SKILL.md",
+        "skills/detect-ai-fingerprints/references/writing-code-enforcement-history.md",
         "skills/engagement-post-mortem/SKILL.md",
         "skills/investigate/SKILL.md",
         "skills/merge/SKILL.md",
@@ -13093,9 +13100,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2480297,
+    "characters": 2473847,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 620149,
+    "estimated_tokens": 618537,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13116,7 +13123,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1083903
+      "unclassified": 1077453
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13128,7 +13135,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 271015
+      "unclassified": 269403
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

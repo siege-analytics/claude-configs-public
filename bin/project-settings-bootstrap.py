@@ -129,7 +129,7 @@ def regular(path):
 
 
 @contextmanager
-def _physical_directory(home, relative, *, create=False):
+def _physical_directory(home, relative, *, create=False, owned=False):
     """Pin every directory component; never resolve a publication through links."""
     if not home.is_absolute() or relative.is_absolute() or '..' in (*home.parts, *relative.parts):
         raise ValueError('stable publication directory must be physical and home-relative')
@@ -138,9 +138,9 @@ def _physical_directory(home, relative, *, create=False):
     try:
         current = os.open(home.anchor, flags)
         descriptors.append(current)
-        components = [(part, False) for part in home.parts[1:]]
-        components.extend((part, create) for part in relative.parts)
-        for name, make in components:
+        components = [(part, False, False) for part in home.parts[1:]]
+        components.extend((part, create, True) for part in relative.parts)
+        for name, make, beneath_home in components:
             if make:
                 try:
                     os.mkdir(name, mode=0o700, dir_fd=current)
@@ -150,6 +150,10 @@ def _physical_directory(home, relative, *, create=False):
             descriptors.append(child)
             bindings.append((current, name, child))
             current = child
+            if owned and beneath_home:
+                info = os.fstat(child)
+                if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) & 0o022:
+                    raise ValueError('native session path component must be owned and not writable by others')
         def verify():
             for parent, name, child in bindings:
                 named = os.stat(name, dir_fd=parent, follow_symlinks=False)
@@ -217,6 +221,8 @@ def load(path, name):
 
 def craft_process():
     """The same fixed application ancestry boundary as the installed router."""
+    if sys.platform != 'darwin':
+        return False
     result = subprocess.run(['/bin/ps', '-axo', 'pid=,ppid=,comm='], capture_output=True, text=True, timeout=5)
     if result.returncode:
         raise ValueError('cannot establish callback process ancestry')
@@ -426,6 +432,23 @@ def cli(raw, event, payload, *, mode='native-cli'):
         environment = {k: v for k, v in os.environ.items() if k not in craft_keys and not k.startswith('CCP_CRAFT_ROUTER_')}
         environment.update(PYTHONDONTWRITEBYTECODE='1', CCP_HOOK_STATE_DIR=str(state))
         environment['PATH'] = str(interpreter.parent) + os.pathsep + environment.get('PATH', '')
+        if mode == 'native-cli' and not any(environment.get(key, '').strip() for key in
+                ('CLAUDE_SIGNAL_DIR', 'CRAFT_SIGNAL_DIR', 'CRAFT_AGENT_SIGNAL_DIR', 'CLAUDE_SESSION_DIR')):
+            anchor = load(package / 'compatibility/hooks/lib/session_anchor.py', 'project_native_session_anchor')
+            sdk = anchor.payload_uuid(payload)
+            if not sdk:
+                raise ValueError('native CLI callback has no valid SDK session identity')
+            session_state = Path.home() / '.local/state/siege/core-authoring' / state.name
+            with _physical_directory(Path.home(), session_state.relative_to(Path.home()), create=True, owned=True) as directory:
+                info = os.fstat(directory[0])
+                if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) & 0o077:
+                    raise ValueError('native CLI session state must be owned and private')
+            session = session_state / 'sessions' / sdk
+            with _physical_directory(Path.home(), session.relative_to(Path.home()), create=True, owned=True) as directory:
+                info = os.fstat(directory[0])
+                if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) & 0o077:
+                    raise ValueError('native CLI session directory must be owned and private')
+            environment.update(CLAUDE_SESSION_DIR=str(session), CLAUDE_SESSION_ID=sdk)
         if mode == 'headless-craft':
             for key in ('CRAFT_SESSION_PATH', 'CRAFT_AGENT_SESSION_PATH', 'CLAUDE_SESSION_DIR', 'CLAUDE_SESSION_ID',
                         'CLAUDE_CODE_SESSION_ID', 'SESSION_ID', 'CLAUDE_SIGNAL_DIR', 'CRAFT_SIGNAL_DIR',

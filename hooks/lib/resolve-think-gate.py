@@ -969,6 +969,10 @@ def _resolve_action(workspace: str, payload: dict) -> dict:
     if shape.get('metadata_posts'):
         if shape.get('remote_actions') or shape.get('review_actions'):
             return {**shape, 'gate': None, 'error': 'Split metadata posts from separately granted remote operations.'}
+        bodies = {canonical(target['body_path']) for target in shape['metadata_posts']
+                  if target.get('resource') == 'pr' and target.get('operation') == 'create'}
+        if bodies & {canonical(path) for path in shape['paths']}:
+            return {**shape, 'gate': None, 'error': 'A proposal body file cannot be written by the same command.'}
         post_selected = select_metadata_post_task(workspace, shape)
         if not post_selected.get('gate'):
             return {**shape, **post_selected}
@@ -1177,7 +1181,7 @@ def select_metadata_post_task(workspace: str, shape: dict) -> dict:
                 if len(source_roots) != 1 or not (any(_within(body, root) for root in source_roots)
                         or private and _within(body, private) and own_session_path(workspace, body, directory=True)):
                     matched = False; break
-                sensitive = r'(?:\.env(?:$|\.)|credentials\.json|service-account.*\.json|\.(?:pem|key|p12|pfx)$|id_rsa|id_ed25519|token\.json|\.secrets?$|^\.(?:ssh|aws|gnupg)$)'
+                sensitive = r'(?:\.env(?:$|\.)|credentials\.json|service-account.*\.json|\.(?:pem|key|p12|pfx)$|id_rsa|id_ed25519|token\.json|\.secrets?$|^\.(?:git|ssh|aws|gnupg)$)'
                 if any(re.search(sensitive, part, re.I) for part in body.split(os.sep)):
                     matched = False; break
                 try:
