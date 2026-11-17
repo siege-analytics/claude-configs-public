@@ -57,9 +57,15 @@ def workflow_steps():
     workflow = yaml.safe_load((ROOT / '.github/workflows/build-and-publish.yml').read_text())
     if not isinstance(workflow, dict):
         raise ValueError('CI workflow must be a mapping')
+    if 'defaults' in workflow:
+        raise ValueError('unmodeled workflow execution override: defaults')
     jobs = workflow.get('jobs')
     if not isinstance(jobs, dict) or not isinstance(jobs.get('validate'), dict):
         raise ValueError('CI workflow must define a validation job')
+    for name in ['validate', 'validation-complete', *(f'hooks-{i}' for i in range(4))]:
+        job = jobs.get(name)
+        if isinstance(job, dict) and any(key in job for key in ('defaults', 'continue-on-error')):
+            raise ValueError('unmodeled job execution override: ' + name)
     steps = jobs['validate']['steps']
     if not isinstance(steps, list):
         raise ValueError('CI validation steps must be an array')
