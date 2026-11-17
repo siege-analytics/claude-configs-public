@@ -217,6 +217,8 @@ def load(path, name):
 
 def craft_process():
     """The same fixed application ancestry boundary as the installed router."""
+    if sys.platform != 'darwin':
+        return False
     result = subprocess.run(['/bin/ps', '-axo', 'pid=,ppid=,comm='], capture_output=True, text=True, timeout=5)
     if result.returncode:
         raise ValueError('cannot establish callback process ancestry')

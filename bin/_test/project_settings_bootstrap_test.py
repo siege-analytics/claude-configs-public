@@ -94,6 +94,52 @@ class Bootstrap(unittest.TestCase):
             with self.assertRaises(PermissionError):
                 b.headless_process(pid=42)
 
+    def test_linux_dispatch_uses_qualified_proc_without_desktop_ps(self):
+        proc = self.home / 'dispatch-proc'
+        process = proc / '42'
+        process.mkdir(parents=True)
+        (process / 'exe').symlink_to('/app/vendor/bun/bun')
+        (process / 'status').write_text('PPid: 0\n')
+        (process / 'cmdline').write_bytes(
+            b'/app/vendor/bun/bun\0run\0/app/packages/server/src/index.ts\0--allow-insecure-bind\0')
+        payload = {'hook_event_name': 'UserPromptSubmit', 'cwd': str(self.repo)}
+        raw = json.dumps(payload).encode()
+        headless = b.headless_process
+        with patch.object(b.sys, 'platform', 'linux'), \
+             patch.object(b.subprocess, 'run', side_effect=FileNotFoundError('/bin/ps unavailable')) as ps, \
+             patch.object(b, 'headless_process', side_effect=lambda: headless(proc, 42)), \
+             patch.object(b, 'cli', return_value=0) as cli, \
+             patch.dict(os.environ, {'CRAFT_SESSION_DIR': str(self.workspace / 'sessions/native')}):
+            self.assertEqual(b.dispatch(raw, 'UserPromptSubmit'), 0)
+            cli.assert_called_once_with(raw, 'UserPromptSubmit', payload, mode='headless-craft')
+            cli.reset_mock()
+            (process / 'cmdline').write_bytes(b'/app/vendor/bun/bun\0run\0other.ts\0')
+            with self.assertRaisesRegex(ValueError, 'no qualified host witness'):
+                b.dispatch(raw, 'UserPromptSubmit')
+            cli.assert_not_called()
+            (process / 'exe').unlink()
+            (process / 'exe').symlink_to('/usr/bin/bun')
+            with self.assertRaisesRegex(ValueError, 'no qualified host witness'):
+                b.dispatch(raw, 'UserPromptSubmit')
+            cli.assert_not_called()
+            ps.assert_not_called()
+
+    def test_desktop_probe_preserves_exact_ancestry_and_ps_failures(self):
+        command = ['/bin/ps', '-axo', 'pid=,ppid=,comm=']
+        output = '42 7 /usr/bin/python3\n7 1 /Applications/Craft Agents.app/Contents/MacOS/Craft Agents\n'
+        with patch.object(b.sys, 'platform', 'darwin'), patch.object(b.os, 'getpid', return_value=42), \
+             patch.object(b.subprocess, 'run', return_value=subprocess.CompletedProcess(command, 0, output)) as ps:
+            self.assertTrue(b.craft_process())
+            ps.assert_called_once_with(command, capture_output=True, text=True, timeout=5)
+            ps.return_value = subprocess.CompletedProcess(command, 0, output.replace('Craft Agents.app', 'Other.app'))
+            self.assertFalse(b.craft_process())
+            ps.return_value = subprocess.CompletedProcess(command, 1, '')
+            with self.assertRaisesRegex(ValueError, 'cannot establish callback process ancestry'):
+                b.craft_process()
+            ps.side_effect = FileNotFoundError('/bin/ps unavailable')
+            with self.assertRaises(FileNotFoundError):
+                b.craft_process()
+
     def test_managed_profile_preserves_operator_policy_and_rejects_duplicates(self):
         settings = b.profile()
         settings['model'] = 'operator-choice'
