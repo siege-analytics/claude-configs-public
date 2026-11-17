@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **199**
-- Characters: **2,480,297**
-- Estimated tokens: **620,149** (character/4 estimate)
+- Characters: **2,474,872**
+- Estimated tokens: **618,793** (character/4 estimate)
 - Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 111 | 1,083,903 | 271,015 |
+| unclassified | 111 | 1,078,478 | 269,659 |
 
 ## Largest source items
 
@@ -43,13 +43,13 @@ This report describes committed source evidence. Missing references or tests do 
 |---|---|---:|---:|---|
 | `writing-code` | rule | 51,268 | 12,817 | `skills/_writing-code-rules.md` |
 | `shelves--top-design` | reference-shelf | 38,675 | 9,669 | `skills/shelves/design/top-design/SKILL.md` |
-| `session-coordination` | rule | 34,908 | 8,727 | `skills/_session-coordination-rules.md` |
 | `writing-claims` | rule | 31,339 | 7,835 | `skills/_writing-claims-rules.md` |
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
 | `shelves--one-page-marketing` | reference-shelf | 30,696 | 7,674 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
 | `writing-rules` | rule | 30,148 | 7,537 | `skills/_writing-rules-rules.md` |
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
-| `drive-while-away` | skill | 28,087 | 7,022 | `skills/drive-while-away/SKILL.md` |
+| `session-coordination` | rule | 29,267 | 7,317 | `skills/_session-coordination-rules.md` |
+| `drive-while-away` | skill | 28,303 | 7,076 | `skills/drive-while-away/SKILL.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
 | `engagement-post-mortem` | skill | 26,713 | 6,679 | `skills/engagement-post-mortem/SKILL.md` |
 | `detect-ai-fingerprints` | skill | 26,708 | 6,677 | `skills/detect-ai-fingerprints/SKILL.md` |

@@ -4,7 +4,7 @@ description: Always-on. Cross-session coordination discipline for agent-to-agent
 
 # Session coordination
 
-These nine rules apply to multi-session work where two or more agents exchange `send_agent_message` to coordinate. They are complemented by `[rule:tandem-agent]`, which governs role contracts, reviewer/implementer boundaries, explicit authorization, active collaborator supervision, durable findings, and re-review. Originating evidence is a 2026-06-05 incident where two pour-now sessions (`260605-brisk-spring` testing-strategy, `260604-clear-lagoon` Playwright) entered a queue-lag spiral. One was sending updates faster than the other could process. The receiver went silent to drain its queue. The operator read the silence as a stall. Workspace governance (`260604-smooth-gold`) verified the silent partner was alive and processing -- session.jsonl mtime under two minutes -- and that the silence was a deliberate cadence choice, not a session failure. The first four rules name the discipline failures that produced the operator read-error: missing at-rest declaration with explicit re-engagement signal (rule 1), continued pinging past at-rest declaration (rule 2), "stuck" / "death spiral" framing applied to slow processing (rule 3), implicit-but-unstated baton hand-off after the signoff (rule 4). Rules 5 and 6 cover the later hub/COO failure mode where user decisions are dumped as a vague bundle and the main session is captured by foreground spoke-coordination churn.
+These nine rules apply to multi-session work where two or more agents exchange `send_agent_message` to coordinate. They are complemented by `[rule:tandem-agent]`, which governs role contracts, reviewer/implementer boundaries, explicit authorization, active collaborator supervision, durable findings, and re-review.
 
 Stewards act within their domains and existing grants. Workspace Config owns workspace/configuration, skills, automations, session management and repairs. Deep Think partners with the user on foundational thinking and planning. Traffic Cop primarily stewards boards: ownership, status, priorities and dependencies. It dispatches and follows through via owning hubs: when A finishes, ask what it unlocks and sequence eligible work. Routine implementation belongs to the owning hub; bounded direct execution is a pragmatic option when it advances the outcome without an ownership collision. Return implementation to the hub when available; this is not a new approval step or reason to halt current work. Domain Hubs coordinate workers and own lane delivery, including reviewing and merging their workers' work under normal checks; required independent review remains independent. TC is not a universal permission gate or sole merger. Route genuine changes to goals, scope, material risk or protected operations to their actual decision owner; preserve explicit owner holds and existing review, protection and production conditions.
 
@@ -143,42 +143,9 @@ These rules are mandatory. The carve-out in rule 2 (operator override) lives ins
 - `[skill:drive-while-away]` handles operator-handoff cadence for autonomous sessions. session-coordination rules are the agent-to-agent analog.
 - `[skill:ask-questions]` is the single operator question procedure that session-coordination:5 defers to; this file keeps only the hub gating.
 
-## Originating evidence
+## Background reference
 
-- **2026-06-05 incident, pour-now workspace.** `260605-brisk-spring` (testing-strategy successor, spawned earlier the same day after the original session hit a provider transient) and `260604-clear-lagoon` (Playwright) were collaborating on PR #181 / PR #183 work for the chain-picker UAT testing framework. clear-lagoon delivered v3 F1 signoff and B1 PR #183 URL, then went at-rest -- but without an explicit baton declaration of "present the unified plan to operator." brisk-spring continued sending drain-pressure pings ("Queue lag now ~30 min"). Operator read the silence as a stall and asked workspace governance (`260604-smooth-gold`) to verify the state. Governance read clear-lagoon's session.jsonl: last activity 114 seconds prior, no errors, deliberate "going silent until brisk-spring's queue drains" status. The cadence mismatch was real; the framing of it as a session failure was the error. The first four rules above name the discipline failures that produced the framing error.
-
-- **2026-09-05 hub decision/control-surface correction, Craft Agent session `260905-clever-quasar`.** The operator described a Siege hub failure mode where the hub says it needs decisions on a list of vague topics, then captures the user-facing session with extended `send_agent_message` churn before the operator has a useful control surface. The historical correction concerned decision-dependent coordination; it asked each decision one at a time with context, options, a recommendation and a default. Apply rule 5 above, which defers the question procedure to [skill:ask-questions]: ask as a survey, one question at a time, and route the answers only after the last one. Running and independent authorized work continues. If coordination must fan out, the hub should act like a COO with few direct reports by creating sub-managers rather than personally driving every spoke exchange in the foreground.
-
-The incident is recurrence-1 for the cohort. Per writing-claims:4's carve-out (authoring a new rule artifact is the legitimate case for naming a new pattern in the same response as the failure being named), the rule artifact itself is the backing for the cohort introduction.
-
-## Tooling status
-
-Judgment-enforced via `[skill:code-review]` and `[skill:hostile-review]` at v3.x.
-
-Mechanical detection candidates for v3.x.y, ordered by tractability:
-
-- **session-coordination:3** is the most tractable: a workspace governance role with filesystem access to other sessions' `session.jsonl` can verify last-activity timestamps and flag escalation language ("stuck," "hung," "death spiral") in outbound messages against the actual partner state.
-- **session-coordination:4** is next-most tractable: an outbound `send_agent_message` parser can detect closing-thread phrases ("at-rest," "going silent," "done here") without a corresponding baton phrase ("baton to you," "next move is yours," "present X to operator") and flag the message as rule-4 non-compliant.
-- **session-coordination:1** requires comparing outbound and inbound message counts on a thread; if inbound has accumulated past a threshold without a substantive outbound, the parser flags missing at-rest declaration.
-- **session-coordination:2** requires cross-session state visibility (was the partner's last message an at-rest declaration?) and operator-context awareness (did the operator declare the lag a problem?). Both are tractable for a workspace governance role; agent-side enforcement is harder.
-
-All four are tractable but require runtime access to other sessions' state, which the framework does not yet expose to running agents directly. Workspace governance sessions (the role `260604-smooth-gold` occupied during the originating incident) have that access via filesystem reads of `session.jsonl`; the role is one place these rules can be mechanically enforced as a sibling-supervision layer.
-
-## Coverage matrix
-
-Nine judgment entries when `_coverage.md` is updated in a follow-up PR:
-
-- `partner-silence-without-declaration` (session-coordination:1, judgment)
-- `pinging-past-partner-at-rest` (session-coordination:2, judgment)
-- `escalation-language-without-evidence` (session-coordination:3, judgment)
-- `thread-closed-without-explicit-baton` (session-coordination:4, judgment)
-- `decision-dump-without-checklist-gate` (session-coordination:5, judgment)
-- `foreground-send-agent-message-control-surface-hijack` (session-coordination:6, judgment)
-- `default-or-rate-blind-spoke-source-selection` (session-coordination:7, judgment)
-- `stale-worker-reviewer-not-archived` (session-coordination:8, judgment)
-- `collaborator-handoff-set-and-forget` (session-coordination:9, judgment)
-
-Tooling-status counts after update: mechanical unchanged; judgment increases by five relative to the pre-hub-control version; gap unchanged.
+For historical incidents, proposed coordination tooling or coverage accounting, read the coordination background reference linked from [skill:drive-while-away]. It is optional context, not an additional dispatch prerequisite.
 
 ## Attribution
 
