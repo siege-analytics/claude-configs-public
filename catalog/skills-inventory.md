@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **199**
-- Characters: **2,473,729**
-- Estimated tokens: **618,508** (character/4 estimate)
+- Characters: **2,473,847**
+- Estimated tokens: **618,537** (character/4 estimate)
 - Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,13 +35,13 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 111 | 1,077,335 | 269,374 |
+| unclassified | 111 | 1,077,453 | 269,403 |
 
 ## Largest source items
 
 | Slug | Kind | Characters | Est. tokens | Source |
 |---|---|---:|---:|---|
-| `writing-code` | rule | 49,914 | 12,479 | `skills/_writing-code-rules.md` |
+| `writing-code` | rule | 50,032 | 12,508 | `skills/_writing-code-rules.md` |
 | `shelves--top-design` | reference-shelf | 38,675 | 9,669 | `skills/shelves/design/top-design/SKILL.md` |
 | `writing-claims` | rule | 31,339 | 7,835 | `skills/_writing-claims-rules.md` |
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
