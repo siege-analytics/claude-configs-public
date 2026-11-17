@@ -31,7 +31,7 @@ PLAIN = {
 # Verbs whose options can write or run programs: their arguments must reach the
 # per-tool check exactly as bash will see them, so no unquoted expansion.
 GUARDED = {"sed", "find", "sort", "uniq", "jq", "yq", "date", "rg", "git", "gh", "kubectl", "docker", "curl",
-           "timeout", "nice", "time", "base64", "command"}
+           "timeout", "nice", "time", "base64", "command", "awk", "/usr/bin/awk"}
 SHELL_WORDS = {"do", "done", "then", "else", "fi", "!", "{", "}", "while", "until", "if", "elif"}
 GIT_READ = {"log", "show", "diff", "status", "rev-parse", "rev-list", "ls-files", "ls-remote",
             "ls-tree", "describe", "blame", "grep", "cat-file", "for-each-ref", "merge-base",
@@ -475,6 +475,99 @@ def find_ok(args):
     return not any(a in bad for a in args)
 
 
+def awk_ok(args):
+    """Parse only inline record-copy / stdout-print rules, never general awk.
+
+    Each rule is an optional /regex/ followed by a nonempty brace block.
+    Statements copy $0 to ordinary lowercase scalars, or print NR and scalars
+    already named by such copies. No option, call, special-variable assignment,
+    expression, external program, file-program or output destination is parsed.
+    """
+    if not args or not args[0] or len(args[0]) > 8192:
+        return False
+    for operand in args[1:]:
+        if (not operand or operand.startswith('-') and operand != '-'
+                or re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', operand)
+                or operand.startswith(('/inet/', '/inet4/', '/inet6/'))):
+            return False
+    program, tokens, i = args[0], [], 0
+    while i < len(program):
+        char = program[i]
+        if char in ' \t':
+            i += 1
+        elif char == '/':
+            start = i
+            i += 1
+            while i < len(program) and program[i] != '/':
+                if program[i] in '\r\n':
+                    return False
+                if program[i] == '\\':
+                    i += 1
+                    if i == len(program) or program[i] in '\r\n':
+                        return False
+                i += 1
+            if i == len(program):
+                return False
+            i += 1
+            tokens.append(program[start:i])
+        elif program.startswith('$0', i):
+            tokens.append('$0')
+            i += 2
+        elif char in '{}=,;':
+            tokens.append(char)
+            i += 1
+        else:
+            name = re.match(r'[A-Za-z_][A-Za-z0-9_]*', program[i:])
+            if name is None:
+                return False
+            tokens.append(name[0])
+            i += len(name[0])
+    forbidden = {'print', 'printf', 'system', 'getline', 'close', 'fflush', 'next',
+                 'nextfile', 'delete', 'function', 'return', 'break', 'continue',
+                 'while', 'for', 'if', 'else', 'do', 'exit', 'length', 'substr',
+                 'index', 'match', 'split', 'sub', 'gsub', 'sprintf', 'tolower',
+                 'toupper', 'atan2', 'cos', 'sin', 'exp', 'log', 'sqrt', 'int',
+                 'rand', 'srand'}
+    assigned, printed, i = set(), False, 0
+    while i < len(tokens):
+        if tokens[i].startswith('/'):
+            i += 1
+        if i == len(tokens) or tokens[i] != '{':
+            return False
+        i += 1
+        statements = 0
+        while i < len(tokens) and tokens[i] != '}':
+            if tokens[i] == 'print':
+                i += 1
+                if i == len(tokens) or tokens[i] not in assigned | {'NR'}:
+                    return False
+                i += 1
+                while i < len(tokens) and tokens[i] == ',':
+                    i += 1
+                    if i == len(tokens) or tokens[i] not in assigned | {'NR'}:
+                        return False
+                    i += 1
+                printed = True
+            else:
+                name = tokens[i]
+                if (not re.fullmatch(r'[a-z][a-z0-9_]*', name) or name in forbidden
+                        or tokens[i + 1:i + 3] != ['=', '$0']):
+                    return False
+                assigned.add(name)
+                i += 3
+            statements += 1
+            if i < len(tokens) and tokens[i] == ';':
+                i += 1
+            elif i == len(tokens) or tokens[i] != '}':
+                return False
+        if not statements or i == len(tokens):
+            return False
+        i += 1
+        if i < len(tokens) and tokens[i] == ';':
+            i += 1
+    return printed
+
+
 def simple_ok(words):
     while words and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", words[0]):
         return False   # an env prefix can change what a tool does; not proven read-only
@@ -529,6 +622,8 @@ def simple_ok(words):
         return sed_ok(args)
     if w == "find":
         return find_ok(args)
+    if w in {"awk", "/usr/bin/awk"}:
+        return awk_ok(args)
     if w == "git":
         return git_ok(args)
     if w == "gh":
@@ -549,7 +644,7 @@ def simple_ok(words):
 EXPANDS = set("$_{(@*#?!-0123456789'") | set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 
-def segment_expansions(command):
+def segment_expansions(command, *, strict_globs=False):
     """Split `command` at unquoted ; & | ( ) and newlines and return, for each
     simple command, (text, expansions): what bash will expand into extra or
     option-shaped words. That is `$` starting a real expansion outside single
@@ -619,7 +714,7 @@ def segment_expansions(command):
                 content(c)
                 if c == "$" and (nxt in EXPANDS or nxt == '"'):   # $"…" is a locale string: bash drops the $
                     found.add("$")
-                elif c in "*?[" and (word_start or dash):
+                elif c in "*?[" and (strict_globs or word_start or dash):
                     found.add(c)
                 bare.append(c)
                 word_start = False
@@ -675,9 +770,15 @@ def main(command):
     # A verb whose options can write must not receive anything bash will expand
     # into an option: $VAR / ${X:--delete} / $'..' / a glob matching `-delete` /
     # brace expansion. Not provable either way, so "unproven" (4), never 0.
-    for text, exp in segment_expansions(command):
+    segments = segment_expansions(command)
+    for text, exp in segments:
         if exp and lead_verbs(text) & (GUARDED | VETO_ONLY | {"?"}):
             return 4
+    if any(lead_verbs(text) & {"awk", "/usr/bin/awk"} for text, _ in segments):
+        # A glob may also become an awk NAME=VALUE assignment, not just an option.
+        for text, exp in segment_expansions(command, strict_globs=True):
+            if exp and lead_verbs(text) & {"awk", "/usr/bin/awk"}:
+                return 4
     if "\n" in command.strip("\n") or "\r" in command:
         return 1   # multi-line commands are not proven read-only (siege#1057 safelist policy)
     try:
