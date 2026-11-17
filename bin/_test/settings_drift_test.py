@@ -48,15 +48,20 @@ def main():
     snippet_path = REPO_ROOT / "hooks" / "settings-snippet.json"
     settings_path = REPO_ROOT / ".claude" / "settings.json"
     snippet = json.loads(snippet_path.read_text())
-    settings = json.loads(settings_path.read_text())
-
-    # The live tree must agree, or every fixture below is comparing against a
-    # baseline that is already broken.
+    source_settings = json.loads(settings_path.read_text())
+    # Core authoring uses the independently installed bootstrap profile;
+    # consumer drift fixtures still exercise the full consumer snippet.
     check(
-        "live settings and snippet agree",
-        compare(settings_path, snippet_path) == [],
-        compare(settings_path, snippet_path),
+        "live Core settings match the stable authoring profile",
+        validate_hooks.compare_source_profile(settings_path) == [],
+        validate_hooks.compare_source_profile(settings_path),
     )
+    settings = copy.deepcopy(snippet)
+    for groups in settings["hooks"].values():
+        for group in groups:
+            for hook in group.get("hooks", []):
+                if "command" in hook:
+                    hook["command"] = validate_hooks.normalise_command(hook["command"])
 
     # The set size is asserted over triples and not over hooks, so an empty-set
     # comparison cannot masquerade as agreement, and so the two granularities
@@ -69,11 +74,22 @@ def main():
         f"got {len(triples)} triples over {len(paths)} hooks",
     )
     check(
-        "source settings and snippet have the same registration multiplicity",
+        "consumer baseline and snippet have the same registration multiplicity",
         sorted(validate_hooks.hook_registrations(settings)) == sorted(validate_hooks.hook_registrations(snippet)),
     )
 
     with tempfile.TemporaryDirectory() as tmp:
+        source_missing = copy.deepcopy(source_settings)
+        source_missing["hooks"]["PreToolUse"][0]["hooks"].clear()
+        check("missing Core bootstrap callback is reported",
+              bool(validate_hooks.compare_source_profile(write(tmp, "source-missing.json", source_missing))))
+        source_duplicate = copy.deepcopy(source_settings)
+        source_duplicate["hooks"]["PreToolUse"].append(
+            copy.deepcopy(source_duplicate["hooks"]["PreToolUse"][0]))
+        check("duplicate Core bootstrap callback is reported",
+              bool(validate_hooks.compare_source_profile(write(tmp, "source-duplicate.json", source_duplicate))))
+        check("consumer baseline and snippet agree",
+              compare(write(tmp, "consumer.json", settings), snippet_path) == [])
         repeated = copy.deepcopy(settings)
         group = repeated['hooks']['PreToolUse'][0]
         duplicate = copy.deepcopy(group['hooks'][0])
