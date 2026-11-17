@@ -38,4 +38,3 @@ Nine judgment entries when `_coverage.md` is updated in a follow-up PR:
 - `collaborator-handoff-set-and-forget` (session-coordination:9, judgment)
 
 Tooling-status counts after update: mechanical unchanged; judgment increases by five relative to the pre-hub-control version; gap unchanged.
-
