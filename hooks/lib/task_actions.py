@@ -1211,6 +1211,8 @@ def reader(args: list[str]) -> bool:
     if not args:
         return False
     cmd, rest = args[0], args[1:]
+    if cmd in {'awk', '/usr/bin/awk'}:
+        return _released_read_classifier().awk_ok(rest)
     if cmd == "curl":
         # Reuse the shared exact diagnostic grammar when another segment has
         # effects; curl's version component contributes no guessed cwd write.
