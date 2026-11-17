@@ -781,7 +781,8 @@ class CanonicalCLI(unittest.TestCase):
         target.write_text('else:\nelse:\n')
         (target.parent / 'resolve-think-gate.py').write_text('else:\nelse:\n')
         state = b.state_path(self.home, b.common_directory(self.repo))
-        directory = state / 'sessions' / sdk / 'tasks' / gates.r.task_slug(ticket)
+        session_state = self.home / '.local/state/siege/core-authoring' / state.name
+        directory = session_state / 'sessions' / sdk / 'tasks' / gates.r.task_slug(ticket)
         gate = directory / 'think-gate.json'
         before = b.package_digest(self.package)
         def callback(tool, value, identity=sdk):
@@ -792,8 +793,11 @@ class CanonicalCLI(unittest.TestCase):
                                   cwd=self.repo, env=dict(env, CCP_TASK_ID=ticket), timeout=40)
         denied = callback('Edit', {'file_path': str(target), 'old_string': 'else:', 'new_string': ''})
         self.assertEqual(denied.returncode, 2, denied.stdout + denied.stderr)
-        self.assertIn(str(state / 'sessions' / sdk / 'tasks'), denied.stdout + denied.stderr)
+        self.assertIn(str(session_state / 'sessions' / sdk / 'tasks'), denied.stdout + denied.stderr)
         self.assertFalse(gate.is_relative_to(self.package))
+        self.assertFalse(gate.is_relative_to(self.home / '.claude'))
+        self.assertEqual(session_state.stat().st_uid, os.getuid())
+        self.assertEqual(session_state.stat().st_mode & 0o777, 0o700)
         data = {'ticket': ticket, 'sessionId': sdk, 'repo_root': str(self.repo),
                 'scope_paths': [str(target)], 'status': 'implementing'}
         seed = callback('Write', {'file_path': str(gate), 'content': json.dumps(data)})
@@ -812,6 +816,13 @@ class CanonicalCLI(unittest.TestCase):
             result = callback('Edit', {'file_path': str(target)}, identity)
             self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
             self.assertIn('valid SDK session identity', result.stderr)
+        session_state.chmod(0o755)
+        try:
+            result = callback('Edit', {'file_path': str(target)})
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn('session state must be owned and private', result.stderr)
+        finally:
+            session_state.chmod(0o700)
         self.assertEqual(b.package_digest(self.package), before)
         self.assertFalse((self.package / 'compatibility/sessions' / sdk).exists())
 
