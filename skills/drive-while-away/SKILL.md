@@ -262,6 +262,7 @@ The rewrite addresses both by: (1) requiring `CronCreate` (recurring) instead of
 
 ## Cross-references
 
+- For coordination retrospectives, proposed tooling or historical coverage accounting, read [coordination background](references/session-coordination-background.md). Routine dispatch does not require this reference.
 - `[rule:writing-prose]` writing-prose:5 -- the speech-time rule that requires a mechanism call for future-action commitments. This skill is the operational playbook for which mechanism in which cadence.
 - `[rule:writing-claims]` writing-claims:9 -- applies when the agent claims state about what's happening between fires ("the build took effect"). Each fired turn must probe before claiming.
 - `[skill:wrap-up]` -- the symmetric session-end skill. Use wrap-up when the work is genuinely done; use this skill when the work continues past the operator's availability.
