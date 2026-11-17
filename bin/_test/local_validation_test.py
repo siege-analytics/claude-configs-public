@@ -169,6 +169,28 @@ class LocalValidation(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.load_adapter().workflow_steps()
 
+    def test_unmodeled_shell_and_failure_overrides_are_rejected(self):
+        import copy
+        original = self.shard_workflow()
+        self.save_shards(original)
+        self.assertEqual(self.load_adapter().workflow_steps()[-1]['run'],
+                         self.load_adapter().LOCAL_HOOK_COMMAND)
+        cases = []
+        value = copy.deepcopy(original)
+        value['defaults'] = {'run': {'shell': 'bash -c true {0}'}}
+        cases.append(('workflow defaults', value))
+        for name in ['validate', 'validation-complete', *(f'hooks-{i}' for i in range(4))]:
+            for key, override in [('defaults', {'run': {'shell': 'bash -c true {0}'}}),
+                                  ('continue-on-error', True)]:
+                value = copy.deepcopy(original)
+                value['jobs'][name][key] = override
+                cases.append((name + ' ' + key, value))
+        for label, workflow in cases:
+            with self.subTest(scope=label):
+                self.save_shards(workflow)
+                with self.assertRaisesRegex(ValueError, 'execution override'):
+                    self.load_adapter().workflow_steps()
+
     def selected_hooks(self):
         self.workflow([{'name': 'early marker', 'run': 'touch workflow-started'},
                        {'name': 'hook fixtures', 'run': 'bash hooks/_test/ticket_required.test.sh'}])

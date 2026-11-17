@@ -428,7 +428,8 @@ raise SystemExit(r.main(['install', *sys.argv[3:]]))
         self.entry('verify')
 
     def test_selected_protected_adapter_has_no_siege_source_or_promotion(self):
-        for relative in ('scripts/ci/protected-policy-range.py', 'scripts/ci/check-branch-topology.sh'):
+        for relative in ('scripts/ci/protected-policy-range.py', 'scripts/ci/check-branch-topology.sh',
+                         'scripts/ci/canonical_main.py'):
             destination = self.source / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / relative, destination)

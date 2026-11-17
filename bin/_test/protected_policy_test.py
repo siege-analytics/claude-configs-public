@@ -49,6 +49,7 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         working_authority = (
             SCRIPT, Path("bin/_test/protected_policy_test.py"),
             Path("scripts/ci/check-branch-topology.sh"),
+            Path("scripts/ci/canonical_main.py"),
             Path(".github/workflows/pr-base-guard.yml"),
             Path("bin/effective_policy.py"), Path("bin/gate_contract.py"),
             Path("bundles/siege/policy-inputs.json"), Path("bundles/siege/protected-adapter.json"),

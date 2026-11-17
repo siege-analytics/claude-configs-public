@@ -4081,10 +4081,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 17984,
-      "content_sha256": "f7e9532ad955955e3cb2d1d4e5cfe277e642ebd1bab9f7291653ac1c2ebc5b7b",
+      "characters": 6209,
+      "content_sha256": "3e45d3ee3c207d1b4ccfe9df19bc5aca26369733f5c4d4968581fb8564c4f522",
       "description": "unknown",
-      "estimated_tokens": 4496,
+      "estimated_tokens": 1553,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -4102,6 +4102,7 @@
         "skills/RESOLVER.md",
         "skills/_session-coordination-rules.md",
         "skills/_standing-approval-rules.md",
+        "skills/_strategic-agency-rules.md",
         "skills/ask-questions/SKILL.md",
         "skills/stalled-session-recovery/host-controls.md",
         "skills/think/SKILL.md"
@@ -4109,7 +4110,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 218,
+      "lines": 41,
       "owner": [
         "unknown"
       ],
@@ -4975,6 +4976,7 @@
       "source_path": "skills/_output-rules.md",
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/canonical_main_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
@@ -5531,6 +5533,7 @@
       "source_path": "skills/_python-rules.md",
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/canonical_main_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
@@ -6243,7 +6246,6 @@
         "plans/self-review-718-orphan-dispatch.md",
         "plans/self-review-867-hub-rule-count.md",
         "skills/KERNEL.md",
-        "skills/_strategic-agency-rules.md",
         "skills/_tandem-agent-rules.md",
         "skills/_ticket-lifecycle-rules.md",
         "skills/ask-questions/SKILL.md",
@@ -6558,10 +6560,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 7325,
-      "content_sha256": "069d11b940c9dbb68854f247cbd426570499f5da4075ac4e7b209a51768b9862",
-      "description": "Always-on. Mission-first doctrine for hubs and workers. Skills exist to help agents accomplish strategic goals by deriving and advancing tactical goals with bounded initiative. Agents should keep moving when tactical ordering is safe and non-critical, and should ask for guidance when the choice affects strategy, authorization, risk, or operator control.",
-      "estimated_tokens": 1832,
+      "characters": 4572,
+      "content_sha256": "60c5574b1d86e0087cc75c4d99293ce3b5d79c61b38b39ece90dc9966b83b638",
+      "description": "Always-on mission focus, bounded initiative and coordinator follow-through for hubs and workers.",
+      "estimated_tokens": 1143,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -6575,6 +6577,7 @@
         "docs/instruction-architecture.md",
         "plans/independent-review-goal-continuity-1328.md",
         "skills/KERNEL.md",
+        "skills/_autonomy-rules.md",
         "skills/_standing-approval-rules.md",
         "skills/ask-questions/SKILL.md",
         "skills/drive-while-away/SKILL.md",
@@ -6583,7 +6586,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 38,
+      "lines": 31,
       "owner": [
         "unknown"
       ],
@@ -9366,6 +9369,7 @@
       "slug": "commit",
       "source_path": "skills/commit/SKILL.md",
       "test_evidence": [
+        "bin/_test/canonical_main_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/consumer_runtime_test.py",
         "bin/_test/craft_backend_canary_test.py",
@@ -10131,6 +10135,7 @@
         "plans/self-review-257-operator-visible-cadence.md",
         "plans/self-review-628-standing-order-progress-summary-stop.md",
         "skills/RESOLVER.md",
+        "skills/_autonomy-rules.md",
         "skills/_session-coordination-rules.md",
         "skills/_strategic-agency-rules.md",
         "skills/stalled-session-recovery/SKILL.md"
@@ -10713,6 +10718,7 @@
       "source_path": "skills/merge/SKILL.md",
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/canonical_main_test.py",
         "bin/_test/craft_hook_router_test.py",
         "bin/_test/craft_workspace_trust_test.py",
         "bin/_test/deploy_source_policy_test.py",
@@ -10724,6 +10730,7 @@
         "bin/_test/progressive_mount_test.py",
         "bin/_test/project_settings_bootstrap_test.py",
         "bin/_test/protected_policy_test.py",
+        "bin/_test/provider_event_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
         "bin/_test/scanner_source_test.py",
@@ -11314,6 +11321,7 @@
       "source_path": "skills/python/SKILL.md",
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/canonical_main_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
@@ -13051,10 +13059,10 @@
     },
     {
       "canonical_source": "skills/wrap-up/SKILL.md",
-      "characters": 8830,
-      "content_sha256": "71d4602c9baee4b445d6934f936a7faeea5d3cb7eee913155bc13a5045c36ca6",
+      "characters": 9001,
+      "content_sha256": "cda15846a287ff5570c3d2bd39c876b18b1634762b224cba60e667867eb9ebcc",
       "description": "End-of-session cleanup that commits changes, sweeps for LESSONS.md ledger entries, and updates README/ROADMAP/CLAUDE.md. Use when finishing work.",
-      "estimated_tokens": 2208,
+      "estimated_tokens": 2251,
       "frontmatter_name": "wrap-up",
       "generated_outputs": [
         "dist/nested/skills/wrap-up",
@@ -13105,9 +13113,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2473847,
+    "characters": 2459490,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 618537,
+    "estimated_tokens": 614948,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13128,7 +13136,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1077453
+      "unclassified": 1063096
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13140,7 +13148,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 269403
+      "unclassified": 265814
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
