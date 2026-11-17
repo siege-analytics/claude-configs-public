@@ -192,6 +192,7 @@ jobs:
         run: |
           bash .github/workflows/_test_release_source_policy.sh
           python3 bin/_test/release_handoff_test.py
+          python3 scripts/ci/main-publication-test.py
 
       - name: Exact-main deployment source fixtures
         run: python3 bin/_test/deploy_source_policy_test.py
@@ -370,6 +371,8 @@ jobs:
   publish:
     name: Build and publish to release branches
     needs: validation-complete
+    outputs:
+      publication_status: ${{ steps.publication.outputs.status }}
     # `develop` is integration-only. Publishing, tagging, and releases are
     # authorized exclusively by a successful push/merge to `main`.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
@@ -390,15 +393,26 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Verify current Main inside publication mutex
+        id: publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python3 scripts/ci/main-publication.py
+
       - name: Install pinned frontmatter validation dependency
+        if: steps.publication.outputs.status == 'current'
         run: python3 -m pip install --require-hashes -r requirements-validation.txt
 
       - name: Configure git
+        if: steps.publication.outputs.status == 'current'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Resolve release version
+        if: steps.publication.outputs.status == 'current'
         id: resolve-version
         run: |
           set -euo pipefail
@@ -418,6 +432,7 @@ jobs:
           echo "bumped=$( [ "$RESOLVED" != "$VERSION" ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
 
       - name: Prepare versioned changelog before building
+        if: steps.publication.outputs.status == 'current'
         env:
           RELEASE_TAG: ${{ steps.resolve-version.outputs.tag }}
         run: |
@@ -426,9 +441,11 @@ jobs:
           python3 scripts/ci/release-notes.py --version "$RELEASE_TAG" --out /tmp/release-notes.md
 
       - name: Build dist/nested and dist/flat
+        if: steps.publication.outputs.status == 'current'
         run: python3 bin/build.py
 
       - name: Stage exact nested output
+        if: steps.publication.outputs.status == 'current'
         run: |
           set -euo pipefail
           # Stage all four outputs locally; publish only after manifest checks.
@@ -441,6 +458,7 @@ jobs:
           (cd /tmp/release-nested && git add --force -A && git commit -m "Publish nested layout from ${GITHUB_SHA}")
 
       - name: Stage exact flat output
+        if: steps.publication.outputs.status == 'current'
         run: |
           set -euo pipefail
           rm -rf /tmp/release-flat
@@ -450,6 +468,7 @@ jobs:
           (cd /tmp/release-flat && git add --force -A && git commit -m "Publish flat layout from ${GITHUB_SHA}")
 
       - name: Stage exact claude-code output
+        if: steps.publication.outputs.status == 'current'
         run: |
           set -euo pipefail
           rm -rf /tmp/release-claude-code
@@ -459,6 +478,7 @@ jobs:
           (cd /tmp/release-claude-code && git add --force -A && git commit -m "Publish claude-code package from ${GITHUB_SHA}")
 
       - name: Stage exact craft-agent output
+        if: steps.publication.outputs.status == 'current'
         run: |
           set -euo pipefail
           rm -rf /tmp/release-craft-agent
@@ -468,6 +488,7 @@ jobs:
           (cd /tmp/release-craft-agent && git add --force -A && git commit -m "Publish craft-agent package from ${GITHUB_SHA}")
 
       - name: Record immutable release handoff and archives
+        if: steps.publication.outputs.status == 'current'
         env:
           RELEASE_TAG: ${{ steps.resolve-version.outputs.tag }}
         run: |
@@ -476,6 +497,7 @@ jobs:
             --tag "$RELEASE_TAG" --source "$GITHUB_SHA"
 
       - name: Preserve handoff before remote mutation
+        if: steps.publication.outputs.status == 'current'
         uses: actions/upload-artifact@v4
         with:
           name: release-handoff-${{ github.run_id }}-${{ github.run_attempt }}
@@ -483,6 +505,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish exact source, consumer tags and release branches
+        if: steps.publication.outputs.status == 'current'
         env:
           RELEASE_TAG: ${{ steps.resolve-version.outputs.tag }}
         run: |
@@ -491,6 +514,7 @@ jobs:
             --tag "$RELEASE_TAG" --source "$GITHUB_SHA"
 
       - name: Create GitHub Release
+        if: steps.publication.outputs.status == 'current'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.resolve-version.outputs.tag }}

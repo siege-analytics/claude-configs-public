@@ -463,6 +463,11 @@ workflow-local preparations do not commit version changes back to protected main
 The producer saves the complete handoff as a workflow artifact before updating
 remote refs, preserving recovery evidence if GitHub Release creation fails.
 
+Inside the publication mutex, the producer verifies current canonical Main before
+preparing a version or writing outputs. An older run is marked `SUPERSEDED` and
+does not publish consumer artifacts; successful source validation alone is not an
+immutable handoff. An unverifiable or divergent Main fails publication closed.
+
 The release-event tag repair verifies this handoff and the downloaded archives.
 It uses only the recorded commits; moving `release/*` branches cannot choose a
 repair target. An existing tag with a different target fails verification. Older
