@@ -5754,29 +5754,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/wrap-up",
           "file_count": 1,
-          "tree_sha256": "e5ef10ba49473136287b63fbcc1d6f2470b5dbe63f2052ed7db8b2c22057fe32"
+          "tree_sha256": "1cc1899aad126f14bc493835991504c6b16efe89c7b85cf70e837068353bd7a6"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/wrap-up",
           "file_count": 1,
-          "tree_sha256": "e5ef10ba49473136287b63fbcc1d6f2470b5dbe63f2052ed7db8b2c22057fe32"
+          "tree_sha256": "1cc1899aad126f14bc493835991504c6b16efe89c7b85cf70e837068353bd7a6"
         },
         "flat": {
           "destination": "dist/flat/skills/wrap-up",
           "file_count": 1,
-          "tree_sha256": "e5ef10ba49473136287b63fbcc1d6f2470b5dbe63f2052ed7db8b2c22057fe32"
+          "tree_sha256": "1cc1899aad126f14bc493835991504c6b16efe89c7b85cf70e837068353bd7a6"
         },
         "nested": {
           "destination": "dist/nested/skills/wrap-up",
           "file_count": 1,
-          "tree_sha256": "e5ef10ba49473136287b63fbcc1d6f2470b5dbe63f2052ed7db8b2c22057fe32"
+          "tree_sha256": "1cc1899aad126f14bc493835991504c6b16efe89c7b85cf70e837068353bd7a6"
         }
       },
       "canonical_source": "skills/wrap-up/SKILL.md",
       "kind": "skill",
       "slug": "wrap-up",
       "source_file_count": 1,
-      "source_tree_sha256": "d6655fd6a418336055e75d363bb5f51feb2f581a5f145cc56cec461a461c9d26"
+      "source_tree_sha256": "3dcee13d8e07ac249e4659386f5e3c6f90644adec5996c5b6a72cf0c84b19c70"
     }
   ],
   "schema_version": 1,

@@ -183,8 +183,8 @@ These metrics are diagnostic aids, not enforcement gates.
 ## Session Notes (YYYY-MM-DD)
 
 ### Mistakes to Avoid
-- **Issue**: Git branch mismatch - local `master` vs remote `main`
-  **Fix**: Always use `git checkout -B main origin/main` after clone/fetch
+- **Issue**: A task used the repository default instead of its declared integration branch
+  **Fix**: Prepare an isolated task worktree from verified develop (or the integration branch authorized by the repository's policy). Preserve existing checkouts; update deployment branches through their scoped procedure.
 
 ### Useful Patterns
 - To restart interpreter without pod restart: `curl -X PUT .../api/interpreter/setting/restart/<name>`

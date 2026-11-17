@@ -13059,10 +13059,10 @@
     },
     {
       "canonical_source": "skills/wrap-up/SKILL.md",
-      "characters": 8830,
-      "content_sha256": "71d4602c9baee4b445d6934f936a7faeea5d3cb7eee913155bc13a5045c36ca6",
+      "characters": 9001,
+      "content_sha256": "cda15846a287ff5570c3d2bd39c876b18b1634762b224cba60e667867eb9ebcc",
       "description": "End-of-session cleanup that commits changes, sweeps for LESSONS.md ledger entries, and updates README/ROADMAP/CLAUDE.md. Use when finishing work.",
-      "estimated_tokens": 2208,
+      "estimated_tokens": 2251,
       "frontmatter_name": "wrap-up",
       "generated_outputs": [
         "dist/nested/skills/wrap-up",
@@ -13113,9 +13113,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2459319,
+    "characters": 2459490,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 614905,
+    "estimated_tokens": 614948,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13136,7 +13136,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1062925
+      "unclassified": 1063096
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13148,7 +13148,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 265771
+      "unclassified": 265814
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
