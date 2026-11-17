@@ -7419,10 +7419,10 @@
     },
     {
       "canonical_source": "skills/_writing-code-rules.md",
-      "characters": 49914,
-      "content_sha256": "76ad60e00c593e3064ba560d0e5ec07a38ceb48d3b922ebb945c39e212b911f7",
+      "characters": 50032,
+      "content_sha256": "8348d0127d99739411875e0476fe2307687eae41d9325cd9fb039f3941093283",
       "description": "Always-on. Code-authoring discipline. Docstring brevity, no history references in code comments, no speculative abstractions, verify symbols and dependency contracts before using them, exercise real dependencies before claiming integration works, doc-edit symmetry, no silent error swallowing, migration completeness (old-path grep must return zero), deprecation shims require companion follow-up tickets. Test-writing rules live in `_writing-tests-rules.md`; claim-grounding (commit/PR-body claims) lives in `_writing-claims-rules.md`.",
-      "estimated_tokens": 12479,
+      "estimated_tokens": 12508,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_writing-code-rules.md",
@@ -13100,9 +13100,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2473729,
+    "characters": 2473847,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 618508,
+    "estimated_tokens": 618537,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13123,7 +13123,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1077335
+      "unclassified": 1077453
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13135,7 +13135,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 269374
+      "unclassified": 269403
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
