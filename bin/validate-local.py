@@ -29,6 +29,30 @@ REFRESH = [
 ]
 
 
+LOCAL_HOOK_COMMAND = '''shopt -s nullglob
+files=(hooks/_test/*.test.sh)
+if [ ${#files[@]} -eq 0 ]; then
+  echo "No files matched hooks/_test/*.test.sh; refusing to report success."
+  exit 1
+fi
+failed=""
+for f in "${files[@]}"; do
+  echo "::group::$f"
+  if bash "$f"; then
+    echo "PASS $f"
+  else
+    echo "FAIL $f"
+    failed="$failed $f"
+  fi
+  echo "::endgroup::"
+done
+if [ -n "$failed" ]; then
+  echo "Failing hook test files:$failed"
+  exit 1
+fi
+echo "All ${#files[@]} hook test files passed."'''
+
+
 def workflow_steps():
     workflow = yaml.safe_load((ROOT / '.github/workflows/build-and-publish.yml').read_text())
     if not isinstance(workflow, dict):
@@ -44,6 +68,44 @@ def workflow_steps():
             raise ValueError('CI validation step has an invalid command shape')
         if 'env' in step and not isinstance(step['env'], dict):
             raise ValueError('CI step environment must be a mapping')
+    shard_names = [f'hooks-{i}' for i in range(4)]
+    if 'validation-complete' in jobs or any(name in jobs for name in shard_names):
+        aggregate = jobs.get('validation-complete', {})
+        if not isinstance(aggregate, dict):
+            raise ValueError('invalid complete hook shard job')
+        if {name for name in jobs if name.startswith('hooks-')} != set(shard_names):
+            raise ValueError('unexpected hook shard jobs')
+        if (aggregate.get('name') != 'Validate references and build' or
+                aggregate.get('needs') != ['validate', *shard_names] or
+                aggregate.get('if') != '${{ always() }}' or
+                aggregate.get('steps') != [
+                    {'uses': 'actions/checkout@v4', 'with': {'fetch-depth': 0}},
+                    {'uses': 'actions/setup-python@v5', 'with': {'python-version': '3.12'}},
+                    {'name': 'Verify complete same-source validation',
+                    'env': {'VALIDATION_NEEDS': '${{ toJSON(needs) }}'},
+                    'run': 'python3 scripts/ci/hook-shards.py aggregate'}]):
+            raise ValueError('unrecognized complete hook shard contract')
+        for index, name in enumerate(shard_names):
+            expected = [
+                {'uses': 'actions/checkout@v4', 'with': {'fetch-depth': 0}},
+                {'uses': 'actions/setup-python@v5', 'with': {'python-version': '3.12'}},
+                {'name': 'Install pinned frontmatter validation dependency',
+                 'run': 'python3 -m pip install --require-hashes -r requirements-validation.txt'},
+                {'name': 'Full build for hook validation', 'run': 'python3 bin/build.py'},
+                {'name': 'Hook scenario tests', 'id': 'source-report',
+                 'run': f'python3 scripts/ci/hook-shards.py run --shard {index}'},
+            ]
+            if (not isinstance(jobs.get(name), dict) or jobs[name].get('steps') != expected or 'if' in jobs[name] or
+                    jobs[name].get('outputs') != {'report': '${{ steps.source-report.outputs.report }}'}):
+                raise ValueError('unrecognized hook shard job: ' + name)
+        report = {'name': 'Bind successful preflight to source', 'id': 'source-report',
+                  'run': 'python3 scripts/ci/hook-shards.py preflight'}
+        if (steps[-1:] != [report] or jobs['validate'].get('outputs') !=
+                {'report': '${{ steps.source-report.outputs.report }}'}):
+            raise ValueError('unrecognized preflight source binding')
+        # Locally run the SAME auto-discovered workload serially, without
+        # fabricating GitHub identity/results or executing CI-only aggregation.
+        steps = [*steps[:-1], {'name': 'Hook scenario tests', 'run': LOCAL_HOOK_COMMAND}]
     return steps
 
 
