@@ -39,6 +39,8 @@ The affected-tests gate (`[skill:commit]` step 4) runs the declared affected tes
 
 The `test-guard.sh` hook checks the selected task's evidence at push/PR time. Native terminal root lookup remains available only without a host binding and requires the same strict receipt contract. Projects declaring `testing:` demand evidence when source is touched. A receipt documents what ran; reviewers still assess test adequacy.
 
+Separate a failed test from a failed verification wrapper. If affected tests passed and only a later layout assertion, report step or harness failed, preserve the failed receipt and the actual individual results. When their source and relevant inputs remain unchanged, retain those results as evidence, repair the failing layer and run a fresh genuine producer for the corrected affected checks. Broaden the rerun for changed behavior, failed controls, unresolved coverage or an explicit project requirement. Do not repeat unaffected passed suites solely because the outer command failed, edit a failed receipt into success, or claim checks reran when they did not. This recovery needs no new permission within the existing task grant; unverified behavior still cannot be reported as verified.
+
 Override requires `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]` in the commit body. A bare skip is blocked. Using the override repeatedly is a review signal, not a substitute for repairing test infrastructure.
 
 ## Operationalization

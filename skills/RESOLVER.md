@@ -80,7 +80,7 @@ Named data/engine routes require an operational task in the same clause, not a b
 | Open a PR | [skill:create-pr] |
 | Merge a PR | [skill:merge] |
 | Protect `develop` / `main` | [skill:develop-guard] |
-| Ensure a ticket destination exists before non-trivial work | [skill:ticket-guard] |
+| Reuse or repair durable tracking when useful or explicitly required by project policy | [skill:ticket-guard] |
 
 ### Session
 

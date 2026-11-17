@@ -176,6 +176,7 @@ def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirec
         raise UnknownShape("nested Git wrapper exceeds inspection limit")
     parsed = shell_tokens(command, inspection_comments=inspection_comments)
     groups, words = [], []
+    piped = False
     pending_redirect = False
     for word, operator, glob in parsed:
         if glob:
@@ -191,15 +192,20 @@ def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirec
                 continue
             if word not in {";", "&&", "||", "|"}:
                 raise UnknownShape("Git redirection/background shape is unresolved")
-            groups.append(words)
+            if piped and not words:
+                raise UnknownShape("empty Git pipeline member")
+            groups.append((words, piped or word == "|"))
+            piped = word == "|"
             words = []
         else:
             words.append(word)
-    groups.append(words)
+    if piped and not words:
+        raise UnknownShape("empty Git pipeline member")
+    groups.append((words, piped))
     if pending_redirect:
         raise UnknownShape("Git redirection target is missing")
     found = []
-    for words in groups:
+    for words, pipeline in groups:
         if not words:
             continue
         target = directory_target(words)
@@ -225,10 +231,12 @@ def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirec
                 raise UnknownShape("shell Git wrapper is missing code")
             if strict and dispatch[2].startswith("-"):
                 raise UnresolvedLiteralDispatch("shell command/options boundary is unresolved")
-            found.extend(invocations(dispatch[2], cwd, depth + 1, strict=strict, companions=companions, redirect_probe=redirect_probe, inspection_comments=inspection_comments))
+            nested = invocations(dispatch[2], cwd, depth + 1, strict=strict, companions=companions, redirect_probe=redirect_probe, inspection_comments=inspection_comments)
+            found.extend({**item, "pipeline": True} if pipeline else item for item in nested)
             continue
         if dispatch and (dispatch[0] == "eval" or strict and os.path.basename(dispatch[0]) == "eval"):
-            found.extend(invocations(" ".join(dispatch[1:]), cwd, depth + 1, strict=strict, companions=companions, redirect_probe=redirect_probe, inspection_comments=inspection_comments))
+            nested = invocations(" ".join(dispatch[1:]), cwd, depth + 1, strict=strict, companions=companions, redirect_probe=redirect_probe, inspection_comments=inspection_comments)
+            found.extend({**item, "pipeline": True} if pipeline else item for item in nested)
             continue
         if strict and dispatch and (os.path.basename(dispatch[0]).startswith("git-") or
                        dispatch[0] in {"!", "if", "then", "elif", "while", "until"} and
@@ -236,6 +244,8 @@ def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirec
             raise UnknownShape("unsupported Git control or dashed builtin; use literal git commit")
         item = prefix(words, cwd)
         if item:
+            if pipeline:
+                item["pipeline"] = True
             found.append(item)
         elif companions is not None:
             companions.append(words)
@@ -513,7 +523,20 @@ def main():
             ticket_policy(command, os.path.realpath(options.cwd or os.getcwd()))
             print("handled")
             return 0
-        items = invocations(command, os.path.realpath(options.cwd or os.getcwd()))
+        try:
+            items = invocations(command, os.path.realpath(options.cwd or os.getcwd()))
+        except UnknownShape:
+            # Literal redirections do not hide the Git operation, but unsupported
+            # executable wrappers remain unresolved. Task policy owns file effects.
+            items = invocations(command, os.path.realpath(options.cwd or os.getcwd()),
+                                strict=True, redirect_probe=True)
+            # Pipeline members run concurrently; a final config writer can
+            # change an earlier member before Git resolves its dispatch.
+            if any(item['args'][0] == 'config'
+                   and released_read_verdict(shlex.join(['git', *item['args']])) != 0
+                   for index, item in enumerate(items)
+                   if index < len(items) - 1 or item.get('pipeline')):
+                raise UnknownShape('separate Git configuration mutations from redirected operation inspection')
         for item in items:
             if options.policy == "branch":
                 if in_scope(item["cwd"]):
