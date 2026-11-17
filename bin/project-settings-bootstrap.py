@@ -217,6 +217,8 @@ def load(path, name):
 
 def craft_process():
     """The same fixed application ancestry boundary as the installed router."""
+    if sys.platform != 'darwin':
+        return False
     result = subprocess.run(['/bin/ps', '-axo', 'pid=,ppid=,comm='], capture_output=True, text=True, timeout=5)
     if result.returncode:
         raise ValueError('cannot establish callback process ancestry')
@@ -426,6 +428,13 @@ def cli(raw, event, payload, *, mode='native-cli'):
         environment = {k: v for k, v in os.environ.items() if k not in craft_keys and not k.startswith('CCP_CRAFT_ROUTER_')}
         environment.update(PYTHONDONTWRITEBYTECODE='1', CCP_HOOK_STATE_DIR=str(state))
         environment['PATH'] = str(interpreter.parent) + os.pathsep + environment.get('PATH', '')
+        if mode == 'native-cli' and not any(environment.get(key, '').strip() for key in
+                ('CLAUDE_SIGNAL_DIR', 'CRAFT_SIGNAL_DIR', 'CRAFT_AGENT_SIGNAL_DIR', 'CLAUDE_SESSION_DIR')):
+            anchor = load(package / 'compatibility/hooks/lib/session_anchor.py', 'project_native_session_anchor')
+            sdk = anchor.payload_uuid(payload)
+            if not sdk:
+                raise ValueError('native CLI callback has no valid SDK session identity')
+            environment.update(CLAUDE_SESSION_DIR=str(state / 'sessions' / sdk), CLAUDE_SESSION_ID=sdk)
         if mode == 'headless-craft':
             for key in ('CRAFT_SESSION_PATH', 'CRAFT_AGENT_SESSION_PATH', 'CLAUDE_SESSION_DIR', 'CLAUDE_SESSION_ID',
                         'CLAUDE_CODE_SESSION_ID', 'SESSION_ID', 'CLAUDE_SIGNAL_DIR', 'CRAFT_SIGNAL_DIR',

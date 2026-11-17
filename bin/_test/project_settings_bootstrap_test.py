@@ -94,6 +94,52 @@ class Bootstrap(unittest.TestCase):
             with self.assertRaises(PermissionError):
                 b.headless_process(pid=42)
 
+    def test_linux_dispatch_uses_qualified_proc_without_desktop_ps(self):
+        proc = self.home / 'dispatch-proc'
+        process = proc / '42'
+        process.mkdir(parents=True)
+        (process / 'exe').symlink_to('/app/vendor/bun/bun')
+        (process / 'status').write_text('PPid: 0\n')
+        (process / 'cmdline').write_bytes(
+            b'/app/vendor/bun/bun\0run\0/app/packages/server/src/index.ts\0--allow-insecure-bind\0')
+        payload = {'hook_event_name': 'UserPromptSubmit', 'cwd': str(self.repo)}
+        raw = json.dumps(payload).encode()
+        headless = b.headless_process
+        with patch.object(b.sys, 'platform', 'linux'), \
+             patch.object(b.subprocess, 'run', side_effect=FileNotFoundError('/bin/ps unavailable')) as ps, \
+             patch.object(b, 'headless_process', side_effect=lambda: headless(proc, 42)), \
+             patch.object(b, 'cli', return_value=0) as cli, \
+             patch.dict(os.environ, {'CRAFT_SESSION_DIR': str(self.workspace / 'sessions/native')}):
+            self.assertEqual(b.dispatch(raw, 'UserPromptSubmit'), 0)
+            cli.assert_called_once_with(raw, 'UserPromptSubmit', payload, mode='headless-craft')
+            cli.reset_mock()
+            (process / 'cmdline').write_bytes(b'/app/vendor/bun/bun\0run\0other.ts\0')
+            with self.assertRaisesRegex(ValueError, 'no qualified host witness'):
+                b.dispatch(raw, 'UserPromptSubmit')
+            cli.assert_not_called()
+            (process / 'exe').unlink()
+            (process / 'exe').symlink_to('/usr/bin/bun')
+            with self.assertRaisesRegex(ValueError, 'no qualified host witness'):
+                b.dispatch(raw, 'UserPromptSubmit')
+            cli.assert_not_called()
+            ps.assert_not_called()
+
+    def test_desktop_probe_preserves_exact_ancestry_and_ps_failures(self):
+        command = ['/bin/ps', '-axo', 'pid=,ppid=,comm=']
+        output = '42 7 /usr/bin/python3\n7 1 /Applications/Craft Agents.app/Contents/MacOS/Craft Agents\n'
+        with patch.object(b.sys, 'platform', 'darwin'), patch.object(b.os, 'getpid', return_value=42), \
+             patch.object(b.subprocess, 'run', return_value=subprocess.CompletedProcess(command, 0, output)) as ps:
+            self.assertTrue(b.craft_process())
+            ps.assert_called_once_with(command, capture_output=True, text=True, timeout=5)
+            ps.return_value = subprocess.CompletedProcess(command, 0, output.replace('Craft Agents.app', 'Other.app'))
+            self.assertFalse(b.craft_process())
+            ps.return_value = subprocess.CompletedProcess(command, 1, '')
+            with self.assertRaisesRegex(ValueError, 'cannot establish callback process ancestry'):
+                b.craft_process()
+            ps.side_effect = FileNotFoundError('/bin/ps unavailable')
+            with self.assertRaises(FileNotFoundError):
+                b.craft_process()
+
     def test_managed_profile_preserves_operator_policy_and_rejects_duplicates(self):
         settings = b.profile()
         settings['model'] = 'operator-choice'
@@ -722,6 +768,52 @@ class CanonicalCLI(unittest.TestCase):
         data = {'ticket': ticket, 'sessionId': 'native-one', 'repo_root': str(repo), 'scope_paths': [str(target)], 'status': 'implementing'}
         (directory / 'think-gate.json').write_text(json.dumps(data))
         return target, directory, data
+
+    def test_default_native_task_state_is_external_and_survives_next_callback(self):
+        self.install()
+        env = {k: v for k, v in self.env.items() if k not in
+               ('CLAUDE_SESSION_DIR', 'CLAUDE_SESSION_ID', 'CLAUDE_CODE_SESSION_ID',
+                'CLAUDE_SIGNAL_DIR', 'CRAFT_SIGNAL_DIR', 'CRAFT_AGENT_SIGNAL_DIR')}
+        sdk = '12345678-1234-1234-1234-123456789abc'
+        env['CLAUDE_CODE_SESSION_ID'] = sdk
+        ticket = 'example/core#1286'
+        target = self.repo / 'hooks/lib/task_actions.py'
+        target.write_text('else:\nelse:\n')
+        (target.parent / 'resolve-think-gate.py').write_text('else:\nelse:\n')
+        state = b.state_path(self.home, b.common_directory(self.repo))
+        directory = state / 'sessions' / sdk / 'tasks' / gates.r.task_slug(ticket)
+        gate = directory / 'think-gate.json'
+        before = b.package_digest(self.package)
+        def callback(tool, value, identity=sdk):
+            payload = {'hook_event_name': 'PreToolUse', 'session_id': identity,
+                       'cwd': str(self.repo), 'tool_name': tool, 'tool_input': value}
+            return subprocess.run(b.command_for('PreToolUse'), shell=True,
+                                  input=json.dumps(payload), capture_output=True, text=True,
+                                  cwd=self.repo, env=dict(env, CCP_TASK_ID=ticket), timeout=40)
+        denied = callback('Edit', {'file_path': str(target), 'old_string': 'else:', 'new_string': ''})
+        self.assertEqual(denied.returncode, 2, denied.stdout + denied.stderr)
+        self.assertIn(str(state / 'sessions' / sdk / 'tasks'), denied.stdout + denied.stderr)
+        self.assertFalse(gate.is_relative_to(self.package))
+        data = {'ticket': ticket, 'sessionId': sdk, 'repo_root': str(self.repo),
+                'scope_paths': [str(target)], 'status': 'implementing'}
+        seed = callback('Write', {'file_path': str(gate), 'content': json.dumps(data)})
+        self.assertEqual(seed.returncode, 0, seed.stdout + seed.stderr)
+        directory.mkdir(parents=True)
+        gate.write_text(json.dumps(data))  # Simulate only the admitted fixture Write effect.
+        owned = callback('Edit', {'file_path': str(target), 'old_string': 'else:', 'new_string': ''})
+        self.assertEqual(owned.returncode, 0, owned.stdout + owned.stderr)
+        foreign = callback('Edit', {'file_path': str(self.base / 'foreign.py')})
+        self.assertEqual(foreign.returncode, 2, foreign.stdout + foreign.stderr)
+        for field, value in (('sessionId', 'foreign-owner'), ('status', 'done')):
+            gate.write_text(json.dumps(dict(data, **{field: value})))
+            result = callback('Edit', {'file_path': str(target)})
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        for identity in ('', '../invalid'):
+            result = callback('Edit', {'file_path': str(target)}, identity)
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn('valid SDK session identity', result.stderr)
+        self.assertEqual(b.package_digest(self.package), before)
+        self.assertFalse((self.package / 'compatibility/sessions' / sdk).exists())
 
     def callback(self, repo, target, ticket, tool='Edit'):
         raw = json.dumps({'hook_event_name': 'PreToolUse', 'session_id': 'native-one', 'cwd': str(repo),
