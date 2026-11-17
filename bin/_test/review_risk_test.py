@@ -194,7 +194,7 @@ CI_INVOCATION_SITES = [
  ("bin/generated-source-authority.py","bin/build.py",'[sys.executable, str(root / "bin" / "build.py"), "--dist", str(fresh_dist)],',1),
  ("bin/kernel-budget.py","bin/generated-source-authority.py",'[sys.executable, str(root / "bin" / "generated-source-authority.py"), "--check"],',1),
  (".github/workflows/build-and-publish.yml","bin/build.py","run: python3 bin/build.py --check",1),
- (".github/workflows/build-and-publish.yml","bin/build.py","run: python3 bin/build.py",2),
+ (".github/workflows/build-and-publish.yml","bin/build.py","run: python3 bin/build.py",6),
  (".github/workflows/build-and-publish.yml","bin/generated-source-authority.py","python3 bin/generated-source-authority.py --check",2),
  (".github/workflows/build-and-publish.yml","bin/kernel-budget.py","python3 bin/kernel-budget.py --check",1),
  (".github/workflows/build-and-publish.yml","bin/skill-inventory.py","python3 bin/skill-inventory.py --check",1),

@@ -9,7 +9,9 @@ on:
 
 jobs:
   validate:
-    name: Validate references and build
+    name: Validation preflight
+    outputs:
+      report: ${{ steps.source-report.outputs.report }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -247,37 +249,127 @@ jobs:
           python3 bin/_test/skill_lifecycle_test.py
           python3 bin/skill-lifecycle.py --check
 
-      # A bare `for f in ...; do bash "$f"; done` exits with the status of the
-      # LAST file, so a failure in any other file is invisible. Failures are
-      # accumulated and the step exits non-zero if any file failed. An empty
-      # glob is a failure rather than a silent pass. Ref: #713
+      - name: CI hook shard controls
+        run: python3 scripts/ci/hook-shards-test.py
+
+      - name: Bind successful preflight to source
+        id: source-report
+        run: python3 scripts/ci/hook-shards.py preflight
+
+  hooks-0:
+    name: Hook scenario partition 1/4
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      report: ${{ steps.source-report.outputs.report }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned frontmatter validation dependency
+        run: python3 -m pip install --require-hashes -r requirements-validation.txt
+      - name: Full build for hook validation
+        run: python3 bin/build.py
       - name: Hook scenario tests
-        run: |
-          shopt -s nullglob
-          files=(hooks/_test/*.test.sh)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No files matched hooks/_test/*.test.sh; refusing to report success."
-            exit 1
-          fi
-          failed=""
-          for f in "${files[@]}"; do
-            echo "::group::$f"
-            if bash "$f"; then
-              echo "PASS $f"
-            else
-              echo "FAIL $f"
-              failed="$failed $f"
-            fi
-            echo "::endgroup::"
-          done
-          if [ -n "$failed" ]; then
-            echo "Failing hook test files:$failed"
-            exit 1
-          fi
-          echo "All ${#files[@]} hook test files passed."
+        id: source-report
+        run: python3 scripts/ci/hook-shards.py run --shard 0
+
+  hooks-1:
+    name: Hook scenario partition 2/4
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      report: ${{ steps.source-report.outputs.report }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned frontmatter validation dependency
+        run: python3 -m pip install --require-hashes -r requirements-validation.txt
+      - name: Full build for hook validation
+        run: python3 bin/build.py
+      - name: Hook scenario tests
+        id: source-report
+        run: python3 scripts/ci/hook-shards.py run --shard 1
+
+  hooks-2:
+    name: Hook scenario partition 3/4
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      report: ${{ steps.source-report.outputs.report }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned frontmatter validation dependency
+        run: python3 -m pip install --require-hashes -r requirements-validation.txt
+      - name: Full build for hook validation
+        run: python3 bin/build.py
+      - name: Hook scenario tests
+        id: source-report
+        run: python3 scripts/ci/hook-shards.py run --shard 2
+
+  hooks-3:
+    name: Hook scenario partition 4/4
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      report: ${{ steps.source-report.outputs.report }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned frontmatter validation dependency
+        run: python3 -m pip install --require-hashes -r requirements-validation.txt
+      - name: Full build for hook validation
+        run: python3 bin/build.py
+      - name: Hook scenario tests
+        id: source-report
+        run: python3 scripts/ci/hook-shards.py run --shard 3
+
+  validation-complete:
+    name: Validate references and build
+    needs: [validate, hooks-0, hooks-1, hooks-2, hooks-3]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify complete same-source validation
+        env:
+          VALIDATION_NEEDS: ${{ toJSON(needs) }}
+        run: python3 scripts/ci/hook-shards.py aggregate
+
   publish:
     name: Build and publish to release branches
-    needs: validate
+    needs: validation-complete
     # `develop` is integration-only. Publishing, tagging, and releases are
     # authorized exclusively by a successful push/merge to `main`.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'

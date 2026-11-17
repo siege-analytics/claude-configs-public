@@ -109,6 +109,66 @@ class LocalValidation(unittest.TestCase):
             ('Hook scenario tests', (False, False, True, True)),
         ])
 
+    def test_ci_publication_depends_on_complete_required_check(self):
+        workflow = yaml.safe_load((ROOT / '.github/workflows/build-and-publish.yml').read_text())
+        jobs = workflow['jobs']
+        self.assertEqual(jobs['publish']['needs'], 'validation-complete')
+        self.assertEqual(jobs['publish']['if'],
+                         "github.event_name == 'push' && github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'")
+        self.assertEqual([name for name, job in jobs.items()
+                          if job.get('name') == 'Validate references and build'], ['validation-complete'])
+        for name in ['validate', *(f'hooks-{i}' for i in range(4))]:
+            self.assertNotIn('needs', jobs[name])
+            self.assertEqual(jobs[name]['runs-on'], 'ubuntu-latest')
+            self.assertEqual(jobs[name]['permissions'], {'contents': 'read', 'pull-requests': 'read'})
+        module = self.load_adapter()
+        module.ROOT = ROOT
+        self.assertEqual(module.workflow_steps()[-1]['run'], module.LOCAL_HOOK_COMMAND)
+
+    def shard_workflow(self):
+        workflow = yaml.safe_load((ROOT / '.github/workflows/build-and-publish.yml').read_text())
+        # Exercise the actual reviewed CI job contract, while running only tiny
+        # private hook fixtures through the serial local equivalent.
+        workflow['jobs']['validate']['steps'] = [
+            workflow['jobs']['validate']['steps'][-1]]
+        return workflow
+
+    def save_shards(self, workflow):
+        (self.root / '.github/workflows/build-and-publish.yml').write_text(yaml.safe_dump(workflow))
+
+    def test_sharded_ci_local_adapter_discovers_all_files_and_nonfinal_failure(self):
+        self.save_shards(self.shard_workflow())
+        hooks = self.root / 'hooks/_test'
+        hooks.mkdir(parents=True)
+        (hooks / 'a.test.sh').write_text('echo first >> order; exit 7\n')
+        (hooks / 'b.test.sh').write_text('echo second >> order; exit 0\n')
+        module = self.load_adapter()
+        commands = module.full_steps(module.workflow_steps())
+        self.assertEqual(len(commands), 1)
+        result = module.run_step(commands[0][1], dict(os.environ), 10)
+        self.assertNotEqual(result, 0)
+        self.assertEqual((self.root / 'order').read_text().splitlines(), ['first', 'second'])
+        for path in hooks.iterdir():
+            path.unlink()
+        self.assertNotEqual(module.run_step(commands[0][1], dict(os.environ), 10), 0)
+
+    def test_missing_or_changed_shard_contract_is_rejected(self):
+        import copy
+        original = self.shard_workflow()
+        cases = []
+        value = copy.deepcopy(original); del value['jobs']['hooks-2']; cases.append(value)
+        value = copy.deepcopy(original); value['jobs']['hooks-0']['steps'][-1]['run'] += ' --unknown'; cases.append(value)
+        value = copy.deepcopy(original); value['jobs']['hooks-1']['if'] = 'false'; cases.append(value)
+        value = copy.deepcopy(original); value['jobs']['validation-complete']['needs'].pop(); cases.append(value)
+        value = copy.deepcopy(original); value['jobs']['validation-complete']['steps'].append({'run': 'unknown'}); cases.append(value)
+        value = copy.deepcopy(original); value['jobs']['validate']['steps'][-1]['run'] = 'unknown'; cases.append(value)
+        value = copy.deepcopy(original); value['jobs']['hooks-4'] = value['jobs']['hooks-0']; cases.append(value)
+        for workflow in cases:
+            with self.subTest(workflow=workflow):
+                self.save_shards(workflow)
+                with self.assertRaises(ValueError):
+                    self.load_adapter().workflow_steps()
+
     def selected_hooks(self):
         self.workflow([{'name': 'early marker', 'run': 'touch workflow-started'},
                        {'name': 'hook fixtures', 'run': 'bash hooks/_test/ticket_required.test.sh'}])

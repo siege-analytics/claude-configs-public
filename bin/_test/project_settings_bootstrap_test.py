@@ -25,6 +25,26 @@ sys.path.insert(0, str(ROOT / 'hooks/_test'))
 import task_keyed_gates as gates
 
 
+class NativePathComponents(unittest.TestCase):
+    def test_owned_component_checks_do_not_require_creation_or_rewrite_modes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary).resolve() / 'home'
+            directory = home / 'existing'
+            directory.mkdir(parents=True, mode=0o755)
+            with b._physical_directory(home, Path('existing'), owned=True):
+                pass
+            directory.chmod(0o777)
+            with self.assertRaisesRegex(ValueError, 'not writable by others'):
+                with b._physical_directory(home, Path('existing'), owned=True):
+                    pass
+            self.assertEqual(directory.stat().st_mode & 0o777, 0o777)
+            directory.chmod(0o755)
+            with patch.object(b.os, 'getuid', return_value=os.getuid() + 1):
+                with self.assertRaisesRegex(ValueError, 'owned'):
+                    with b._physical_directory(home, Path('existing'), owned=True):
+                        pass
+
+
 class Bootstrap(unittest.TestCase):
     def setUp(self):
         self.f = fixtures.Router(methodName='runTest')
@@ -806,6 +826,28 @@ class CanonicalCLI(unittest.TestCase):
         gate.write_text(json.dumps(data))  # Simulate only the admitted fixture Write effect.
         owned = callback('Edit', {'file_path': str(target), 'old_string': 'else:', 'new_string': ''})
         self.assertEqual(owned.returncode, 0, owned.stdout + owned.stderr)
+        session = session_state / 'sessions' / sdk
+        self.assertEqual(session.stat().st_mode & 0o777, 0o700)
+        for unsafe in (self.home / '.local/state', session_state / 'sessions', session):
+            original_mode = unsafe.stat().st_mode & 0o777
+            with self.subTest(unsafe_component=unsafe):
+                unsafe.chmod(0o777)
+                try:
+                    result = callback('Edit', {'file_path': str(target)})
+                    self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                    self.assertIn('native', result.stderr)
+                finally:
+                    unsafe.chmod(original_mode)
+        relocated = self.base / 'linked-session-target'
+        session.rename(relocated)
+        session.symlink_to(relocated, target_is_directory=True)
+        try:
+            result = callback('Edit', {'file_path': str(target)})
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn('Project policy bootstrap failed closed', result.stderr)
+        finally:
+            session.unlink()
+            relocated.rename(session)
         foreign = callback('Edit', {'file_path': str(self.base / 'foreign.py')})
         self.assertEqual(foreign.returncode, 2, foreign.stdout + foreign.stderr)
         for field, value in (('sessionId', 'foreign-owner'), ('status', 'done')):
