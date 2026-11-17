@@ -434,7 +434,12 @@ def cli(raw, event, payload, *, mode='native-cli'):
             sdk = anchor.payload_uuid(payload)
             if not sdk:
                 raise ValueError('native CLI callback has no valid SDK session identity')
-            environment.update(CLAUDE_SESSION_DIR=str(state / 'sessions' / sdk), CLAUDE_SESSION_ID=sdk)
+            session_state = Path.home() / '.local/state/siege/core-authoring' / state.name
+            with _physical_directory(Path.home(), session_state.relative_to(Path.home()), create=True) as directory:
+                info = os.fstat(directory[0])
+                if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) & 0o077:
+                    raise ValueError('native CLI session state must be owned and private')
+            environment.update(CLAUDE_SESSION_DIR=str(session_state / 'sessions' / sdk), CLAUDE_SESSION_ID=sdk)
         if mode == 'headless-craft':
             for key in ('CRAFT_SESSION_PATH', 'CRAFT_AGENT_SESSION_PATH', 'CLAUDE_SESSION_DIR', 'CLAUDE_SESSION_ID',
                         'CLAUDE_CODE_SESSION_ID', 'SESSION_ID', 'CLAUDE_SIGNAL_DIR', 'CRAFT_SIGNAL_DIR',

@@ -1056,29 +1056,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_writing-code-rules.md",
           "file_count": 1,
-          "tree_sha256": "03e05ac3d1320236564a3ab948c2ad9227e6785c048cda4646498c892d64e403"
+          "tree_sha256": "32ecbfa1fbf8896666d3e912c0e6fb2f2c732046d5239dec4e23ef578eee62ae"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_writing-code-rules.md",
           "file_count": 1,
-          "tree_sha256": "03e05ac3d1320236564a3ab948c2ad9227e6785c048cda4646498c892d64e403"
+          "tree_sha256": "32ecbfa1fbf8896666d3e912c0e6fb2f2c732046d5239dec4e23ef578eee62ae"
         },
         "flat": {
           "destination": "dist/flat/skills/_writing-code-rules.md",
           "file_count": 1,
-          "tree_sha256": "03e05ac3d1320236564a3ab948c2ad9227e6785c048cda4646498c892d64e403"
+          "tree_sha256": "32ecbfa1fbf8896666d3e912c0e6fb2f2c732046d5239dec4e23ef578eee62ae"
         },
         "nested": {
           "destination": "dist/nested/skills/_writing-code-rules.md",
           "file_count": 1,
-          "tree_sha256": "03e05ac3d1320236564a3ab948c2ad9227e6785c048cda4646498c892d64e403"
+          "tree_sha256": "32ecbfa1fbf8896666d3e912c0e6fb2f2c732046d5239dec4e23ef578eee62ae"
         }
       },
       "canonical_source": "skills/_writing-code-rules.md",
       "kind": "rule",
       "slug": "writing-code",
       "source_file_count": 1,
-      "source_tree_sha256": "5b048d731a4d30fde1ef1b7786eebad4d8000c9d8485415fac11349a47e30a5e"
+      "source_tree_sha256": "7319f8b8bd54cc0e7e1f897482f631887845f00b1e085198c12148cf3f6e2071"
     },
     {
       "artifacts": {
@@ -1722,30 +1722,30 @@
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/detect-ai-fingerprints",
-          "file_count": 15,
-          "tree_sha256": "2cf6c13a90e05c2cf9ea6f0d8a2dbc9096912aed4542949085021aff1fdd2d17"
+          "file_count": 16,
+          "tree_sha256": "f1908b686510979a6f0feec70d6af32d3abf0f906e3068b29a7cafcd85d12168"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/detect-ai-fingerprints",
-          "file_count": 15,
-          "tree_sha256": "2cf6c13a90e05c2cf9ea6f0d8a2dbc9096912aed4542949085021aff1fdd2d17"
+          "file_count": 16,
+          "tree_sha256": "f1908b686510979a6f0feec70d6af32d3abf0f906e3068b29a7cafcd85d12168"
         },
         "flat": {
           "destination": "dist/flat/skills/detect-ai-fingerprints",
-          "file_count": 15,
-          "tree_sha256": "2cf6c13a90e05c2cf9ea6f0d8a2dbc9096912aed4542949085021aff1fdd2d17"
+          "file_count": 16,
+          "tree_sha256": "f1908b686510979a6f0feec70d6af32d3abf0f906e3068b29a7cafcd85d12168"
         },
         "nested": {
           "destination": "dist/nested/skills/detect-ai-fingerprints",
-          "file_count": 15,
-          "tree_sha256": "2cf6c13a90e05c2cf9ea6f0d8a2dbc9096912aed4542949085021aff1fdd2d17"
+          "file_count": 16,
+          "tree_sha256": "f1908b686510979a6f0feec70d6af32d3abf0f906e3068b29a7cafcd85d12168"
         }
       },
       "canonical_source": "skills/detect-ai-fingerprints/SKILL.md",
       "kind": "skill",
       "slug": "detect-ai-fingerprints",
-      "source_file_count": 15,
-      "source_tree_sha256": "034dbb5189aff920c4016b99c9e7e536b6ff8f4e68b37f1534134693ed5039b2"
+      "source_file_count": 16,
+      "source_tree_sha256": "f9f16c6a837cf30fb990f8ab0e3280c345d3210b8e9541f29eef0b4f1bbf5006"
     },
     {
       "artifacts": {
@@ -5784,8 +5784,8 @@
     "artifact_snapshot_count": 808,
     "canonical_source_count": 199,
     "destination_collision_count": 0,
-    "generated_file_mapping_count": 2948,
-    "source_owned_file_count": 737,
+    "generated_file_mapping_count": 2952,
+    "source_owned_file_count": 738,
     "support_source_count": 3,
     "unowned_generated_file_count": 0
   },
