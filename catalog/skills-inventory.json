@@ -4975,6 +4975,7 @@
       "source_path": "skills/_output-rules.md",
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/canonical_main_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
@@ -5531,6 +5532,7 @@
       "source_path": "skills/_python-rules.md",
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/canonical_main_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
@@ -9366,6 +9368,7 @@
       "slug": "commit",
       "source_path": "skills/commit/SKILL.md",
       "test_evidence": [
+        "bin/_test/canonical_main_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/consumer_runtime_test.py",
         "bin/_test/craft_backend_canary_test.py",
@@ -10713,6 +10716,7 @@
       "source_path": "skills/merge/SKILL.md",
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/canonical_main_test.py",
         "bin/_test/craft_hook_router_test.py",
         "bin/_test/craft_workspace_trust_test.py",
         "bin/_test/deploy_source_policy_test.py",
@@ -10724,6 +10728,7 @@
         "bin/_test/progressive_mount_test.py",
         "bin/_test/project_settings_bootstrap_test.py",
         "bin/_test/protected_policy_test.py",
+        "bin/_test/provider_event_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
         "bin/_test/scanner_source_test.py",
@@ -11314,6 +11319,7 @@
       "source_path": "skills/python/SKILL.md",
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/canonical_main_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",

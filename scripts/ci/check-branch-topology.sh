@@ -52,10 +52,11 @@ if ! git rev-parse --verify "$MAIN_REF^{commit}" >/dev/null 2>&1; then
   exit 2
 fi
 
-if ! git merge-base --is-ancestor "$MAIN_REF" HEAD; then
-  echo "BLOCKED: candidate HEAD does not contain current main ($MAIN_REF)." >&2
+POLICY_ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+if ! python3 "$POLICY_ROOT/scripts/ci/canonical_main.py" "$MAIN_REF" HEAD; then
+  echo "BLOCKED: candidate HEAD does not cover current main ($MAIN_REF)." >&2
   echo "Merge main into develop (or update the feature from reconciled develop), resolve and retest there." >&2
   exit 1
 fi
 
-echo "PASS: $HEAD_BRANCH -> $BASE_BRANCH follows canonical topology and contains $MAIN_REF."
+echo "PASS: $HEAD_BRANCH -> $BASE_BRANCH follows canonical topology and covers $MAIN_REF."

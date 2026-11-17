@@ -29,6 +29,7 @@ WORKFLOW_PATH = Path(".github/workflows/pr-base-guard.yml")
 TRUSTED_DEPENDENCIES = (
     VALIDATOR_PATH,
     ENTRYPOINT_PATH,
+    Path("scripts/ci/canonical_main.py"),
     Path("bin/effective_policy.py"),
     Path("bin/gate_contract.py"),
     Path("bundles/siege/policy-inputs.json"),
@@ -50,6 +51,7 @@ POLICY_SENSITIVE = (
     VALIDATOR_PATH.as_posix(),
     ENTRYPOINT_PATH.as_posix(),
     WORKFLOW_PATH.as_posix(),
+    "scripts/ci/canonical_main.py",
     "examples/provider/shared-parent-workflow.yml",
 )
 
@@ -389,9 +391,11 @@ def normalize_host_event(args: argparse.Namespace) -> None:
     current_main = str(git(workflow_root, "rev-parse", "refs/remotes/origin/main")).strip()
     if current_main != args.executed_workflow_revision:
         raise ValueError("host workflow SHA differs from fetched canonical default branch")
-    if subprocess.run(["git", "-C", str(candidate), "merge-base", "--is-ancestor", current_main, args.head],
-                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
-        raise Denied("candidate HEAD does not contain current canonical main")
+    coverage_path = Path("scripts/ci/canonical_main.py")
+    tracked_blob(trusted, args.trusted_revision, coverage_path)
+    coverage = load_module(trusted, coverage_path, "_canonical_main_coverage")
+    if not coverage.covers_main(candidate, current_main, args.head):
+        raise Denied("candidate HEAD does not cover current canonical main")
     args.executed_workflow_root = workflow_root
     args.host_event_binding = {"event": facts["GITHUB_EVENT_NAME"], "mode": binding,
                                "parent_repository": parent_identity, "parent_revision": args.trusted_revision,
@@ -435,7 +439,8 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         raise ValueError("trusted checkout HEAD differs from declared trusted revision")
     selected_policy = any(getattr(args, name, None) is not None for name in
                           ("policy_root", "policy_inputs", "policy_inputs_sha256"))
-    dependencies = (VALIDATOR_PATH, ENTRYPOINT_PATH, Path("bin/effective_policy.py"),
+    dependencies = (VALIDATOR_PATH, ENTRYPOINT_PATH, Path("scripts/ci/canonical_main.py"),
+                    Path("bin/effective_policy.py"),
                     Path("bin/gate_contract.py"), Path("catalog/gate-contract-schema.json")) if selected_policy else TRUSTED_DEPENDENCIES
     dependency_blobs = {
         path.as_posix(): tracked_blob(trusted, trusted_revision, path)

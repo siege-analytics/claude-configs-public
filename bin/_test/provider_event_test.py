@@ -114,6 +114,37 @@ class ProviderEventTest(unittest.TestCase):
             self.assertEqual((code, rejected['state']), (1, 'denied'), rejected)
         self.assertEqual(revisions, [self.fixture.trusted_revision] * 2)
 
+    def test_content_identical_main_promotion_does_not_block_feature(self):
+        value = self.consumer()
+        repo = value['repo']
+        promoted = f.git(repo, 'rev-parse', 'HEAD').stdout.strip()
+        f.git(repo, 'checkout', '-qb', 'fixture-main', value['base'])
+        f.git(repo, 'merge', '--no-ff', '-qm', 'Pure fixture promotion', promoted)
+        main = f.git(repo, 'rev-parse', 'HEAD').stdout.strip()
+        f.git(repo, 'push', '-q', '--no-verify', str(value['remote']),
+              main + ':refs/heads/main', promoted + ':refs/heads/develop')
+        f.git(value['workflow_root'], 'fetch', '-q', str(value['remote']),
+              'refs/heads/main:refs/remotes/origin/main')
+        f.git(value['workflow_root'], 'checkout', '-q', '--detach', main)
+        f.git(repo, 'checkout', '-q', 'feature/pilot')
+        self.case.change(repo, 'after-promotion', self.case.message('Continue after promotion'), no_verify=True)
+        value['base'] = promoted
+        self.publish_event(value)
+        code, result = self.probe(value, environment={'GITHUB_WORKFLOW_SHA': main})
+        self.assertEqual((code, result['state']), (0, 'eligible'), result)
+
+        f.git(repo, 'checkout', '-q', 'fixture-main')
+        self.case.change(repo, 'unmerged-hotfix', self.case.message('Actual Main hotfix'), no_verify=True)
+        hotfix = f.git(repo, 'rev-parse', 'HEAD').stdout.strip()
+        f.git(repo, 'push', '-q', '--no-verify', str(value['remote']), hotfix + ':refs/heads/main')
+        f.git(value['workflow_root'], 'fetch', '-q', str(value['remote']),
+              'refs/heads/main:refs/remotes/origin/main')
+        f.git(value['workflow_root'], 'checkout', '-q', '--detach', hotfix)
+        f.git(repo, 'checkout', '-q', 'feature/pilot')
+        self.publish_event(value)
+        code, result = self.probe(value, environment={'GITHUB_WORKFLOW_SHA': hotfix})
+        self.assertEqual((code, result['state']), (1, 'denied'), result)
+
     def test_missing_ticket_denies_then_new_exact_head_repairs_for_both(self):
         for project in ['strict-release', 'synthetic-trunk']:
             value = self.consumer(project)

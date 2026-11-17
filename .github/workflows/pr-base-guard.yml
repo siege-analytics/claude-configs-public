@@ -55,20 +55,37 @@ jobs:
         run: bash ../policy/scripts/ci/check-branch-topology.sh
 
       # Merge queues have already admitted a PR through the head-role check.
-      # The queued synthetic commit must still contain current main.
+      # The queued synthetic commit must still cover current Main content.
       - name: Check out merge-group candidate
         if: github.event_name == 'merge_group'
         uses: actions/checkout@v4
         with:
+          path: candidate
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fetch canonical Main for merge group
+        if: github.event_name == 'merge_group'
+        id: canonical_main
+        working-directory: candidate
+        run: |
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          echo "revision=$(git rev-parse refs/remotes/origin/main)" >> "$GITHUB_OUTPUT"
+
+      - name: Check out trusted merge-group coverage policy
+        if: github.event_name == 'merge_group'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.canonical_main.outputs.revision }}
+          path: policy
           persist-credentials: false
 
       - name: Validate merge-group ancestry
         if: github.event_name == 'merge_group'
+        working-directory: candidate
         run: |
-          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
-          git merge-base --is-ancestor origin/main HEAD || {
-            echo "BLOCKED: merge-group candidate does not contain current main."
+          python3 ../policy/scripts/ci/canonical_main.py origin/main HEAD || {
+            echo "BLOCKED: merge-group candidate does not cover current main."
             exit 1
           }
-          echo "PASS: merge-group candidate contains current main."
+          echo "PASS: merge-group candidate covers current main."
