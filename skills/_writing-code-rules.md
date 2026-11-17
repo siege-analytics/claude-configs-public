@@ -373,7 +373,7 @@ Falsification: `grep -rEn '# (TODO|FIXME|HACK|XXX)' <package>/ --include='*.py'`
 
 ## Override
 
-These rules are mandatory. No `[code-skip]` override. Apply `[skill:commit]` step 4 (the affected-tests gate) for writing-code:5. `[skill:detect-ai-fingerprints]` documents current mechanical coverage and its limits. Use `[skill:code-review]` for judgment-bound rules and `[skill:self-review]` for writing-code:16, :17 and :18.
+These rules are mandatory. No `[code-skip]` override. Apply `[skill:commit]` step 4 (the affected-tests gate) for writing-code:5. `[skill:detect-ai-fingerprints]` documents current mechanical coverage and its limits. Writing-code:12 currently requires judgment review; its numbered AST description is not an implemented scanner check. Use `[skill:code-review]` for judgment-bound rules and `[skill:self-review]` for writing-code:16, :17 and :18.
 
 ## Cross-references
 
