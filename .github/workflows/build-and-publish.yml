@@ -135,7 +135,9 @@ jobs:
         run: python3 bin/_test/package_documentation_test.py
 
       - name: Shared-parent registered provider events
-        run: python3 bin/_test/provider_event_test.py
+        run: |
+          python3 bin/_test/canonical_main_test.py
+          python3 bin/_test/provider_event_test.py
 
       - name: Native consumer Git registration and destination range
         run: python3 bin/_test/native_push_test.py

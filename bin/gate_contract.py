@@ -34,7 +34,7 @@ HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 DECISIONS = ["allow", "deny", "not-applicable", "unknown", "error"]
 CAPABILITY_STATES = ["verified", "unsupported", "unverified"]
 SCHEMA_SHA256 = "3cd65d6ffee11f39baca5c066d550fb89e5e2ccab4ee73e51f8a87bf00974d72"
-PROTECTED_ADAPTER_WORKFLOW_SHA256 = "13b83c61b8326f9c2deaab9beb8611968a7c00562dcb1b155dba9c37f0748d50"
+PROTECTED_ADAPTER_WORKFLOW_SHA256 = "7ec569aba3198fe7c7d3e2ccd1dc5dc2f7661ea8289c9ba9b93d19e12c00aa2e"
 # Compatibility registration for this repository's explicitly adopted Siege
 # profile. Generic callers supply their independently pinned input registration;
 # publishing a descriptor or selecting skill content cannot supply that pin.
