@@ -824,29 +824,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_strategic-agency-rules.md",
           "file_count": 1,
-          "tree_sha256": "fee1d3cadf0ada2867e1b732a2f29cc37c099fa6fbdced5439f27dbf640e1315"
+          "tree_sha256": "ca9a8238d89058160590b2d81ed0147438409d38b8b819b985273449bfd568fe"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_strategic-agency-rules.md",
           "file_count": 1,
-          "tree_sha256": "fee1d3cadf0ada2867e1b732a2f29cc37c099fa6fbdced5439f27dbf640e1315"
+          "tree_sha256": "ca9a8238d89058160590b2d81ed0147438409d38b8b819b985273449bfd568fe"
         },
         "flat": {
           "destination": "dist/flat/skills/_strategic-agency-rules.md",
           "file_count": 1,
-          "tree_sha256": "fee1d3cadf0ada2867e1b732a2f29cc37c099fa6fbdced5439f27dbf640e1315"
+          "tree_sha256": "ca9a8238d89058160590b2d81ed0147438409d38b8b819b985273449bfd568fe"
         },
         "nested": {
           "destination": "dist/nested/skills/_strategic-agency-rules.md",
           "file_count": 1,
-          "tree_sha256": "fee1d3cadf0ada2867e1b732a2f29cc37c099fa6fbdced5439f27dbf640e1315"
+          "tree_sha256": "ca9a8238d89058160590b2d81ed0147438409d38b8b819b985273449bfd568fe"
         }
       },
       "canonical_source": "skills/_strategic-agency-rules.md",
       "kind": "rule",
       "slug": "strategic-agency",
       "source_file_count": 1,
-      "source_tree_sha256": "abd5fe5df469d212f288d8d16b9888e256bcc2e9d892163b9c81090073f62ddc"
+      "source_tree_sha256": "1b79656740149c8ea6ebc3070ca04f1bf3d3389354e2c6b49f7e5e3908bdb7dc"
     },
     {
       "artifacts": {

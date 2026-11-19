@@ -16,7 +16,7 @@ Carry the acceptance criteria, current owner, next eligible action or exact depe
 
 Where assigned, WC maintains workspace/session tools and scheduler health; TC sequences business outcomes through hubs and boards; hubs deliver their assignments. A WC health callback does not resume another owner: verify that the registered action or supported event reaches its intended owner. WC acknowledgment is not a prerequisite for otherwise authorized peer work. Renew a maintenance lease within the existing grant while its parent remains unfinished, or verify an accepting replacement and working return route. Respect an explicit user horizon or whole-objective pause; [skill:drive-while-away] owns genuine whole-objective impasse handling.
 
-For apparent holds, inherited duties and prerequisite repair, follow autonomy's authority and hold-provenance rules. A hold applies to its dependent action; it does not change the acceptance criteria or silently transfer ownership.
+For apparent holds, inherited duties and prerequisite repair, follow autonomy's authority rules and `[rule:standing-approval]` "Hold provenance and satisfaction". A hold applies to its dependent action; it does not change the acceptance criteria or silently transfer ownership.
 
 **strategic-agency:3. Workers deliver evidence toward the parent criteria.** Understand which acceptance criterion the assignment advances. Carry out adjacent authorized steps needed to produce its result, then return durable evidence or the exact dependency that prevents it. A subtask is complete when its promised evidence is delivered, not when a tool call or report exists. Do not stop at the narrowest subtask when the role contract authorizes the next step; do not take over another owner's assignment.
 
