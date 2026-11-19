@@ -226,6 +226,11 @@ def git_file_effects(words):
 
 
 def git_ok(args):
+    # The version flag is global, repository-independent, and has no worktree
+    # effects. Classify the exact form before repository-target resolution so
+    # agents can inspect Git in a task directory before a checkout exists.
+    if args == ["--version"]:
+        return True
     effect = git_file_effects(["git"] + args)
     if effect is not None:
         return effect.get("read_only", False)

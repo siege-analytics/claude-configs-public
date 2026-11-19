@@ -31,6 +31,17 @@ class Safety(unittest.TestCase):
         self.git("commit", "-q", "--allow-empty", "-m", "seed")
         self.git("remote", "add", "origin", "https://github.com/siege-analytics/synthetic.git")
 
+    def test_git_version_is_read_only_without_a_repository_root(self):
+        import task_actions
+        command = "git --version"
+        self.assertTrue(task_actions.reader(shlex.split(command)))
+        self.assertTrue(task_actions._released_read_classifier().git_ok(["--version"]))
+        self.g.assertGate(0, command, cwd=self.g.ws, env=self.env)
+        result = subprocess.run(command, shell=True, cwd=self.g.ws, env=self.env,
+                                check=True, capture_output=True, text=True, timeout=10)
+        self.assertIn("git version", result.stdout)
+        self.g.assertGate(2, "git --version && git init", cwd=self.g.ws, env=self.env)
+
     def test_no_optional_locks_global_preserves_reads_and_mutation_denials(self):
         import task_actions
         target = shlex.quote(str(self.repo))
