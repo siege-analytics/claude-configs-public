@@ -6219,10 +6219,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 29267,
-      "content_sha256": "81f19d9ba567a585d7282010fc81ffeddb4cebfde99957d5f45f24af261e1294",
+      "characters": 30640,
+      "content_sha256": "8bfe5274a9ff7f28d07881e3c1b6fcd3aa72b4c40ad9d17123f892b01b37abe4",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7317,
+      "estimated_tokens": 7660,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6255,7 +6255,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 152,
+      "lines": 156,
       "owner": [
         "unknown"
       ],
@@ -6469,6 +6469,7 @@
         "skills/RESOLVER.md",
         "skills/_prospective-memory-rules.md",
         "skills/_session-coordination-rules.md",
+        "skills/_strategic-agency-rules.md",
         "skills/_tandem-agent-rules.md",
         "skills/engagement-post-mortem/SKILL.md",
         "skills/merge/SKILL.md",
@@ -6560,10 +6561,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 4572,
-      "content_sha256": "60c5574b1d86e0087cc75c4d99293ce3b5d79c61b38b39ece90dc9966b83b638",
+      "characters": 4558,
+      "content_sha256": "5aab794528cad2ee631840fab5da98d70a39f9c1f0cebeeb0a4784a032e43019",
       "description": "Always-on mission focus, bounded initiative and coordinator follow-through for hubs and workers.",
-      "estimated_tokens": 1143,
+      "estimated_tokens": 1140,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -13113,9 +13114,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2459490,
+    "characters": 2460849,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 614948,
+    "estimated_tokens": 615288,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13136,7 +13137,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1063096
+      "unclassified": 1064455
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13148,7 +13149,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 265814
+      "unclassified": 266154
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
