@@ -581,6 +581,9 @@ class BranchSources(unittest.TestCase):
             def payload(branch, source):
                 args = ({'repository_full_name': 'electinfo/example', 'branch_name': branch, 'base_ref': source}
                         if modern else {'owner': 'electinfo', 'repo': 'example', 'branch': branch, 'from_branch': source})
+                # Native CraftAgents GitHub tool invocations carry these
+                # presentation fields in addition to the semantic API args.
+                args.update({'_displayName': 'Create branch', '_intent': 'create'})
                 return {'tool_name': tool, 'tool_input': args}
             native.check(payload('feature/correct', 'develop'))
             native.check(payload('develop', 'main'))
@@ -591,6 +594,18 @@ class BranchSources(unittest.TestCase):
                     native.check(payload(branch, source))
             request = payload('develop', 'main')
             request['tool_input']['force'] = True
+            with self.assertRaises(ValueError):
+                native.check(request)
+            request = payload('feature/correct', 'develop')
+            request['tool_input']['update'] = True
+            with self.assertRaises(ValueError):
+                native.check(request)
+            request = payload('feature/correct', 'develop')
+            request['tool_input']['_unexpected'] = 'not connector metadata'
+            with self.assertRaises(ValueError):
+                native.check(request)
+            request = payload('feature/correct', 'develop')
+            request['tool_input']['_intent'] = {'create': True}
             with self.assertRaises(ValueError):
                 native.check(request)
             request = payload('feature/wrong', None)
