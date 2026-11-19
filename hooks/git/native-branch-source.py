@@ -21,16 +21,24 @@ def check(payload):
     args = payload.get('tool_input')
     if not isinstance(args, dict):
         raise ValueError('GitHub branch creation arguments are unavailable')
+    # CraftAgents appends these presentation fields to native tool inputs.
+    # They are not sent to GitHub and cannot affect the selected source or ref.
+    # Drop only the exact known metadata keys before validating the operation;
+    # mutation-affecting or unknown fields remain rejected below.
+    metadata = {'_displayName', '_intent'}
+    if any(key in args and not isinstance(args[key], str) for key in metadata):
+        raise ValueError('GitHub tool presentation metadata must be text')
+    args = {key: value for key, value in args.items() if key not in metadata}
     if 'repository_full_name' in args:
         if set(args) - {'repository_full_name', 'branch_name', 'base_ref', 'sha'}:
-            raise ValueError('unsupported GitHub creation fields; update/force options cannot create develop safely')
+            raise ValueError('unsupported GitHub branch-creation fields')
         repository = args.get('repository_full_name')
         branch = args.get('branch_name')
         source = args.get('base_ref')
         sha = args.get('sha')
     else:
         if set(args) - {'owner', 'repo', 'branch', 'from_branch', 'sha'}:
-            raise ValueError('unsupported GitHub creation fields; update/force options cannot create develop safely')
+            raise ValueError('unsupported GitHub branch-creation fields')
         owner, repo = args.get('owner'), args.get('repo')
         repository = f'{owner}/{repo}' if isinstance(owner, str) and isinstance(repo, str) else None
         branch = args.get('branch')
