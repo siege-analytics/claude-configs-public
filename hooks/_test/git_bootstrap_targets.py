@@ -664,6 +664,120 @@ class GitBootstrap(unittest.TestCase):
             actual=subprocess.run(args,cwd=self.ws,env=self.f.env,capture_output=True,timeout=10)
             self.assertNotEqual(actual.returncode,0);self.assertTrue(marker.exists())
 
+    def helper_environment(self):
+        return {'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_KEY_0': 'credential.https://github.com.helper',
+                'GIT_CONFIG_VALUE_0': '!touch ' + str(self.ws / 'helper-must-not-run')}
+
+    def helper_removed_clone(self, destination):
+        return ['env', '-u', 'GIT_CONFIG_COUNT', '-u', 'GIT_CONFIG_KEY_0',
+                '-u', 'GIT_CONFIG_VALUE_0', 'git', 'clone', '--template=',
+                str(self.bundle), str(destination)]
+
+    def test_exact_child_helper_removal_real_clone_and_probe_environment(self):
+        from git_command import prefix, literal_prefix
+        import task_actions
+        target = self.ws / 'helper-removed-clone'
+        inherited = self.helper_environment()
+        self.f.env.update(inherited)
+        self.task(target)
+        args = self.helper_removed_clone(target)
+        probes = []
+        native_run = subprocess.run
+
+        def inspect_probe(argv, **kwargs):
+            if isinstance(argv, list) and argv[:1] == ['git'] and 'git-bootstrap-read-' in str(argv):
+                child = kwargs['env']
+                probes.append(dict(child))
+                # Synthetic remote metadata is allowed, never the inherited helper.
+                self.assertNotEqual(child.get('GIT_CONFIG_KEY_0'), inherited['GIT_CONFIG_KEY_0'])
+                self.assertNotIn(inherited['GIT_CONFIG_VALUE_0'], child.values())
+            return native_run(argv, **kwargs)
+
+        with patch.dict(os.environ, inherited), patch.object(task_actions.subprocess, 'run', side_effect=inspect_probe):
+            before = dict(os.environ)
+            self.assertEqual(literal_prefix(args, strict=True)[0][:2], ['git', 'clone'])
+            operation = prefix(args, str(self.ws))
+            self.assertEqual(operation['child_environment_unset'],
+                             ('GIT_CONFIG_COUNT', 'GIT_CONFIG_KEY_0', 'GIT_CONFIG_VALUE_0'))
+            shape = self.shape(args)
+            self.assertNotIn('error', shape)
+            self.assertIn(str(target), shape['paths'])
+            self.assertEqual(dict(os.environ), before)
+        self.assertTrue(probes)
+        self.f.assertGate(0, shlex.join(args), cwd=self.ws)
+        actual = native_run(args, cwd=self.ws, env=self.f.env, capture_output=True, timeout=15)
+        self.assertEqual(actual.returncode, 0)
+        self.assertEqual((target / 'note.txt').read_text(), 'preserve me\n')
+        self.assertFalse((self.ws / 'helper-must-not-run').exists())
+        self.assertEqual({k: self.f.env[k] for k in inherited}, inherited)
+        # The same inherited helper without the explicit reduction still fails closed.
+        with patch.dict(os.environ, inherited):
+            self.assertIn('environment-dependent', self.shape(['git', 'clone', str(self.bundle), str(self.ws / 'not-reduced')]).get('error', ''))
+        # Probe state must not leak into the next ordinary classification.
+        self.assertIsNone(task_actions._git_bootstrap_environment.get())
+
+    def test_child_removal_rejects_ambiguous_entries_and_other_environment(self):
+        target = self.ws / 'never-created'
+        args = self.helper_removed_clone(target)
+        cases = [
+            {'GIT_CONFIG_COUNT': '0'}, {'GIT_CONFIG_COUNT': '2'},
+            {'GIT_CONFIG_COUNT': '01'}, {'GIT_CONFIG_COUNT': '-1'},
+            {'GIT_CONFIG_KEY_0': 'url.https://example.invalid.insteadOf'},
+            {'GIT_CONFIG_KEY_0': 'http.https://github.com.extraheader'},
+            {'GIT_CONFIG_KEY_0': 'core.sshCommand'},
+            {'GIT_CONFIG_KEY_0': 'credential.username'},
+            {'GIT_CONFIG_KEY_1': 'credential.helper'},
+            {'GIT_CONFIG_VALUE_9': 'unused'}, {'GIT_CONFIG_KEY_bad': 'unused'},
+            {'GIT_DIR': str(self.source / '.git')},
+            {'GIT_WORK_TREE': str(self.source)}, {'GIT_SSH_COMMAND': 'false'},
+        ]
+        for change in cases:
+            with self.subTest(change=list(change)), patch.dict(os.environ, {**self.helper_environment(), **change}):
+                self.assertTrue(self.shape(args).get('error'))
+                self.assertFalse(target.exists())
+        for missing in ('GIT_CONFIG_KEY_0', 'GIT_CONFIG_VALUE_0'):
+            with self.subTest(missing=missing), patch.dict(os.environ, self.helper_environment()):
+                os.environ.pop(missing)
+                self.assertTrue(self.shape(args).get('error'))
+
+    def test_child_removal_keeps_transport_and_task_guards(self):
+        from git_command import prefix
+        target = self.ws / 'unsafe-child-clone'
+        args = self.helper_removed_clone(target)
+        inherited = self.helper_environment()
+        self.f.env.update(inherited)
+        with patch.dict(os.environ, inherited):
+            self.f.assertGate(2, shlex.join(args), cwd=self.ws)  # no Task
+            for changed in [args[:1] + ['-i'] + args[1:], args[:3] + args[5:],
+                            args[:7] + ['sh', '-c', 'git clone anything'],
+                            args[:7] + ['git', 'init', str(target)],
+                            args[:7] + ['git', 'status'],
+                            args[:7] + ['command', 'git', 'clone', str(self.bundle), str(target)]]:
+                self.assertTrue(self.shape(changed).get('error'))
+            self.task(target, status='reviewing')
+            self.f.assertGate(2, shlex.join(args), cwd=self.ws)
+            self.task(target)
+            self.f.assertGate(2, shlex.join(self.helper_removed_clone(self.ws / 'foreign')), cwd=self.ws)
+            unsafe = args[:-2] + ['ext::false', str(target)]
+            self.assertIn('unsupported', self.shape(unsafe).get('error', ''))
+            self.assertFalse(target.exists())
+
+    def test_removed_helper_does_not_hide_persistent_transport_rewrites(self):
+        target = self.ws / 'rewrite-stays-denied'
+        marker = self.ws / 'transport-must-not-run'
+        config = self.ws / 'child-rewrite.config'
+        config.write_text('[url "ext::touch ' + str(marker) + '"]\n insteadOf = ' + str(self.bundle) + '\n')
+        inherited = {**self.helper_environment(), 'GIT_CONFIG_GLOBAL': str(config)}
+        self.f.env.update(inherited)
+        args = self.helper_removed_clone(target)
+        self.task(target)
+        with patch.dict(os.environ, inherited):
+            self.assertTrue(self.shape(args).get('error'))
+            self.f.assertGate(2, shlex.join(args), cwd=self.ws)
+        self.assertFalse(target.exists())
+        self.assertFalse(marker.exists())
+        self.assertEqual(config.read_text(), '[url "ext::touch ' + str(marker) + '"]\n insteadOf = ' + str(self.bundle) + '\n')
+
     def test_inherited_git_targeting_environment_denies_bootstrap(self):
         for key in ('GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE','GIT_TEMPLATE_DIR','GIT_CONFIG_COUNT','GIT_SSH_COMMAND'):
             with self.subTest(key=key),patch.dict(os.environ,{key:str(self.source)}):
