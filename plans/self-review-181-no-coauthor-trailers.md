@@ -25,7 +25,9 @@ Issue #181 records the concrete failure: GitHub squash merges added Craft Agent 
 - `bash -n .githooks/commit-msg hooks/git/no-attribution.sh hooks/_test/commit_detector.test.sh hooks/_test/review_risk_policy.test.sh`: passed.
 - `git diff --check`: passed.
 - `python3 bin/sync-skill-references.py --check`: passed.
-- `python3 bin/build.py --check`: could not complete locally because this system Python lacks the pinned PyYAML dependency; hosted CI is required for that check.
+- `uv run --with-requirements requirements-validation.txt python3 bin/skill-inventory.py --check`: passed after refreshing the generated inventory.
+- `uv run --with-requirements requirements-validation.txt python3 bin/generated-source-authority.py --check`: passed after refreshing the generated source-authority catalog.
+- `uv run --with-requirements requirements-validation.txt python3 bin/build.py --check`: passed; all 199 skill/rule headers validated.
 - Hosted CI is pending on this exact candidate.
 
 ## Peer review
@@ -38,6 +40,6 @@ The initial source-level check was incomplete for `-F` and editor messages. The 
 
 ## Quantified claims
 
-- 14 files changed: 8 instruction surfaces, 2 hook boundaries, 2 regression tests and 2 review records.
+- 17 files changed: 8 instruction surfaces, 2 hook boundaries, 2 regression tests, 3 generated catalogs and 2 review records.
 - Focused suites: 39 commit-detector cases and 14 native review-policy cases passed; 0 failed.
 - No production or protected history was modified.
