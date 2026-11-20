@@ -19,6 +19,7 @@ sys.dont_write_bytecode = True
 
 from task_actions import UnknownShape, shell_tokens, released_read_verdict, action as classify_action
 from branch_source import check as check_branch_source, task_release_source
+from task_actions import child_helper_removal
 
 PROTECTED = {"main", "master", "develop", "dev", "development", "staging", "next", "integration"}
 BUILTINS = set("add am annotate apply archive bisect blame branch bundle cat-file check-attr check-ignore check-mailmap check-ref-format checkout checkout-index cherry cherry-pick clean clone column commit config count-objects credential describe diff diff-files diff-index diff-tree difftool fast-export fast-import fetch filter-branch fmt-merge-msg for-each-ref format-patch fsck gc get-tar-commit-id grep hash-object help index-pack init instaweb interpret-trailers log ls-files ls-remote ls-tree mailinfo mailsplit maintenance merge merge-base merge-file merge-index merge-one-file merge-tree mergetool mktag mktree multi-pack-index mv name-rev notes pack-objects pack-redundant pack-refs patch-id prune prune-packed pull push range-diff read-tree rebase reflog remote repack replace request-pull rerere reset restore rev-list rev-parse revert rm send-email send-pack shortlog show show-branch show-index show-ref sparse-checkout stage stash status stripspace submodule subtree switch symbolic-ref tag unpack-file unpack-objects update-index update-ref update-server-info var verify-commit verify-pack verify-tag version whatchanged worktree write-tree".split())
@@ -44,6 +45,9 @@ def literal_prefix(words, *, strict=False):
     environment = []
     while args and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", args[0]):
         environment.append(args.pop(0).split("=", 1)[0])
+    child = child_helper_removal(args)
+    if child is not None:
+        return child[0], environment
     if args and os.path.basename(args[0]) in {"command", "env"}:
         wrapper = os.path.basename(args.pop(0))
         if wrapper == "command" and args[:1] == ["--"]:
@@ -58,6 +62,11 @@ def literal_prefix(words, *, strict=False):
 
 def prefix(words, cwd):
     """Resolve literal executable/global options, preserving command -c aliases."""
+    original = list(words)
+    while original and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", original[0]):
+        original.pop(0)
+    child = child_helper_removal(original)
+    removals = child[1] if child is not None else ()
     args, environment = literal_prefix(words)
     if not args or os.path.basename(args[0]) != "git":
         if args and os.path.basename(args[0]) in {"sudo", "exec", "nice", "timeout"} and any(os.path.basename(a) == "git" for a in args[1:]):
@@ -97,7 +106,7 @@ def prefix(words, cwd):
         return None
     for _ in range(8):
         if args[0] in BUILTINS:
-            return {"cwd": cwd, "args": args, "config": config}
+            return {"cwd": cwd, "args": args, "config": config, "child_environment_unset": removals}
         alias = inspect_git(cwd, "config", "--get", "alias." + args[0], config=config)
         if not alias or alias.startswith("!"):
             raise UnknownShape("unknown or executable Git alias: " + args[0])
