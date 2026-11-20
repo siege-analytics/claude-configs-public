@@ -9,6 +9,7 @@ non-option prefix or a genuine -- terminator; quoted patterns do not expand.
 """
 from __future__ import annotations
 from pathlib import Path
+from contextvars import ContextVar
 
 import ast
 import fnmatch
@@ -24,6 +25,36 @@ import time
 
 class UnknownShape(ValueError):
     pass
+
+
+CHILD_HELPER_REMOVALS = ('GIT_CONFIG_COUNT', 'GIT_CONFIG_KEY_0', 'GIT_CONFIG_VALUE_0')
+
+
+def child_helper_removal(words, environment=None):
+    """Return literal clone dispatch/removals, or None for other prefixes.
+
+    Any credential-helper context is safe to remove, never execute: the whole
+    indexed group must contain exactly that one entry. Persistent configuration,
+    transport, destination and Task checks still apply to the resulting clone.
+    """
+    args = list(words)
+    if not args or os.path.basename(args[0]) != 'env' or args[1:2] != ['-u']:
+        return None
+    expected = [part for name in CHILD_HELPER_REMOVALS for part in ('-u', name)]
+    if args[1:7] != expected or args[7:9] != ['git', 'clone']:
+        raise UnknownShape('unsupported child Git environment removals')
+    inherited = os.environ if environment is None else environment
+    if inherited.get('GIT_CONFIG_COUNT') != '1':
+        raise UnknownShape('child helper removal requires exactly one inherited indexed entry')
+    if not all(name in inherited for name in CHILD_HELPER_REMOVALS):
+        raise UnknownShape('child helper removal needs a complete indexed entry')
+    if any(name.startswith(('GIT_CONFIG_KEY_', 'GIT_CONFIG_VALUE_'))
+           and name not in CHILD_HELPER_REMOVALS for name in inherited):
+        raise UnknownShape('additional indexed Git entries are unresolved')
+    key = inherited['GIT_CONFIG_KEY_0']
+    if not re.fullmatch(r'credential(?:\.[^\x00-\x20]+)?\.helper', key, re.I):
+        raise UnknownShape('only an inherited credential helper may be removed')
+    return args[7:], CHILD_HELPER_REMOVALS
 
 
 def shell_tokens(command: str, *, inspection_comments=False, inspection_expansions=False, quoted_words=None, assignment_words=None) -> list[tuple[str, bool, tuple[int, ...]]]:
@@ -536,13 +567,17 @@ def _git_toplevel(directory: str) -> str:
 
 
 
+_git_bootstrap_environment = ContextVar("git_bootstrap_environment", default=None)
+
+
 def _git_bootstrap_read(arguments: list[str], config: tuple = (), *, git_dir: str | None = None):
     """Fixed read-only Git lookup without enclosing-repository configuration."""
     import tempfile
     try:
         with tempfile.TemporaryDirectory(prefix='git-bootstrap-read-') as scratch:
             neutral = os.path.realpath(scratch)
-            environment = dict(os.environ)
+            selected = _git_bootstrap_environment.get()
+            environment = dict(os.environ if selected is None else selected)
             environment['GIT_CEILING_DIRECTORIES'] = os.path.dirname(neutral)
             if config:
                 environment['GIT_CONFIG_COUNT'] = str(len(config))
@@ -681,6 +716,25 @@ def _git_clone_effective_source(source: str, *, git_dir: str | None = None) -> s
 
 
 def _git_bootstrap_destination(operation: dict) -> str | None:
+    """Inspect bootstrap using exactly its modeled child environment."""
+    environment = dict(os.environ)
+    removals = operation.get("child_environment_unset", ())
+    if removals:
+        words = ["env", *[part for name in removals for part in ("-u", name)],
+                 "git", *operation["args"]]
+        child = child_helper_removal(words, environment)
+        if child is None:
+            raise UnknownShape("unproved child Git environment")
+        for name in removals:
+            environment.pop(name)
+    token = _git_bootstrap_environment.set(environment)
+    try:
+        return _git_bootstrap_destination_in_environment(operation, environment)
+    finally:
+        _git_bootstrap_environment.reset(token)
+
+
+def _git_bootstrap_destination_in_environment(operation: dict, environment: dict) -> str | None:
     """Bound fresh repository creation; all other Git mutations keep toplevel ownership.
 
     No candidate command executes here. Creation cannot borrow a containing
@@ -695,7 +749,7 @@ def _git_bootstrap_destination(operation: dict) -> str | None:
                    'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES',
                    'GIT_CONFIG', 'GIT_CONFIG_PARAMETERS',
                    'GIT_CONFIG_COUNT', 'GIT_EXEC_PATH', 'GIT_SSH', 'GIT_SSH_COMMAND'}
-    if any(name in os.environ for name in redirecting):
+    if any(name in environment for name in redirecting):
         raise UnknownShape('environment-dependent Git bootstrap targeting is unresolved')
     cwd = operation['cwd']
     if not os.path.isdir(cwd):
@@ -740,7 +794,7 @@ def _git_bootstrap_destination(operation: dict) -> str | None:
     if not empty_template:
         template = _git_bootstrap_read(['config', '--path', '--get', 'init.templateDir'])
         template_value = template.stdout[:-1] if template.stdout.endswith(b'\n') else template.stdout
-        if template.returncode not in {0, 1} or template_value != b'' or 'GIT_TEMPLATE_DIR' in os.environ:
+        if template.returncode not in {0, 1} or template_value != b'' or 'GIT_TEMPLATE_DIR' in environment:
             raise UnknownShape('configured Git bootstrap template has unmodeled write aliases; use --template= for this invocation')
     if command == 'init':
         if len(operands) > 1:
@@ -2907,6 +2961,13 @@ def _action(command: str, cwd: str) -> dict:
             binding = value
         if not args:
             raise UnknownShape("missing command")
+        child_git = child_helper_removal(args)
+        child_unsets = child_git[1] if child_git is not None else ()
+        if child_git is not None:
+            if any(arg_globs[:7]):
+                raise UnknownShape("expanded child environment removal is unresolved")
+            args = child_git[0]
+            arg_globs = arg_globs[7:]
         if arg_globs[0]:
             raise UnknownShape('globbed command requires an explicit executable')
         if args[0] == "cd":
@@ -3039,6 +3100,8 @@ def _action(command: str, cwd: str) -> dict:
                 # A valid task does not turn an unresolved alias into authority.
                 from git_command import prefix
                 operation = prefix(args, local)
+                if operation and child_unsets:
+                    operation["child_environment_unset"] = child_unsets
                 if not operation:
                     raise UnknownShape("unsupported Git mutation options")
                 if any(_long_option_matches(a, ('--textconv', '--ext-diff', '--exec', '--open-files-in-pager',
