@@ -1288,6 +1288,10 @@ def reader(args: list[str]) -> bool:
             return False
         return _options(rest[1:], flags={"--all", "--outdated", "--uptodate", "--editable", "--local", "--user", "--not-required", "--include-editable", "--exclude-editable", "--pre", "--files", "-f", "-v", "--verbose", "-q", "--quiet", "--disable-pip-version-check", "--no-cache-dir"}, values={"--format", "--exclude", "--path"}, maximum=0 if rest[0] == "check" else None)
     if cmd == "git":
+        # Global version inspection is repository-independent; do not require
+        # a Git root just because this is a git-prefixed command.
+        if rest == ["--version"]:
+            return True
         while rest:
             if rest[0] == "--no-optional-locks":
                 rest = rest[1:]  # Inert global flag, never a mutation exemption.
