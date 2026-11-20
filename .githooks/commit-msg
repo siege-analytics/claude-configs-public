@@ -1,8 +1,9 @@
 #!/bin/bash
 # Native git commit-msg hook for claude-configs-public.
 #
-# Enforces Self-Review trailers and ticket references on all commits
-# regardless of execution environment (Craft Agent, Claude Code, manual).
+# Enforces no Co-Authored-By trailers, Self-Review trailers and ticket
+# references on all commits regardless of execution environment (Craft Agent,
+# Claude Code, manual).
 #
 # This is the Layer 3 enforcement referenced in self-review/SKILL.md's
 # "Cross-environment enforcement" section. It fires for all push sources
@@ -32,6 +33,14 @@ COMMIT_MSG=$(cat -- "$COMMIT_MSG_FILE")
 
 # Parse trailers from the commit message.
 TRAILERS=$(echo "$COMMIT_MSG" | git interpret-trailers --parse 2>/dev/null || true)
+
+# Enforce the no-co-author rule against the final message file, so `git commit
+# -F`, editor messages and other non-literal message sources cannot bypass the
+# early PreToolUse scan. No person or tool gets a Co-Authored-By exception.
+if printf '%s\n' "$COMMIT_MSG" | grep -qiE '^[[:space:]]*Co-Authored-By[[:space:]]*:'; then
+    echo "BLOCKED: commit messages may not contain any Co-Authored-By trailer." >&2
+    exit 1
+fi
 
 # Machine-compute the minimum review tier from staged paths. A declaration may
 # escalate but never downgrade. Fail closed when the policy/helper is absent.

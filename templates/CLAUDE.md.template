@@ -45,7 +45,7 @@ Use a conversational yet substantive voice in all output (commits, PRs, comments
 Never include AI assistant attribution in any output:
 - No "Generated with Claude Code" or similar
 - No "Created with [tool name]" or similar
-- No "Co-Authored-By: Claude" in commits
+- No `Co-Authored-By` trailer of any kind in commits
 - Remove any such attribution if found in existing code
 
 ### 5. Test Before Presenting
@@ -65,7 +65,7 @@ If stuck or unable to solve something:
 ## Attribution Policy
 
 **NEVER** include AI assistant attribution in commits, PRs, issues, comments, or any public-facing content. This includes:
-- No `Co-Authored-By: Claude` or similar lines in commit messages
+- No `Co-Authored-By` trailer of any kind in commit messages
 - No "Created with [tool name]" phrasing anywhere
 - No "Generated with [tool name]" in PR descriptions
 - No AI assistant mentions in issue comments or documentation

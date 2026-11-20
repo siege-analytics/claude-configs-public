@@ -1,6 +1,6 @@
 # Hooks
 
-Claude Code hooks that enforce the rules described in the skills.
+Claude Code and native Git hooks that enforce the rules described in the skills.
 Skills are advisory — they tell the agent what to do. Hooks are
 mandatory — they block the agent when it tries to break a rule.
 
@@ -13,7 +13,8 @@ behavior; the skill explains the correct behavior.
 |------|----------|--------|
 | `git/branch-guard.sh` | develop-guard, branch, commit (step 0) | Commits to main, develop, master, staging |
 | `git/ticket-required.sh` | commit (ticket enforcement) | Modeled direct literal commits whose explicit message lacks a ticket reference after Git's configured comment cleanup; scissors truncates only when editing. The bounded cat-substitution form is recognized only outside shell quotes. Indeterminate messages, invalid sources, and the known large-multiline limit fail closed. |
-| `git/no-attribution.sh` | commit (attribution policy), all CLAUDE.md | Commits with AI/agent attribution |
+| `git/no-attribution.sh` | commit (early attribution check), all CLAUDE.md | Literal commit commands with a `Co-Authored-By` trailer or AI/agent attribution |
+| `.githooks/commit-msg` | native Git commit-msg | Any final commit message containing a `Co-Authored-By` trailer, including `git commit -F` and editor messages |
 | `git/no-sensitive-files.sh` | commit (sensitive files) | Staging .env, credentials, keys |
 | `git/no-broad-staging.sh` | commit (staging patterns) | `git add -A`, `git add .`, `git add --all` |
 | `git/self-review.sh` | `skills/self-review/SKILL.md`, `feedback_self_code_review` memory | `git push`, `gh pr create`, `gh pr merge` when latest commit lacks `Self-Review:` / `Self-Review-Source:` trailers, or the source artifact lacks required sections. v1.1 includes Goal-source mtime check. v2 follow-ups tracked in the skill. See skill's "Known limitations" section for documented recoverable FPs (chained `git commit && git push`, echo-string substring match, multi-statement `cd`). |

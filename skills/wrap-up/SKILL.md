@@ -192,7 +192,7 @@ These metrics are diagnostic aids, not enforcement gates.
 
 ## Attribution policy
 
-**NEVER** include AI or agent attribution in commits, documentation updates, or any content produced during wrap-up. No "Generated with Claude Code", "Made with Cursor", "Built with Codex", Co-Authored-By lines referencing AI tools, or any other AI/agent markers.
+**NEVER** include AI or agent attribution in commits, documentation updates, or any content produced during wrap-up. No `Co-Authored-By` trailer of any kind, "Generated with Claude Code", "Made with Cursor", "Built with Codex", or other AI/agent markers.
 
 ## Checklist
 

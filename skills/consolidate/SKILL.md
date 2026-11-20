@@ -122,7 +122,7 @@ After consolidation:
 
 ## Attribution policy
 
-**NEVER** include AI or agent attribution in consolidated documentation, commits, or any content produced. No "Generated with Claude Code", "Made with Cursor", "Built with Codex", Co-Authored-By lines referencing AI tools, or any other AI/agent markers.
+**NEVER** include AI or agent attribution in consolidated documentation, commits, or any content produced. No `Co-Authored-By` trailer of any kind, "Generated with Claude Code", "Made with Cursor", "Built with Codex", or other AI/agent markers.
 
 ## Notes
 

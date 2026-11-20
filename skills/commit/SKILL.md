@@ -354,7 +354,7 @@ If it was already committed, remove it from history and rotate the credential im
 # Attribution policy
 
 **NEVER** include AI or agent attribution in commit messages. This includes:
-- No `Co-Authored-By: Claude`, `Co-Authored-By: Cursor`, `Co-Authored-By: Copilot`, or similar lines
+- No `Co-Authored-By` trailer of any kind
 - No "Generated with Claude Code", "Made with Cursor", "Built with Codex", or any AI tool mentions
 - No `🤖`, `[bot]`, or other markers that signal AI involvement
 - No attribution to any AI assistant, code generation tool, or agent framework
