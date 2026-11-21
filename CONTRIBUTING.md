@@ -229,7 +229,7 @@ When writing a new skill or editing one:
 - **Reference other skills by slug.** Never path. The build handles paths.
 - **Keep cross-links to a minimum.** Each cross-link is a maintenance edge; only add one if loading the linked skill is genuinely useful in this skill's context.
 - **Add edge-case checks** when the skill performs work -- see `[skill:code-review]` §1 for the universal edge-case checklist.
-- **No AI/agent attribution** in commits, PR descriptions, skill body, or anywhere else user-visible. See `[rule:output]`.
+- **No co-author trailers or AI/agent attribution** in commits, PR descriptions, skill body, or anywhere else user-visible. See `[rule:output]`.
 
 ## Skill validation
 

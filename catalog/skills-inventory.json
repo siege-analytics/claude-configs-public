@@ -4905,10 +4905,10 @@
     },
     {
       "canonical_source": "skills/_output-rules.md",
-      "characters": 7555,
-      "content_sha256": "f1d822a5a28133bd8b387e837aa5eb1b8d33d05f9ebc4cb8eab4d5c8d4065f66",
+      "characters": 7603,
+      "content_sha256": "35c575bef885b101af5a855f94b8122269b84110ff7295fa97531d278ab9901a",
       "description": "unknown",
-      "estimated_tokens": 1889,
+      "estimated_tokens": 1901,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_output-rules.md",
@@ -9312,10 +9312,10 @@
     },
     {
       "canonical_source": "skills/commit/SKILL.md",
-      "characters": 23740,
-      "content_sha256": "074fdf5eb3463dfa7d1a747502372e1f4f2deec2331f9d9eb1ac9f6368780fc4",
+      "characters": 23681,
+      "content_sha256": "4872013d2db889fe34545a63121cb42b02a70d890af2006fc75313d84f4f3bc0",
       "description": "Create coherent reviewed commits that explain the change and reference the motivating task.",
-      "estimated_tokens": 5935,
+      "estimated_tokens": 5921,
       "frontmatter_name": "commit",
       "generated_outputs": [
         "dist/nested/skills/commit",
@@ -9524,10 +9524,10 @@
     },
     {
       "canonical_source": "skills/consolidate/SKILL.md",
-      "characters": 4443,
-      "content_sha256": "3d4c92d3ba85b656a8f4f1c50ca0c6fb451845446175fc2541c684aaa6063586",
+      "characters": 4434,
+      "content_sha256": "a975e3bc5e4a2a9d64aafd510aed7d79f757dcf92ca734cc7c662a635a991de5",
       "description": "Find and consolidate redundant documentation. Identifies duplicates, moves canonical content to docs/, replaces copies with links.",
-      "estimated_tokens": 1111,
+      "estimated_tokens": 1109,
       "frontmatter_name": "consolidate",
       "generated_outputs": [
         "dist/nested/skills/consolidate",
@@ -9567,10 +9567,10 @@
     },
     {
       "canonical_source": "skills/create-pr/SKILL.md",
-      "characters": 15405,
-      "content_sha256": "003c4b7645419c86257e7829d248028a3be98fbce1ca8d528e37d6e7c2cf4ee4",
+      "characters": 15853,
+      "content_sha256": "d52306b2c823ef3f3bb2b05080d65009cb63ecf95280078815a5fe88b56cb93c",
       "description": "Create a pull request with structured description, linked tickets, and commit narrative. Enforces bidirectional linking.",
-      "estimated_tokens": 3852,
+      "estimated_tokens": 3964,
       "frontmatter_name": "create-pr",
       "generated_outputs": [
         "dist/nested/skills/create-pr",
@@ -9598,7 +9598,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 384,
+      "lines": 386,
       "owner": [
         "unknown"
       ],
@@ -13060,10 +13060,10 @@
     },
     {
       "canonical_source": "skills/wrap-up/SKILL.md",
-      "characters": 9001,
-      "content_sha256": "cda15846a287ff5570c3d2bd39c876b18b1634762b224cba60e667867eb9ebcc",
+      "characters": 8992,
+      "content_sha256": "79a257993587303599a3b31be627f8eb1f11df61e4b7d967eaf97601bef486cb",
       "description": "End-of-session cleanup that commits changes, sweeps for LESSONS.md ledger entries, and updates README/ROADMAP/CLAUDE.md. Use when finishing work.",
-      "estimated_tokens": 2251,
+      "estimated_tokens": 2248,
       "frontmatter_name": "wrap-up",
       "generated_outputs": [
         "dist/nested/skills/wrap-up",
@@ -13114,9 +13114,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2460849,
+    "characters": 2461268,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 615288,
+    "estimated_tokens": 615393,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13137,7 +13137,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1064455
+      "unclassified": 1064874
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13149,7 +13149,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 266154
+      "unclassified": 266259
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

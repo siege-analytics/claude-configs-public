@@ -3,7 +3,9 @@
 # Enforces: attribution policy (all CLAUDE.md files, commit skill)
 # Trigger: PreToolUse on Bash(git commit *)
 #
-# Blocks commits containing AI/agent attribution in the message.
+# Early check for prohibited attribution visible in a literal commit command.
+# The native .githooks/commit-msg hook checks the final message file, including
+# `git commit -F` and editor-supplied messages.
 
 set -uo pipefail
 source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
@@ -77,13 +79,7 @@ MESSAGE_AREA=$(echo "$COMMAND" | sed 's/.*git commit//')
 
 # Case-insensitive check for attribution patterns
 PATTERNS=(
-    'co-authored-by.*claude'
-    'co-authored-by.*cursor'
-    'co-authored-by.*copilot'
-    'co-authored-by.*anthropic'
-    'co-authored-by.*openai'
-    'co-authored-by.*codex'
-    'co-authored-by.*craft'
+    'co-authored-by'
     'generated with claude'
     'made with cursor'
     'built with codex'
@@ -95,10 +91,9 @@ PATTERNS=(
 for pattern in "${PATTERNS[@]}"; do
     if echo "$MESSAGE_AREA" | grep -iqE "$pattern"; then
         cat >&2 <<HOOKEOF
-COMMIT MESSAGE REJECTED: This commit command contains AI/agent attribution.
+COMMIT MESSAGE REJECTED: This commit command contains prohibited attribution.
 
-Remove any mention of Claude, Cursor, Copilot, Anthropic, OpenAI,
-Co-Authored-By lines referencing AI tools, or "Generated with" markers.
+Remove any Co-Authored-By trailer, AI/agent tool mention, or "Generated with" marker.
 
 Correct the message and retry the commit with this hook enabled.
 Continue other authorized implementation, design and verification; this
