@@ -126,6 +126,14 @@ else
     printf '  PASS: no-attribution catches attribution in a quoted message\n'; pass=$((pass + 1))
 fi
 
+if attr_payload 'git commit -m "docs: clarify author
+
+Co-Authored-By: Human Collaborator <person@example.com>"' | bash "$GUARDS/no-attribution.sh" >/dev/null 2>&1; then
+    printf '  FAIL: no-attribution ALLOWED a human co-author trailer\n'; fail=$((fail + 1))
+else
+    printf '  PASS: no-attribution rejects any co-author trailer\n'; pass=$((pass + 1))
+fi
+
 if attr_payload 'gh issue create --body "docs about git commit and Claude Code"' | bash "$GUARDS/no-attribution.sh" >/dev/null 2>&1; then
     printf '  PASS: no-attribution ignores a non-commit that mentions both\n'; pass=$((pass + 1))
 else

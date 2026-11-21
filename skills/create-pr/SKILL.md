@@ -342,9 +342,11 @@ or request labels from a host that does not provide them.
 **NEVER** include AI or agent attribution in PR titles, descriptions, or metadata. This includes:
 - No "Generated with Claude Code", "Made with Cursor", "Built with Codex", or any AI tool mentions
 - No `🤖`, `[bot]`, or other markers that signal AI involvement
-- No `Co-Authored-By` lines referencing AI tools in the merge commit
+- No `Co-Authored-By` trailer of any kind in the merge commit
 - No attribution to any AI assistant, code generation tool, or agent framework
 - This applies to the title, description body, commit table, and any comments on the PR
+
+Before merging, inspect the exact merge method and resulting message. Do not use a squash operation that would synthesize a `Co-Authored-By` trailer; choose a supported merge/rebase path that preserves the no-trailer rule. If an owned unpublished commit has such a trailer, continue the authorized source work and repair that candidate history before publication. Never turn the repair into a reason to stop the task or rewrite protected/shared history.
 
 # Platform support: GitHub vs GitLab
 

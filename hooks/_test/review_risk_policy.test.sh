@@ -20,6 +20,19 @@ Self-Review: focused diff checked
 EOF
 run_msg "$TMP/a.msg" >/dev/null 2>&1 && ok "Tier A accepts short review without artifact" || bad "Tier A short review blocked"
 git -C "$R" commit --no-verify -q -F "$TMP/a.msg"
+cat > "$TMP/human-coauthor.msg" <<'EOF'
+docs: clarify authorship [task: authorized fixture]
+
+Review-Tier: A
+Self-Review: focused policy check
+Co-Authored-By: Human Collaborator <person@example.com>
+EOF
+if run_msg "$TMP/human-coauthor.msg" >/dev/null 2>&1; then bad "native commit-msg accepted a human co-author trailer"; else ok "native commit-msg rejects any co-author trailer from the final message file"; fi
+out=$(cd "$R" && bash .githooks/commit-msg --selected "$TMP/human-coauthor.msg" 2>&1); rc=$?
+if [[ $rc -ne 0 && "$out" == *"commit messages may not contain any Co-Authored-By trailer"* ]]; then ok "selected commit-msg rejects co-author trailers before policy delegation"; else bad "selected commit-msg did not reject a co-author trailer"; fi
+python3 -c 'import sys; sys.stdout.write("x" * 2000000)' >> "$TMP/human-coauthor.msg"
+out=$(run_msg "$TMP/human-coauthor.msg" 2>&1); rc=$?
+if [[ $rc -ne 0 && "$out" == *"commit messages may not contain any Co-Authored-By trailer"* ]]; then ok "large message rejects early co-author trailer without a pipe race"; else bad "large message bypassed the co-author trailer rejection"; fi
 mkdir -p "$R/skills/x"; printf 'behavior\n' > "$R/skills/x/SKILL.md"; git -C "$R" add skills/x/SKILL.md
 cat > "$TMP/low.msg" <<'EOF'
 feat: skill
