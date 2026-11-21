@@ -11447,6 +11447,7 @@
         "hooks/_test/registered_receipt_provider.test.sh",
         "hooks/_test/registered_scanner_execution.test.sh",
         "hooks/_test/resolve_project.test.sh",
+        "hooks/_test/review_risk_policy.test.sh",
         "hooks/_test/scanner_execution.py",
         "hooks/_test/scanner_execution.test.sh",
         "hooks/_test/scoped_test_evidence.py",

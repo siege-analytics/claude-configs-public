@@ -19,28 +19,33 @@
 
 set -euo pipefail
 
+reject_coauthor_trailer() {
+    local message_file="$1"
+    if grep -qiE '^[[:space:]]*Co-Authored-By[[:space:]]*:' < "$message_file"; then
+        echo "BLOCKED: commit messages may not contain any Co-Authored-By trailer." >&2
+        return 1
+    fi
+}
+
 # Selected registration supplies all policy authority inputs as a host binding.
-# The remaining body is the retained repository compatibility wrapper.
+# Enforce authorship against the final message file before delegating so the
+# selected path cannot bypass the repository-wide rule.
 if [[ "${1:-}" == "--selected" && $# -ge 2 ]]; then
     shift
+    if [[ $# -eq 1 ]]; then
+        reject_coauthor_trailer "$1" || exit $?
+    fi
     SELECTED_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
     exec python3 -B "$SELECTED_ROOT/bin/native_git.py" commit-msg -- "$@"
 fi
 
 [[ $# -eq 1 ]] || { echo "commit-msg: expected one message file" >&2; exit 2; }
 COMMIT_MSG_FILE="$1"
+reject_coauthor_trailer "$COMMIT_MSG_FILE" || exit $?
 COMMIT_MSG=$(cat -- "$COMMIT_MSG_FILE")
 
 # Parse trailers from the commit message.
 TRAILERS=$(echo "$COMMIT_MSG" | git interpret-trailers --parse 2>/dev/null || true)
-
-# Enforce the no-co-author rule against the final message file, so `git commit
-# -F`, editor messages and other non-literal message sources cannot bypass the
-# early PreToolUse scan. No person or tool gets a Co-Authored-By exception.
-if printf '%s\n' "$COMMIT_MSG" | grep -qiE '^[[:space:]]*Co-Authored-By[[:space:]]*:'; then
-    echo "BLOCKED: commit messages may not contain any Co-Authored-By trailer." >&2
-    exit 1
-fi
 
 # Machine-compute the minimum review tier from staged paths. A declaration may
 # escalate but never downgrade. Fail closed when the policy/helper is absent.
