@@ -4081,10 +4081,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 7095,
-      "content_sha256": "0e55ebd4d3794daeb7af48e1f0192af19750f3137e9e26bbca6a992cbd37d6f6",
+      "characters": 7294,
+      "content_sha256": "1f4d111706997b7bba869a7d93afb629bcecf57e2297aeb49b3061ac12820336",
       "description": "unknown",
-      "estimated_tokens": 1774,
+      "estimated_tokens": 1824,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -13115,9 +13115,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2463493,
+    "characters": 2463692,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 615949,
+    "estimated_tokens": 615999,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13138,7 +13138,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1067099
+      "unclassified": 1067298
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13150,7 +13150,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 266815
+      "unclassified": 266865
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
