@@ -20,30 +20,49 @@ Before choosing a repair, read [host controls and deployment navigation](host-co
 ## Duration checkpoints and session renewal
 
 Workspace Config owns session health and renewal; hubs report evidence about
-their workers and TC keeps delivery ownership current. Choose a checkpoint
-interval **D** appropriate to the role and expected work, using an existing
-supported health sweep or return event where possible. Record the next check;
-do not create a separate timer per session by default. Reaching D, a large
-context, or a quiet interval triggers inspection, not automatic replacement.
+their workers and TC keeps delivery ownership current. Choose a renewal interval
+**D** appropriate for the role and expected work, using an existing supported
+health sweep or return event. Unless the role sets another interval, use **D =
+4 hours of active session time**. Workspace Config must include active sessions
+in a recurring health sweep at least hourly; do not create a separate timer per
+session by default. A checkpoint is an execution trigger, not a reason to wait
+for an operator prompt.
 
-At a checkpoint compare the unfinished objective with actual recent tools and
-results, current instructions, pending messages/tools and the event that will
-resume the work. A Working label or a status summary alone is not progress.
-Then choose the smallest effective action:
+At each checkpoint compare the unfinished objective with actual recent tools
+and results, current instructions, pending messages/tools and the event that
+will resume the work. A Working label or status summary alone is not progress.
+Then keep the mission moving while applying these lifecycle rules:
 
-- **Healthy work or a real dependency:** retain the owner and its specific
-  return event. Continue independent eligible work; do not restart useful work
-  because its age crossed D.
+- **D reached with active work:** start a successor handoff as routine
+  maintenance. The predecessor keeps its current ownership and continues
+  eligible work until the successor has accepted the handoff and produced a
+  useful, non-overlapping turn. Transfer ownership exactly once before the
+  successor writes, reconcile pending operations and return routes, then retire
+  the predecessor. Do not wait for context failure
+  or an operator acknowledgment.
+- **Context pressure reaches the host's renewal warning:** start that same
+  handoff immediately rather than waiting for D. If the host exposes no
+  warning, use 75% of usable context as the renewal threshold. Include the
+  context evidence and a compact, durable checkpoint so the successor starts
+  with room to work.
+- **No active work or real dependency:** mark the session and any completed,
+  duplicate or superseded children as archive candidates after verifying that
+  no open task, pending return, live operation or required audit history still
+  depends on them. Preserve the transcript and durable handoff; do not leave
+  completed children attached as if they still own work.
 - **Missing wake-up or unnecessary stop:** deliver the missing result, correct
   the mistaken restriction, or route the next concrete step under the existing
-  grant. A fresh session would inherit the same problem unless it is repaired.
-- **Evidence of context degradation:** when repeated stale-state decisions,
-  lost objectives or unrecoverable context pressure persist after a bounded
-  refresh, use the successor procedure below. Include the observed failure and
-  current canonical instructions so the successor does not inherit the error.
+  grant. Do not use a fresh session to avoid repairing a failure that it would
+  inherit.
 - **Credential/configuration failure or an uncertain live mutation:** use the
   corresponding diagnosis below. Respawning with the same expired connection
   is not recovery; replacement does not settle an operation's unknown outcome.
+
+Use the host's supported trigger for D (health sweep, scheduled check or return
+event) and verify that it actually runs. If the host cannot schedule checks,
+Workspace Config must keep D in its normal recurring workspace sweep and act
+on it there; do not claim automatic renewal until a real check and successor
+handoff have been observed. Renewal must not interrupt unrelated mission work.
 
 For renewal, save the unfinished outcome, next executable step, task/board
 ownership, exact source and evidence references, real holds and pending
@@ -130,16 +149,15 @@ A minimal respawn prompt is a liability. Include, at minimum:
 
 ## Archiving
 
-Retire the predecessor only after the renewal conditions above are met:
-durable handoff, settled concurrent ownership, and a successor that accepts
-the unfinished objective and produces a useful turn. An authorized steward or
-verified supervision job may perform that retirement under its existing grant;
-passing D or receiving a spawn acknowledgment is insufficient. Once the handoff
-is settled, apply the host's retirement/deletion-candidate label and retire the
-obsolete role assignment so it is visibly superseded; preserve transcript and
-handoff history rather than physically deleting it without authorization. For a wedged
-session, the host may refuse retirement while it is processing; reconcile the
-live operation through supported controls rather than working around refusal.
+Retire the predecessor only after the durable handoff is accepted, concurrent
+ownership is settled, and the successor has produced a useful turn. D or a
+context warning triggers this process but does not itself authorize deletion.
+Once the handoff is settled, apply the host's retirement/deletion-candidate
+label and retire the obsolete role assignment so it is visibly superseded;
+preserve transcript and handoff history rather than physically deleting it
+without authorization. For a wedged session, the host may refuse retirement
+while it is processing; reconcile the live operation through supported
+controls rather than working around refusal.
 
 ## Cross-references
 
