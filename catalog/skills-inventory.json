@@ -4081,10 +4081,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 6209,
-      "content_sha256": "3e45d3ee3c207d1b4ccfe9df19bc5aca26369733f5c4d4968581fb8564c4f522",
+      "characters": 7095,
+      "content_sha256": "0e55ebd4d3794daeb7af48e1f0192af19750f3137e9e26bbca6a992cbd37d6f6",
       "description": "unknown",
-      "estimated_tokens": 1553,
+      "estimated_tokens": 1774,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -4110,7 +4110,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 41,
+      "lines": 43,
       "owner": [
         "unknown"
       ],
@@ -6561,10 +6561,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 4558,
-      "content_sha256": "5aab794528cad2ee631840fab5da98d70a39f9c1f0cebeeb0a4784a032e43019",
+      "characters": 5897,
+      "content_sha256": "e802a40f696b6163e1dd5abe0b60e05e38dba0584cd0304784bf254c4455db39",
       "description": "Always-on mission focus, bounded initiative and coordinator follow-through for hubs and workers.",
-      "estimated_tokens": 1140,
+      "estimated_tokens": 1475,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -6587,7 +6587,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 31,
+      "lines": 35,
       "owner": [
         "unknown"
       ],
@@ -13115,9 +13115,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2461268,
+    "characters": 2463493,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 615393,
+    "estimated_tokens": 615949,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13138,7 +13138,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1064874
+      "unclassified": 1067099
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13150,7 +13150,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 266259
+      "unclassified": 266815
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
