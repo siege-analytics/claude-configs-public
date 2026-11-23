@@ -68,7 +68,7 @@ Files at the root of `skills/` named `_*-rules.md` are loaded by the resolver Co
 
 ## Rules bundle
 
-Craft Agents and Claude Code share the compact safety kernel and select detailed procedures on demand. Craft's Claude SDK backend supports prompt and tool hooks. Other backend capabilities must be verified in the installed host; a shared skills pane alone does not prove enforcement parity. See [Craft enforcement](craft-agent/README.md).
+Craft Agents and Claude Code share the compact safety kernel and select detailed procedures on demand. Craft 0.15.9 supports prompt hooks, but does not forward user `settings.json` tool hooks to the Claude SDK. Other backend capabilities must be verified in the installed host; a shared skills pane alone does not prove enforcement parity. See [Craft enforcement](craft-agent/README.md).
 
 The build also emits a compatibility **rules bundle**, concatenating the rule sources:
 
@@ -83,12 +83,16 @@ The bundle includes a version/commit banner and is regenerated on every build fr
 
 **Hosts without verified hooks:** skills and loaded rules are advisory. Mechanical blocking requires a verified tool hook, native Git hook, or protected provider check; document which mechanism was actually observed.
 
-Craft 0.15.6's Pi/Codex backend does not dispatch these Claude settings hooks.
-Shared skills therefore do not provide task-gate or mutation enforcement there.
-Use the Claude SDK backend when this hook enforcement is required; native Git
-hooks and provider protection remain separate controls. A newer host must pass
-the backend canary before being described as equivalent. Runtime artifact pins
-can be inspected without changing any approval:
+Craft 0.15.9 does not dispatch agent-event automation actions such as
+`PreToolUse`, and its Claude backend does not forward user `settings.json`
+tool hooks to the SDK (upstream issue [#921](https://github.com/craft-ai-agents/craft-agents-oss/issues/921)).
+Shared skills and successful router registration therefore do not establish
+tool-level task-gate or mutation enforcement in Craft, on either backend.
+Use native Git hooks and provider protection for enforceable mutation controls;
+describe any Craft tool hook as active only after a live exact-backend canary
+proves both allow and block behavior. A newer host must pass the same canary
+before being described as equivalent. Runtime artifact pins can be inspected
+without changing any approval:
 
 ```bash
 python3 scripts/canary/craft-backend-canary.py capture-runtime-pins
