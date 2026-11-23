@@ -80,6 +80,24 @@ This procedure does not itself install a scheduler or guarantee background
 execution. Verify the configured trigger and a real resulting check before
 claiming automatic supervision or renewal is active.
 
+### Transcript-size checkpoint
+
+Measure the stored `session.jsonl` size alongside model-context usage. Craft's
+documented Pi/Bun WebSocket implementation can reject logical messages above
+16 MiB even when the Node implementation permits 100 MiB. A large transcript
+may therefore break UI/session loading before the model reports context
+exhaustion. Use 8 MiB (half the smaller documented cap) as a proactive renewal
+threshold unless the host advertises a lower maximum; keep the evidence packet
+and successor prompt compact. A `sessions:getMessages` timeout (for example,
+`30000ms`) while opening a large session is a concrete retrieval failure
+signal: stop repeating full-history reloads and renew through supported session
+controls. The threshold is a conservative trigger, not a claim that every
+session load serializes the entire file or that every server uses Bun. Create a
+successor with the active objective, verified state, evidence paths, owners,
+real holds and return routes. Do not truncate or rewrite the predecessor
+transcript. Preserve it as the read-only record and retire it only after the
+successor has accepted the work and produced a useful turn.
+
 ## The three failure shapes
 
 Do not assume the shape from the error message. Confirm it from the transcript.
@@ -116,7 +134,7 @@ An archive refusal such as "currently processing a turn" reports a current host 
 
 1. **Do not read only the last line.** Read the last several non-error entries -- specifically the last *assistant* content before the error run began, not just the trailing error.
 2. **Look for an explicit statement of the real problem**, stated by the session itself shortly before it went quiet (an oversized-payload complaint, an "I don't have enough context to answer" admission, a mid-operation status line).
-3. **Compare transcript size/density against comparable healthy sessions** (same role, similar age). A session that has grown unusually large per-message relative to peers, especially one that is *already* a successor spawned because an earlier predecessor exhausted a context/quota budget, is a candidate for shape 2 (context exhaustion presenting as a generic error) even without an explicit "too large" message.
+3. **Compare transcript size/density against comparable healthy sessions** (same role, similar age). A session that has grown unusually large per-message relative to peers, especially one that is *already* a successor spawned because an earlier predecessor exhausted a context/quota budget, is a candidate for shape 2 (context exhaustion presenting as a generic error) even without an explicit "too large" message. Compare its byte size with the host's advertised WebSocket cap too; a transport-size failure can present as a generic disconnect even when model context remains available.
 4. **Check for an incomplete live mutation.** If the last coherent lines describe applying/writing/deploying a multi-step change and the count of "done" doesn't match the count "expected" (e.g. "all 5 objects match... applying now" followed by "all 4 objects applied"), the operationally important fact is the incomplete mutation, not the error label. The successor's first job is to verify actual live state against the intended end state -- not to blindly retry the operation, and not to assume nothing landed.
 5. **Check for a live tool-call loop** (see shape 3's signature) before concluding "just busy" or "just quiet."
 
