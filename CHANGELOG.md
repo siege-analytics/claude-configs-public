@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: operational session renewal and scheduled-run cleanup
+
+- Require a live, recurring health check to measure active duration and transcript size, complete the successor handoff when a threshold is reached, and verify actual completion rather than treating a scheduler launch or queued message as success.
+- Keep eligible renewal moving when a compound read is refused by using supported native session reads and routing the precise gate defect; never bypass the gate or let an unrelated scan failure suppress an already evidenced handoff.
+- Keep routine Workspace Config session maintenance under its existing role grant instead of inventing a business-task review gate for native session controls; retain live-operation and successor-acceptance checks.
+- Require per-run scheduled prompt sessions to record results, finish as `done`, receive the `delete-me` marker when no named owner action remains, and verify that the configured cleanup consumes the marker.
+
 ### Changed: proportionate task preparation and review (#1328)
 
 - Remove universal pre-edit investigation, pre-mortem, junior/senior and posted-artifact prerequisites. Keep actual task ownership, implementing status, physical scope and protected operation controls.

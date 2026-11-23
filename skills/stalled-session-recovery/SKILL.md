@@ -80,6 +80,57 @@ This procedure does not itself install a scheduler or guarantee background
 execution. Verify the configured trigger and a real resulting check before
 claiming automatic supervision or renewal is active.
 
+### Make the trigger operational
+
+Workspace Config owns closing this loop. A skill rule or an enabled schedule is
+not proof that renewal is running. In the target workspace, verify all of the
+following and repair a missing piece within the existing grant:
+
+1. One recurring health check is enabled and runs at least hourly. It measures
+   active time against **D** and the host's usable-context warning. On Craft
+   workspaces that persist readable `session.jsonl` files, it also measures
+   transcript bytes against the size threshold above. On other hosts, use the
+   strongest supported context metric and record when byte size is unavailable.
+   The check must reach the workspace's actual session inventory.
+2. Automation history shows a completed check and its result. A scheduler tick,
+   successful prompt-session creation, queued message, or `needs-review` status
+   alone proves dispatch, not inspection, handoff, or recovery.
+3. When a trigger is met, the check resumes the owning steward/hub and carries
+   out the successor handoff in this skill. Do not downgrade a measured size or
+   context trigger to a notification-only report because an unrelated scan,
+   gate, or owner callback failed. Use supported native session reads or a
+   narrower read-only inspection to establish the affected session's state;
+   route a genuine hook defect for repair while continuing decisions supported
+   by the evidence already obtained. Never bypass the gate or repeat an
+   unchanged refused command.
+4. A scheduled prompt that creates a separate session for each run must close
+   its own run. `done` means this inspection episode finished; it does not
+   claim the monitored mission is complete. After recording the result and
+   delivering any deduplicated notification or continuation, set the run to
+   `done` and mark it `delete-me`. Do not leave periodic runs in `needs-review`
+   while waiting for a peer to consume a queued message or resolve the larger
+   mission; keep that return in the existing durable task/ledger. Reserve
+   `needs-review` for a decision the operator must make before this run can
+   continue. Preserve the run transcript and durable result. Verify that the
+   configured cleanup process consumes the marker; marking a session is not
+   physical deletion.
+
+Routine workspace-session inspection and lifecycle work are part of Workspace
+Config's assigned maintenance role. Use the host's native session inventory,
+message, spawn, status, label and retirement controls within that role. Do not
+invent a business Task, review tier, posted artifact or operator GO as a
+prerequisite for those native maintenance actions. Keep genuine host checks,
+live-operation settlement, successor acceptance and role boundaries intact.
+When an unrelated file gate blocks a compound inventory command, use supported
+native session reads for the measured candidates and route the exact gate defect
+without making that repair a prerequisite for a qualifying handoff.
+
+If the host cannot inspect session size, preserve task ownership, start a
+successor, or retire a settled predecessor, identify that exact missing
+capability and route its repair to the owner. Do not report automatic renewal as
+active until a measured trigger has resulted in an accepted successor and a
+cleaned-up predecessor on the live host.
+
 ### Transcript-size checkpoint
 
 Measure the stored `session.jsonl` size alongside model-context usage. Craft's
