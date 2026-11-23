@@ -26,7 +26,7 @@ Example unacceptable: silence after the last substantive reply, with no signal o
 
 **session-coordination:3. Distinguish slow from stuck before escalating to "stuck."** Check the partner's current operation, actual tool/result delivery and last substantive progress through the host's supported observations. Timestamps, an alive SDK process, an Active/Working label or newly queued inbound messages alone do not prove that the operation is advancing. Slow processing of substantive content -- signoffs, file reads, considered replies -- is not stuckness. An observation timeout is not proof of termination: recheck the same operation or inspect other authoritative state before deciding on recovery.
 
-At a duration or context checkpoint, follow [skill:stalled-session-recovery]'s renewal procedure. Age triggers a health and progress review, not automatic replacement. If the session is healthy and advancing, renew its work episode in place. If evidence shows context degradation, first refresh the working context in the same session when supported; verify it retains the parent outcome, acceptance evidence, current owner, next action and actual holds. Replace the session only when in-place recovery fails or a concrete runtime failure makes continuation unreliable. Before a successor writes, transfer the baton and pending returns, verify its intended hierarchy, settle concurrent ownership, and preserve the predecessor until the successor accepts the work. A maintenance-episode renewal is not session recreation.
+At D with unfinished work, follow [skill:stalled-session-recovery]'s routine successor-handoff procedure even when the predecessor is healthy; the threshold is a lifecycle event, not evidence that the session is stuck. A host renewal warning or 75% of usable context triggers the same handoff sooner. Do not require an in-place refresh first. Inspect live operations so the handoff does not interrupt a mutation: the predecessor retains ownership and continues eligible work until the successor accepts the handoff and produces a useful, non-overlapping turn. Transfer ownership exactly once, preserve pending returns and intended hierarchy, settle concurrent writes before the successor acts, then retire the predecessor. If no unfinished work remains, set its terminal status and archive it instead of respawning it.
 
 Escalation language ("stuck," "hung," "death spiral") implies a specific failure shape -- session crash, provider hiccup, infinite loop -- that you should not name unless evidence matches. If control or result delivery is uncertain, apply [skill:stalled-session-recovery] before interrupting or starting a successor. Preserve the predecessor and settle concurrent ownership; neither a quiet interval nor an activity label authorizes duplicate work.
 
@@ -58,19 +58,19 @@ Before retirement, preserve only durable value: final findings, open risks, PR/t
 
 **A terminal run must not remain `todo` or `in-progress`.** Once the bounded result is recorded and its next owner is clear, set the CraftAgents session status to `done` when the bounded work is complete or transferred; use `needs-review` only when a named external owner action is genuinely required, and include the evidence and return condition. If eligible work remains, keep working or transfer it to an active successor; do not label an unfinished mission complete. Then archive the terminal run through the host's supported control so its transcript remains available without occupying the active workspace. A status change alone is not retirement, and archiving is not physical deletion.
 
-For a recurring automation or health sweep, treat each invocation as one bounded run. Keep one active owner for unfinished recurring work; do not create another run while the previous run still owns an unresolved result or pending return. After recording a completed or routed run, set its terminal status and archive it. The next scheduled invocation can then start with a clean checkpoint instead of inheriting a pile of Todo sessions.
+For a recurring automation or health sweep, treat each invocation as one bounded run. Its coordinator (the owning hub, or WC for a workspace-level sweep) records the result and pending return, sets the terminal status, then archives the run through the host's supported control. If the host refuses archival while the run is processing, record the exact session ID and terminal state for WC's next session-management sweep; WC archives it through the host after it reports idle. Do not create another run while the previous one owns an unresolved result or pending return. Once the result is terminal and its next owner is clear, deferred archival is cleanup, not a gate on independent work or the next non-overlapping invocation.
 
 Do not retire a spoke that still owns an unmerged PR, an unresolved blocker, pending CI/UAT, unique credentials/browser state, or evidence not yet copied into the ticket/plan/PR. If the spoke is noisy but still needed, narrow its brief or move it under a sub-manager instead of archiving it.
 
 **session-coordination:9. Check collaborators after handoffs; do not set-and-forget.** When you delegate review, implementation, verification, or investigation to another session, the delegation is not complete until you actively check the collaborator's status/result and either resume, redirect, retire, or report a bounded waiting state. Re-check after every material handoff, after any expected wait, and before making a decision that depends on collaborator output. Before saying a collaborator is done, stuck, paused, or safe to ignore, inspect both its current status and latest reply rather than relying on a prior message. If the operator asks about collaborator progress, inspect the collaborator immediately. Apply `[rule:tandem-agent]` for role boundaries and authorization before sending new work.
 
 For duration or context checkpoints, use [skill:stalled-session-recovery]'s
-session-renewal procedure. D triggers a health check, not an age-based respawn.
-Renew healthy work in place; refresh degrading context in place when supported;
-replace only after refresh fails or a concrete runtime fault prevents reliable
-continuation. WC coordinates session maintenance while the owning hub and TC
-preserve delivery ownership. Confirm successor acceptance and settled concurrent
-ownership before retiring a predecessor, without creating a fresh approval step.
+successor-handoff procedure. D triggers routine renewal of unfinished work even
+when the predecessor is healthy; a host warning or 75% of usable context triggers
+it sooner. Do not require in-place context refresh first. WC coordinates session
+maintenance while the owning hub and TC preserve delivery ownership. Confirm
+successor acceptance and settle concurrent operations before transferring
+ownership and retiring a predecessor, without creating a fresh approval step.
 
 ## Dispatch protocol
 
