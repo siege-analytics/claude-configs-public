@@ -5406,29 +5406,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/stalled-session-recovery",
           "file_count": 2,
-          "tree_sha256": "c2a14830a0a0360e1d9da25736f46eb2ffd65f081168bcf6cd4b65885ecd7b0c"
+          "tree_sha256": "468f354acdd635e8db0b39d87c12d7b4f8ded5dab9b88c004dece9025bb37e98"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/stalled-session-recovery",
           "file_count": 2,
-          "tree_sha256": "c2a14830a0a0360e1d9da25736f46eb2ffd65f081168bcf6cd4b65885ecd7b0c"
+          "tree_sha256": "468f354acdd635e8db0b39d87c12d7b4f8ded5dab9b88c004dece9025bb37e98"
         },
         "flat": {
           "destination": "dist/flat/skills/stalled-session-recovery",
           "file_count": 2,
-          "tree_sha256": "c2a14830a0a0360e1d9da25736f46eb2ffd65f081168bcf6cd4b65885ecd7b0c"
+          "tree_sha256": "468f354acdd635e8db0b39d87c12d7b4f8ded5dab9b88c004dece9025bb37e98"
         },
         "nested": {
           "destination": "dist/nested/skills/stalled-session-recovery",
           "file_count": 2,
-          "tree_sha256": "c2a14830a0a0360e1d9da25736f46eb2ffd65f081168bcf6cd4b65885ecd7b0c"
+          "tree_sha256": "468f354acdd635e8db0b39d87c12d7b4f8ded5dab9b88c004dece9025bb37e98"
         }
       },
       "canonical_source": "skills/stalled-session-recovery/SKILL.md",
       "kind": "skill",
       "slug": "stalled-session-recovery",
       "source_file_count": 2,
-      "source_tree_sha256": "11f71779d94d24ad41e31efdbb516c47d9a63eb159ad65cbba125848b07d256b"
+      "source_tree_sha256": "162de9dca5de8dafc2333bff1c120bf77382aa8840591c58eea6c1d1d5eb1dc9"
     },
     {
       "artifacts": {

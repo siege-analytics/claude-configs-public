@@ -95,9 +95,10 @@ Last few transcript entries alternate an operator/system retry ("try again") wit
 Every attempt fails identically, because the request itself cannot succeed, not because a shared resource is temporarily exhausted. Two common concrete causes, both observed producing a generic "rate limited"-shaped error in practice:
 
 - **Wrong model/connection pair for the account tier** -- e.g. a model listed as selectable for a connection but not actually supported for that specific account type. Every turn errors immediately, with no other activity in between.
+- **Missing or invalid provider authentication** -- the session cannot obtain credentials for its configured connection. Verify this through the host's supported connection-status control; do not diagnose from the generic error text alone. A successor configured with the same unauthenticated connection will fail the same way.
 - **Oversized single request** -- e.g. a large diff pushed as one API call. Look for the session's own words a few turns *before* the error run starts; a model that already said something like "the JSON body was too large for a single API call, I'll split this into multiple commits" and then never got the chance to is exactly this shape. Retrying the identical oversized request fails identically forever.
 
-**Fix:** inspect the host's supported configuration and retry controls. If an authorized in-place correction is supported, apply the bounded correction and observe a real successful turn. Do not retry the unchanged failing request. If the host cannot make the needed correction, use the successor procedure below with a working configuration and instructions to chunk oversized requests. Preserve the original objective, task state and specific correction.
+**Fix:** inspect the host's supported configuration, authentication status and retry controls. If an authorized in-place correction or credential refresh is available, apply it and observe a real successful turn. Otherwise select a verified authenticated provider that fits the task and the operator's constraints. If no such provider or supported re-authentication route is available, keep independent authorized work moving and route one precise owner re-auth action with the evidence and return path; do not retry the unchanged failing request, repeatedly spawn against it, transfer raw credentials, or declare the objective complete. For oversized requests, chunk the work before resuming. Preserve the original objective, task state and specific correction.
 
 ### 3. Wedged session (a stuck tool call, not a stuck request)
 
@@ -120,6 +121,8 @@ An archive refusal such as "currently processing a turn" reports a current host 
 ## Before respawning: check for a superseding session
 
 Do not respawn a stuck session's exact original task without checking whether it has already been picked up elsewhere. Search for other active sessions on the same ticket/scope (`list_sessions`, search by ticket number or topic). If one exists and is active, either skip the respawn (archive the stuck one only) or fold "your original task may be superseded, check with X first" into the respawn prompt instead of repeating stale instructions. This is the stalled-session-recovery instance of the hub federation query protocol (`hub/SKILL.md` Part 4) -- the same duplicate-work risk applies whether the collision is between two live hubs or between a stuck session's stale task and a newer session already covering it.
+
+If the failure involved provider authentication or model availability, check the candidate successor's connection and model through the host's supported status controls before sending its handoff. Do not start another session with the same failed configuration. If no working connection exists, keep the handoff and task visible, pursue independent work, and route the specific re-authentication action to the credential owner.
 
 Check the session's status against its bounded objective and durable handoff.
 A terminal status with a verified completed or transferred objective needs no
