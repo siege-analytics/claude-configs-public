@@ -115,6 +115,16 @@ following and repair a missing piece within the existing grant:
    configured cleanup process consumes the marker; marking a session is not
    physical deletion.
 
+Routine workspace-session inspection and lifecycle work are part of Workspace
+Config's assigned maintenance role. Use the host's native session inventory,
+message, spawn, status, label and retirement controls within that role. Do not
+invent a business Task, review tier, posted artifact or operator GO as a
+prerequisite for those native maintenance actions. Keep genuine host checks,
+live-operation settlement, successor acceptance and role boundaries intact.
+When an unrelated file gate blocks a compound inventory command, use supported
+native session reads for the measured candidates and route the exact gate defect
+without making that repair a prerequisite for a qualifying handoff.
+
 If the host cannot inspect session size, preserve task ownership, start a
 successor, or retire a settled predecessor, identify that exact missing
 capability and route its repair to the owner. Do not report automatic renewal as
