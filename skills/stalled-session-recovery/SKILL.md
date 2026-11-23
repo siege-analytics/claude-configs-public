@@ -20,30 +20,49 @@ Before choosing a repair, read [host controls and deployment navigation](host-co
 ## Duration checkpoints and session renewal
 
 Workspace Config owns session health and renewal; hubs report evidence about
-their workers and TC keeps delivery ownership current. Choose a checkpoint
-interval **D** appropriate to the role and expected work, using an existing
-supported health sweep or return event where possible. Record the next check;
-do not create a separate timer per session by default. Reaching D, a large
-context, or a quiet interval triggers inspection, not automatic replacement.
+their workers and TC keeps delivery ownership current. Choose a renewal interval
+**D** appropriate for the role and expected work, using an existing supported
+health sweep or return event. Unless the role sets another interval, use **D =
+4 hours of active session time**. Workspace Config must include active sessions
+in a recurring health sweep at least hourly; do not create a separate timer per
+session by default. A checkpoint is an execution trigger, not a reason to wait
+for an operator prompt.
 
-At a checkpoint compare the unfinished objective with actual recent tools and
-results, current instructions, pending messages/tools and the event that will
-resume the work. A Working label or a status summary alone is not progress.
-Then choose the smallest effective action:
+At each checkpoint compare the unfinished objective with actual recent tools
+and results, current instructions, pending messages/tools and the event that
+will resume the work. A Working label or status summary alone is not progress.
+Then keep the mission moving while applying these lifecycle rules:
 
-- **Healthy work or a real dependency:** retain the owner and its specific
-  return event. Continue independent eligible work; do not restart useful work
-  because its age crossed D.
+- **D reached with active work:** start a successor handoff as routine
+  maintenance. The predecessor keeps its current ownership and continues
+  eligible work until the successor has accepted the handoff and produced a
+  useful, non-overlapping turn. Transfer ownership exactly once before the
+  successor writes, reconcile pending operations and return routes, then retire
+  the predecessor. Do not wait for context failure
+  or an operator acknowledgment.
+- **Context pressure reaches the host's renewal warning:** start that same
+  handoff immediately rather than waiting for D. If the host exposes no
+  warning, use 75% of usable context as the renewal threshold. Include the
+  context evidence and a compact, durable checkpoint so the successor starts
+  with room to work.
+- **No active work or real dependency:** mark the session and any completed,
+  duplicate or superseded children as archive candidates after verifying that
+  no open task, pending return, live operation or required audit history still
+  depends on them. Preserve the transcript and durable handoff; do not leave
+  completed children attached as if they still own work.
 - **Missing wake-up or unnecessary stop:** deliver the missing result, correct
   the mistaken restriction, or route the next concrete step under the existing
-  grant. A fresh session would inherit the same problem unless it is repaired.
-- **Evidence of context degradation:** when repeated stale-state decisions,
-  lost objectives or unrecoverable context pressure persist after a bounded
-  refresh, use the successor procedure below. Include the observed failure and
-  current canonical instructions so the successor does not inherit the error.
+  grant. Do not use a fresh session to avoid repairing a failure that it would
+  inherit.
 - **Credential/configuration failure or an uncertain live mutation:** use the
   corresponding diagnosis below. Respawning with the same expired connection
   is not recovery; replacement does not settle an operation's unknown outcome.
+
+Use the host's supported trigger for D (health sweep, scheduled check or return
+event) and verify that it actually runs. If the host cannot schedule checks,
+Workspace Config must keep D in its normal recurring workspace sweep and act
+on it there; do not claim automatic renewal until a real check and successor
+handoff have been observed. Renewal must not interrupt unrelated mission work.
 
 For renewal, save the unfinished outcome, next executable step, task/board
 ownership, exact source and evidence references, real holds and pending
@@ -76,9 +95,10 @@ Last few transcript entries alternate an operator/system retry ("try again") wit
 Every attempt fails identically, because the request itself cannot succeed, not because a shared resource is temporarily exhausted. Two common concrete causes, both observed producing a generic "rate limited"-shaped error in practice:
 
 - **Wrong model/connection pair for the account tier** -- e.g. a model listed as selectable for a connection but not actually supported for that specific account type. Every turn errors immediately, with no other activity in between.
+- **Missing or invalid provider authentication** -- the session cannot obtain credentials for its configured connection. Verify this through the host's supported connection-status control; do not diagnose from the generic error text alone. A successor configured with the same unauthenticated connection will fail the same way.
 - **Oversized single request** -- e.g. a large diff pushed as one API call. Look for the session's own words a few turns *before* the error run starts; a model that already said something like "the JSON body was too large for a single API call, I'll split this into multiple commits" and then never got the chance to is exactly this shape. Retrying the identical oversized request fails identically forever.
 
-**Fix:** inspect the host's supported configuration and retry controls. If an authorized in-place correction is supported, apply the bounded correction and observe a real successful turn. Do not retry the unchanged failing request. If the host cannot make the needed correction, use the successor procedure below with a working configuration and instructions to chunk oversized requests. Preserve the original objective, task state and specific correction.
+**Fix:** inspect the host's supported configuration, authentication status and retry controls. If an authorized in-place correction or credential refresh is available, apply it and observe a real successful turn. Otherwise select a verified authenticated provider that fits the task and the operator's constraints. If no such provider or supported re-authentication route is available, keep independent authorized work moving and route one precise owner re-auth action with the evidence and return path; do not retry the unchanged failing request, repeatedly spawn against it, transfer raw credentials, or declare the objective complete. For oversized requests, chunk the work before resuming. Preserve the original objective, task state and specific correction.
 
 ### 3. Wedged session (a stuck tool call, not a stuck request)
 
@@ -101,6 +121,8 @@ An archive refusal such as "currently processing a turn" reports a current host 
 ## Before respawning: check for a superseding session
 
 Do not respawn a stuck session's exact original task without checking whether it has already been picked up elsewhere. Search for other active sessions on the same ticket/scope (`list_sessions`, search by ticket number or topic). If one exists and is active, either skip the respawn (archive the stuck one only) or fold "your original task may be superseded, check with X first" into the respawn prompt instead of repeating stale instructions. This is the stalled-session-recovery instance of the hub federation query protocol (`hub/SKILL.md` Part 4) -- the same duplicate-work risk applies whether the collision is between two live hubs or between a stuck session's stale task and a newer session already covering it.
+
+If the failure involved provider authentication or model availability, check the candidate successor's connection and model through the host's supported status controls before sending its handoff. Do not start another session with the same failed configuration. If no working connection exists, keep the handoff and task visible, pursue independent work, and route the specific re-authentication action to the credential owner.
 
 Check the session's status against its bounded objective and durable handoff.
 A terminal status with a verified completed or transferred objective needs no
@@ -130,16 +152,15 @@ A minimal respawn prompt is a liability. Include, at minimum:
 
 ## Archiving
 
-Retire the predecessor only after the renewal conditions above are met:
-durable handoff, settled concurrent ownership, and a successor that accepts
-the unfinished objective and produces a useful turn. An authorized steward or
-verified supervision job may perform that retirement under its existing grant;
-passing D or receiving a spawn acknowledgment is insufficient. Once the handoff
-is settled, apply the host's retirement/deletion-candidate label and retire the
-obsolete role assignment so it is visibly superseded; preserve transcript and
-handoff history rather than physically deleting it without authorization. For a wedged
-session, the host may refuse retirement while it is processing; reconcile the
-live operation through supported controls rather than working around refusal.
+Retire the predecessor only after the durable handoff is accepted, concurrent
+ownership is settled, and the successor has produced a useful turn. D or a
+context warning triggers this process but does not itself authorize deletion.
+Once the handoff is settled, apply the host's retirement/deletion-candidate
+label and retire the obsolete role assignment so it is visibly superseded;
+preserve transcript and handoff history rather than physically deleting it
+without authorization. For a wedged session, the host may refuse retirement
+while it is processing; reconcile the live operation through supported
+controls rather than working around refusal.
 
 ## Cross-references
 
