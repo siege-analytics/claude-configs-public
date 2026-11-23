@@ -44,29 +44,43 @@ before reading its policy. Managed hook commands remain in the workspace policy.
 The receipt records the exact router path and digest.
 
 Craft's SDK child was observed running under `workspace/sessions/<session-id>`.
-Workspace project
-settings alone therefore do not establish hook discovery. The user-level router
-supplies the supported Craft workspace route, and returns without running Craft
-policy outside Craft. Local policy/registration checks and live backend callback
-canaries are separate acceptance stages.
+Workspace project settings alone therefore do not establish hook discovery.
+The user-level router supplies a scoped route, but registration is only a
+configuration receipt; it does not prove that Craft invokes the callback. Craft
+0.15.9 documents that agent-event automations such as `PreToolUse` do not run
+actions, and issue #921 reports that user `settings.json` tool hooks are not
+forwarded to the Claude SDK. Treat `PreToolUse`, `PostToolUse`, and
+`PostToolUseFailure` in Craft as **unavailable until an exact-backend live
+canary proves delivery**. A `UserPromptSubmit` canary proves only prompt-hook
+delivery, not tool-hook delivery. Keep local policy/registration checks and live
+backend callback canaries as separate acceptance stages.
 
 ## How CA blocking works
 
-Craft Agent passes `UserPromptSubmit` and `PreToolUse` to the Claude Agent SDK.
-A `command` hook can hard-block by emitting a single `{"continue": false,
-"systemMessage": "..."}` object as its sole stdout. Mixed human text plus a
-later JSON line does not parse and does not block (verified in #416); the JSON
-must be the only thing on stdout.
+Craft has a `UserPromptSubmit` path, but Craft 0.15.9 does not run
+`PreToolUse`/`PostToolUse` agent-event automation actions, and Craft does not
+forward user `settings.json` tool hooks to the Claude Agent SDK (see upstream
+issue #921). Therefore a registered `PreToolUse` router is not a hard gate in
+Craft unless a live canary on the exact Craft version, backend, and connection
+proves that callback executes and blocks. Do not infer tool-hook support from
+the Claude SDK's standalone capabilities or from successful registration.
 
-`hooks/resolver/ca-enforcement-gate.sh` is that wrapper. It runs the advisory
-gates (`think-gate-guard`, `investigate-gate-guard`, `skill-enforcement-gate`),
-scans their output for blocking signals (STALE DESIGN, BLOCKED, missing
-investigation, and similar), and consults the manifest's per-runtime policy.
-These three prompt checks are advisory in Craft: hard-stopping the prompt
-would prevent the model from answering status questions or repairing missing
-artifacts. Action-level mutation/write gates and native Git hooks still enforce
-their own requirements. Explicit child `continue:false` decisions remain hard
-stops. The wrapper is always active; no opt-in switch is required.
+On a host that does invoke Claude command hooks, a hook can hard-block by
+emitting a single `{"continue": false, "systemMessage": "..."}` object as
+its sole stdout. Mixed human text plus a later JSON line does not parse and
+does not block (verified in #416); the JSON must be the only thing on stdout.
+
+`hooks/resolver/ca-enforcement-gate.sh` is that wrapper on a host that invokes
+the registered callback. It runs the advisory gates (`think-gate-guard`,
+`investigate-gate-guard`, `skill-enforcement-gate`), scans their output for
+blocking signals (STALE DESIGN, BLOCKED, missing investigation, and similar),
+and consults the manifest's per-runtime policy. These three prompt checks are
+advisory in Craft: hard-stopping the prompt would prevent the model from
+answering status questions or repairing missing artifacts. In Craft, do not
+claim action-level enforcement from this wrapper until its tool callback has
+passed a live block/allow canary. Native Git hooks and provider protections
+remain independently enforceable. Explicit child `continue:false` decisions
+are hard stops only when Craft actually invokes the callback.
 
 Craft's SDK child legitimately carries both Craft and Claude markers. When
 markers overlap, the wrapper corroborates a packaged macOS Craft ancestor using
@@ -79,12 +93,13 @@ The registry manifest must be installed at `hooks/enforcement-manifest.json`.
 The root copy is retained for audit consumers, but does not satisfy runtime
 lookup. The verifier checks this deployment boundary explicitly.
 
-CA does not expose a first-class end-of-turn or PreToolUse deny action through
-`automations.json` (only `prompt` and `webhook` actions). Push-time gates that
-need a hard block therefore run as native git `pre-push` hooks. Prompt-time
-diagnostics use the runtime-aware wrapper above. Verify each backend's actual
-tool-hook delivery separately; shared packaged files do not prove a live Codex
-or Claude backend invoked them.
+CA 0.15.9 does not execute agent-event automation actions such as `PreToolUse`
+or `Stop`; scripts/webhooks are available only on supported automation events.
+Push-time gates that need a hard block therefore run as native Git hooks.
+Prompt-time diagnostics use the runtime-aware wrapper only after a live
+`UserPromptSubmit` canary. Verify any tool-hook delivery separately; shared
+packaged files, router receipts, and SDK capability do not prove that Craft
+invoked the callback on either its Pi or Claude backend.
 
 ## Rules reach the model through CLAUDE.md
 
