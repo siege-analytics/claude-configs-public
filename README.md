@@ -68,7 +68,7 @@ Files at the root of `skills/` named `_*-rules.md` are loaded by the resolver Co
 
 ## Rules bundle
 
-Craft Agents and Claude Code share the compact safety kernel and select detailed procedures on demand. Craft's Claude SDK backend supports prompt and tool hooks. Other backend capabilities must be verified in the installed host; a shared skills pane alone does not prove enforcement parity. See [Craft enforcement](craft-agent/README.md).
+Craft Agents and Claude Code share the compact safety kernel and select detailed procedures on demand. Craft 0.15.9 supports prompt hooks, but does not forward user `settings.json` tool hooks to the Claude SDK. Other backend capabilities must be verified in the installed host; a shared skills pane alone does not prove enforcement parity. See [Craft enforcement](craft-agent/README.md).
 
 The build also emits a compatibility **rules bundle**, concatenating the rule sources:
 

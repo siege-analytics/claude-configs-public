@@ -70,17 +70,17 @@ emitting a single `{"continue": false, "systemMessage": "..."}` object as
 its sole stdout. Mixed human text plus a later JSON line does not parse and
 does not block (verified in #416); the JSON must be the only thing on stdout.
 
-`hooks/resolver/ca-enforcement-gate.sh` is that wrapper on a host that invokes
-the registered callback. It runs the advisory gates (`think-gate-guard`,
+`hooks/resolver/ca-enforcement-gate.sh` is wired only to `UserPromptSubmit` in
+Craft. It provides prompt-time diagnostics and does not gate tool events. It
+runs the advisory gates (`think-gate-guard`,
 `investigate-gate-guard`, `skill-enforcement-gate`), scans their output for
 blocking signals (STALE DESIGN, BLOCKED, missing investigation, and similar),
 and consults the manifest's per-runtime policy. These three prompt checks are
 advisory in Craft: hard-stopping the prompt would prevent the model from
-answering status questions or repairing missing artifacts. In Craft, do not
-claim action-level enforcement from this wrapper until its tool callback has
-passed a live block/allow canary. Native Git hooks and provider protections
-remain independently enforceable. Explicit child `continue:false` decisions
-are hard stops only when Craft actually invokes the callback.
+answering status questions or repairing missing artifacts. Craft 0.15.9 does
+not invoke the configured tool-event callbacks, so this wrapper supplies no
+tool-level enforcement in Craft. Native Git hooks and provider protections
+remain independently enforceable.
 
 Craft's SDK child legitimately carries both Craft and Claude markers. When
 markers overlap, the wrapper corroborates a packaged macOS Craft ancestor using
@@ -96,10 +96,10 @@ lookup. The verifier checks this deployment boundary explicitly.
 CA 0.15.9 does not execute agent-event automation actions such as `PreToolUse`
 or `Stop`; scripts/webhooks are available only on supported automation events.
 Push-time gates that need a hard block therefore run as native Git hooks.
-Prompt-time diagnostics use the runtime-aware wrapper only after a live
-`UserPromptSubmit` canary. Verify any tool-hook delivery separately; shared
-packaged files, router receipts, and SDK capability do not prove that Craft
-invoked the callback on either its Pi or Claude backend.
+The runtime-aware wrapper is registered only for `UserPromptSubmit` and
+provides prompt-time diagnostics; it does not gate tool events. Shared packaged
+files, router receipts, and SDK capability do not prove that Craft invoked a
+tool callback on either its Pi or Claude backend.
 
 ## Rules reach the model through CLAUDE.md
 

@@ -86,9 +86,10 @@ Measure the stored `session.jsonl` size alongside model-context usage. Craft's
 documented Pi/Bun WebSocket implementation can reject logical messages above
 16 MiB even when the Node implementation permits 100 MiB. A large transcript
 may therefore break UI/session loading before the model reports context
-exhaustion. Use 8 MiB (half the smaller documented cap) as a proactive renewal
-threshold unless the host advertises a lower maximum; keep the evidence packet
-and successor prompt compact. A `sessions:getMessages` timeout (for example,
+exhaustion. Use 8 MiB as the proactive renewal threshold by default. If the
+host advertises a lower maximum, set the threshold below that cap (for example,
+half the advertised maximum). Keep the evidence packet and successor prompt
+compact. A `sessions:getMessages` timeout (for example,
 `30000ms`) while opening a large session is a concrete retrieval failure
 signal: stop repeating full-history reloads and renew through supported session
 controls. The threshold is a conservative trigger, not a claim that every
