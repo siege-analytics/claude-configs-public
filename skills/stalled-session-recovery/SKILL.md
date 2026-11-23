@@ -34,14 +34,16 @@ will resume the work. A Working label or status summary alone is not progress.
 Then keep the mission moving while applying these lifecycle rules:
 
 - **D reached with active work:** start a successor handoff as routine
-  maintenance. The predecessor keeps its current ownership and continues
+  maintenance even when the predecessor is healthy; D is not a stuckness
+  judgment. The predecessor keeps its current ownership and continues
   eligible work until the successor has accepted the handoff and produced a
   useful, non-overlapping turn. Transfer ownership exactly once before the
   successor writes, reconcile pending operations and return routes, then retire
   the predecessor. Do not wait for context failure
   or an operator acknowledgment.
 - **Context pressure reaches the host's renewal warning:** start that same
-  handoff immediately rather than waiting for D. If the host exposes no
+  handoff immediately rather than waiting for D. Do not require an in-place
+  context refresh first. If the host exposes no
   warning, use 75% of usable context as the renewal threshold. Include the
   context evidence and a compact, durable checkpoint so the successor starts
   with room to work.
@@ -159,8 +161,10 @@ Once the handoff is settled, apply the host's retirement/deletion-candidate
 label and retire the obsolete role assignment so it is visibly superseded;
 preserve transcript and handoff history rather than physically deleting it
 without authorization. For a wedged session, the host may refuse retirement
-while it is processing; reconcile the live operation through supported
-controls rather than working around refusal.
+while it is processing. Record the exact session ID and terminal/ownership
+state for WC's next session-management sweep; WC archives it through the host
+after it reports idle. Keep unrelated work moving and do not work around the
+host refusal or make the completed task wait on archival.
 
 ## Cross-references
 
