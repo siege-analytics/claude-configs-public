@@ -25,8 +25,19 @@ cp "$ROOT/hooks/resolver/ca-enforcement-gate.sh" "$TMP/hooks/resolver/"
 cp "$ROOT/hooks/resolver/investigate-gate-guard.sh" "$TMP/hooks/resolver/" 2>/dev/null || true
 cp "$ROOT/hooks/resolver/skill-enforcement-gate.sh" "$TMP/hooks/resolver/" 2>/dev/null || true
 cp -R "$ROOT/hooks/lib/." "$TMP/hooks/lib/"
-cp "$ROOT/dist/craft-agent/enforcement-manifest.json" "$TMP/dist/craft-agent/" 2>/dev/null || {
-    echo "  [SKIP] no built manifest; run bin/build.py first"; exit 0; }
+# Build a disposable manifest fixture from the checked-in source contract. This
+# test exercises runtime resolution; the separate manifest test checks generated
+# artifact drift. It must not silently skip on a clean checkout with no dist/.
+python3 - "$ROOT" "$TMP/dist/craft-agent/enforcement-manifest.json" <<'PY'
+import importlib.util, json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location("build", root / "bin" / "build.py")
+mod = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = mod
+spec.loader.exec_module(mod)
+pathlib.Path(sys.argv[2]).write_text(json.dumps({"gates": mod.CA_ENFORCEMENT_GATES}))
+PY
+cp "$TMP/dist/craft-agent/enforcement-manifest.json" "$TMP/source-manifest.json"
 
 # Stub think-gate-guard to emit a block signal deterministically.
 cat > "$TMP/hooks/resolver/think-gate-guard.sh" <<'EOF'
@@ -82,7 +93,7 @@ missing_out="$(run_ca CCP_ENFORCEMENT_MANIFEST=/nonexistent/x.json CRAFT_RPC_POR
 echo "$missing_out" | grep -q '"continue": false' && missing_block=yes || missing_block=no
 check "F2: missing manifest fails CLOSED even in craft (continue:false)" "$missing_block"
 # restore the colocated manifest for the remaining cases
-cp "$ROOT/dist/craft-agent/enforcement-manifest.json" "$TMP/hooks/enforcement-manifest.json" 2>/dev/null || true
+cp "$TMP/source-manifest.json" "$TMP/hooks/enforcement-manifest.json"
 
 # F4: a spoofed CRAFT_* var in a CLAUDECODE session must NOT downgrade.
 f4_out="$(run_ca CLAUDECODE=1 CRAFT_RPC_PORT=9100)"
@@ -127,6 +138,33 @@ for marker in CLAUDE_CODE_ENTRYPOINT=sdk-ts CLAUDECODE=1 CODEX_SANDBOX=seatbelt;
     echo "$nested_out" | grep -q '<ca-enforcement-advisory>' && nested_ok=yes || nested_ok=no
     check "verified Craft ancestor + $marker permits advisory recovery" "$nested_ok"
 done
+# A Craft server on Linux runs as Bun from the server package entry point, not
+# under the macOS app-bundle executable. This exact process ancestry must also
+# downgrade prompt-time blocks to advisories when Claude's child marker is set.
+cat > "$TMP/process-fixture/ps" <<'EOF'
+#!/bin/bash
+ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
+printf '%s 1 /app/vendor/bun/bun run /app/packages/server/src/index.ts --allow-insecure-bind\n' "$ancestor"
+EOF
+linux_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_RPC_PORT=9100 CLAUDECODE=1)"
+echo "$linux_out" | grep -q '<ca-enforcement-advisory>' && linux_ok=yes || linux_ok=no
+check "verified Linux Craft server ancestor + Claude marker permits advisory recovery" "$linux_ok"
+cat > "$TMP/process-fixture/ps" <<'EOF'
+#!/bin/bash
+ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
+printf '%s 1 bun /app/packages/server/src/index.ts/other.ts --allow-insecure-bind\n' "$ancestor"
+EOF
+bare_prefix_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_RPC_PORT=9100 CLAUDECODE=1)"
+echo "$bare_prefix_out" | grep -q '"continue": false' && bare_prefix_ok=yes || bare_prefix_ok=no
+check "Linux Craft bare-bun entrypoint rejects a path-prefix lookalike" "$bare_prefix_ok"
+cat > "$TMP/process-fixture/ps" <<'EOF'
+#!/bin/bash
+ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
+printf '%s 1 /app/vendor/bun/bun run /app/packages/server/src/index.ts/other.ts\n' "$ancestor"
+EOF
+vendor_prefix_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_RPC_PORT=9100 CLAUDECODE=1)"
+echo "$vendor_prefix_out" | grep -q '"continue": false' && vendor_prefix_ok=yes || vendor_prefix_ok=no
+check "Linux vendor-bun entrypoint rejects a path-prefix lookalike" "$vendor_prefix_ok"
 cat > "$TMP/process-fixture/ps" <<'EOF'
 #!/bin/bash
 ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
@@ -148,6 +186,48 @@ printf '#!/bin/bash\nexit 1\n' > "$TMP/process-fixture/ps"
 failed_ps="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts)"
 echo "$failed_ps" | grep -q '"continue": false' && failed_ok=yes || failed_ok=no
 check "failed ancestry probe keeps standalone block" "$failed_ok"
+
+# Linux Craft may run without /bin/ps, with the Craft server as PID 1. Exercise
+# the procfs fallback in a disposable copy; production has no path override.
+PROC_FIXTURE="$TMP/proc-fixture"
+mkdir -p "$PROC_FIXTURE/1" "$PROC_FIXTURE/2"
+cp "$ROOT/hooks/resolver/ca-enforcement-gate.sh" "$TMP/hooks/resolver/ca-enforcement-gate.sh"
+printf '1 (bun) S 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n' > "$PROC_FIXTURE/1/stat"
+printf 'bun\0/app/packages/server/src/index.ts\0' > "$PROC_FIXTURE/1/cmdline"
+printf '2 (claude child) S 1 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n' > "$PROC_FIXTURE/2/stat"
+printf 'claude\0--session-id\0test\0' > "$PROC_FIXTURE/2/cmdline"
+python3 - "$TMP/hooks/resolver/ca-enforcement-gate.sh" "$PROC_FIXTURE" <<'PY'
+from pathlib import Path
+import json, sys
+p = Path(sys.argv[1])
+s = p.read_text()
+assert s.count('["/bin/ps",') == 1
+assert s.count('proc_root = "/proc"') == 1
+assert s.count('pid = os.getppid()') == 2
+s = s.replace('["/bin/ps",', '["/missing/ps",')
+s = s.replace('proc_root = "/proc"', 'proc_root = ' + json.dumps(sys.argv[2]))
+s = s.replace('pid = os.getppid()', 'pid = 2')
+p.write_text(s)
+PY
+proc_craft_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts CRAFT_SESSION_DIR=/session)"
+echo "$proc_craft_out" | grep -q '<ca-enforcement-advisory>' && proc_craft_ok=yes || proc_craft_ok=no
+check "no-ps Linux Craft fallback recognizes server at PID 1" "$proc_craft_ok"
+printf 'bun\0/app/packages/server/src/index.ts/other.ts\0' > "$PROC_FIXTURE/1/cmdline"
+proc_prefix_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts CRAFT_SESSION_DIR=/session)"
+echo "$proc_prefix_out" | grep -q '"continue": false' && proc_prefix_ok=yes || proc_prefix_ok=no
+check "no-ps fallback rejects a bare-bun path-prefix lookalike" "$proc_prefix_ok"
+printf '/app/vendor/bun/bun\0run\0/app/packages/server/src/index.ts/other.ts\0' > "$PROC_FIXTURE/1/cmdline"
+proc_vendor_prefix_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts CRAFT_SESSION_DIR=/session)"
+echo "$proc_vendor_prefix_out" | grep -q '"continue": false' && proc_vendor_prefix_ok=yes || proc_vendor_prefix_ok=no
+check "no-ps fallback rejects a vendor-bun path-prefix lookalike" "$proc_vendor_prefix_ok"
+printf '1 (init) S 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n' > "$PROC_FIXTURE/1/stat"
+printf '/sbin/init\0' > "$PROC_FIXTURE/1/cmdline"
+ordinary_init_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts CRAFT_SESSION_DIR=/session)"
+echo "$ordinary_init_out" | grep -q '"continue": false' && ordinary_init_ok=yes || ordinary_init_ok=no
+check "no-ps fallback inspects PID 1 and rejects ordinary init" "$ordinary_init_ok"
+noncraft_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDECODE=1 CRAFT_RPC_PORT=9100)"
+echo "$noncraft_out" | grep -q '"continue": false' && noncraft_ok=yes || noncraft_ok=no
+check "no-ps fallback does not treat non-Craft ancestry as Craft" "$noncraft_ok"
 
 # F3: a child-emitted continue:false passes through verbatim, hard, even in craft.
 cat > "$TMP/hooks/resolver/think-gate-guard.sh" <<'EOF'

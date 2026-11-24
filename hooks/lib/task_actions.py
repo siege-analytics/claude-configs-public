@@ -745,10 +745,12 @@ def _git_bootstrap_destination_in_environment(operation: dict, environment: dict
         return None
     if operation.get('config'):
         raise UnknownShape('Git bootstrap configuration overrides are unmodeled')
+    if 'GIT_CONFIG_COUNT' in environment and not _credential_only_git_config(environment):
+        raise UnknownShape('environment-dependent Git bootstrap targeting is unresolved')
     redirecting = {'GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR', 'GIT_INDEX_FILE',
                    'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES',
                    'GIT_CONFIG', 'GIT_CONFIG_PARAMETERS',
-                   'GIT_CONFIG_COUNT', 'GIT_EXEC_PATH', 'GIT_SSH', 'GIT_SSH_COMMAND'}
+                   'GIT_EXEC_PATH', 'GIT_SSH', 'GIT_SSH_COMMAND'}
     if any(name in environment for name in redirecting):
         raise UnknownShape('environment-dependent Git bootstrap targeting is unresolved')
     cwd = operation['cwd']
@@ -2567,6 +2569,40 @@ def _gh_find_refusal(args, depth, inspect):
                 return reason
         index += 1
     return None
+
+
+def _credential_only_git_config(environment: dict) -> bool:
+    """Allow indexed credential settings that cannot redirect Git's write target.
+
+    Inspect keys and structure only. Credential values may contain secrets or
+    shell helper commands, so they are deliberately never read or logged.
+    """
+    raw_count = environment.get('GIT_CONFIG_COUNT', '')
+    if not re.fullmatch(r'[1-9][0-9]*', raw_count):
+        return False
+    count = int(raw_count)
+    if count > 128:
+        return False
+    allowed_key = re.compile(r'credential(?:\.[^\x00-\x20]+)?\.(?:helper|useHttpPath|username)', re.I)
+    for index in range(count):
+        key_name = f'GIT_CONFIG_KEY_{index}'
+        value_name = f'GIT_CONFIG_VALUE_{index}'
+        key = environment.get(key_name)
+        value = environment.get(value_name)
+        if key is None or value is None or not allowed_key.fullmatch(key):
+            return False
+        # `git var -l` is parsed as newline-delimited records by the destination
+        # probe. A credential value containing CR/LF could forge another config
+        # record (for example clone.defaultremotename) and mislead that parser.
+        # Keep ordinary credential secrets available to the actual clone, but
+        # reject values that can escape their single config record.
+        if '\n' in value or '\r' in value:
+            return False
+    for name in environment:
+        match = re.fullmatch(r'GIT_CONFIG_(?:KEY|VALUE)_(.*)', name)
+        if match and (not match.group(1).isdigit() or int(match.group(1)) >= count):
+            return False
+    return True
 
 
 def unparseable_merge_refusal(command, _depth=0, _supplied=False):
