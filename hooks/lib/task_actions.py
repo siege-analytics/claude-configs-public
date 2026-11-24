@@ -948,6 +948,44 @@ _WRAPPER_NO_COMMAND = {  # options after which the wrapper runs no command
     "taskset": {"-p", "--pid"}, "chrt": {"-p", "--pid"}, "sudo": {"-e", "--edit", "-l", "--list", "-v", "--validate"},
 }
 _WRAPPER_STRINGS = {"env": {"-S", "--split-string"}, "flock": {"-c", "--command"}, "script": {"-c", "--command"}}
+# Strict parsing (#1376), used only by refuse_opaque_runner: the exact options
+# each wrapper takes without a value, options whose value is only attached
+# (-iX, --replace=X), and value options the shared table above omits. An option
+# in no table, including an abbreviated GNU long option, is not modelled. GNU
+# and BSD spellings are both listed; sudo -s/-i and doas -s start a shell
+# (_WRAPPER_SHELLS). The shared table is unchanged so the gh-admin and ssh
+# unwrapping keep their outcomes.
+_STRICT_WRAPPER_VALUES = {  # BSD env -P altpath, xargs -J/-R/-S, doas -a; GNU --process-slot-var
+    "env": {"-P"}, "xargs": {"-J", "-R", "-S", "--process-slot-var"}, "doas": {"-a"},
+}
+_WRAPPER_FLAGS = {
+    "timeout": {"--foreground", "--preserve-status", "-v", "--verbose", "-f", "-p"},
+    "gtimeout": {"--foreground", "--preserve-status", "-v", "--verbose", "-f", "-p"},
+    "setsid": {"-c", "--ctty", "-f", "--fork", "-w", "--wait"}, "unbuffer": {"-p"},
+    "time": {"-p", "--portability", "-a", "--append", "-v", "--verbose", "-q", "--quiet", "-l", "-h"},
+    "xargs": {"-0", "--null", "-o", "--open-tty", "-p", "--interactive", "-r", "--no-run-if-empty", "-t",
+              "--verbose", "-x", "--exit", "--show-limits"},
+    "sudo": {"-A", "--askpass", "-b", "--background", "-E", "-H", "--set-home", "-K", "--remove-timestamp", "-k",
+             "--reset-timestamp", "-n", "--non-interactive", "-P", "--preserve-groups", "-S", "--stdin", "-B",
+             "--bell", "-N", "--no-update"},
+    "doas": {"-n", "-L"},
+    "caffeinate": {"-d", "-i", "-m", "-s", "-u"},
+    "watch": {"-b", "--beep", "-c", "--color", "-C", "--no-color", "-e", "--errexit", "-g", "--chgexit", "-p",
+              "--precise", "-t", "--no-title", "-w", "--no-wrap", "-r", "--no-rerun", "-x", "--exec"},
+    "flock": {"-s", "--shared", "-x", "--exclusive", "-e", "-u", "--unlock", "-n", "--nb", "--nonblock", "-o",
+              "--close", "-F", "--no-fork", "--verbose"},
+    "script": {"-a", "--append", "-e", "--return", "-f", "--flush", "-q", "--quiet", "-F", "-k", "-r", "-d", "-p"},
+    "ionice": {"-t", "--ignore"}, "taskset": {"-a", "--all-tasks", "-c", "--cpu-list"},
+    "chrt": {"-a", "--all-tasks", "-b", "--batch", "-d", "--deadline", "-f", "--fifo", "-i", "--idle", "-o",
+             "--other", "-r", "--rr", "-R", "--reset-on-fork", "-v", "--verbose", "-m", "--max"},
+    "env": {"-i", "--ignore-environment", "-0", "--null", "-v", "--debug", "--list-signal-handling"},
+    "command": {"-p"}, "exec": {"-c", "-l"},
+}
+_WRAPPER_OPTIONAL = {
+    "xargs": {"-e", "-i", "-l", "--eof", "--replace", "--max-lines"}, "watch": {"-d", "--differences"},
+    "sudo": {"--preserve-env"}, "env": {"--block-signal", "--default-signal", "--ignore-signal"},
+}
+_WRAPPER_SHELLS = {"sudo": {"-s", "--shell", "-i", "--login"}, "doas": {"-s"}}
 _SSH_LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
 _SSH_HOST = re.compile(_SSH_LABEL + r"(?:\." + _SSH_LABEL + r")*")
 _SSH_LOGIN = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]*")
@@ -1162,9 +1200,33 @@ def _env_split_string(text):
     return args
 
 
-def _wrapped_command(args: list[str], *, preserve_shell=False):
+def _strict_wrapper_option(name: str, option: str, attached: str | None, strict: dict, values: set) -> bool:
+    """Check one wrapper option in strict mode (#1376); True when the rest of a
+    short cluster is that option's attached value. Refuses an option the
+    tables do not model, including an abbreviated GNU long option, and an
+    option that starts a shell."""
+    if option in _WRAPPER_SHELLS.get(name, ()):
+        raise UnknownShape(f'{name} {option} starts a shell; opaque inline execution has unbounded mutation targets')
+    if name == 'xargs' and option in {'-I', '-J', '-i', '--replace'}:
+        strict['replace'] = attached if attached is not None else '{}'
+    if option in values or option in _WRAPPER_OPTIONAL.get(name, ()):
+        return True
+    if option in _WRAPPER_FLAGS.get(name, ()) and not (option.startswith('--') and attached is not None):
+        return False
+    if name == 'arch' and attached is None and re.fullmatch(r'-[A-Za-z0-9_]+', option):
+        return False  # an architecture selector such as -arm64
+    raise UnknownShape(f'{name} option {option!r} is not modelled; a command wrapper whose behaviour '
+                       'cannot be bounded is refused (#1376)')
+
+
+def _wrapped_command(args: list[str], *, preserve_shell=False, strict: dict | None = None):
     """Argv that a supported command wrapper runs: None when args[0] is not a
-    wrapper, [] when the wrapper runs no command."""
+    wrapper, [] when the wrapper runs no command.
+
+    With `strict` (a dict that receives an xargs replacement string), every
+    wrapper option must be modelled exactly and a command string that cannot
+    be split is refused, instead of guessing where the command starts.
+    """
     name = os.path.basename(args[0])
     if name not in _WRAPPER_VALUES:
         return None
@@ -1174,10 +1236,14 @@ def _wrapped_command(args: list[str], *, preserve_shell=False):
             return ['sh', '-c', text]
         if preserve_shell and name == 'env':
             split = _env_split_string(text)
+            if split is None and strict is not None:
+                raise UnknownShape('env -S string is not modelled; its command cannot be bounded (#1376)')
             return ['env'] + split if split is not None else None
         return _command_string(text)
 
     values, strings = _WRAPPER_VALUES[name], _WRAPPER_STRINGS.get(name, set())
+    if strict is not None:  # the corrected option model; other callers keep the shared table
+        values = (values | _STRICT_WRAPPER_VALUES.get(name, set())) - _WRAPPER_OPTIONAL.get(name, set())
     stops, exec_mode, index = _WRAPPER_NO_COMMAND.get(name, set()), False, 1
     while index < len(args):
         token = args[index]
@@ -1185,6 +1251,10 @@ def _wrapped_command(args: list[str], *, preserve_shell=False):
             index += 1
             break
         if name in {"env", "sudo"} and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", token, re.S):
+            index += 1
+            continue
+        if strict is not None and (name == "env" and token == "-"  # a lone - is env -i
+                                   or name == "nice" and re.fullmatch(r"-[0-9]+", token)):  # nice -5
             index += 1
             continue
         if not token.startswith("-") or token == "-":
@@ -1198,6 +1268,8 @@ def _wrapped_command(args: list[str], *, preserve_shell=False):
                 text = attached if equal else (args[index] if index < len(args) else "")
                 split = command_string(text)
                 return split + (args[index + (0 if equal else 1):] if name == "env" else []) if split is not None else []
+            if strict is not None:
+                _strict_wrapper_option(name, option, attached if equal else None, strict, values)
             exec_mode = exec_mode or option == "--exec"
             if option in values and not equal:
                 index += 1
@@ -1212,6 +1284,11 @@ def _wrapped_command(args: list[str], *, preserve_shell=False):
                 split = command_string(text)
                 return split + (args[index + (0 if rest else 1):] if name == "env" else []) if split is not None else []
             exec_mode = exec_mode or (name == "watch" and option == "-x")
+            if strict is not None:
+                takes_value = option in values
+                value = rest or (args[index] if takes_value and index < len(args) else None)
+                if _strict_wrapper_option(name, option, value, strict, values) and not takes_value:
+                    break  # an attached-only value such as xargs -i{}
             if option in values:
                 if not rest:
                     index += 1
@@ -1222,9 +1299,138 @@ def _wrapped_command(args: list[str], *, preserve_shell=False):
         option, equal, attached = rest[0].partition("=")
         split = command_string(attached if equal else (rest[1] if len(rest) > 1 else ""))
         return split if split is not None else []
+    if strict is not None and name == "script":  # util-linux script also reads -c/--command after FILE
+        for word in rest:
+            if word == "--" or not word.startswith("-") or word == "-":
+                break  # the command (macOS) starts; its own arguments are not script options
+            if word.startswith("--c") or not word.startswith("--") and "c" in word:
+                raise UnknownShape('script -c after FILE runs a shell string on Linux; '
+                                   'opaque inline execution has unbounded mutation targets')
     if name == "watch" and not exec_mode:  # watch runs its words as one sh -c string
         return command_string(" ".join(rest))
     return rest
+
+
+# Programs that run code they are handed (a shell, eval/exec, Python inline
+# code). What that code mutates cannot be bounded (#1376).
+_OPAQUE_RUNNERS = {'eval', 'exec', 'bash', 'sh', 'zsh', 'dash', 'ksh'}
+_OPAQUE_WRAPPER_DEPTH = 16
+_OPAQUE = 'opaque inline execution has unbounded mutation targets'
+
+
+def _opaque_runner(args: list[str], *, wrapped=False, supplied=False, replace=None) -> bool:
+    """Whether argv runs a shell, eval/exec or Python inline code.
+
+    The executable is matched by basename and case-insensitively: /bin/sh is
+    sh, and macOS resolves SH to the same shell. `supplied` means a wrapper
+    such as xargs appends arguments the model cannot see; `replace` is its
+    replacement string, which can stand for any words up to the program.
+    """
+    name = os.path.basename(args[0]).casefold()
+    if name in _OPAQUE_RUNNERS:
+        return True
+    # Versioned names may carry ABI flags: t (free-threaded, python3.13t),
+    # d (debug), m (pymalloc, python3.7m) and u (wide unicode).
+    if not re.fullmatch(r'python[0-9]*(?:\.[0-9]+)*[dmtu]*', name):
+        return False
+    # Behind a wrapper (and not fed by xargs), the AST-checked read-only
+    # program keeps the outcome it had before #1376. _python_read models only
+    # the names python and python3.
+    if wrapped and not supplied and _python_read(args):
+        return False
+    if any(_ENV_DYNAMIC_WORD in word for word in args[1:]):
+        return True
+    # Develop refused the bare (unwrapped) literal names python/python3 when
+    # any word starts -c; that floor is kept for exactly those commands.
+    # Other spellings (a path, case, version or ABI flag) and every wrapped
+    # form use the option-region scan, so a program's own -c after the script
+    # or -m module (pytest -c FILE) is not Python's.
+    if not wrapped and args[0] in {'python', 'python3'} and any(word.startswith('-c') for word in args[1:]):
+        return True
+    options = _python_options(args, replace)
+    if supplied:  # appended words are options unless a program is already named
+        return options != 'program'
+    return options == 'inline'
+
+
+def _python_options(args: list[str], replace=None) -> str:
+    """Scan Python options up to the program: 'inline' when they include -c
+    (alone or in a short cluster such as -Ic), 'program' when a script, -m
+    module, - (stdin) or -- names the program first, otherwise 'open'.
+    -W and -X take a value. An option, script or module word containing an
+    xargs replacement string is chosen at run time, so the scan is 'open'."""
+    def chosen(word):
+        return replace is not None and replace in word
+    index = 1
+    while index < len(args):
+        word = args[index]
+        if chosen(word):
+            return 'open'
+        if word == '--':
+            return 'program' if index + 1 < len(args) and not chosen(args[index + 1]) else 'open'
+        if word == '-' or not word.startswith('-'):
+            return 'program'
+        index += 1
+        if word.startswith('--'):
+            index += word == '--check-hash-based-pycs'
+            continue
+        for position, letter in enumerate(word[1:], 1):
+            if letter == 'c':
+                return 'inline'
+            if letter == 'm':
+                module = word[position + 1:] or (args[index] if index < len(args) else '')
+                return 'program' if module and not chosen(module) else 'open'
+            if letter in 'WX':
+                index += position == len(word) - 1  # a value in the next word
+                break
+    return 'open'
+
+
+def refuse_opaque_runner(args: list[str]) -> None:
+    """Refuse opaque inline execution, run directly or through command wrappers.
+
+    Each supported wrapper is unwrapped to the command it runs with the
+    existing wrapper model (_wrapped_command) in strict mode, repeating
+    through nested wrappers, and every command in that chain is tested
+    (#1376). A wrapper whose behaviour the model cannot bound is refused
+    rather than passed on: an unmodelled or abbreviated option, a shell the
+    wrapper starts itself, an unsplittable env -S string, and a command or
+    executable that xargs supplies from its input.
+    """
+    assignment = re.compile(r'[A-Za-z_][A-Za-z0-9_]*=.*', re.S)
+    command, supplied, replace = args, False, None
+    for depth in range(_OPAQUE_WRAPPER_DEPTH + 1):
+        while command and assignment.fullmatch(command[0]):
+            command = command[1:]
+        if not command:
+            return
+        if _ENV_DYNAMIC_WORD in command[0]:
+            raise UnknownShape('a command wrapper runs an executable chosen by the environment; '
+                               'its mutation targets cannot be bounded')
+        if replace is not None and replace in command[0]:
+            raise UnknownShape(f'xargs supplies the executable from its input; {_OPAQUE}')
+        if _opaque_runner(command, wrapped=depth > 0, supplied=supplied, replace=replace):
+            raise UnknownShape(_OPAQUE)
+        name = os.path.basename(command[0]).casefold()
+        if name not in _WRAPPER_VALUES:
+            return
+        facts = {}
+        inner = _wrapped_command([name, *command[1:]], preserve_shell=True, strict=facts)
+        if name == 'script' and not inner:
+            raise UnknownShape(f'script without a command runs an interactive shell; {_OPAQUE}')
+        if supplied and not inner:
+            raise UnknownShape(f'xargs supplies the command {name} runs; {_OPAQUE}')
+        # A word the wrapper consumes itself (an option, its value or a
+        # positional) that is chosen at run time can move where the command
+        # starts: an env -S ${VAR} or an earlier xargs replacement string.
+        cut = len(command) - len(inner)
+        head = command[1:cut] if inner and command[cut:] == inner else command[1:]
+        if any(_ENV_DYNAMIC_WORD in word or replace is not None and replace in word for word in head):
+            raise UnknownShape(f'{name} options or operands are supplied at run time; {_OPAQUE}')
+        supplied = supplied or name == 'xargs'
+        replace = facts.get('replace', replace)
+        command = inner
+    raise UnknownShape('command wrappers nested beyond the modelled depth cannot be bounded')
 
 
 def ssh_invocation(args: list[str]):
@@ -3114,8 +3320,9 @@ def _action(command: str, cwd: str) -> dict:
                 paths.extend(canonical(value, effective) for value in environment_targets)
                 # This branch is already a mutation; do not rerun reader admission.
             self_managed = self_managed and args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "ln"}
-            if args[0] in {'eval', 'exec', 'bash', 'sh', 'zsh', 'dash', 'ksh'} or args[0] in {'python', 'python3'} and any(x == '-c' or x.startswith('-c') for x in args[1:]):
-                raise UnknownShape('opaque inline execution has unbounded mutation targets')
+            # Shell runners, eval/exec and inline code, also behind supported
+            # command wrappers such as timeout or nohup (#1376).
+            refuse_opaque_runner(args)
             local = effective
             # gh -R/--repo selector values (#1347) and modelled free-text
             # option values (#1355) are not local paths; the glob/tilde checks
