@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **199**
-- Characters: **2,473,542**
-- Estimated tokens: **618,461** (character/4 estimate)
+- Characters: **2,475,585**
+- Estimated tokens: **618,972** (character/4 estimate)
 - Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 111 | 1,077,148 | 269,327 |
+| unclassified | 111 | 1,079,191 | 269,838 |
 
 ## Largest source items
 
@@ -53,6 +53,7 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
 | `detect-ai-fingerprints` | skill | 26,919 | 6,730 | `skills/detect-ai-fingerprints/SKILL.md` |
 | `engagement-post-mortem` | skill | 26,713 | 6,679 | `skills/engagement-post-mortem/SKILL.md` |
+| `stalled-session-recovery` | skill | 26,295 | 6,574 | `skills/stalled-session-recovery/SKILL.md` |
 | `siege-utilities--hostile-review` | project-skill | 25,909 | 6,478 | `projects/siege-utilities/skills/hostile-review/SKILL.md` |
 | `shelves--high-performance-django` | reference-shelf | 25,890 | 6,473 | `skills/shelves/django/high-performance-django/SKILL.md` |
 | `writing-tests` | rule | 25,880 | 6,470 | `skills/_writing-tests-rules.md` |
@@ -62,7 +63,6 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--negotiation` | reference-shelf | 24,710 | 6,178 | `skills/shelves/sales/negotiation/SKILL.md` |
 | `shelves--ios-hig-design` | reference-shelf | 24,657 | 6,165 | `skills/shelves/design/ios-hig-design/SKILL.md` |
 | `shelves--37signals-way` | reference-shelf | 24,449 | 6,113 | `skills/shelves/team/37signals-way/SKILL.md` |
-| `stalled-session-recovery` | skill | 24,252 | 6,063 | `skills/stalled-session-recovery/SKILL.md` |
 | `shelves--data-intensive` | reference-shelf | 23,688 | 5,922 | `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
 | `commit` | skill | 23,681 | 5,921 | `skills/commit/SKILL.md` |
 | `hostile-review` | skill | 23,345 | 5,837 | `skills/hostile-review/SKILL.md` |
