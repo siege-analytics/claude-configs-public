@@ -8,7 +8,9 @@ This verifies neither SDK discovery nor actual backend callback delivery.
 
 Standing-order watchdog automations remain opt-in via
 --include-standing-order-automations. SchedulerTick prompt automations create
-sessions and SessionStatusChange audits can self-trigger if enabled.
+sessions. SessionStatusChange audits are guarded against recursion: each run
+marks itself before completion, and a nested audit cancels itself rather than
+creating another matching status event.
 
 The settings merge is idempotent. Optional automation registration is also
 idempotent (replace-by-identity, never append duplicates) and preserves every

@@ -139,8 +139,8 @@ The installer must not silently flatten or overwrite that content.
 
 | File | Purpose |
 |---|---|
-| `automations-snippet.json` | Optional standing-order watchdog (`SchedulerTick`) and completion audit (`SessionStatusChange`). Register with `bin/wire-enforcement.py --include-standing-order-automations` only when periodic session creation is wanted. Merged by (event, name), preserving operator automations. |
-| `standing-order-watchdog.json` | Reference spec for the watchdog: the failure case, signal-file schema, completion criteria, and the runtime split between Claude Code (hook) and Craft Agent (automation). |
+| `automations-snippet.json` | Optional standing-order watchdog (`SchedulerTick`) and completion audit (`SessionStatusChange`). The completion audit marks itself `Automation Audit` before status changes; a nested audit detects the marker and cancels itself, preventing recursion. Register with `bin/wire-enforcement.py --include-standing-order-automations` only when periodic session creation is wanted. Merged by (event, name), preserving operator automations. |
+| `standing-order-watchdog.json` | Reference spec for the watchdog: the failure case, signal-file schema, completion criteria, recursion guard, and the runtime split between Claude Code (hook) and Craft Agent (automation). |
 
 Generated artifacts (`enforcement-manifest.json`, `settings-enforcement.json`,
 `.githooks/pre-push`) are emitted under `dist/craft-agent/` by

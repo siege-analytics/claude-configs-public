@@ -109,6 +109,13 @@ def main() -> None:
         assert "Standing-order watchdog" in names
         assert "Standing-order completion audit" in names
 
+        source = json.loads((ROOT / "craft-agent/automations-snippet.json").read_text())
+        audit_prompt = source["automations"]["SessionStatusChange"][0]["actions"][0]["prompt"]
+        assert audit_prompt.index("apply and verify the exact `Automation Audit` label") < audit_prompt.index("set this audit session to Done")
+        assert "If that triggering session has the `Automation Audit` label" in audit_prompt
+        assert "set this run to Cancelled" in audit_prompt
+        assert "If the marker cannot be applied and verified, set this run to Cancelled" in audit_prompt
+
     print("wire_enforcement_automations_test: PASS")
 
 

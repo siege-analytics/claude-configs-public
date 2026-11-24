@@ -4,6 +4,10 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: bounded completion-audit recursion
+
+- Mark each completion-audit session with `Automation Audit` before a terminal status change. A nested audit recognizes the marker and cancels itself, bounding the chain and preserving audits of ordinary target sessions. If the marker cannot be verified, the audit cancels rather than emitting a matching status event.
+
 ### Fixed: operational session renewal and scheduled-run cleanup
 
 - Require a live, recurring health check to measure active duration and transcript size, complete the successor handoff when a threshold is reached, and verify actual completion rather than treating a scheduler launch or queued message as success.

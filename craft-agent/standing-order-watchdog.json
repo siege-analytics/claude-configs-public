@@ -11,7 +11,8 @@
     "craft_agent": {
       "default": "off (opt-in)",
       "mechanism": "The same signal-file hook. The periodic watchdog in automations-snippet.json is opt-in and not wired by default: on SchedulerTick it creates a watchdog session that audits active standing orders and re-prompts sessions that went idle with work remaining.",
-      "session_cost": "Each SchedulerTick tick spawns a watchdog session (~144/day at the shipped */10 cadence) and each done/blocked SessionStatusChange spawns an audit session; these accumulate in the session list.",
+      "session_cost": "Each SchedulerTick tick spawns a watchdog session (~144/day at the shipped */10 cadence) and each done/blocked SessionStatusChange spawns an audit session. Each audit applies and verifies its Automation Audit marker before changing status; the resulting nested audit detects that marker and cancels itself, preventing recursive audit sessions.",
+      "recursion_guard": "Before auditing, each audit session applies and verifies the Automation Audit label on itself. If the session whose status triggered this event has that label, record a skipped nested audit, add Delete Me, and set this run to Cancelled (outside the matcher). If the marker cannot be applied and verified, cancel this run rather than setting Done or Blocked. Ordinary target sessions continue through the existing completion audit.",
       "enable": "Merge craft-agent/automations-snippet.json into the workspace automations.json only when periodic batch-continuity enforcement is wanted and the session cost is acceptable.",
       "artifact": "dist/craft-agent/automations-snippet.json"
     }
