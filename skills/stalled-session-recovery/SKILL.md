@@ -150,6 +150,11 @@ real holds and return routes. Do not truncate or rewrite the predecessor
 transcript. Preserve it as the read-only record and retire it only after the
 successor has accepted the work and produced a useful turn.
 
+Crossing the measured byte threshold is itself the renewal trigger: begin the
+handoff in that sweep even when token usage is below its separate threshold or
+the session still reports `active`/`todo`. Session status and model-context
+estimates do not override observed transcript size.
+
 ## The three failure shapes
 
 Do not assume the shape from the error message. Confirm it from the transcript.
@@ -238,6 +243,13 @@ transfer ownership exactly once, correct parent links through native controls,
 and retire only the genuinely superseded predecessor. A missing reply from a
 peer is not permission to duplicate the role: keep the handoff visible and
 continue independent authorized work while the named owner acts.
+
+Craft may initially parent a spawned successor to its creator. Correct that
+link through the native parent control as the coordinator's first handoff
+housekeeping, then verify the successor's actual parent with native session
+info before treating it as a root-level steward or hub. Do not make the
+successor wait for a separate acknowledgment of this repair; complete the
+parent correction while its independent, authorized preparation continues.
 
 When the work uses [skill:drive-while-away]'s bounded checkpoint journal, read it
 alongside the last coherent transcript. Have the coordinator record supersession
