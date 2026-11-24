@@ -152,6 +152,22 @@ check "verified Linux Craft server ancestor + Claude marker permits advisory rec
 cat > "$TMP/process-fixture/ps" <<'EOF'
 #!/bin/bash
 ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
+printf '%s 1 bun /app/packages/server/src/index.ts/other.ts --allow-insecure-bind\n' "$ancestor"
+EOF
+bare_prefix_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_RPC_PORT=9100 CLAUDECODE=1)"
+echo "$bare_prefix_out" | grep -q '"continue": false' && bare_prefix_ok=yes || bare_prefix_ok=no
+check "Linux Craft bare-bun entrypoint rejects a path-prefix lookalike" "$bare_prefix_ok"
+cat > "$TMP/process-fixture/ps" <<'EOF'
+#!/bin/bash
+ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
+printf '%s 1 /app/vendor/bun/bun run /app/packages/server/src/index.ts/other.ts\n' "$ancestor"
+EOF
+vendor_prefix_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_RPC_PORT=9100 CLAUDECODE=1)"
+echo "$vendor_prefix_out" | grep -q '"continue": false' && vendor_prefix_ok=yes || vendor_prefix_ok=no
+check "Linux vendor-bun entrypoint rejects a path-prefix lookalike" "$vendor_prefix_ok"
+cat > "$TMP/process-fixture/ps" <<'EOF'
+#!/bin/bash
+ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
 printf '%s 1 /Applications/Other.app/Contents/MacOS/Other\n' "$ancestor"
 printf '999999 1 /Applications/Craft Agents.app/Contents/MacOS/Craft Agents\n'
 EOF
@@ -196,6 +212,14 @@ PY
 proc_craft_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts CRAFT_SESSION_DIR=/session)"
 echo "$proc_craft_out" | grep -q '<ca-enforcement-advisory>' && proc_craft_ok=yes || proc_craft_ok=no
 check "no-ps Linux Craft fallback recognizes server at PID 1" "$proc_craft_ok"
+printf 'bun\0/app/packages/server/src/index.ts/other.ts\0' > "$PROC_FIXTURE/1/cmdline"
+proc_prefix_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts CRAFT_SESSION_DIR=/session)"
+echo "$proc_prefix_out" | grep -q '"continue": false' && proc_prefix_ok=yes || proc_prefix_ok=no
+check "no-ps fallback rejects a bare-bun path-prefix lookalike" "$proc_prefix_ok"
+printf '/app/vendor/bun/bun\0run\0/app/packages/server/src/index.ts/other.ts\0' > "$PROC_FIXTURE/1/cmdline"
+proc_vendor_prefix_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts CRAFT_SESSION_DIR=/session)"
+echo "$proc_vendor_prefix_out" | grep -q '"continue": false' && proc_vendor_prefix_ok=yes || proc_vendor_prefix_ok=no
+check "no-ps fallback rejects a vendor-bun path-prefix lookalike" "$proc_vendor_prefix_ok"
 printf '1 (init) S 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n' > "$PROC_FIXTURE/1/stat"
 printf '/sbin/init\0' > "$PROC_FIXTURE/1/cmdline"
 ordinary_init_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts CRAFT_SESSION_DIR=/session)"
