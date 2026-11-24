@@ -5697,6 +5697,8 @@
         "hooks/_test/unresolved_target_repo_1281.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
         "hooks/_test/worktree_materialization_risk.test.sh",
+        "hooks/_test/wrapped_opaque_runner_1376.py",
+        "hooks/_test/wrapped_opaque_runner_1376.test.sh",
         "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/ci/test_promote_unreleased.sh",
@@ -10817,7 +10819,8 @@
         "hooks/_test/sensitive_files.test.sh",
         "hooks/_test/ticket_propagation_guard.test.sh",
         "hooks/_test/universal_mutation_gate_fail_closed.test.sh",
-        "hooks/_test/universal_mutation_gate_safelist.test.sh"
+        "hooks/_test/universal_mutation_gate_safelist.test.sh",
+        "hooks/_test/wrapped_opaque_runner_1376.py"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -11484,6 +11487,8 @@
         "hooks/_test/unresolved_target_repo_1281.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
         "hooks/_test/worktree_materialization_risk.test.sh",
+        "hooks/_test/wrapped_opaque_runner_1376.py",
+        "hooks/_test/wrapped_opaque_runner_1376.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/ci/test_promote_unreleased.sh",
         "scripts/ci/test_release_notes.sh",
