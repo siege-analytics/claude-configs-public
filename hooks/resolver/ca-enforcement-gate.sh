@@ -134,9 +134,12 @@ try:
         # The Linux Craft server is a Bun process launched from this package
         # entry point. Match the observed server command, not a generic `bun`,
         # `node`, or environment marker that an unrelated process could set.
-        if command.startswith("bun /app/packages/server/src/index.ts"):
-            sys.exit(0)
-        if command.startswith("/app/vendor/bun/bun run /app/packages/server/src/index.ts"):
+        linux_entrypoints = (
+            "bun /app/packages/server/src/index.ts",
+            "/app/vendor/bun/bun run /app/packages/server/src/index.ts",
+        )
+        if any(command == entrypoint or command.startswith(entrypoint + " ")
+               for entrypoint in linux_entrypoints):
             sys.exit(0)
         if parent <= 0 or parent == pid:
             break

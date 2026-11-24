@@ -40,6 +40,19 @@ def automation_names(ws: Path) -> list[str]:
     return names
 
 
+def automation_prompt(ws: Path, name: str) -> str:
+    data = json.loads((ws / "automations.json").read_text())
+    for entries in data.get("automations", {}).values():
+        for entry in entries:
+            if isinstance(entry, dict) and entry.get("name") == name:
+                return "\n".join(
+                    action.get("prompt", "")
+                    for action in entry.get("actions", [])
+                    if isinstance(action, dict)
+                )
+    raise AssertionError(f"missing automation: {name}")
+
+
 def run(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(["python3", str(WIRE), *args], text=True, capture_output=True, timeout=30)
 
@@ -108,6 +121,12 @@ def main() -> None:
         names = automation_names(ws)
         assert "Standing-order watchdog" in names
         assert "Standing-order completion audit" in names
+        watchdog_prompt = automation_prompt(ws, "Standing-order watchdog")
+        assert watchdog_prompt.index("add the delete-me label") < watchdog_prompt.index("set its status to done")
+        audit_prompt = automation_prompt(ws, "Standing-order completion audit")
+        assert "If it already has the delete-me label" in audit_prompt
+        assert "do not audit it, do not change its status" in audit_prompt
+        assert audit_prompt.index("add the delete-me label") < audit_prompt.index("set its status to done")
 
     print("wire_enforcement_automations_test: PASS")
 

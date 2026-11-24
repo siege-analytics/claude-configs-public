@@ -2588,7 +2588,15 @@ def _credential_only_git_config(environment: dict) -> bool:
         key_name = f'GIT_CONFIG_KEY_{index}'
         value_name = f'GIT_CONFIG_VALUE_{index}'
         key = environment.get(key_name)
-        if key is None or value_name not in environment or not allowed_key.fullmatch(key):
+        value = environment.get(value_name)
+        if key is None or value is None or not allowed_key.fullmatch(key):
+            return False
+        # `git var -l` is parsed as newline-delimited records by the destination
+        # probe. A credential value containing CR/LF could forge another config
+        # record (for example clone.defaultremotename) and mislead that parser.
+        # Keep ordinary credential secrets available to the actual clone, but
+        # reject values that can escape their single config record.
+        if '\n' in value or '\r' in value:
             return False
     for name in environment:
         match = re.fullmatch(r'GIT_CONFIG_(?:KEY|VALUE)_(.*)', name)
