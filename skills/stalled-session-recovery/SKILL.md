@@ -150,6 +150,14 @@ real holds and return routes. Do not truncate or rewrite the predecessor
 transcript. Preserve it as the read-only record and retire it only after the
 successor has accepted the work and produced a useful turn.
 
+Crossing the measured byte threshold triggers renewal in that sweep when the
+session still owns an unfinished objective, active dependency or pending return
+that needs a successor. Do not spawn a successor for completed work merely
+because a stale `active`/`todo` status or large transcript remains: verify the
+objective is terminal, preserve required audit history, and mark the session
+for the normal archive path. For unfinished work, token usage and session
+status do not override the measured transcript size.
+
 ## The three failure shapes
 
 Do not assume the shape from the error message. Confirm it from the transcript.
@@ -205,6 +213,52 @@ Resume the existing owner or deliver the missing event where that suffices;
 do not automatically respawn or silently discard the unfinished objective.
 
 ## Respawning: what the successor needs
+
+### Preserve the role and its mission
+
+An operational respawn replaces a role holder; it is not a clean-room role
+demo. Unless the operator explicitly limits a spawn to an isolated runtime
+test, full succession is the default: recover the predecessor's durable
+responsibilities, current task state, decisions, working relationships, direct
+children, pending returns and intended hierarchy before treating the new
+session as the role's successor. Search the predecessor's session record,
+saved handoff files and relevant live task/board state; reconcile each claim
+against current evidence. Do not assume Craft copied predecessor memory, and do
+not stop at the successor's statement that it received only startup
+instructions.
+
+A runtime-only smoke test may deliberately exclude predecessor work, but that
+session is a test candidate, not the operational replacement: keep it separate
+from the designated role holder and do not retire, supersede, or redirect work
+from the predecessor on the strength of the test. If the operator later asks
+the test session to inherit the role or mission, that newer direction starts a
+full succession. Treat test-specific limits such as "no transfer" as scoped to
+the test; they do not override a later operator instruction to recover the
+predecessor's work.
+
+Before starting an operational successor, identify the current incumbent and
+any other candidate sessions for that role. Keep one clearly designated
+current holder. Send the durable handoff to the successor and the current
+coordination partners at their existing level (WC, TC and DT remain workspace
+root peers); an old predecessor is not the only valid reporting target. Verify
+delivery and the successor's first useful, non-overlapping action. Then
+transfer ownership exactly once, correct parent links through native controls,
+and retire only the genuinely superseded predecessor. A missing reply from a
+peer is not permission to duplicate the role: keep the handoff visible and
+continue independent authorized work while the named owner acts.
+
+Craft may initially parent a spawned successor to its creator. Correct that
+link through the native parent control as the coordinator's first handoff
+housekeeping, then verify the successor's actual parent with native session
+info before describing it as a root-level steward or hub. The incorrect link
+does not suspend the successor's assigned role or existing authority: it may
+continue its authorized work while the coordinator corrects the metadata. The
+coordinator records the exact parent discrepancy and correction result in the
+successor's durable handoff/continuity record and explicit coordination roster
+used to track role ownership and peer routing. If native correction is
+unavailable, record the unresolved link in those same records and route its
+repair to the coordinator; do not claim that peer placement is verified or
+leave the successor idle.
 
 When the work uses [skill:drive-while-away]'s bounded checkpoint journal, read it
 alongside the last coherent transcript. Have the coordinator record supersession

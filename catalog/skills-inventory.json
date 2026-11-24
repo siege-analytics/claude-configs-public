@@ -12379,10 +12379,10 @@
     },
     {
       "canonical_source": "skills/stalled-session-recovery/SKILL.md",
-      "characters": 24252,
-      "content_sha256": "4e378b46ea2a6f4f4cb25bf16c9631f9921953b893a900b7ad87ef81517cfeed",
+      "characters": 27675,
+      "content_sha256": "1def0f274835d0095ad39f77923e6578d02a107957929c1f4aaa010fc821593a",
       "description": "How to diagnose and recover a session that has stopped producing useful turns -- stuck on a repeating error, silent for an abnormal stretch, or looping on the same tool call. Invoke when checking on a session that \"seems stuck,\" when a session's own error looks like it should have cleared but hasn't, when a hub is deciding whether to nudge or respawn a worker, or when auditing a fleet of sessions for health. Covers three failure shapes (transient error, persistent misconfiguration, wedged tool call) with distinct diagnostics and distinct fixes, the discipline of reading the last coherent content instead of trusting the error label, and how to respawn without duplicating work or losing in-flight state.",
-      "estimated_tokens": 6063,
+      "estimated_tokens": 6919,
       "frontmatter_name": "stalled-session-recovery",
       "generated_outputs": [
         "dist/nested/skills/stalled-session-recovery",
@@ -12402,7 +12402,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 250,
+      "lines": 304,
       "owner": [
         "unknown"
       ],
@@ -13115,9 +13115,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2473542,
+    "characters": 2476965,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 618461,
+    "estimated_tokens": 619317,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -13138,7 +13138,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1077148
+      "unclassified": 1080571
     },
     "tier_counts": {
       "on-demand": 15,
@@ -13150,7 +13150,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 269327
+      "unclassified": 270183
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,
