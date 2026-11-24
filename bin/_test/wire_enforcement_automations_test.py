@@ -125,7 +125,12 @@ def main() -> None:
         assert watchdog_prompt.index("add the delete-me label") < watchdog_prompt.index("set its status to done")
         audit_prompt = automation_prompt(ws, "Standing-order completion audit")
         assert "If it already has the delete-me label" in audit_prompt
-        assert "do not audit it, do not change its status" in audit_prompt
+        assert "do not audit the affected session, do not change its status" in audit_prompt
+        early_exit = audit_prompt.index("If it already has the delete-me label")
+        early_exit_marker = audit_prompt.index("add the delete-me label to this audit session", early_exit)
+        early_exit_stop = audit_prompt.index("stop this audit", early_exit)
+        assert early_exit_marker < early_exit_stop
+        assert "leave its status unchanged" in audit_prompt[early_exit:early_exit_stop]
         assert audit_prompt.index("add the delete-me label") < audit_prompt.index("set its status to done")
 
     print("wire_enforcement_automations_test: PASS")
