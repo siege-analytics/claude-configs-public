@@ -25,8 +25,19 @@ cp "$ROOT/hooks/resolver/ca-enforcement-gate.sh" "$TMP/hooks/resolver/"
 cp "$ROOT/hooks/resolver/investigate-gate-guard.sh" "$TMP/hooks/resolver/" 2>/dev/null || true
 cp "$ROOT/hooks/resolver/skill-enforcement-gate.sh" "$TMP/hooks/resolver/" 2>/dev/null || true
 cp -R "$ROOT/hooks/lib/." "$TMP/hooks/lib/"
-cp "$ROOT/dist/craft-agent/enforcement-manifest.json" "$TMP/dist/craft-agent/" 2>/dev/null || {
-    echo "  [SKIP] no built manifest; run bin/build.py first"; exit 0; }
+# Build a disposable manifest fixture from the checked-in source contract. This
+# test exercises runtime resolution; the separate manifest test checks generated
+# artifact drift. It must not silently skip on a clean checkout with no dist/.
+python3 - "$ROOT" "$TMP/dist/craft-agent/enforcement-manifest.json" <<'PY'
+import importlib.util, json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location("build", root / "bin" / "build.py")
+mod = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = mod
+spec.loader.exec_module(mod)
+pathlib.Path(sys.argv[2]).write_text(json.dumps({"gates": mod.CA_ENFORCEMENT_GATES}))
+PY
+cp "$TMP/dist/craft-agent/enforcement-manifest.json" "$TMP/source-manifest.json"
 
 # Stub think-gate-guard to emit a block signal deterministically.
 cat > "$TMP/hooks/resolver/think-gate-guard.sh" <<'EOF'
@@ -82,7 +93,7 @@ missing_out="$(run_ca CCP_ENFORCEMENT_MANIFEST=/nonexistent/x.json CRAFT_RPC_POR
 echo "$missing_out" | grep -q '"continue": false' && missing_block=yes || missing_block=no
 check "F2: missing manifest fails CLOSED even in craft (continue:false)" "$missing_block"
 # restore the colocated manifest for the remaining cases
-cp "$ROOT/dist/craft-agent/enforcement-manifest.json" "$TMP/hooks/enforcement-manifest.json" 2>/dev/null || true
+cp "$TMP/source-manifest.json" "$TMP/hooks/enforcement-manifest.json"
 
 # F4: a spoofed CRAFT_* var in a CLAUDECODE session must NOT downgrade.
 f4_out="$(run_ca CLAUDECODE=1 CRAFT_RPC_PORT=9100)"
@@ -127,6 +138,17 @@ for marker in CLAUDE_CODE_ENTRYPOINT=sdk-ts CLAUDECODE=1 CODEX_SANDBOX=seatbelt;
     echo "$nested_out" | grep -q '<ca-enforcement-advisory>' && nested_ok=yes || nested_ok=no
     check "verified Craft ancestor + $marker permits advisory recovery" "$nested_ok"
 done
+# A Craft server on Linux runs as Bun from the server package entry point, not
+# under the macOS app-bundle executable. This exact process ancestry must also
+# downgrade prompt-time blocks to advisories when Claude's child marker is set.
+cat > "$TMP/process-fixture/ps" <<'EOF'
+#!/bin/bash
+ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
+printf '%s 1 /app/vendor/bun/bun run /app/packages/server/src/index.ts --allow-insecure-bind\n' "$ancestor"
+EOF
+linux_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_RPC_PORT=9100 CLAUDECODE=1)"
+echo "$linux_out" | grep -q '<ca-enforcement-advisory>' && linux_ok=yes || linux_ok=no
+check "verified Linux Craft server ancestor + Claude marker permits advisory recovery" "$linux_ok"
 cat > "$TMP/process-fixture/ps" <<'EOF'
 #!/bin/bash
 ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
