@@ -73,8 +73,9 @@ _ca_gate_id() {
 # default, when unresolved) -- NOT gate_runtime_policy, whose advisory-default
 # was the review-found disablement bug (#892 FU1 review).
 #
-# Mixed markers are normal for Craft's SDK child. Only an OS-observed packaged
-# Craft ancestor may resolve that ambiguity; environment markers alone cannot.
+# Mixed markers are normal for Craft's SDK child. Only an OS-observed Craft
+# application/server ancestor may resolve that ambiguity; environment markers
+# alone cannot. Craft's Linux server runs from the package entry point (#1500).
 _ca_has_craft_ancestor() {
     python3 - <<'PY' 2>/dev/null
 import os
@@ -83,7 +84,7 @@ import sys
 
 try:
     result = subprocess.run(
-        ["/bin/ps", "-ax", "-o", "pid=,ppid=,comm="],
+        ["/bin/ps", "-ax", "-o", "pid=,ppid=,args="],
         capture_output=True, text=True, timeout=2, check=True,
     )
     parents = {}
@@ -97,8 +98,16 @@ try:
         if pid <= 1 or pid in visited or pid not in parents:
             break
         visited.add(pid)
-        parent, executable = parents[pid]
-        if executable == "/Applications/Craft Agents.app/Contents/MacOS/Craft Agents":
+        parent, command = parents[pid]
+        mac_bundle = "/Applications/Craft Agents.app/Contents/MacOS/Craft Agents"
+        if command == mac_bundle or command.startswith(mac_bundle + " "):
+            sys.exit(0)
+        # The Linux Craft server is a Bun process launched from this package
+        # entry point. Match the observed server command, not a generic `bun`,
+        # `node`, or environment marker that an unrelated process could set.
+        if command.startswith("bun /app/packages/server/src/index.ts"):
+            sys.exit(0)
+        if command.startswith("/app/vendor/bun/bun run /app/packages/server/src/index.ts"):
             sys.exit(0)
         pid = parent
 except (OSError, subprocess.SubprocessError, ValueError):
@@ -112,7 +121,8 @@ _ca_gate_blocks() {
     command -v gate_runtime_policy_strict >/dev/null 2>&1 || return 0
     # Craft really spawns Claude/Codex children. Reject ambiguous markers only
     # when the host cannot be corroborated by process ancestry. This preserves
-    # standalone anti-spoof behavior without deadlocking a real Craft session.
+    # standalone anti-spoof behavior without deadlocking real Craft sessions on
+    # macOS or Linux (#1500).
     # Guard the array expansions for `set -u`: on bash 3.2 (macOS) an empty or
     # unset array expands to an unbound-variable error, which under this hook's
     # `set -euo pipefail` would ABORT before emitting any block/advisory JSON --
