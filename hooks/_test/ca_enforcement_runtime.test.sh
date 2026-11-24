@@ -171,6 +171,40 @@ failed_ps="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLA
 echo "$failed_ps" | grep -q '"continue": false' && failed_ok=yes || failed_ok=no
 check "failed ancestry probe keeps standalone block" "$failed_ok"
 
+# Linux Craft may run without /bin/ps, with the Craft server as PID 1. Exercise
+# the procfs fallback in a disposable copy; production has no path override.
+PROC_FIXTURE="$TMP/proc-fixture"
+mkdir -p "$PROC_FIXTURE/1" "$PROC_FIXTURE/2"
+cp "$ROOT/hooks/resolver/ca-enforcement-gate.sh" "$TMP/hooks/resolver/ca-enforcement-gate.sh"
+printf '1 (bun) S 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n' > "$PROC_FIXTURE/1/stat"
+printf 'bun\0/app/packages/server/src/index.ts\0' > "$PROC_FIXTURE/1/cmdline"
+printf '2 (claude child) S 1 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n' > "$PROC_FIXTURE/2/stat"
+printf 'claude\0--session-id\0test\0' > "$PROC_FIXTURE/2/cmdline"
+python3 - "$TMP/hooks/resolver/ca-enforcement-gate.sh" "$PROC_FIXTURE" <<'PY'
+from pathlib import Path
+import json, sys
+p = Path(sys.argv[1])
+s = p.read_text()
+assert s.count('["/bin/ps",') == 1
+assert s.count('proc_root = "/proc"') == 1
+assert s.count('pid = os.getppid()') == 2
+s = s.replace('["/bin/ps",', '["/missing/ps",')
+s = s.replace('proc_root = "/proc"', 'proc_root = ' + json.dumps(sys.argv[2]))
+s = s.replace('pid = os.getppid()', 'pid = 2')
+p.write_text(s)
+PY
+proc_craft_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts CRAFT_SESSION_DIR=/session)"
+echo "$proc_craft_out" | grep -q '<ca-enforcement-advisory>' && proc_craft_ok=yes || proc_craft_ok=no
+check "no-ps Linux Craft fallback recognizes server at PID 1" "$proc_craft_ok"
+printf '1 (init) S 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n' > "$PROC_FIXTURE/1/stat"
+printf '/sbin/init\0' > "$PROC_FIXTURE/1/cmdline"
+ordinary_init_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts CRAFT_SESSION_DIR=/session)"
+echo "$ordinary_init_out" | grep -q '"continue": false' && ordinary_init_ok=yes || ordinary_init_ok=no
+check "no-ps fallback inspects PID 1 and rejects ordinary init" "$ordinary_init_ok"
+noncraft_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDECODE=1 CRAFT_RPC_PORT=9100)"
+echo "$noncraft_out" | grep -q '"continue": false' && noncraft_ok=yes || noncraft_ok=no
+check "no-ps fallback does not treat non-Craft ancestry as Craft" "$noncraft_ok"
+
 # F3: a child-emitted continue:false passes through verbatim, hard, even in craft.
 cat > "$TMP/hooks/resolver/think-gate-guard.sh" <<'EOF'
 #!/bin/bash
