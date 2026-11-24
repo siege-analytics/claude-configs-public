@@ -83,19 +83,48 @@ import subprocess
 import sys
 
 try:
-    result = subprocess.run(
-        ["/bin/ps", "-ax", "-o", "pid=,ppid=,args="],
-        capture_output=True, text=True, timeout=2, check=True,
-    )
     parents = {}
-    for line in result.stdout.splitlines():
-        fields = line.strip().split(None, 2)
-        if len(fields) == 3 and fields[0].isdigit() and fields[1].isdigit():
-            parents[int(fields[0])] = (int(fields[1]), fields[2])
-    pid = os.getppid()
+    try:
+        result = subprocess.run(
+            ["/bin/ps", "-ax", "-o", "pid=,ppid=,args="],
+            capture_output=True, text=True, timeout=2, check=True,
+        )
+        for line in result.stdout.splitlines():
+            fields = line.strip().split(None, 2)
+            if len(fields) == 3 and fields[0].isdigit() and fields[1].isdigit():
+                parents[int(fields[0])] = (int(fields[1]), fields[2])
+        pid = os.getppid()
+    except FileNotFoundError:
+        # Minimal Craft containers may omit /bin/ps. Linux exposes the same
+        # ancestry in procfs; use it only when ps is absent, and keep all other
+        # probe failures fail-closed below.
+        proc_root = "/proc"
+        for entry in os.scandir(proc_root):
+            if not entry.name.isdigit():
+                continue
+            try:
+                pid_entry = int(entry.name)
+                stat = open(os.path.join(proc_root, entry.name, "stat"), encoding="utf-8").read()
+                # comm is parenthesized and may contain spaces or ')'; split
+                # after its final ')' so field 4 (ppid) stays unambiguous.
+                end_comm = stat.rfind(")")
+                fields = stat[end_comm + 1:].split()
+                if end_comm < 0 or len(fields) < 2 or not fields[1].isdigit():
+                    continue
+                parent = int(fields[1])
+                raw_cmd = open(os.path.join(proc_root, entry.name, "cmdline"), "rb").read()
+                command = raw_cmd.replace(b"\0", b" ").decode("utf-8", "replace").strip()
+                if not command:
+                    command = open(os.path.join(proc_root, entry.name, "comm"), encoding="utf-8").read().strip()
+                parents[pid_entry] = (parent, command)
+            except (OSError, ValueError):
+                continue
+        pid = os.getppid()
     visited = set()
     for _ in range(24):
-        if pid <= 1 or pid in visited or pid not in parents:
+        # Inspect PID 1 before stopping. In Linux Craft containers, the Craft
+        # server itself can be PID 1 and the Claude child is its direct child.
+        if pid <= 0 or pid in visited or pid not in parents:
             break
         visited.add(pid)
         parent, command = parents[pid]
@@ -109,6 +138,8 @@ try:
             sys.exit(0)
         if command.startswith("/app/vendor/bun/bun run /app/packages/server/src/index.ts"):
             sys.exit(0)
+        if parent <= 0 or parent == pid:
+            break
         pid = parent
 except (OSError, subprocess.SubprocessError, ValueError):
     pass
