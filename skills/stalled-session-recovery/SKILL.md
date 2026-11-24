@@ -150,10 +150,13 @@ real holds and return routes. Do not truncate or rewrite the predecessor
 transcript. Preserve it as the read-only record and retire it only after the
 successor has accepted the work and produced a useful turn.
 
-Crossing the measured byte threshold is itself the renewal trigger: begin the
-handoff in that sweep even when token usage is below its separate threshold or
-the session still reports `active`/`todo`. Session status and model-context
-estimates do not override observed transcript size.
+Crossing the measured byte threshold triggers renewal in that sweep when the
+session still owns an unfinished objective, active dependency or pending return
+that needs a successor. Do not spawn a successor for completed work merely
+because a stale `active`/`todo` status or large transcript remains: verify the
+objective is terminal, preserve required audit history, and mark the session
+for the normal archive path. For unfinished work, token usage and session
+status do not override the measured transcript size.
 
 ## The three failure shapes
 
@@ -247,9 +250,15 @@ continue independent authorized work while the named owner acts.
 Craft may initially parent a spawned successor to its creator. Correct that
 link through the native parent control as the coordinator's first handoff
 housekeeping, then verify the successor's actual parent with native session
-info before treating it as a root-level steward or hub. Do not make the
-successor wait for a separate acknowledgment of this repair; complete the
-parent correction while its independent, authorized preparation continues.
+info before describing it as a root-level steward or hub. The incorrect link
+does not suspend the successor's assigned role or existing authority: it may
+continue its authorized work while the coordinator corrects the metadata. The
+coordinator records the exact parent discrepancy and correction result in the
+successor's durable handoff/continuity record and explicit coordination roster
+used to track role ownership and peer routing. If native correction is
+unavailable, record the unresolved link in those same records and route its
+repair to the coordinator; do not claim that peer placement is verified or
+leave the successor idle.
 
 When the work uses [skill:drive-while-away]'s bounded checkpoint journal, read it
 alongside the last coherent transcript. Have the coordinator record supersession
