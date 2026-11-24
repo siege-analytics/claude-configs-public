@@ -673,6 +673,52 @@ class GitBootstrap(unittest.TestCase):
                 '-u', 'GIT_CONFIG_VALUE_0', 'git', 'clone', '--template=',
                 str(self.bundle), str(destination)]
 
+    def test_credential_only_host_git_config_allows_scoped_clone(self):
+        target = self.ws / 'credential-only-clone'
+        environment = self.helper_environment()
+        self.f.env.update(environment)
+        self.task(target)
+        args = ['git', 'clone', '--template=', str(self.bundle), str(target)]
+        with patch.dict(os.environ, environment):
+            shape = self.shape(args)
+            self.assertNotIn('error', shape)
+            self.assertIn(str(target), shape['paths'])
+            self.f.assertGate(0, shlex.join(args), cwd=self.ws)
+        actual = subprocess.run(args, cwd=self.ws, env=self.f.env,
+                                capture_output=True, timeout=15)
+        self.assertEqual(actual.returncode, 0, actual.stderr.decode(errors='replace'))
+        self.assertEqual((target / 'note.txt').read_text(), 'preserve me\n')
+
+    def test_git_bootstrap_rejects_malformed_or_redirecting_indexed_config(self):
+        bad_environments = (
+            {'GIT_CONFIG_COUNT': 'nope'},
+            {'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_KEY_0': 'core.worktree',
+             'GIT_CONFIG_VALUE_0': str(self.ws)},
+            {'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_KEY_0': 'include.path',
+             'GIT_CONFIG_VALUE_0': str(self.source)},
+            {'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_KEY_0': 'credential.helper'},
+            {'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_VALUE_0': 'x'},
+            {'GIT_CONFIG_COUNT': '2', 'GIT_CONFIG_KEY_0': 'credential.helper',
+             'GIT_CONFIG_VALUE_0': 'x', 'GIT_CONFIG_KEY_1': 'core.worktree',
+             'GIT_CONFIG_VALUE_1': str(self.ws)},
+            {'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_KEY_1': 'credential.helper',
+             'GIT_CONFIG_VALUE_1': 'x'},
+        )
+        for index, extra in enumerate(bad_environments):
+            with self.subTest(environment_index=index):
+                environment = dict(extra)
+                target = self.ws / f'blocked-indexed-config-{index}'
+                for key in list(self.f.env):
+                    if key == 'GIT_CONFIG_COUNT' or key.startswith(('GIT_CONFIG_KEY_', 'GIT_CONFIG_VALUE_')):
+                        self.f.env.pop(key)
+                self.f.env.update(environment)
+                self.task(target)
+                args = ['git', 'clone', '--template=', str(self.bundle), str(target)]
+                with patch.dict(os.environ, environment):
+                    self.assertTrue(self.shape(args).get('error'))
+                    self.f.assertGate(2, shlex.join(args), cwd=self.ws)
+                self.assertFalse(target.exists())
+
     def test_exact_child_helper_removal_real_clone_and_probe_environment(self):
         from git_command import prefix, literal_prefix
         import task_actions
@@ -710,9 +756,9 @@ class GitBootstrap(unittest.TestCase):
         self.assertEqual((target / 'note.txt').read_text(), 'preserve me\n')
         self.assertFalse((self.ws / 'helper-must-not-run').exists())
         self.assertEqual({k: self.f.env[k] for k in inherited}, inherited)
-        # The same inherited helper without the explicit reduction still fails closed.
+        # Credential-only host config is now safe without an env prefix.
         with patch.dict(os.environ, inherited):
-            self.assertIn('environment-dependent', self.shape(['git', 'clone', str(self.bundle), str(self.ws / 'not-reduced')]).get('error', ''))
+            self.assertNotIn('error', self.shape(['git', 'clone', '--template=', str(self.bundle), str(self.ws / 'not-reduced')]))
         # Probe state must not leak into the next ordinary classification.
         self.assertIsNone(task_actions._git_bootstrap_environment.get())
 
