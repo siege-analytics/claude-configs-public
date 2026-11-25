@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **199**
-- Characters: **2,476,965**
-- Estimated tokens: **619,317** (character/4 estimate)
+- Characters: **2,478,626**
+- Estimated tokens: **619,732** (character/4 estimate)
 - Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 111 | 1,080,571 | 270,183 |
+| unclassified | 111 | 1,082,232 | 270,598 |
 
 ## Largest source items
 
@@ -48,9 +48,9 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
 | `shelves--one-page-marketing` | reference-shelf | 30,696 | 7,674 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
 | `writing-rules` | rule | 30,148 | 7,537 | `skills/_writing-rules-rules.md` |
+| `stalled-session-recovery` | skill | 29,336 | 7,334 | `skills/stalled-session-recovery/SKILL.md` |
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
 | `drive-while-away` | skill | 28,303 | 7,076 | `skills/drive-while-away/SKILL.md` |
-| `stalled-session-recovery` | skill | 27,675 | 6,919 | `skills/stalled-session-recovery/SKILL.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
 | `detect-ai-fingerprints` | skill | 26,919 | 6,730 | `skills/detect-ai-fingerprints/SKILL.md` |
 | `engagement-post-mortem` | skill | 26,713 | 6,679 | `skills/engagement-post-mortem/SKILL.md` |
