@@ -210,6 +210,16 @@ Every attempt fails identically, because the request itself cannot succeed, not 
 
 **Fix:** inspect the host's supported configuration, authentication status and retry controls. If an authorized in-place correction or credential refresh is available, apply it and observe a real successful turn. Otherwise select a verified authenticated provider that fits the task and the operator's constraints. If no such provider or supported re-authentication route is available, keep independent authorized work moving and route one precise owner re-auth action with the evidence and return path; do not retry the unchanged failing request, repeatedly spawn against it, transfer raw credentials, or declare the objective complete. For oversized requests, chunk the work before resuming. Preserve the original objective, task state and specific correction.
 
+A zombie predecessor does not have to recover before its work can move. When
+it cannot accept input or its connection is gone, use its last coherent state
+and durable handoff to start one successor on a verified usable connection;
+do not wait for the predecessor, require an operator to repeat the standing
+authorization, or leave the mission idle. Do not duplicate a successor already
+created for that handoff. If no permitted, authenticated connection is
+available, preserve the handoff and continue work that does not depend on that
+connection; route the exact missing connection/re-authentication action. This
+is a dependency of that successor's turn, not a stop on unrelated work.
+
 ### 3. Wedged session (a stuck tool call, not a stuck request)
 
 The most dangerous shape because it looks the most "alive." A single tool call gets stuck in an executing state indefinitely and never returns, so the turn never completes and the session can never process new input -- but `session.jsonl` keeps growing, because something (a heartbeat, a polling loop) keeps firing on a fixed interval underneath the stuck call.
