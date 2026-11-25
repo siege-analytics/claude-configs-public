@@ -131,6 +131,36 @@ capability and route its repair to the owner. Do not report automatic renewal as
 active until a measured trigger has resulted in an accepted successor and a
 cleaned-up predecessor on the live host.
 
+### End-to-end recovery acceptance
+
+Treat recovery as complete only when the intended user-facing session works
+again. A deployment stamp, healthy process, session-list entry, retained child
+count, successful spawn, or queued message is useful evidence, but none proves
+that a person can resume the conversation.
+
+For each target session, verify the following through supported host controls:
+
+1. The conversation loads without a connection or history-retrieval failure.
+2. Its selected backend is available for that session. Do not infer backend
+   health from the provider name appearing in a dropdown.
+3. A harmless test message receives a response in the recovered session. If
+   the predecessor cannot be loaded, verify that a successor accepted the
+   handoff and that the successor also loads and answers a harmless test
+   message.
+4. The resumed conversation has the durable objective, last confirmed state,
+   next action, pending returns, and genuine holds. Confirm these from the
+   conversation or accepted handoff, not from a spawn receipt.
+5. Required hub/steward peer levels, child ownership, and return routes match
+   the intended workspace hierarchy.
+
+Report recovery per session against these checks. If loading or a test turn
+fails, name the observed host/backend failure and keep the task's checkpoint
+and next supported recovery action visible; do not call the session restored
+because package deployment or metadata repair succeeded. A failed session
+does not suspend independent work elsewhere in the workspace. Do not send
+test content that mutates project state, change authentication, or remove a
+provider as a diagnostic shortcut.
+
 ### Transcript-size checkpoint
 
 Measure the stored `session.jsonl` size alongside model-context usage. Craft's
@@ -179,6 +209,16 @@ Every attempt fails identically, because the request itself cannot succeed, not 
 - **Oversized single request** -- e.g. a large diff pushed as one API call. Look for the session's own words a few turns *before* the error run starts; a model that already said something like "the JSON body was too large for a single API call, I'll split this into multiple commits" and then never got the chance to is exactly this shape. Retrying the identical oversized request fails identically forever.
 
 **Fix:** inspect the host's supported configuration, authentication status and retry controls. If an authorized in-place correction or credential refresh is available, apply it and observe a real successful turn. Otherwise select a verified authenticated provider that fits the task and the operator's constraints. If no such provider or supported re-authentication route is available, keep independent authorized work moving and route one precise owner re-auth action with the evidence and return path; do not retry the unchanged failing request, repeatedly spawn against it, transfer raw credentials, or declare the objective complete. For oversized requests, chunk the work before resuming. Preserve the original objective, task state and specific correction.
+
+A zombie predecessor does not have to recover before its work can move. When
+it cannot accept input or its connection is gone, use its last coherent state
+and durable handoff to start one successor on a verified usable connection;
+do not wait for the predecessor, require an operator to repeat the standing
+authorization, or leave the mission idle. Do not duplicate a successor already
+created for that handoff. If no permitted, authenticated connection is
+available, preserve the handoff and continue work that does not depend on that
+connection; route the exact missing connection/re-authentication action. This
+is a dependency of that successor's turn, not a stop on unrelated work.
 
 ### 3. Wedged session (a stuck tool call, not a stuck request)
 
